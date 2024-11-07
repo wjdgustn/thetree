@@ -129,3 +129,11 @@ address, dl, ol, ul {
 dl, ol, ul {
     margin-top: 0;
 }
+
+b, strong {
+    font-weight: 700;
+}
+
+b, h1, h2, h3, h4, h5, h6 {
+    font-family: "Noto Sans Korean", "Noto Sans", "Nanum Gothic", "KoPubDotum B", "Malgun Gothic", "맑은 고딕", sans-serif;
+}

@@ -14,4 +14,10 @@ app.get('/member/signup', (req, res) => {
     });
 });
 
+app.post('/member/signup', async (req, res) => {
+    res.renderSkin('test', {
+        contentHtml: JSON.stringify(req.body)
+    });
+});
+
 module.exports = app;

@@ -19,15 +19,37 @@ const aClickHandler = async e => {
     const href = e.srcElement.getAttribute('href');
     if(!href || href === '#') return;
 
+    const fullUrl = new URL(e.srcElement.href);
+    if(fullUrl.origin !== window.location.origin) return;
+
     e.preventDefault();
     await movePage(href);
 }
+
+const formHandler = async e => {
+    const data = new FormData(e.srcElement);
+    const response = await fetch(e.srcElement.action, {
+        method: e.srcElement.method,
+        body: data
+    });
+
+    if(response.redirected) return await movePage(response.url);
+
+    const html = await response.text();
+    if(replaceContent(html)) setupPjax();
+}
+
 function setupPjax() {
     const aElements = document.querySelectorAll('a');
-
     for(let a of aElements) {
         a.removeEventListener('click', aClickHandler);
         a.addEventListener('click', aClickHandler);
+    }
+
+    const forms = document.querySelectorAll('form');
+    for(let form of forms) {
+        form.removeEventListener('submit', formHandler);
+        form.addEventListener('submit', formHandler);
     }
 }
 
@@ -36,15 +58,23 @@ async function movePage(url, pushState = true) {
     const response = await fetch(url);
     const html = await response.text();
 
+    if(replaceContent(html)) {
+        if(pushState) history.pushState(null, null, response.url);
+
+        setupPjax();
+    }
+    else location.href = response.url;
+}
+
+function replaceContent(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const newContent = doc.getElementById('content');
 
+    if(!newContent) return false;
+
     content.innerHTML = newContent.innerHTML;
-
-    if(pushState) history.pushState(null, null, response.url);
-
-    setupPjax();
+    return true;
 }
 
 function emit(name) {

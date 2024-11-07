@@ -4,8 +4,6 @@
   "theme_color": "#f85c64",
   "base_url": "http://localhost:3000",
 
-  "sitenotice": "",
-  "default_skin": "liberty",
   "logo_text": "테스트위키",
   "logo_image": "",
   "copyright_text": "copyright agree",

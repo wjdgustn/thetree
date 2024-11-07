@@ -4,11 +4,22 @@ const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
 const dayjs = require('dayjs');
+const nodemailer = require('nodemailer');
 
 const globalUtils = require('./utils/global');
 
-global.publicConfig = require('./publicConfig.json');
-global.serverConfig = require('./serverConfig.json');
+global.publicConfig = {};
+global.serverConfig = {};
+
+global.updateConfig = () => {
+    global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
+    global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
+
+    global.mailTransporter = nodemailer.createTransport({
+
+    });
+}
+updateConfig();
 
 Object.defineProperty(global, 'config', {
     get() {
@@ -39,6 +50,10 @@ passport.deserializeUser(async (uuid, done) => {
     const user = await User.findOne({ uuid });
     done(null, user);
 });
+
+app.use(express.urlencoded({
+    extended: true
+}));
 
 app.use(session({
     secret: process.env.SESSION_SECRET,

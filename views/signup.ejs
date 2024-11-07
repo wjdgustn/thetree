@@ -2,6 +2,12 @@
     @import "/css/views/signup.css";
 </style>
 
+<div class="thetree-alert thetree-alert-danger">
+    <div class="thetree-alert-content">
+        <strong>[오류!]</strong>&nbsp; <span>이메일 허용 목록에 있는 이메일이 아닙니다.</span>
+    </div>
+</div>
+
 <form method="post" class="signup-form">
     <div class="signup-block">
         <textarea class="signup-input signup-terms" readonly><%=config.terms%></textarea>
@@ -14,10 +20,14 @@
         </label>
     </div>
 
+    <p class="input-error">동의의 값은 필수입니다.</p>
+
     <div class="signup-block">
         <label for="emailInput">Email</label>
         <input class="signup-input" id="emailInput" name="email">
     </div>
+
+    <p class="input-error">해당 이메일로 이미 계정 생성 인증 메일을 보냈습니다.</p>
 
     <%if(config.email_whitelist.length) {%>
         <p>
