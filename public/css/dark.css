@@ -1,0 +1,22 @@
+.theseed-dark-mode .thetree-alert-primary {
+    background-color: #05234f;
+    border-color: #052e6d;
+    color: #c0d2ee
+}
+
+.theseed-dark-mode .thetree-alert-danger {
+    background-color: #3d050b;
+    border-color: #861520;
+    color: #eec0c0;
+}
+
+.theseed-dark-mode .thetree-link-button {
+    background-color: #27292d;
+    border-color: #383b40;
+    color: #ddd !important;
+}
+
+.thetree-link-button:not([disabled]):hover {
+    background-color: #2d2f34;
+    border-color: #383b40;
+}

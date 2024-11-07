@@ -1,0 +1,131 @@
+.thetree-alert {
+    background-color: #f3f3f3;
+    border: 1px solid #d5d5d5;
+    border-radius: .25rem;
+    column-gap: .75rem;
+    display: flex;
+    margin-bottom: 1.5rem;
+    padding: .5rem .75rem;
+}
+
+.thetree-alert-primary {
+    background-color: #cee2fd;
+    border-color: #7eaaed;
+    color: #0b3574
+}
+
+.thetree-alert-danger {
+    background-color: #f7c6ca;
+    border-color: #b42e3b;
+    color: #3f0404;
+}
+
+.thetree-alert-content {
+    flex: 1;
+}
+
+.thetree-alert-close {
+    background: none;
+    border: none;
+    color: var(--light-text-color, var(--text-color, #212529));
+    display: inline-block;
+    height: 1.15rem;
+    margin: .05rem 0 0;
+    opacity: .7;
+    width: 1.15rem;
+}
+
+.thetree-alert-close svg {
+    height: 100%;
+    width: 100%;
+    fill: currentColor;
+}
+
+a.thetree-link-button {
+    background-color: white;
+    border: .0625rem solid #ccc;
+    color: #373a3c !important;
+    cursor: pointer;
+    display: inline-block;
+    font-size: .9rem;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: .2rem .7rem;
+    text-align: center;
+    text-decoration: none !important;
+    touch-action: manipulation;
+    user-select: none;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+button.thetree-button {
+    background-color: white;
+    border: .0625rem solid #ccc;
+    color: #373a3c;
+    cursor: pointer;
+    display: inline-block;
+    font-size: .9rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin: 0;
+    padding: .2rem .7rem;
+    text-align: center;
+    touch-action: manipulation;
+    user-select: none;
+    white-space: nowrap
+}
+
+.thetree-link-button:not([disabled]):hover {
+    background-color: #e6e6e6;
+    border-color: #adadad;
+}
+
+button.thetree-blue-button {
+    background-color: #0275d8;
+    border-color: #0275d8;
+    color: white;
+}
+
+a.thetree-mint-button {
+    background-color: #5bc0de;
+    border-color: #5bc0de;
+    color: white !important;
+}
+
+button.thetree-danger-button {
+    background-color: #d9534f;
+    border-color: #d9534f;
+    color: white;
+}
+
+[role=button], a, area, button, input, label, select, summary, textarea {
+    touch-action: manipulation;
+}
+
+textarea {
+    border: 1px solid #e1e8ed;
+    padding: .5rem;
+    width: 100%;
+    resize: vertical;
+    overflow: auto;
+}
+
+label {
+    word-break: keep-all;
+    display: inline-block;
+    margin-bottom: .5rem;
+}
+
+input[type=checkbox], input[type=radio] {
+    box-sizing: border-box;
+    padding: 0;
+}
+
+address, dl, ol, ul {
+    margin-bottom: 1rem;
+}
+
+dl, ol, ul {
+    margin-top: 0;
+}

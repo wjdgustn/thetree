@@ -1,0 +1,7 @@
+/.idea/
+/node_modules/
+
+.env
+
+publicConfig.json
+serverConfig.json

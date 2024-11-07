@@ -1,0 +1,16 @@
+{
+  "site_name": "테스트위키",
+  "front_page": "테스트위키:대문",
+  "theme_color": "#f85c64",
+  "base_url": "http://localhost:3000",
+
+  "sitenotice": "",
+  "default_skin": "liberty",
+  "logo_text": "테스트위키",
+  "logo_image": "",
+  "copyright_text": "copyright agree",
+  "copyright_url": "https://example.com",
+  "footer_html": "hi im footer",
+
+  "skin.liberty.navbar_logo_padding": "0.4rem 0 0 0"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "thetree",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "npx nodemon main.js --debug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wjdgustn/thetree.git"
+  },
+  "author": "HYONSU",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/wjdgustn/thetree/issues"
+  },
+  "homepage": "https://github.com/wjdgustn/thetree#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "jsdiff": "^1.1.1",
+    "mongoose": "^8.8.0",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "readable-url": "^1.1.0",
+    "uuid": "^11.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
