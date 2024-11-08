@@ -20,11 +20,16 @@ window.addEventListener('popstate', async e => {
 });
 
 const aClickHandler = async e => {
-    const href = e.srcElement.getAttribute('href');
+    const aElement = e.srcElement;
+
+    let href = aElement.getAttribute('href');
     if(!href || href === '#') return;
 
-    const fullUrl = new URL(e.srcElement.href);
+    const fullUrl = new URL(aElement.href);
     if(fullUrl.origin !== window.location.origin) return;
+
+    if(typeof aElement.dataset.addRedirect !== 'undefined')
+        href += `?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
 
     e.preventDefault();
     await movePage(href);
