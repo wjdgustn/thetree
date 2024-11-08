@@ -11,16 +11,6 @@ const globalUtils = require('./utils/global');
 global.publicConfig = {};
 global.serverConfig = {};
 
-global.updateConfig = () => {
-    global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
-    global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
-
-    global.mailTransporter = nodemailer.createTransport({
-
-    });
-}
-updateConfig();
-
 Object.defineProperty(global, 'config', {
     get() {
         return {
@@ -30,11 +20,21 @@ Object.defineProperty(global, 'config', {
     }
 });
 
+global.updateConfig = () => {
+    global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
+    global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
+
+    global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
+}
+updateConfig();
+
 const User = require('./schemas/user');
 
 require('dotenv').config();
 
-const debug = process.argv.includes('--debug');
+global.debug = process.argv.includes('--debug');
+
+require('./schemas')();
 
 const app = express();
 

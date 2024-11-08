@@ -1,6 +1,10 @@
 for(let key of Object.keys(globalUtils)) window[key] = globalUtils[key];
 
-window.query = new URLSearchParams(window.location.search);
+Object.defineProperty(window, 'query', {
+    get() {
+        return new URLSearchParams(window.location.search);
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     content = document.getElementById('content');
@@ -26,17 +30,51 @@ const aClickHandler = async e => {
     await movePage(href);
 }
 
+const formBackup = {};
 const formHandler = async e => {
-    const data = new FormData(e.srcElement);
-    const response = await fetch(e.srcElement.action, {
-        method: e.srcElement.method,
-        body: data
+    const form = e.srcElement;
+
+    e.preventDefault();
+
+    const data = new FormData(form);
+    const response = await fetch(form.action, {
+        method: form.method,
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams(data).toString()
     });
 
     if(response.redirected) return await movePage(response.url);
 
+    const forms = content.querySelectorAll('form');
+    for(let form of forms) {
+        if(!form.id) continue;
+
+        formBackup[form.id] = new FormData(form);
+    }
+
     const html = await response.text();
-    if(replaceContent(html)) setupPjax();
+    if(replaceContent(html)) {
+        setupPjax();
+
+        const forms = content.querySelectorAll('form');
+        for(let form of forms) {
+            const backup = formBackup[form.id];
+            if(!backup) continue;
+
+            for(let [key, value] of backup) {
+                const input = form.querySelector(`input[name="${key}"]`);
+                if(!input) continue;
+
+                if(input.type === 'checkbox' || input.type === 'radio')
+                    input.checked = !!value;
+                else
+                    input.value = value;
+            }
+        }
+    }
+    else alert(html);
 }
 
 function setupPjax() {
@@ -51,6 +89,8 @@ function setupPjax() {
         form.removeEventListener('submit', formHandler);
         form.addEventListener('submit', formHandler);
     }
+
+    emit('thetree:pageLoad');
 }
 
 let content;

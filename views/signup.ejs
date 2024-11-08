@@ -2,13 +2,33 @@
     @import "/css/views/signup.css";
 </style>
 
+<%if(typeof alert !== 'undefined') {%>
 <div class="thetree-alert thetree-alert-danger">
     <div class="thetree-alert-content">
-        <strong>[오류!]</strong>&nbsp; <span>이메일 허용 목록에 있는 이메일이 아닙니다.</span>
+        <strong>[오류!]</strong>&nbsp; <span><%=alert%></span>
     </div>
 </div>
+<%}%>
 
-<form method="post" class="signup-form">
+<%
+const fieldErrorExists = typeof fieldErrors !== 'undefined' && fieldErrors.length > 0;
+
+let focusTarget = '';
+if(fieldErrorExists) focusTarget = fieldErrors[0].path;
+
+function fieldError(name) {
+    if(!fieldErrorExists) return '';
+
+    const error = fieldErrors.find(e => e.path === name);
+    if(!error) return '';
+
+    return `<p class="input-error">${error.msg}</p>`;
+}
+%>
+
+<script src="/js/views/signup_focus.js"></script>
+
+<form method="post" id="signup-form" class="signup-form" data-focus="<%=focusTarget%>">
     <div class="signup-block">
         <textarea class="signup-input signup-terms" readonly><%=config.terms%></textarea>
     </div>
@@ -20,14 +40,14 @@
         </label>
     </div>
 
-    <p class="input-error">동의의 값은 필수입니다.</p>
+    <%-fieldError('agree')%>
 
     <div class="signup-block">
         <label for="emailInput">Email</label>
         <input class="signup-input" id="emailInput" name="email">
     </div>
 
-    <p class="input-error">해당 이메일로 이미 계정 생성 인증 메일을 보냈습니다.</p>
+    <%-fieldError('email')%>
 
     <%if(config.email_whitelist.length) {%>
         <p>

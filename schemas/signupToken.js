@@ -9,13 +9,15 @@ const newSchema = new Schema({
         unique: true,
         index: true,
         default: () => randomstring.generate({
-            charset: 'hex'
+            charset: 'hex',
+            length: 64
         })
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        index: true
     },
     ip: {
         type: String,
