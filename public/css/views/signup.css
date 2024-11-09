@@ -1,5 +1,5 @@
-@scope (#content-body) {
-    .signup-form {
+@scope (#content-style) {
+    #member-form {
         max-width: 40rem;
         margin: 0 auto;
     }
@@ -60,17 +60,17 @@
 
     .theseed-dark-mode .signup-agree-input {
         background-color: #282829;
-        border-color: #484848
+        border-color: #484848;
     }
 
     .signup-agree-input:checked {
         background-color: #bcbcbc;
-        background-color: var(--brand-color-1,#bcbcbc);
+        background-color: var(--brand-color-1, #bcbcbc);
         background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 448 512%27%3E%3Cpath d=%27M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7l233.4-233.3c12.5-12.5 32.8-12.5 45.3 0z%27 style=%27fill:%23fff%27/%3E%3C/svg%3E")
     }
 
     .signup-agree-input:focus-visible {
-        --focus-outline-color: var(--brand-bright-color-2,#e3e3e3);
+        --focus-outline-color: var(--brand-bright-color-2, #e3e3e3);
         box-shadow: 0 0 0 .2rem #e3e3e3;
         box-shadow: var(--focus-outline-color) 0 0 0 .2rem;
         transition: box-shadow .1s linear
@@ -99,7 +99,7 @@
 
     .signup-button {
         align-items: center;
-        border: 1px solid #7eaaed;
+        border: 1px solid;
         border-radius: 4px;
         cursor: pointer;
         display: inline-flex;
@@ -112,8 +112,6 @@
         transition: background-color .1s ease-in, box-shadow .1s linear;
         white-space: nowrap;
         min-width: 4rem;
-        background-color: #3f82e6;
-        color: #fff;
     }
 
     .theseed-dark-mode .signup-button {

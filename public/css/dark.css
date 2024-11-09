@@ -16,7 +16,23 @@
     color: #ddd !important;
 }
 
-.thetree-link-button:not([disabled]):hover {
+.theseed-dark-mode .thetree-link-button:not([disabled]):hover {
     background-color: #2d2f34;
     border-color: #383b40;
+}
+
+.theseed-dark-mode .thetree-blue-button {
+    background-color: #1555b5;
+    border-color: #052e6d;
+}
+
+.theseed-dark-mode .thetree-button {
+    background-color: #282829;
+    border-color: #484848;
+    color: var(--dark-text-color, var(--text-color, #e0e0e0));
+}
+
+.theseed-dark-mode .thetree-primary-button {
+    background-color: #1555b5;
+    border-color: #052e6d;
 }

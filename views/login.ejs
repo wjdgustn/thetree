@@ -1,2 +1,61 @@
-wow this is login
-<a href="/member/signup">signup</a>
+<style>
+    @import "/css/views/login.css";
+</style>
+
+<%if(typeof alert !== 'undefined') {%>
+<div class="thetree-alert thetree-alert-danger">
+    <div class="thetree-alert-content">
+        <strong>[오류!]</strong>&nbsp; <span><%=alert%></span>
+    </div>
+</div>
+<%}%>
+
+<%
+const fieldErrorExists = typeof fieldErrors !== 'undefined' && fieldErrors.length > 0;
+
+let focusTarget = '';
+if(fieldErrorExists) focusTarget = fieldErrors[0].path;
+
+function fieldError(name) {
+    if(!fieldErrorExists) return '';
+
+    const error = fieldErrors.find(e => e.path === name);
+    if(!error) return '';
+
+    return `<p class="input-error">${error.msg}</p>`;
+}
+%>
+
+<script src="/js/views/member_focus.js"></script>
+
+<form method="post" id="member-form" data-focus="<%=focusTarget%>">
+    <div class="login-block">
+        <label for="emailInput">Email</label>
+        <input class="login-input" id="emailInput" name="email">
+        <%-fieldError('email')%>
+    </div>
+
+    <div class="login-block">
+        <label for="passwordInput">Password</label>
+        <input class="login-input" value="" type="password" id="passwordInput" name="password">
+        <%-fieldError('password')%>
+    </div>
+
+    <div class="login-block login-recover-password-block">
+        <a href="/member/recover_password" class="recover-password">비밀번호를 잊으셨나요?</a>
+    </div>
+
+    <div class="login-block login-bottom-block">
+        <label class="autologin-label">
+            <input type="checkbox" class="autologin-input" name="autologin">
+            자동 로그인
+        </label>
+
+        <div class="login-button-block">
+            <a href="/member/signup" role="button" class="thetree-button">계정 만들기</a>
+            <button class="thetree-button thetree-primary-button">로그인</button>
+        </div>
+    </div>
+
+    <input type="hidden" name="redirect" value="<%=req.query.redirect%>">
+</form>

@@ -1,6 +1,9 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
+const passport = require('passport');
+
+const middleware = require('../utils/middleware');
 
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
@@ -18,11 +21,12 @@ const renderSignup = (res, data = {}) => res.renderSkin('계정 만들기', {
     contentName: 'signup'
 });
 
-app.get('/member/signup', (req, res) => {
+app.get('/member/signup', middleware.isLogout, (req, res) => {
     renderSignup(res);
 });
 
 app.post('/member/signup',
+    middleware.isLogout,
     body('email')
         .notEmpty().withMessage('이메일의 값은 필수입니다.')
         .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.'),
@@ -152,6 +156,44 @@ app.post('/member/signup/:token',
     res.renderSkin('계정 만들기', {
         contentHtml: `<p>환영합니다! <b>${req.body.username}</b>님 계정 생성이 완료되었습니다.</p>`
     });
+});
+
+const renderLogin = (res, data = {}) => res.renderSkin('로그인', {
+    ...data,
+    contentName: 'login'
+});
+
+app.get('/member/login', middleware.isLogout, (req, res) => {
+    renderLogin(res);
+});
+
+app.post('/member/login',
+    middleware.isLogout,
+    body('email')
+        .notEmpty()
+        .withMessage('이메일의 값은 필수입니다.'),
+    body('password')
+        .notEmpty()
+        .withMessage('비밀번호의 값은 필수입니다.'),
+    async (req, res, next) => {
+    const result = validationResult(req);
+    if(!result.isEmpty()) return renderLogin(res, {
+        fieldErrors: result.array()
+    });
+
+    passport.authenticate('local', (err, user, info) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('서버 오류');
+        }
+        if(!user) return renderLogin(res, {
+            alert: info.message
+        });
+        return req.login(user, err => {
+            if(err) console.error(err);
+            if(!res.headersSent) return res.redirect(req.body.redirect || '/');
+        });
+    })(req, res, next);
 });
 
 module.exports = app;

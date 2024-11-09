@@ -59,21 +59,36 @@ a.thetree-link-button {
     white-space: nowrap;
 }
 
-button.thetree-button {
-    background-color: white;
-    border: .0625rem solid #ccc;
-    color: #373a3c;
+.thetree-button {
+    align-items: center;
+    background-color: var(--light-article-background-color, var(--article-background-color, #fff));
+    border: 1px solid #d5d5d5;
+    border-radius: 4px;
+    color: inherit !important;
     cursor: pointer;
-    display: inline-block;
+    display: inline-flex;
     font-size: .9rem;
-    font-weight: 400;
+    justify-content: center;
     line-height: 1.5;
-    margin: 0;
-    padding: .2rem .7rem;
-    text-align: center;
-    touch-action: manipulation;
-    user-select: none;
-    white-space: nowrap
+    overflow: hidden;
+    padding: .3rem .75rem;
+    text-decoration: none !important;
+    transition: background-color .1s ease-in, box-shadow .1s linear;
+    white-space: nowrap;
+}
+
+.thetree-button:hover {
+    background-color: #f2f2f2;
+}
+
+.thetree-primary-button {
+    background-color: #3f82e6;
+    border-color: #7eaaed;
+    color: #fff !important;
+}
+
+.thetree-primary-button:hover {
+    background-color: #4078cd;
 }
 
 .thetree-link-button:not([disabled]):hover {
@@ -136,4 +151,14 @@ b, strong {
 
 b, h1, h2, h3, h4, h5, h6 {
     font-family: "Noto Sans Korean", "Noto Sans", "Nanum Gothic", "KoPubDotum B", "Malgun Gothic", "맑은 고딕", sans-serif;
+}
+
+a {
+    background-color: transparent;
+    color: #0275d8;
+    text-decoration: none;
+}
+
+.theseed-dark-mode a {
+    color: #e69720;
 }
