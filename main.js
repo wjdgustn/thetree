@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const dayjs = require('dayjs');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 const globalUtils = require('./utils/global');
 
@@ -47,8 +48,12 @@ passport.serializeUser((user, done) => {
     done(null, user.uuid);
 });
 passport.deserializeUser(async (uuid, done) => {
-    const user = await User.findOne({ uuid });
-    done(null, user);
+    const user = await User.findOne({ uuid }).lean();
+    const hash = crypto.createHash('sha256').update(user.email).digest('hex');
+    done(null, {
+        ...user,
+        avatar: `//secure.gravatar.com/avatar/${hash}?d=retro`
+    });
 });
 
 app.use(express.urlencoded({
@@ -117,6 +122,12 @@ app.use((req, res, next) => {
         const viewName = data.viewName || null;
         if (viewName) delete data.viewName;
 
+        if(data.fullReload || req.session.fullReload) {
+            res.setHeader('TheSeed-Full-Reload', 'true');
+            delete data.fullReload;
+            delete req.session.fullReload;
+        }
+
         res.render('main', {
             ...data,
             skin,
@@ -129,12 +140,12 @@ app.use((req, res, next) => {
             session: {
                 menus: [],
                 account: {
-                    name: '127.0.0.1',
-                    uuid: null,
-                    type: 0
+                    name: req.user?.name ?? req.ip,
+                    uuid: req.user?.uuid,
+                    type: Number(req.isAuthenticated())
                 },
-                gravatar_url: null,
-                user_document_discuss: 'fda',
+                gravatar_url: req.user?.avatar,
+                user_document_discuss: null,
                 quick_block: false
             }
         });

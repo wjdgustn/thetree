@@ -60,7 +60,7 @@ const formHandler = async e => {
     }
 
     const html = await response.text();
-    if(replaceContent(html)) {
+    if(replaceContent(html, response)) {
         setupPjax();
 
         const forms = content.querySelectorAll('form');
@@ -103,7 +103,7 @@ async function movePage(url, pushState = true) {
     const response = await fetch(url);
     const html = await response.text();
 
-    if(replaceContent(html)) {
+    if(replaceContent(html, response)) {
         if(pushState) history.pushState(null, null, response.url);
 
         setupPjax();
@@ -111,9 +111,13 @@ async function movePage(url, pushState = true) {
     else location.href = response.url;
 }
 
-function replaceContent(html) {
+function replaceContent(html, response) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
+
+    if(response.headers.get('TheSeed-Full-Reload') === 'true')
+        return location.href = response.url;
+
     const newContent = doc.getElementById('content');
 
     if(!newContent) return false;

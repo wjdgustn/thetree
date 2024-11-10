@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 const User = require('../schemas/user');
 
-module.exports = (passport) => {
+module.exports = passport => {
     passport.use(new LocalStrategy({
         usernameField: 'email',
         passwordField: 'password'

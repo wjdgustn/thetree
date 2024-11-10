@@ -175,7 +175,7 @@ app.post('/member/login',
     body('password')
         .notEmpty()
         .withMessage('비밀번호의 값은 필수입니다.'),
-    async (req, res, next) => {
+    (req, res, next) => {
     const result = validationResult(req);
     if(!result.isEmpty()) return renderLogin(res, {
         fieldErrors: result.array()
@@ -191,9 +191,20 @@ app.post('/member/login',
         });
         return req.login(user, err => {
             if(err) console.error(err);
-            if(!res.headersSent) return res.redirect(req.body.redirect || '/');
+            if(!res.headersSent) {
+                req.session.fullReload = true;
+                return res.redirect(req.body.redirect || '/');
+            }
         });
     })(req, res, next);
+});
+
+app.get('/member/logout', middleware.isLogin, (req, res) => {
+    req.logout(err => {
+        if(err) console.error(err);
+        req.session.fullReload = true;
+        res.redirect('/');
+    });
 });
 
 module.exports = app;
