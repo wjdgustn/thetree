@@ -99,7 +99,7 @@ a.thetree-link-button {
 button.thetree-blue-button {
     background-color: #0275d8;
     border-color: #0275d8;
-    color: white;
+    color: white !important;
 }
 
 a.thetree-mint-button {
@@ -111,7 +111,7 @@ a.thetree-mint-button {
 button.thetree-danger-button {
     background-color: #d9534f;
     border-color: #d9534f;
-    color: white;
+    color: white !important;
 }
 
 [role=button], a, area, button, input, label, select, summary, textarea {
