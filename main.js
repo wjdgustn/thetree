@@ -6,6 +6,8 @@ const path = require('path');
 const dayjs = require('dayjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const cheerio = require('cheerio');
+const compression = require('compression');
 
 const globalUtils = require('./utils/global');
 
@@ -33,7 +35,7 @@ const User = require('./schemas/user');
 
 require('dotenv').config();
 
-global.debug = process.argv.includes('--debug');
+global.debug = process.env.NODE_ENV === 'development';
 
 require('./schemas')();
 
@@ -74,7 +76,10 @@ for(let f of fs.readdirSync('./login')) {
     require(`./login/${f}`)(passport);
 }
 
-app.use(express.static('./public'));
+if(!debug) {
+    app.use(compression());
+}
+app.use(express.static(`./public${debug ? '' : './public/dist'}`));
 
 const skinsStatic = express.static('./skins');
 app.use('/skins', (req, res, next) => {
@@ -100,20 +105,20 @@ app.get('/js/global.js', (req, res) => {
 });
 
 app.use((req, res, next) => {
-    res.locals.rmWhitespace = true;
+    app.locals.rmWhitespace = true;
 
-    res.locals.fs = fs;
-    res.locals.path = path;
-    res.locals.dayjs = dayjs;
+    app.locals.fs = fs;
+    app.locals.path = path;
+    app.locals.dayjs = dayjs;
 
-    res.locals.__dirname = __dirname;
+    app.locals.__dirname = __dirname;
 
-    res.locals.req = req;
-    res.locals.env = process.env;
-    res.locals.config = config;
+    app.locals.req = req;
+    app.locals.env = process.env;
+    app.locals.config = config;
 
-    res.locals = {
-        ...res.locals,
+    app.locals = {
+        ...app.locals,
         ...globalUtils
     }
 
@@ -123,13 +128,15 @@ app.use((req, res, next) => {
         const viewName = data.viewName || null;
         if (viewName) delete data.viewName;
 
+        let sendOnlyContent = req.get('Sec-Fetch-Dest') === 'empty';
         if(data.fullReload || req.session.fullReload) {
-            res.setHeader('TheSeed-Full-Reload', 'true');
+            sendOnlyContent = false;
+
             delete data.fullReload;
             delete req.session.fullReload;
         }
 
-        res.render('main', {
+        app.render('main', {
             ...data,
             skin,
             page: {
@@ -149,6 +156,17 @@ app.use((req, res, next) => {
                 user_document_discuss: null,
                 quick_block: false
             }
+        }, (err, html) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Skin render error');
+            }
+
+            if(sendOnlyContent) {
+                const $ = cheerio.load(html);
+                res.send($('#content').html());
+            }
+            else res.send(html);
         });
     }
 

@@ -20,7 +20,7 @@ window.addEventListener('popstate', async e => {
 });
 
 const aClickHandler = async e => {
-    const aElement = e.srcElement;
+    const aElement = e.currentTarget;
 
     let href = aElement.getAttribute('href');
     if(!href || href === '#') return;
@@ -37,7 +37,7 @@ const aClickHandler = async e => {
 
 const formBackup = {};
 const formHandler = async e => {
-    const form = e.srcElement;
+    const form = e.currentTarget;
 
     e.preventDefault();
 
@@ -50,7 +50,7 @@ const formHandler = async e => {
         body: new URLSearchParams(data).toString()
     });
 
-    if(response.redirected) return await movePage(response.url);
+    if(response.redirected) return await movePage(response);
 
     const forms = content.querySelectorAll('form');
     for(let form of forms) {
@@ -60,7 +60,7 @@ const formHandler = async e => {
     }
 
     const html = await response.text();
-    if(replaceContent(html, response)) {
+    if(replaceContent(html)) {
         setupPjax();
 
         const forms = content.querySelectorAll('form');
@@ -99,11 +99,12 @@ function setupPjax() {
 }
 
 let content;
-async function movePage(url, pushState = true) {
-    const response = await fetch(url);
+async function movePage(response, pushState = true) {
+    if(typeof response === 'string') response = await fetch(response);
+
     const html = await response.text();
 
-    if(replaceContent(html, response)) {
+    if(replaceContent(html)) {
         if(pushState) history.pushState(null, null, response.url);
 
         setupPjax();
@@ -111,19 +112,22 @@ async function movePage(url, pushState = true) {
     else location.href = response.url;
 }
 
-function replaceContent(html, response) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+function replaceContent(html) {
+    if(!html.includes('<!DOCTYPE html>')) {
+        content.innerHTML = html;
+        return true;
+    }
 
-    if(response.headers.get('TheSeed-Full-Reload') === 'true')
-        return location.href = response.url;
+    return false;
 
-    const newContent = doc.getElementById('content');
-
-    if(!newContent) return false;
-
-    content.innerHTML = newContent.innerHTML;
-    return true;
+    // const parser = new DOMParser();
+    // const doc = parser.parseFromString(html, 'text/html');
+    //
+    // const newContent = doc.getElementById('content');
+    // if(!newContent) return false;
+    //
+    // content.innerHTML = newContent.innerHTML;
+    // return true;
 }
 
 function emit(name) {
