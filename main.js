@@ -5,7 +5,6 @@ const fs = require('fs');
 const path = require('path');
 const dayjs = require('dayjs');
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
 const cheerio = require('cheerio');
 const compression = require('compression');
 const useragent = require('express-useragent');
@@ -55,10 +54,9 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (uuid, done) => {
     const user = await User.findOne({ uuid }).lean();
     if(!user) return done(null, false);
-    const hash = crypto.createHash('sha256').update(user.email).digest('hex');
     done(null, {
         ...user,
-        avatar: `//secure.gravatar.com/avatar/${hash}?d=retro`
+        avatar: utils.getGravatar(user.email)
     });
 });
 

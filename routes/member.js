@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 
+const utils = require('../utils');
 const middleware = require('../utils/middleware');
 
 const User = require('../schemas/user');
@@ -157,7 +158,10 @@ app.post('/member/signup/:token',
         email: token.email
     });
 
-    return req.login(newUser, err => {
+    return req.login({
+        ...newUser.toJSON(),
+        avatar: utils.getGravatar(newUser.email)
+    }, err => {
         if(err) console.error(err);
         if(!res.headersSent) {
             console.log('req.user after login:');
