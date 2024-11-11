@@ -10,6 +10,11 @@ const newSchema = new Schema({
         index: true,
         default: uuid
     },
+    createdAt: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
     email: {
         type: String,
         required: true,

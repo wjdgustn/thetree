@@ -113,9 +113,20 @@ async function movePage(response, pushState = true) {
 }
 
 function replaceContent(html) {
-    if(!html.includes('<!DOCTYPE html>') && html.includes('<')) {
-        content.innerHTML = html;
+    if(html.includes('<!DOCTYPE html>')) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        document.body.innerHTML = doc.body.innerHTML;
+        console.log('full body replace');
+        console.log(doc.body.innerHTML);
         return true;
+    }
+    else {
+        if(html.includes('<')) {
+            content.innerHTML = html;
+            return true;
+        }
     }
 
     return false;

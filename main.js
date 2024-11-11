@@ -8,6 +8,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const cheerio = require('cheerio');
 const compression = require('compression');
+const useragent = require('express-useragent');
 
 const globalUtils = require('./utils/global');
 
@@ -51,11 +52,27 @@ passport.serializeUser((user, done) => {
 });
 passport.deserializeUser(async (uuid, done) => {
     const user = await User.findOne({ uuid }).lean();
+    if(!user) return done(null, false);
     const hash = crypto.createHash('sha256').update(user.email).digest('hex');
     done(null, {
         ...user,
         avatar: `//secure.gravatar.com/avatar/${hash}?d=retro`
     });
+});
+
+if(!debug) {
+    app.use(compression());
+}
+app.use(express.static(`./public${debug ? '' : './public/dist'}`));
+
+const skinsStatic = express.static('./skins');
+app.use('/skins', (req, res, next) => {
+    const filename = req.path.split('/').pop();
+
+    const blacklist = ['ejs', 'vue'];
+    if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) next();
+
+    skinsStatic(req, res, next);
 });
 
 app.use(express.urlencoded({
@@ -76,20 +93,7 @@ for(let f of fs.readdirSync('./login')) {
     require(`./login/${f}`)(passport);
 }
 
-if(!debug) {
-    app.use(compression());
-}
-app.use(express.static(`./public${debug ? '' : './public/dist'}`));
-
-const skinsStatic = express.static('./skins');
-app.use('/skins', (req, res, next) => {
-    const filename = req.path.split('/').pop();
-
-    const blacklist = ['ejs', 'vue'];
-    if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) next();
-
-    skinsStatic(req, res, next);
-});
+app.use(useragent.express());
 
 app.get('/js/global.js', (req, res) => {
     res.send(
@@ -114,6 +118,7 @@ app.use((req, res, next) => {
     app.locals.__dirname = __dirname;
 
     app.locals.req = req;
+    app.locals.user = req.user;
     app.locals.env = process.env;
     app.locals.config = config;
 
@@ -121,6 +126,24 @@ app.use((req, res, next) => {
         ...app.locals,
         ...globalUtils
     }
+
+    req.permissions = req.user?.permissions ?? [];
+
+    req.permissions.push('any');
+
+    if(req.isAuthenticated()) {
+        req.permissions.push('member');
+        if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
+            req.permissions.push('member_signup_15days_ago');
+    }
+    else req.permissions.push('ip');
+
+    if(req.useragent.isBot) req.permissions.push('bot');
+
+    // TODO perms:
+    //  document_contributor(at document middleware)
+    //  contributor(using revision history)
+    //  match_username_and_document_title(at document middleware)
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;

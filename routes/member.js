@@ -92,6 +92,11 @@ const renderFinalSignup = (res, data = {}) => res.renderSkin('계정 만들기',
 });
 
 app.get('/member/signup/:token', async (req, res) => {
+    await SignupToken.create({
+        email: 'admin@hyonsu.com',
+        token: req.params.token,
+        ip: req.ip
+    });
     const token = await SignupToken.findOne({
         token: req.params.token
     });
@@ -152,10 +157,17 @@ app.post('/member/signup/:token',
         email: token.email
     });
 
-    req.login(newUser);
-
-    res.renderSkin('계정 만들기', {
-        contentHtml: `<p>환영합니다! <b>${req.body.username}</b>님 계정 생성이 완료되었습니다.</p>`
+    return req.login(newUser, err => {
+        if(err) console.error(err);
+        if(!res.headersSent) {
+            console.log('req.user after login:');
+            console.log(req.user);
+            console.log(req.isAuthenticated());
+            req.session.fullReload = true;
+            return res.renderSkin('계정 만들기', {
+                contentHtml: `<p>환영합니다! <b>${req.body.username}</b>님 계정 생성이 완료되었습니다.</p>`
+            });
+        }
     });
 });
 
@@ -233,6 +245,7 @@ PIN: <b>${user.emailPin}</b>
 });
 
 app.post('/member/login/pin',
+    middleware.isLogout,
     body('pin')
         .notEmpty()
         .withMessage('pin의 값은 필수입니다.')
@@ -290,6 +303,12 @@ app.get('/member/logout', middleware.isLogin, (req, res) => {
         if(err) console.error(err);
         req.session.fullReload = true;
         res.redirect('/');
+    });
+});
+
+app.get('/member/mypage', middleware.isLogin, (req, res) => {
+    res.renderSkin('내 정보', {
+        contentName: 'mypage'
     });
 });
 
