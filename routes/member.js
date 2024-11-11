@@ -7,6 +7,7 @@ const middleware = require('../utils/middleware');
 
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
+const LoginHistory = require('../schemas/loginHistory');
 
 const app = express.Router();
 
@@ -195,7 +196,21 @@ app.post('/member/login',
             alert: info.message
         });
 
+        const checkTrusted = await LoginHistory.findOne({
+            uuid: user.uuid,
+            ip: req.ip,
+            trusted: true
+        });
+        if(checkTrusted) return req.login(user, err => {
+            if(err) console.error(err);
+            if(!res.headersSent) {
+                req.session.fullReload = true;
+                return res.redirect(req.body.redirect || '/');
+            }
+        });
+
         req.session.pinUser = user.uuid;
+        req.session.redirect = req.body.redirect;
         renderPinVerification(res, {
             user
         });
@@ -252,12 +267,21 @@ app.post('/member/login/pin',
         });
     }
 
-    return req.login(user, err => {
+    req.login(user, err => {
         if(err) console.error(err);
         if(!res.headersSent) {
             req.session.fullReload = true;
-            return res.redirect(req.body.redirect || '/');
+            return res.redirect(req.session.redirect || '/');
         }
+    });
+
+    delete req.session.pinUser;
+    delete req.session.redirect;
+
+    await LoginHistory.create({
+        uuid: user.uuid,
+        ip: req.ip,
+        trusted: !!req.body.trust
     });
 });
 

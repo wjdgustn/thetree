@@ -22,7 +22,7 @@
 
     <div class="trust-block">
         <label class="trust-label">
-            <input class="trust-input" type="checkbox" name="trust" checked><span>이 기기를 신뢰</span>
+            <input class="trust-input" type="checkbox" name="trust"<%=user.totpToken ? '' : ' checked'%>><span>이 기기를 신뢰</span>
         </label>
     </div>
 
