@@ -93,11 +93,6 @@ const renderFinalSignup = (res, data = {}) => res.renderSkin('계정 만들기',
 });
 
 app.get('/member/signup/:token', async (req, res) => {
-    await SignupToken.create({
-        email: 'admin@hyonsu.com',
-        token: req.params.token,
-        ip: req.ip
-    });
     const token = await SignupToken.findOne({
         token: req.params.token
     });
