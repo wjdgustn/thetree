@@ -163,6 +163,11 @@ const renderLogin = (res, data = {}) => res.renderSkin('로그인', {
     contentName: 'login'
 });
 
+const renderPinVerification = (res, data = {}) => res.renderSkin('로그인', {
+    ...data,
+    contentName: 'pin_verification'
+});
+
 app.get('/member/login', middleware.isLogout, (req, res) => {
     renderLogin(res);
 });
@@ -181,7 +186,7 @@ app.post('/member/login',
         fieldErrors: result.array()
     });
 
-    passport.authenticate('local', (err, user, info) => {
+    passport.authenticate('local', async (err, user, info) => {
         if(err) {
             console.error(err);
             return res.status(500).send('서버 오류');
@@ -189,14 +194,71 @@ app.post('/member/login',
         if(!user) return renderLogin(res, {
             alert: info.message
         });
-        return req.login(user, err => {
-            if(err) console.error(err);
-            if(!res.headersSent) {
-                req.session.fullReload = true;
-                return res.redirect(req.body.redirect || '/');
-            }
+
+        req.session.pinUser = user.uuid;
+        renderPinVerification(res, {
+            user
+        });
+
+        if(!user.totpToken) await mailTransporter.sendMail({
+            from: config.smtp_sender,
+            to: user.email,
+            subject: `[${config.site_name}] 확인되지 않은 기기에서 로그인`,
+            html: `
+안녕하세요. ${config.site_name} 입니다.
+확인되지 않은 기기에서 로그인을 시도하셨습니다.
+본인이 맞다면 아래 PIN 번호를 입력해주세요.
+PIN: <b>${user.emailPin}</b>
+
+이 메일은 10분동안 유효합니다.
+요청 아이피: ${req.ip}
+        `.trim().replaceAll('\n', '<br>')
         });
     })(req, res, next);
+});
+
+app.post('/member/login/pin',
+    body('pin')
+        .notEmpty()
+        .withMessage('pin의 값은 필수입니다.')
+        .isLength(6)
+        .withMessage('pin의 값은 6글자여야 합니다.'),
+    async (req, res) => {
+    const user = await User.findOne({
+        uuid: req.session.pinUser,
+        lastLoginRequest: {
+            $gte: new Date(Date.now() - 1000 * 60 * 10)
+        }
+    });
+
+    if(!user) {
+        delete req.session.pinUser;
+        return renderLogin(res);
+    }
+
+    const result = validationResult(req);
+    if(!result.isEmpty()) return renderPinVerification(res, {
+        user,
+        alert: result.array()[0].msg
+    });
+
+    if(user.totpToken) {
+
+    }
+    else {
+        if(req.body.pin !== user.emailPin) return renderPinVerification(res, {
+            user,
+            alert: 'PIN이 올바르지 않습니다.'
+        });
+    }
+
+    return req.login(user, err => {
+        if(err) console.error(err);
+        if(!res.headersSent) {
+            req.session.fullReload = true;
+            return res.redirect(req.body.redirect || '/');
+        }
+    });
 });
 
 app.get('/member/logout', middleware.isLogin, (req, res) => {

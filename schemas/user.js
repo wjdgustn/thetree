@@ -46,6 +46,15 @@ const newSchema = new Schema({
     },
     apiToken: {
         type: String
+    },
+    emailPin: {
+        type: String
+    },
+    totpToken: {
+        type: String
+    },
+    lastLoginRequest: {
+        type: Date
     }
 });
 

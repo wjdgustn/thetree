@@ -1,0 +1,32 @@
+<style>
+    @import "/css/views/email_verification.css";
+</style>
+
+<%if(typeof alert !== 'undefined') {%>
+<div class="thetree-alert thetree-alert-danger">
+    <div class="thetree-alert-content">
+        <strong>[오류!]</strong>&nbsp; <span><%=alert%></span>
+    </div>
+</div>
+<%}%>
+
+<script src="/js/form_focus.js"></script>
+
+<form id="pinForm" method="post" action="/member/login/pin" data-focus="pin">
+    <p>확인되지 않은 기기에서 로그인하셨습니다.<br> 이메일(<b><%=user.email%></b>)로 전송된 PIN을 입력해주세요.</p>
+
+    <div class="pin-block">
+        <label class="pin-label" for="pinInput">PIN</label>
+        <input class="pin-input" type="text" inputmode="numeric" pattern="[0-9]*" id="pinInput" name="pin" maxlength="6">
+    </div>
+
+    <div class="trust-block">
+        <label class="trust-label">
+            <input class="trust-input" type="checkbox" name="trust" checked><span>이 기기를 신뢰</span>
+        </label>
+    </div>
+
+    <div class="login-block">
+        <button class="login-button">로그인</button>
+    </div>
+</form>

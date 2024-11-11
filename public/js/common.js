@@ -113,7 +113,7 @@ async function movePage(response, pushState = true) {
 }
 
 function replaceContent(html) {
-    if(!html.includes('<!DOCTYPE html>')) {
+    if(!html.includes('<!DOCTYPE html>') && html.includes('<')) {
         content.innerHTML = html;
         return true;
     }

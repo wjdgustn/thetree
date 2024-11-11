@@ -1,6 +1,8 @@
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
 
+const utils = require('../utils');
+
 const User = require('../schemas/user');
 
 module.exports = passport => {
@@ -9,11 +11,16 @@ module.exports = passport => {
         passwordField: 'password'
     }, async (email, password, done) => {
         try {
-            const exUser = await User.findOne({
+            const exUser = await User.findOneAndUpdate({
                 $or: [
                     { email },
                     { name: email }
                 ]
+            }, {
+                emailPin: utils.getRandomInt(0, 999999).toString().padStart(6, '0'),
+                lastLoginRequest: new Date()
+            }, {
+                new: true
             });
             if(exUser != null) {
                 const result = await bcrypt.compare(password, exUser.password);
