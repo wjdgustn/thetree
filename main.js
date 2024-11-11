@@ -10,6 +10,8 @@ const cheerio = require('cheerio');
 const compression = require('compression');
 const useragent = require('express-useragent');
 
+const utils = require('./utils');
+
 const globalUtils = require('./utils/global');
 
 global.publicConfig = {};
@@ -166,7 +168,10 @@ app.use((req, res, next) => {
                 title,
                 viewName: viewName ?? '',
                 menus: [],
-                data
+                data: utils.withoutKeys(data, [
+                    'contentName',
+                    'contentHtml'
+                ])
             },
             session: {
                 menus: [],
