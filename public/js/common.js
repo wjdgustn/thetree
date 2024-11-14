@@ -20,6 +20,8 @@ window.addEventListener('popstate', async e => {
 });
 
 const aClickHandler = async e => {
+    if(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
     const aElement = e.currentTarget;
 
     let href = aElement.getAttribute('href');
