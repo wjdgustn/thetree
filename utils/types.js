@@ -32,8 +32,8 @@ module.exports = {
     },
     ACLActionTypes: {
         Skip: -1,
-        Allow: 0,
-        Deny: 1,
+        Deny: 0,
+        Allow: 1,
         GotoNamespace: 2,
         GotoOtherNamespace: 3
     }

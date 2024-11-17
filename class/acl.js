@@ -132,6 +132,8 @@ module.exports = class ACL {
     }
 
     async check(aclType = ACLTypes.None, data = {}) {
+        if(aclType === ACLTypes.EditAcl && data?.permissions?.includes('nsacl')) return { result: true };
+
         let rules = this.aclTypes[aclType];
         if(!rules.length && this.namespaceACL) rules = this.namespaceACL.aclTypes[aclType];
 
@@ -139,20 +141,20 @@ module.exports = class ACL {
         for(let rule of rules) {
             if(rule.actionType === ACLActionTypes.Allow) allowedRules.push(rule);
 
-            const { result, aclGroupId } = await this.testRule(rule, data);
+            const { action, aclGroupId } = await this.testRule(rule, data);
 
-            if(result === ACLActionTypes.Allow) return { result };
-            else if(result === ACLActionTypes.Deny) {
+            if(action === ACLActionTypes.Allow) return { result: true };
+            else if(action === ACLActionTypes.Deny) {
                 let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupId)}이기 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
                 if(this.document) aclMessage += this.aclTabMessage;
 
                 return {
-                    result,
+                    result: false,
                     aclMessage
                 }
             }
-            else if(result === ACLActionTypes.GotoNamespace) return await rule.namespaceACL.check(aclType, data);
-            else if(result === ACLActionTypes.GotoOtherNamespace) return await rule.otherNamespaceACL.check(aclType, data);
+            else if(action === ACLActionTypes.GotoNamespace) return await rule.namespaceACL.check(aclType, data);
+            else if(action === ACLActionTypes.GotoOtherNamespace) return await rule.otherNamespaceACL.check(aclType, data);
         }
 
         if(allowedRules.length) {
