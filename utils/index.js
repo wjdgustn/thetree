@@ -12,5 +12,26 @@ module.exports = {
     getGravatar(email) {
         const hash = crypto.createHash('sha256').update(email).digest('hex');
         return `//secure.gravatar.com/avatar/${hash}?d=retro`;
+    },
+    parseDocumentName(name) {
+        const originalName = name;
+        const splitedName = originalName.split(':');
+        const probablyNamespace = splitedName.length > 1 ? splitedName[0] : null;
+        const namespaceExists = config.namespaces.includes(probablyNamespace);
+        const namespace = namespaceExists ? probablyNamespace : '문서';
+        const title = namespaceExists ? splitedName.slice(1).join(':') : originalName;
+
+        let forceShowNamespace = null;
+
+        const splitedTitle = title.split(':');
+        const splitedTitleNamespace = splitedTitle.length > 1 ? splitedTitle[0] : null;
+        if(config.namespaces.includes(splitedTitleNamespace)) forceShowNamespace = true;
+        else if(namespace === '문서') forceShowNamespace = false;
+
+        return {
+            namespace,
+            title,
+            forceShowNamespace
+        }
     }
 }

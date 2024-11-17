@@ -12,7 +12,7 @@ const LoginHistory = require('../schemas/loginHistory');
 
 const app = express.Router();
 
-app.get('/member/login', (req, res) => {
+app.get('/member/login', middleware.isLogout, (req, res) => {
     res.renderSkin('로그인', {
         contentName: 'login'
     });
@@ -181,6 +181,7 @@ const renderPinVerification = (res, data = {}) => res.renderSkin('로그인', {
 });
 
 app.get('/member/login', middleware.isLogout, (req, res) => {
+    console.log(`req.isAuthenticated(): ${req.isAuthenticated()}`);
     renderLogin(res);
 });
 

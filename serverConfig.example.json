@@ -2,6 +2,8 @@
   "sitenotice": "",
   "default_skin": "liberty",
 
+  "namespaces": ["위키운영"],
+
   "terms": "여기에 약관을 입력해주세요.",
 
   "email_whitelist": ["example.com"],

@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const uuid = require('uuid').v4;
+const crypto = require('crypto');
+
+const { UserTypes } = require('../utils/types');
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
@@ -8,37 +10,45 @@ const newSchema = new Schema({
         required: true,
         unique: true,
         index: true,
-        default: uuid
+        default: crypto.randomUUID
     },
     createdAt: {
         type: Date,
         required: true,
         default: Date.now
     },
+    type: {
+        type: Number,
+        required: true,
+        index: true,
+        default: UserTypes.Account,
+        min: Math.min(Object.values(UserTypes)),
+        max: Math.max(Object.values(UserTypes))
+    },
+    ip: {
+        type: String,
+        unique: true,
+        index: true
+    },
     email: {
         type: String,
-        required: true,
         unique: true,
         index: true
     },
     password: {
-        type: String,
-        required: true
+        type: String
     },
     name: {
         type: String,
-        required: true,
         unique: true,
         index: true
     },
     lastNameChange: {
         type: Date,
-        required: true,
         default: Date.now
     },
     permissions: {
         type: Array,
-        required: true,
         default: []
     },
     otpToken: {
@@ -46,7 +56,6 @@ const newSchema = new Schema({
     },
     skin: {
         type: String,
-        required: true,
         default: 'default'
     },
     apiToken: {

@@ -10,6 +10,7 @@ const compression = require('compression');
 const useragent = require('express-useragent');
 
 const utils = require('./utils');
+const types = require('./utils/types');
 
 const globalUtils = require('./utils/global');
 
@@ -20,7 +21,17 @@ Object.defineProperty(global, 'config', {
     get() {
         return {
             ...global.publicConfig,
-            ...global.serverConfig
+            ...global.serverConfig,
+            namespaces: [...new Set([
+                '문서',
+                '틀',
+                '분류',
+                '파일',
+                '사용자',
+                publicConfig.site_name,
+                '휴지통',
+                ...(global.serverConfig.namespaces ?? [])
+            ])]
         }
     }
 });
@@ -115,6 +126,10 @@ app.use((req, res, next) => {
     app.locals.path = path;
     app.locals.dayjs = dayjs;
 
+    for(let t in types) {
+        app.locals[t] = types[t];
+    }
+
     app.locals.__dirname = __dirname;
 
     app.locals.req = req;
@@ -159,29 +174,50 @@ app.use((req, res, next) => {
             delete req.session.fullReload;
         }
 
+        const page = {
+            title,
+            viewName: viewName ?? '',
+            menus: [],
+            data: utils.withoutKeys(data, [
+                'contentName',
+                'contentHtml',
+                'serverData'
+            ])
+        }
+
+        const session = {
+            menus: [],
+            account: {
+                name: req.user?.name ?? req.ip,
+                uuid: req.user?.uuid,
+                type: Number(req.isAuthenticated())
+            },
+            gravatar_url: req.user?.avatar,
+            user_document_discuss: null,
+            quick_block: false
+        }
+
+        const browserGlobalVarScript = `
+<script id="initScript">
+window.CONFIG = ${JSON.stringify(publicConfig)}
+window.page = ${JSON.stringify(page)}
+window.session = ${JSON.stringify(session)}
+
+window.defaultConfig = {
+    'wiki.theme': 'auto'
+}
+
+document.getElementById('initScript').remove();
+</script>
+        `.trim();
+
         app.render('main', {
             ...data,
+            ...(data.serverData ?? {}),
             skin,
-            page: {
-                title,
-                viewName: viewName ?? '',
-                menus: [],
-                data: utils.withoutKeys(data, [
-                    'contentName',
-                    'contentHtml'
-                ])
-            },
-            session: {
-                menus: [],
-                account: {
-                    name: req.user?.name ?? req.ip,
-                    uuid: req.user?.uuid,
-                    type: Number(req.isAuthenticated())
-                },
-                gravatar_url: req.user?.avatar,
-                user_document_discuss: null,
-                quick_block: false
-            }
+            page,
+            session,
+            browserGlobalVarScript
         }, (err, html) => {
             if(err) {
                 console.error(err);
@@ -190,7 +226,7 @@ app.use((req, res, next) => {
 
             if(sendOnlyContent) {
                 const $ = cheerio.load(html);
-                res.send($('#content').html());
+                res.send(browserGlobalVarScript + $('#content').html());
             }
             else res.send(html);
         });

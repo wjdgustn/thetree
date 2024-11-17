@@ -14,8 +14,7 @@ document.addEventListener('alpine:initialized', () => {
     setupPjax();
 });
 
-window.addEventListener('popstate', async e => {
-    console.log(e.state);
+window.addEventListener('popstate', async _ => {
     await movePage(document.location.href, false);
 });
 
@@ -115,23 +114,32 @@ async function movePage(response, pushState = true) {
 }
 
 function replaceContent(html) {
+    let result = false;
+
     if(html.includes('<!DOCTYPE html>')) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
 
         document.body.innerHTML = doc.body.innerHTML;
-        console.log('full body replace');
-        console.log(doc.body.innerHTML);
-        return true;
+        result = true;
     }
     else {
         if(html.includes('<')) {
             content.innerHTML = html;
-            return true;
+            result = true;
         }
     }
 
-    return false;
+    if(result) {
+        const initScript = document.getElementById('initScript');
+        if(initScript) {
+            eval(initScript.textContent);
+            State.page = page;
+            State.session = session;
+        }
+    }
+
+    return result;
 
     // const parser = new DOMParser();
     // const doc = parser.parseFromString(html, 'text/html');
