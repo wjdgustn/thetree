@@ -61,7 +61,7 @@
                             <td><%=rule.order + 1%></td>
                             <td><%=ACL.ruleToConditionString(rule)%></td>
                             <td><%=ACL.actionToString(rule)%></td>
-                            <td><%-rule.expiresAt ? globalUtils.getFullDateTag(rule.expiresAt) : '영구'%></td>
+                            <td><%-rule.expiresAt ? getFullDateTag(rule.expiresAt) : '영구'%></td>
                             <td><a href="/test?acl=<%=rule.uuid%>" class="acl-delete-button thetree-square-button thetree-danger-button">삭제</a></td>
                         </tr>
                     <%}%>

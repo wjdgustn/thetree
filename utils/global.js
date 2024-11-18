@@ -46,7 +46,7 @@ module.exports = {
     getFullDateTag(date) {
         const dateObj = dayjs(date);
         const isoStr = dateObj.toISOString();
-        const dateStr = date.format('YYYY-MM-DD HH:mm:ss');
+        const dateStr = dateObj.format('YYYY-MM-DD HH:mm:ss');
 
         return `<time datetime="${isoStr}">${dateStr}</time>`;
     }
