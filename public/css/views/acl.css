@@ -1,0 +1,97 @@
+@scope (#content-style) {
+    .nav-block {
+        margin-left: calc(var(--article-padding-x, 0) * -1);
+        margin-right: calc(var(--article-padding-x, 0) * -1);
+        position: relative;
+    }
+
+    .nav-block-line {
+        overflow-x: auto;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .nav-block-content {
+        display: inline-block;
+        margin: 0 calc(var(--article-padding-x, 0) / 2);
+    }
+
+    .nav-block-content-ul {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        position: relative;
+    }
+
+    .nav-link {
+        color: var(--light-text-color, var(--text-color, #212529)) !important;
+        display: inline-block;
+        padding: .5rem .75rem;
+        position: relative;
+        text-align: center;
+        text-decoration: none;
+        white-space: nowrap;
+        width: 100%;
+    }
+
+    .nav-link:after {
+        background-color: var(--navigation-item-underline-color, transparent);
+        bottom: 0;
+        content: "";
+        height: 4px;
+        left: 1rem;
+        pointer-events: none;
+        position: absolute;
+        right: 1rem;
+    }
+
+    .nav-link-selected {
+        --navigation-item-underline-color: var(--brand-bright-color-1, #d5d5d5);
+        color: var(--brand-color-1, #bcbcbc) !important;
+        font-weight: 600;
+    }
+
+    .title {
+        color: inherit;
+        font-family: inherit;
+        font-size: 1.4em;
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 1.2em 0 .8em;
+    }
+
+    .table {
+        background-color: transparent;
+        border-collapse: collapse;
+        border-spacing: 0;
+        margin-bottom: 1rem;
+        white-space: nowrap;
+    }
+
+    .table-elements {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .table-block {
+        overflow-x: auto;
+    }
+
+    table td, table th {
+        padding: .5rem .7rem !important;
+    }
+
+    table th {
+        border-bottom: 2px solid #eceeef;
+        text-align: left;
+        vertical-align: bottom;
+    }
+
+    table td {
+        cursor: move;
+    }
+
+    table tr:last-of-type td {
+        border-bottom: 1px solid #eceeef;
+    }
+}

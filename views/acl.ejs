@@ -1,1 +1,104 @@
-make acl editor here
+<style>
+    @import "/css/views/acl.css";
+</style>
+
+<script src="/js/acl.js"></script>
+
+<div class="nav-block">
+    <div class="nav-block-line">
+        <div class="nav-block-content">
+            <ul class="nav-block-content-ul">
+                <li><a class="nav-link" href="#document">문서 ACL</a></li>
+                <li><a class="nav-link" href="#namespace">이름공간 ACL</a></li>
+            </ul>
+        </div>
+    </div>
+    <%# invisible gradient not implemented %>
+</div>
+
+<div class="nav-block" style="margin-top: 0.5rem;">
+    <div class="nav-block-line">
+        <div class="nav-block-content">
+            <ul class="nav-block-content-ul">
+                <%for(let [key, value] of Object.entries(ACLTypes).slice(1)) {%>
+                    <li><a class="nav-link" href="#document.<%=utils.camelToSnakeCase(key)%>"><%=ACL.aclTypeToString(value)%></a></li>
+                <%}%>
+            </ul>
+        </div>
+    </div>
+    <%# invisible gradient not implemented %>
+</div>
+
+<div>
+    <h4 class="title">읽기</h4>
+
+    <div class="table-elements table-block">
+        <table class="table-elements table">
+            <colgroup>
+                <col style="width: 60px;">
+                <col>
+                <col style="width: 80px;">
+                <col style="width: 200px;">
+                <col style="width: 60px;">
+            </colgroup>
+
+            <thead>
+            <tr>
+                <th>No</th>
+                <th>Condition</th>
+                <th>Action</th>
+                <th>Expiration</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr>
+                <td>1</td>
+                <td>perm:any</td>
+                <td>허용</td>
+                <td>영구</td>
+                <td></td>
+            </tr>
+<!--            <tr>-->
+<!--                <td>2</td>-->
+<!--                <td>perm:test</td>-->
+<!--                <td>거부</td>-->
+<!--                <td>영구</td>-->
+<!--                <td></td>-->
+<!--            </tr>-->
+<!--            <tr>-->
+<!--                <td>3</td>-->
+<!--                <td>perm:asdf</td>-->
+<!--                <td>거부</td>-->
+<!--                <td>영구</td>-->
+<!--                <td></td>-->
+<!--            </tr>-->
+<!--            <tr>-->
+<!--                <td>4</td>-->
+<!--                <td>perm:sans</td>-->
+<!--                <td>거부</td>-->
+<!--                <td>영구</td>-->
+<!--                <td></td>-->
+<!--            </tr>-->
+<!--            <tr>-->
+<!--                <td>5</td>-->
+<!--                <td>perm:qwer</td>-->
+<!--                <td>거부</td>-->
+<!--                <td>영구</td>-->
+<!--                <td></td>-->
+<!--            </tr>-->
+            </tbody>
+
+<!--            <tbody style="display: none;">-->
+<!--            <tr draggable="true">-->
+<!--                <td>1</td>-->
+<!--                <td>aclgroup:차단된 사용자</td>-->
+<!--                <td>거부</td>-->
+<!--                <td>영구</td>-->
+<!--                <td></td>-->
+<!--            </tr>-->
+<!--            </tbody>-->
+        </table>
+    </div>
+</div>

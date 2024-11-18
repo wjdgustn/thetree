@@ -24,7 +24,7 @@ const aClickHandler = async e => {
     const aElement = e.currentTarget;
 
     let href = aElement.getAttribute('href');
-    if(!href || href === '#') return;
+    if(!href || href.startsWith('#')) return;
 
     const fullUrl = new URL(aElement.href);
     if(fullUrl.origin !== window.location.origin) return;

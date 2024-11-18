@@ -10,9 +10,10 @@ const compression = require('compression');
 const useragent = require('express-useragent');
 
 const utils = require('./utils');
+const globalUtils = require('./utils/global');
 const types = require('./utils/types');
 
-const globalUtils = require('./utils/global');
+const ACL = require('./class/acl');
 
 global.publicConfig = {};
 global.serverConfig = {};
@@ -130,6 +131,8 @@ app.use((req, res, next) => {
         app.locals[t] = types[t];
     }
 
+    app.locals.ACL = ACL;
+
     app.locals.__dirname = __dirname;
 
     app.locals.req = req;
@@ -137,9 +140,10 @@ app.use((req, res, next) => {
     app.locals.env = process.env;
     app.locals.config = config;
 
-    app.locals = {
-        ...app.locals,
-        ...globalUtils
+    app.locals.utils = utils;
+
+    for(let util in globalUtils) {
+        app.locals[util] = globalUtils[util];
     }
 
     req.permissions = req.user?.permissions ?? [];

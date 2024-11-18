@@ -81,7 +81,7 @@ module.exports = class ACL {
             [ACLTypes.CreateThread]: '토론 생성',
             [ACLTypes.WriteThreadComment]: '토론 댓글',
             [ACLTypes.EditRequest]: '편집 요청',
-            [ACLTypes.EditAcl]: 'ACL'
+            [ACLTypes.ACL]: 'ACL'
         }[aclType];
     }
 
@@ -132,7 +132,7 @@ module.exports = class ACL {
     }
 
     async check(aclType = ACLTypes.None, data = {}) {
-        if(aclType === ACLTypes.EditAcl && data?.permissions?.includes('nsacl')) return { result: true };
+        if(aclType === ACLTypes.ACL && data?.permissions?.includes('nsacl')) return { result: true };
 
         let rules = this.aclTypes[aclType];
         if(!rules.length && this.namespaceACL) rules = this.namespaceACL.aclTypes[aclType];

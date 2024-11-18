@@ -21,7 +21,7 @@ module.exports = {
         CreateThread: 4,
         WriteThreadComment: 5,
         EditRequest: 6,
-        EditAcl: 7
+        ACL: 7
     },
     ACLConditionTypes: {
         Permission: 0,
