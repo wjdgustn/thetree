@@ -37,7 +37,7 @@ app.get('/w/*', async (req, res) => {
             ]
         },
         rev: parseInt(req.query.rev) ?? undefined
-    });
+    }).sort({ rev: -1 });
 
     let acl;
     if(dbDocument) acl = await ACL.get({ document: dbDocument.uuid }, document);
@@ -57,14 +57,14 @@ app.get('/w/*', async (req, res) => {
         uuid: null
     }
 
-    const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, document);
+    const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.renderSkin(undefined, {
         ...defaultData,
         date: null,
         contentHtml: `<h2>${read_acl_message}</h2>`
     });
 
-    const { result: editable, aclMessage: edit_acl_message } = await acl.check(ACLTypes.Edit, document);
+    const { result: editable, aclMessage: edit_acl_message } = await acl.check(ACLTypes.Edit, req.aclData);
     defaultData.editable = editable;
     defaultData.edit_acl_message = edit_acl_message;
 

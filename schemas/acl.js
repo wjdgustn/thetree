@@ -24,19 +24,18 @@ const newSchema = new Schema({
         type: Number,
         required: true,
         default: ACLTypes.None,
-        min: Math.min(Object.values(ACLTypes)),
-        max: Math.max(Object.values(ACLTypes))
+        min: Math.min(...Object.values(ACLTypes)),
+        max: Math.max(...Object.values(ACLTypes))
     },
     order: {
         type: Number,
-        required: true,
         min: 0
     },
     conditionType: {
         type: Number,
         required: true,
-        min: Math.min(Object.values(ACLConditionTypes)),
-        max: Math.max(Object.values(ACLConditionTypes))
+        min: Math.min(...Object.values(ACLConditionTypes)),
+        max: Math.max(...Object.values(ACLConditionTypes))
     },
     conditionContent: {
         type: String,
@@ -45,27 +44,14 @@ const newSchema = new Schema({
     actionType: {
         type: Number,
         required: true,
-        min: Math.min(Object.values(ACLActionTypes)),
-        max: Math.max(Object.values(ACLActionTypes))
+        min: Math.min(...Object.values(ACLActionTypes)),
+        max: Math.max(...Object.values(ACLActionTypes))
     },
     actionContent: {
         type: String
     },
     expiresAt: {
         type: Date
-    }
-});
-
-newSchema.index({ document: 1, type: 1 }, {
-    unique: true,
-    partialFilterExpression: {
-        document: { $exists: true }
-    }
-});
-newSchema.index({ namespace: 1, type: 1 }, {
-    unique: true,
-    partialFilterExpression: {
-        namespace: { $exists: true }
     }
 });
 
@@ -83,6 +69,8 @@ newSchema.pre('save', async function() {
         }).sort({ order: -1 });
         this.order = last ? last.order + 1 : 0;
     }
+
+    if(this.expiresAt === 0) this.expiresAt = undefined;
 });
 
 const model = mongoose.model('ACL', newSchema);

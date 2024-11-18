@@ -231,23 +231,6 @@ document.addEventListener('alpine:init', () => {
     }));
 
     Alpine.data('recent', () => ({
-        recent: [{"document":"냥냥냥","status":"normal","date":1730462638},{"document":"A","status":"normal","date":1730461011}],
-        getDateStr(date) {
-            date = date * 1000;
-            const now = Date.now();
-            const dateObj = new Date(date);
-            const olderThanToday = (now - 1000 * 60 * 60 * 24) > date;
-            return (olderThanToday
-                ? [
-                    dateObj.getFullYear(),
-                    dateObj.getMonth() + 1,
-                    dateObj.getDate()
-                ]
-                : [
-                    dateObj.getHours(),
-                    dateObj.getMinutes(),
-                    dateObj.getSeconds()
-                ]).map(a => a.toString().padStart(2, '0')).join(olderThanToday ? '/' : ':');
-        }
+        recent: [{"document":"냥냥냥","status":"normal","date":1730462638},{"document":"A","status":"normal","date":1730461011}]
     }));
 });

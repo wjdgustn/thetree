@@ -164,6 +164,12 @@ app.use((req, res, next) => {
     //  contributor(using revision history)
     //  match_username_and_document_title(at document middleware)
 
+    req.aclData = {
+        permissions: req.permissions,
+        user: req.user,
+        ip: req.ip
+    }
+
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
     res.renderSkin = (title, data = {}) => {

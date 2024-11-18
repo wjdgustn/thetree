@@ -24,8 +24,8 @@ module.exports = {
         ACL: 7
     },
     ACLConditionTypes: {
-        Permission: 0,
-        User: 1,
+        Perm: 0,
+        Member: 1,
         IP: 2,
         GeoIP: 3,
         ACLGroup: 4
@@ -34,7 +34,34 @@ module.exports = {
         Skip: -1,
         Deny: 0,
         Allow: 1,
-        GotoNamespace: 2,
-        GotoOtherNamespace: 3
-    }
+        GotoNS: 2,
+        GotoOtherNS: 3
+    },
+    GrantablePermissions: [
+        'delete_thread',
+        'admin',
+        'update_thread_status',
+        'nsacl',
+        'hide_thread_comment',
+        'grant',
+        'no_force_captcha',
+        'login_history',
+        'update_thread_document',
+        'update_thread_topic',
+        'aclgroup',
+        'api_access'
+    ],
+    DevPermissions: [
+        'developer',
+        'hideip'
+    ],
+    ACLPermissions: [
+        'any',
+        'member',
+        'admin',
+        'member_signup_15days_ago',
+        'document_contributor',
+        'match_username_and_document_title',
+        'ip'
+    ]
 }

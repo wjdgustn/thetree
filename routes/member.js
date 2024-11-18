@@ -159,9 +159,6 @@ app.post('/member/signup/:token',
     }, err => {
         if(err) console.error(err);
         if(!res.headersSent) {
-            console.log('req.user after login:');
-            console.log(req.user);
-            console.log(req.isAuthenticated());
             req.session.fullReload = true;
             return res.renderSkin('계정 만들기', {
                 contentHtml: `<p>환영합니다! <b>${req.body.username}</b>님 계정 생성이 완료되었습니다.</p>`

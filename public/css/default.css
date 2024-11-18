@@ -41,7 +41,7 @@
     fill: currentColor;
 }
 
-a.thetree-link-button {
+a.thetree-square-button, button.thetree-square-button {
     background-color: white;
     border: .0625rem solid #ccc;
     color: #373a3c !important;
@@ -91,7 +91,7 @@ a.thetree-link-button {
     background-color: #4078cd;
 }
 
-.thetree-link-button:not([disabled]):hover {
+.thetree-square-button:not([disabled]):hover {
     background-color: #e6e6e6;
     border-color: #adadad;
 }
@@ -102,16 +102,26 @@ button.thetree-blue-button {
     color: white !important;
 }
 
+button.thetree-blue-button:not([disabled]):hover {
+    background-color: #025aa5;
+    border-color: #01549b;
+}
+
 a.thetree-mint-button {
     background-color: #5bc0de;
     border-color: #5bc0de;
     color: white !important;
 }
 
-button.thetree-danger-button {
-    background-color: #d9534f;
-    border-color: #d9534f;
+a.thetree-danger-button, button.thetree-danger-button {
+    background-color: #d9534f !important;
+    border-color: #d9534f !important;
     color: white !important;
+}
+
+a.thetree-danger-button:hover, button.thetree-danger-button:hover {
+    background-color: #c9302c !important;
+    border-color: #c12e2a !important;
 }
 
 [role=button], a, area, button, input, label, select, summary, textarea {

@@ -19,18 +19,25 @@ module.exports = class ACL {
     static async get(filter = {}, document = null) {
         const rules = await ACLModel.find({
             ...filter,
-            expiresAt: {
-                $gte: new Date()
-            }
+            $or: [
+                {
+                    expiresAt: {
+                        $gte: new Date()
+                    }
+                },
+                {
+                    expiresAt: null
+                }
+            ]
         }).sort({ order: 1 }).lean();
 
         let namespaceACL;
-        if(document.namespace && filter.document) namespaceACL = await this.get({
+        if(document.namespace && !filter.namespace) namespaceACL = await this.get({
             namespace: document.namespace
         }, document);
 
         for(let rule of rules) {
-            if(rule.conditionType === ACLConditionTypes.User) {
+            if(rule.conditionType === ACLConditionTypes.Member) {
                 rule.user = await User.findOne({
                     uuid: rule.conditionContent
                 }).lean();
@@ -41,12 +48,12 @@ module.exports = class ACL {
                 });
             }
 
-            if(rule.actionType === ACLActionTypes.GotoNamespace) {
+            if(rule.actionType === ACLActionTypes.GotoNS) {
                 if(document) rule.namespaceACL = await this.get({
                     namespace: document.namespace
                 });
             }
-            else if(rule.actionType === ACLActionTypes.GotoOtherNamespace) {
+            else if(rule.actionType === ACLActionTypes.GotoOtherNS) {
                 rule.otherNamespaceACL = await this.get({
                     namespace: rule.actionContent
                 });
@@ -98,11 +105,21 @@ module.exports = class ACL {
         return `${withPrefix && permission === result ? 'perm:' : ''}${result}`;
     }
 
+    static conditionToString(condition) {
+        return {
+            [ACLConditionTypes.Perm]: '권한',
+            [ACLConditionTypes.Member]: '사용자',
+            [ACLConditionTypes.IP]: '아이피',
+            [ACLConditionTypes.GeoIP]: 'GeoIP',
+            [ACLConditionTypes.ACLGroup]: 'ACL그룹'
+        }[condition];
+    }
+
     static ruleToRequiredString(rule) {
-        if(rule.conditionType === ACLConditionTypes.Permission) {
+        if(rule.conditionType === ACLConditionTypes.Perm) {
             return ACL.permissionToString(rule.conditionContent, true)
         }
-        else if(rule.conditionType === ACLConditionTypes.User) {
+        else if(rule.conditionType === ACLConditionTypes.Member) {
             return `특정 사용자`
         }
         else if(rule.conditionType === ACLConditionTypes.IP) {
@@ -117,18 +134,33 @@ module.exports = class ACL {
     }
 
     static ruleToDenyString(rule, aclGroupId = 0) {
-        if(rule.conditionType === ACLConditionTypes.Permission) {
-            return `${ACL.permissionToString(rule.conditionContent)}이기`
-        }
-        else if(rule.conditionType === ACLConditionTypes.User) {
-            return `user:${rule.user.username}이기`
-        }
-        else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
+        if(rule.conditionType === ACLConditionTypes.ACLGroup) {
             return `ACL그룹 ${rule.aclGroup.name} #${aclGroupId}에 있기`
         }
         else {
-            return `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${rule.conditionContent}이기`
+            return `${ACL.ruleToConditionString(rule)}이기`
         }
+    }
+
+    static ruleToConditionString(rule) {
+        if(rule.conditionType === ACLConditionTypes.Perm) {
+            return `${ACL.permissionToString(rule.conditionContent)}`
+        }
+        else if(rule.conditionType === ACLConditionTypes.Member) {
+            return `user:${rule.user.name}`
+        }
+        else {
+            return `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${rule.conditionContent}`;
+        }
+    }
+
+    static actionToString(ruleOrActionType) {
+        return {
+            [ACLActionTypes.Deny]: `거부`,
+            [ACLActionTypes.Allow]: `허용`,
+            [ACLActionTypes.GotoNS]: `이름공간ACL 실행`,
+            [ACLActionTypes.GotoOtherNS]: `${ruleOrActionType.actionContent ?? '다른 이름공간'} ACL 실행`
+        }[typeof ruleOrActionType === 'object' ? ruleOrActionType.actionType : ruleOrActionType];
     }
 
     async check(aclType = ACLTypes.None, data = {}) {
@@ -145,7 +177,7 @@ module.exports = class ACL {
 
             if(action === ACLActionTypes.Allow) return { result: true };
             else if(action === ACLActionTypes.Deny) {
-                let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupId)}이기 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
+                let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupId)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
                 if(this.document) aclMessage += this.aclTabMessage;
 
                 return {
@@ -153,8 +185,8 @@ module.exports = class ACL {
                     aclMessage
                 }
             }
-            else if(action === ACLActionTypes.GotoNamespace) return await rule.namespaceACL.check(aclType, data);
-            else if(action === ACLActionTypes.GotoOtherNamespace) return await rule.otherNamespaceACL.check(aclType, data);
+            else if(action === ACLActionTypes.GotoNS) return await rule.namespaceACL.check(aclType, data);
+            else if(action === ACLActionTypes.GotoOtherNS) return await rule.otherNamespaceACL.check(aclType, data);
         }
 
         if(allowedRules.length) {
@@ -185,12 +217,20 @@ module.exports = class ACL {
 
         const action = rule.actionType;
 
-        if(rule.conditionType === ACLConditionTypes.User) {
+        if(rule.conditionType === ACLConditionTypes.Perm) {
+            if(rule.conditionContent === 'any') return { action };
+
+            if(!data.permissions) return ACLActionTypes.Skip;
+            if(data.permissions.includes(rule.conditionContent)) return { action };
+        }
+        else if(rule.conditionType === ACLConditionTypes.Member) {
             if(!rule.user) return ACLActionTypes.Skip;
 
             if(data.user?.uuid === rule.user.uuid) return { action };
         }
         else if(rule.conditionType === ACLConditionTypes.IP) {
+            if(!data.ip) return ACLActionTypes.Skip;
+
             const requestIsV4 = Address4.isValid(data.ip);
             const targetIsV4 = Address4.isValid(rule.conditionContent);
 
@@ -210,8 +250,12 @@ module.exports = class ACL {
             }
         }
         else if(rule.conditionType === ACLConditionTypes.GeoIP) {
-            const { country } = ipLookup(data.ip);
-            if(country === rule.conditionContent) return { action };
+            if(!data.ip) return ACLActionTypes.Skip;
+
+            const lookupResult = ipLookup(data.ip);
+            if(!lookupResult) return ACLActionTypes.Skip;
+
+            if(lookupResult.country === rule.conditionContent) return { action };
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
             if(!rule.aclGroup) return { action: ACLActionTypes.Skip };

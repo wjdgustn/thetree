@@ -1,3 +1,5 @@
+const dayjs = require('dayjs');
+
 module.exports = {
     doc_fulltitle(document) {
         const type = typeof document;
@@ -24,5 +26,28 @@ module.exports = {
             str += Object.keys(query).map(k => `${k}=${query[k]}`).join('&');
         }
         return str;
+    },
+    getDateStr(date) {
+        const now = Date.now();
+        const dateObj = new Date(date);
+        const olderThanToday = (now - 1000 * 60 * 60 * 24) > date;
+        return (olderThanToday
+            ? [
+                dateObj.getFullYear(),
+                dateObj.getMonth() + 1,
+                dateObj.getDate()
+            ]
+            : [
+                dateObj.getHours(),
+                dateObj.getMinutes(),
+                dateObj.getSeconds()
+            ]).map(a => a.toString().padStart(2, '0')).join(olderThanToday ? '/' : ':');
+    },
+    getFullDateTag(date) {
+        const dateObj = dayjs(date);
+        const isoStr = dateObj.toISOString();
+        const dateStr = date.format('YYYY-MM-DD HH:mm:ss');
+
+        return `<time datetime="${isoStr}">${dateStr}</time>`;
     }
 }

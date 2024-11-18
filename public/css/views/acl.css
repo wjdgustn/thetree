@@ -94,4 +94,8 @@
     table tr:last-of-type td {
         border-bottom: 1px solid #eceeef;
     }
+
+    .acl-delete-button {
+        display: inline !important;
+    }
 }

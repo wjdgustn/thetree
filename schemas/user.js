@@ -22,8 +22,8 @@ const newSchema = new Schema({
         required: true,
         index: true,
         default: UserTypes.Account,
-        min: Math.min(Object.values(UserTypes)),
-        max: Math.max(Object.values(UserTypes))
+        min: Math.min(...Object.values(UserTypes)),
+        max: Math.max(...Object.values(UserTypes))
     },
     ip: {
         type: String,

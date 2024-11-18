@@ -10,13 +10,13 @@
     color: #eec0c0;
 }
 
-.theseed-dark-mode .thetree-link-button {
+.theseed-dark-mode .thetree-square-button {
     background-color: #27292d;
     border-color: #383b40;
     color: #ddd !important;
 }
 
-.theseed-dark-mode .thetree-link-button:not([disabled]):hover {
+.theseed-dark-mode .thetree-square-button:not([disabled]):hover {
     background-color: #2d2f34;
     border-color: #383b40;
 }

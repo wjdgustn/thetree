@@ -52,53 +52,80 @@
             </tr>
             </thead>
 
-            <tbody>
-            <tr>
-                <td>1</td>
-                <td>perm:any</td>
-                <td>허용</td>
-                <td>영구</td>
-                <td></td>
-            </tr>
-<!--            <tr>-->
-<!--                <td>2</td>-->
-<!--                <td>perm:test</td>-->
-<!--                <td>거부</td>-->
-<!--                <td>영구</td>-->
-<!--                <td></td>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <td>3</td>-->
-<!--                <td>perm:asdf</td>-->
-<!--                <td>거부</td>-->
-<!--                <td>영구</td>-->
-<!--                <td></td>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <td>4</td>-->
-<!--                <td>perm:sans</td>-->
-<!--                <td>거부</td>-->
-<!--                <td>영구</td>-->
-<!--                <td></td>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <td>5</td>-->
-<!--                <td>perm:qwer</td>-->
-<!--                <td>거부</td>-->
-<!--                <td>영구</td>-->
-<!--                <td></td>-->
-<!--            </tr>-->
-            </tbody>
-
-<!--            <tbody style="display: none;">-->
-<!--            <tr draggable="true">-->
-<!--                <td>1</td>-->
-<!--                <td>aclgroup:차단된 사용자</td>-->
-<!--                <td>거부</td>-->
-<!--                <td>영구</td>-->
-<!--                <td></td>-->
-<!--            </tr>-->
-<!--            </tbody>-->
+            <%for(let [key, value] of Object.entries(ACLTypes).slice(1)) {%>
+                <%const rulesGroup = [acl?.aclTypes[value] ?? [], namespaceACL?.aclTypes[value] ?? []];%>
+                <%for(let i in rulesGroup) {%>
+                    <tbody id="<%=i === '1' ? 'ns' : ''%>acl-<%=utils.camelToSnakeCase(key)%>">
+                    <%for(let rule of rulesGroup[i]) {%>
+                        <tr data-rule="<%=rule.uuid%>">
+                            <td><%=rule.order + 1%></td>
+                            <td><%=ACL.ruleToConditionString(rule)%></td>
+                            <td><%=ACL.actionToString(rule)%></td>
+                            <td><%-rule.expiresAt ? globalUtils.getFullDateTag(rule.expiresAt) : '영구'%></td>
+                            <td><a href="/test?acl=<%=rule.uuid%>" class="acl-delete-button thetree-square-button thetree-danger-button">삭제</a></td>
+                        </tr>
+                    <%}%>
+                    </tbody>
+                <%}%>
+            <%}%>
         </table>
+
+        <form method="post">
+            <div class="form-inline">
+                <div class="form-group">
+                    <label class="form-control-label">Condition</label>
+                    <div>
+                        <select class="form-control">
+                            <%for(let [key, value] of Object.entries(ACLConditionTypes)) {%>
+                            <option value="<%=utils.camelToSnakeCase(key)%>"><%=ACL.conditionToString(value)%></option>
+                            <%}%>
+                        </select>
+
+                        <select class="form-control">
+                            <%for(let perm of ACLPermissions) {%>
+                            <option value="<%=perm%>"><%=ACL.permissionToString(perm)%></option>
+                            <%}%>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-control-label">Action :</label>
+                    <div>
+                        <select class="form-control">
+                            <%for(let [key, value] of Object.entries(ACLActionTypes).slice(1, req.permissions.includes('developer') ? undefined : -1)) {%>
+                            <option value="<%=utils.camelToSnakeCase(key)%>"><%=ACL.actionToString(value)%></option>
+                            <%}%>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-control-label">Duration :</label>
+                    <div>
+                        <select class="form-control">
+                            <option value="0">영구</option>
+                            <option value="60">1분</option>
+                            <option value="300">5분</option>
+                            <option value="600">10분</option>
+                            <option value="1800">30분</option>
+                            <option value="3600">1시간</option>
+                            <option value="7200">2시간</option>
+                            <option value="86400">하루</option>
+                            <option value="259200">3일</option>
+                            <option value="432000">5일</option>
+                            <option value="604800">7일</option>
+                            <option value="1209600">2주</option>
+                            <option value="1814400">3주</option>
+                            <option value="2592000">1개월</option>
+                            <option value="15552000">6개월</option>
+                            <option value="29030400">1년</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="thetree-square-button thetree-blue-button">추가</button>
+            </div>
+        </form>
     </div>
 </div>

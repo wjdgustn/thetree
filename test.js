@@ -1,6 +1,9 @@
 require('dotenv').config();
 require('./schemas')();
 
+const { ACLTypes, ACLConditionTypes, ACLActionTypes } = require('./utils/types');
+
+const ACL = require('./schemas/acl');
 const ACLGroupItem = require('./schemas/aclGroupItem');
 
 (async () => {
@@ -9,16 +12,16 @@ const ACLGroupItem = require('./schemas/aclGroupItem');
     //     ip: '58.230.143.51/16'
     // });
 
-    const targetip = [58, 230, 143, 51];
-
-    const test = await ACLGroupItem.findOne({
-        ipMin: {
-            $lte: targetip
-        },
-        ipMax: {
-            $gte: targetip
-        }
-    });
+    // const targetip = [58, 230, 143, 51];
+    //
+    // const test = await ACLGroupItem.findOne({
+    //     ipMin: {
+    //         $lte: targetip
+    //     },
+    //     ipMax: {
+    //         $gte: targetip
+    //     }
+    // });
 
     // const test = await ACLGroupItem.findOne({
     //     ['ipMin.0']: {
@@ -46,7 +49,47 @@ const ACLGroupItem = require('./schemas/aclGroupItem');
     //         $gte: targetip[3]
     //     }
     // });
-    console.log(test);
+    // console.log(test);
+
+    // await ACL.create({
+    //     namespace: '테스트위키',
+    //     type: ACLTypes.Read,
+    //     conditionType: ACLConditionTypes.Perm,
+    //     conditionContent: 'any',
+    //     actionType: ACLActionTypes.Allow
+    // });
+
+    // await ACL.create({
+    //     namespace: '테스트위키',
+    //     type: ACLTypes.Read,
+    //     conditionType: ACLConditionTypes.GeoIP,
+    //     conditionContent: 'CN',
+    //     actionType: ACLActionTypes.Deny
+    // });
+    //
+    // await ACL.create({
+    //     namespace: '테스트위키',
+    //     type: ACLTypes.Read,
+    //     conditionType: ACLConditionTypes.IP,
+    //     conditionContent: '::1',
+    //     actionType: ACLActionTypes.Allow
+    // });
+    //
+    // await ACL.create({
+    //     namespace: '테스트위키',
+    //     type: ACLTypes.Read,
+    //     conditionType: ACLConditionTypes.IP,
+    //     conditionContent: '127.0.0.1',
+    //     actionType: ACLActionTypes.Allow
+    // });
+    //
+    // await ACL.create({
+    //     namespace: '테스트위키',
+    //     type: ACLTypes.Edit,
+    //     conditionType: ACLConditionTypes.Member,
+    //     conditionContent: 'df5994d0-2905-45a1-93b4-515aa567500e',
+    //     actionType: ACLActionTypes.Allow
+    // });
 
     setTimeout(() => {
         process.exit();

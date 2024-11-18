@@ -30,8 +30,8 @@ const newSchema = new Schema({
     type: {
         type: Number,
         required: true,
-        min: Math.min(Object.values(HistoryTypes)),
-        max: Math.max(Object.values(HistoryTypes))
+        min: Math.min(...Object.values(HistoryTypes)),
+        max: Math.max(...Object.values(HistoryTypes))
     },
     document: {
         type: String,
