@@ -153,8 +153,6 @@ app.post('/acl/*', async (req, res) => {
     }
     else return res.status(400).send('invalid target');
 
-    console.log(req.body);
-
     const aclType = ACLTypes[req.body.aclType];
     const conditionType = ACLConditionTypes[req.body.conditionType];
     const actionType = ACLActionTypes[req.body.actionType];
