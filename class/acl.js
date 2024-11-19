@@ -168,9 +168,15 @@ module.exports = class ACL {
         let rules = this.aclTypes[aclType];
         if(!rules.length && this.namespaceACL) rules = this.namespaceACL.aclTypes[aclType];
 
+        let nsResult;
+        if(rules.some(r => r.actionType === ACLActionTypes.GotoNS)) nsResult = await this.namespaceACL.check(aclType, data);
+
         const allowedRules = [];
         for(let rule of rules) {
-            if(rule.actionType === ACLActionTypes.Allow) allowedRules.push(rule);
+            if([
+                ACLActionTypes.Allow,
+                ...(nsResult?.result ? [ACLActionTypes.GotoNS] : [])
+            ].includes(rule.actionType)) allowedRules.push(rule);
 
             const { action, aclGroupId } = await this.testRule(rule, data);
 
@@ -184,12 +190,14 @@ module.exports = class ACL {
                     aclMessage
                 }
             }
-            else if(action === ACLActionTypes.GotoNS) return await this.namespaceACL.check(aclType, data);
+            else if(action === ACLActionTypes.GotoNS) return nsResult;
             else if(action === ACLActionTypes.GotoOtherNS) return await rule.otherNamespaceACL.check(aclType, data);
         }
 
         if(allowedRules.length) {
-            let aclMessage = `${ACL.aclTypeToString(aclType)} 권한이 부족합니다. ${rules.map(r => ACL.ruleToRequiredString(r)).join(' OR ')}(이)여야 합니다.`;
+            let aclMessage = `${ACL.aclTypeToString(aclType)} 권한이 부족합니다. ${allowedRules
+                .map(r => ACL.ruleToRequiredString(r))
+                .join(' OR ')}(이)여야 합니다.`;
             if(this.document) aclMessage += this.aclTabMessage;
 
             return {

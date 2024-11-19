@@ -46,7 +46,7 @@ app.get('/w/*', async (req, res) => {
                 HistoryTypes.Rollback
             ]
         },
-        rev: parseInt(req.query.rev) ?? undefined
+        rev: parseInt(req.query.rev) || undefined
     }).sort({ rev: -1 });
 
     let acl;
@@ -75,7 +75,8 @@ app.get('/w/*', async (req, res) => {
     });
 
     const { result: editable, aclMessage: edit_acl_message } = await acl.check(ACLTypes.Edit, req.aclData);
-    defaultData.editable = editable;
+    const { result: editRequestable } = await acl.check(ACLTypes.EditRequest, req.aclData);
+    defaultData.editable = editable || editRequestable;
     defaultData.edit_acl_message = edit_acl_message;
 
     if(!dbDocument || !rev) return res.renderSkin(undefined, {
