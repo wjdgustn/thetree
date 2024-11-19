@@ -105,6 +105,8 @@ async function movePage(response, pushState = true) {
 
     const html = await response.text();
 
+    if(response.status.toString().startsWith('4')) return alert(html);
+
     if(await replaceContent(html)) {
         if(pushState) {
             const newUrl = new URL(response.url);

@@ -274,6 +274,12 @@ for(let f of fs.readdirSync('./routes')) {
     app.use(require(`./routes/${f}`));
 }
 
+app.use((req, res, next) => {
+    const fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
+    if(fromFetch) res.status(404).send(`not found: ${req.method} ${req.path}`);
+    else next();
+});
+
 const port = process.env.port ?? 3000;
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);

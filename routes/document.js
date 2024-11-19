@@ -160,6 +160,8 @@ app.post('/acl/*', async (req, res) => {
     if(aclType == null || conditionType == null || actionType == null)
         return res.status(400).send('invalid type');
 
+    if(aclType === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL category edit requires nsacl permission');
+
     const duration = parseInt(req.body.duration);
     if(isNaN(duration)) return res.status(400).send('invalid duration');
 
@@ -225,6 +227,8 @@ app.get('/action/acl/delete', async (req, res) => {
     });
     if(!dbACL) return res.status(400).send('acl not found');
 
+    if(dbACL.type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL category edit requires nsacl permission');
+
     if(dbACL.document) {
         const dbDocument = await Document.findOne({
             uuid: dbACL.document
@@ -267,6 +271,8 @@ app.patch('/action/acl/reorder', async (req, res) => {
     });
 
     if(acls.some(a => !sameTypeACLs.find(b => a.uuid === b.uuid))) return res.status(400).send('invalid uuid');
+
+    if(acls[0].type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL category edit requires nsacl permission');
 
     const actions = [];
     for(let i in uuids) {
