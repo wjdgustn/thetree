@@ -1,5 +1,64 @@
+let title;
+let navLinks;
+let navTableBodies;
+
+let createACLForm;
+let target;
+let aclType;
+
+function updateNavs() {
+    const splittedHref = location.hash.split('.');
+
+    let showTarget;
+    for(let other of navLinks) {
+        const otherHref = other.getAttribute('href');
+        if(otherHref.includes('.')) {
+            const splittedOther = otherHref.split('.');
+            if(splittedHref[0]) splittedOther[0] = splittedHref[0];
+
+            const newOtherHref = splittedOther.join('.');
+            other.href = newOtherHref;
+
+            const parent = other.parentNode;
+            if(location.hash.includes('.')
+                ? splittedOther[1] === splittedHref[1]
+                : parent.parentNode.children[0] === parent) {
+                other.classList.add('nav-link-selected');
+                showTarget = newOtherHref;
+                title.innerText = other.innerText;
+
+                target.value = splittedOther[0].slice(1);
+                aclType.value = other.dataset.type;
+            }
+            else other.classList.remove('nav-link-selected');
+        }
+        else {
+            const parent = other.parentNode;
+            if(location.hash.length > 1
+                ? otherHref === splittedHref[0]
+                : parent.parentNode.children[0] === parent) {
+                other.classList.add('nav-link-selected');
+                createACLForm.hidden = other.dataset.editable === undefined;
+            }
+            else other.classList.remove('nav-link-selected');
+        }
+    }
+
+    for(let tbody of navTableBodies) {
+        tbody.hidden = tbody.id !== `tbody-${showTarget.slice(1)}`;
+    }
+}
+
 document.addEventListener('thetree:pageLoad', () => {
-    const navLinks = document.querySelectorAll('.nav-block-content-ul > li > .nav-link');
+    title = document.getElementById('acl-title');
+    navLinks = document.querySelectorAll('.nav-block-content-ul > li > .nav-link');
+    navTableBodies = document.getElementsByClassName('nav-tbody');
+
+    createACLForm = document.getElementById('create-acl-form');
+    target = document.getElementsByName('target')[0];
+    aclType = document.getElementsByName('aclType')[0];
+
+    updateNavs();
 
     for(let navLink of navLinks) {
         navLink.addEventListener('click', e => {
@@ -9,24 +68,7 @@ document.addEventListener('thetree:pageLoad', () => {
             e.preventDefault();
             history.pushState(null, null, navLink.href);
 
-            const splittedHref = href.split('.');
-
-            for(let other of navLinks) {
-                const otherHref = other.getAttribute('href');
-                if(otherHref.includes('.')) {
-                    const splittedChild = otherHref.split('.');
-                    splittedChild[0] = splittedHref[0];
-
-                    other.href = splittedChild.join('.');
-
-                    if(otherHref === href) other.classList.add('nav-link-selected');
-                    else other.classList.remove('nav-link-selected');
-                }
-                else {
-                    if(otherHref === splittedHref[0]) other.classList.add('nav-link-selected');
-                    else other.classList.remove('nav-link-selected');
-                }
-            }
+            updateNavs();
         });
     }
 
@@ -34,6 +76,8 @@ document.addEventListener('thetree:pageLoad', () => {
 
     let dragging;
     for(let tr of trs) {
+        if(tr.dataset.editable === undefined) continue;
+
         tr.draggable = true;
 
         tr.addEventListener('dragstart', _ => {
@@ -55,7 +99,7 @@ document.addEventListener('thetree:pageLoad', () => {
         tr.addEventListener('dragend', _ => {
             const childs = [...tr.parentNode.children];
             for(let child of childs) {
-                console.log(child.children[0].innerText);
+                console.log(`uuid: ${child.dataset.rule}, oldNum: ${child.children[0].innerText}`);
             }
             console.log('---');
         });

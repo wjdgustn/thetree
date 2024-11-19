@@ -51,13 +51,21 @@ const ACLGroupItem = require('./schemas/aclGroupItem');
     // });
     // console.log(test);
 
-    // await ACL.create({
-    //     namespace: '테스트위키',
-    //     type: ACLTypes.Read,
-    //     conditionType: ACLConditionTypes.Perm,
-    //     conditionContent: 'any',
-    //     actionType: ACLActionTypes.Allow
-    // });
+    await ACL.create({
+        namespace: '테스트위키',
+        type: ACLTypes.Read,
+        conditionType: ACLConditionTypes.Perm,
+        conditionContent: 'any',
+        actionType: ACLActionTypes.Allow
+    });
+
+    await ACL.create({
+        namespace: '테스트위키',
+        type: ACLTypes.Read,
+        conditionType: ACLConditionTypes.GeoIP,
+        conditionContent: 'KR',
+        actionType: ACLActionTypes.Deny
+    });
 
     // await ACL.create({
     //     namespace: '테스트위키',

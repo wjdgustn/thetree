@@ -87,8 +87,13 @@
         vertical-align: bottom;
     }
 
-    table td {
+    tr[data-editable] td {
         cursor: move;
+    }
+
+    table td[colspan] {
+        cursor: auto;
+        text-align: center;
     }
 
     table tr:last-of-type td {
@@ -97,5 +102,6 @@
 
     .acl-delete-button {
         display: inline !important;
+        margin-left: -10.5px;
     }
 }

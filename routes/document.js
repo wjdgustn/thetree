@@ -1,4 +1,5 @@
 const express = require('express');
+// const { body, validationResult } = require('express-validator');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
@@ -40,7 +41,7 @@ app.get('/w/*', async (req, res) => {
     }).sort({ rev: -1 });
 
     let acl;
-    if(dbDocument) acl = await ACL.get({ document: dbDocument.uuid }, document);
+    if(dbDocument) acl = await ACL.get({ document: dbDocument }, document);
     else acl = await ACL.get({ namespace }, document);
 
     const defaultData = {
@@ -99,19 +100,50 @@ app.get('/acl/*', async (req, res) => {
         title
     });
 
-    let acl;
-    if(dbDocument) acl = await ACL.get({ document: dbDocument.uuid }, document);
-    const namespaceACL = await ACL.get({ namespace }, document);
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const namespaceACL = acl.namespaceACL;
+
+    const { result: editableACL } = await acl.check(ACLTypes.ACL, req.aclData);
+    const { result: editableNSACL } = await namespaceACL.check(ACLTypes.ACL, req.aclData);
 
     res.renderSkin(undefined, {
         viewName: 'acl',
         document,
         serverData: {
             acl,
-            namespaceACL
+            namespaceACL,
+            editableACL,
+            editableNSACL
         },
         contentName: 'acl'
     });
+});
+
+app.post('/acl/*', async (req, res) => {
+    const target = req.body.target;
+    const aclType = parseInt(req.body.aclType);
+
+    if(isNaN(aclType)) return res.status(400).send('invalid aclType');
+
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    if(target === 'document') {
+        const dbDocument = await Document.findOne({
+            namespace,
+            title
+        });
+
+        const acl = await ACL.get({ document: dbDocument }, document);
+        const { result: editable } = await acl.check(ACLTypes.ACL, req.aclData);
+
+        if(!editable) return res.status(403).send('missing document ACL permission');
+    }
+    else if(target === 'namespace') {
+        if(!req.permissions.includes('nsacl')) return res.status(403).send('missing namespace ACL permission');
+    }
+    else return res.status(400).send('invalid target');
 });
 
 module.exports = app;

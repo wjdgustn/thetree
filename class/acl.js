@@ -17,7 +17,11 @@ const checkDefaultData = {
 
 module.exports = class ACL {
     static async get(filter = {}, document = null) {
-        const rules = await ACLModel.find({
+        if(typeof filter.document?.uuid === 'string') filter.document = filter.document.uuid;
+
+        let rules;
+        if(filter.document === null) rules = [];
+        else rules = await ACLModel.find({
             ...filter,
             $or: [
                 {
@@ -48,12 +52,7 @@ module.exports = class ACL {
                 });
             }
 
-            if(rule.actionType === ACLActionTypes.GotoNS) {
-                if(document) rule.namespaceACL = await this.get({
-                    namespace: document.namespace
-                });
-            }
-            else if(rule.actionType === ACLActionTypes.GotoOtherNS) {
+            if(rule.actionType === ACLActionTypes.GotoOtherNS) {
                 rule.otherNamespaceACL = await this.get({
                     namespace: rule.actionContent
                 });
@@ -89,7 +88,7 @@ module.exports = class ACL {
             [ACLTypes.WriteThreadComment]: '토론 댓글',
             [ACLTypes.EditRequest]: '편집 요청',
             [ACLTypes.ACL]: 'ACL'
-        }[aclType];
+        }[aclType] ?? Object.entries(ACLTypes).find(([_, v]) => v === aclType)?.[0] ?? aclType;
     }
 
     static permissionToString(permission, withPrefix = false) {
@@ -112,7 +111,7 @@ module.exports = class ACL {
             [ACLConditionTypes.IP]: '아이피',
             [ACLConditionTypes.GeoIP]: 'GeoIP',
             [ACLConditionTypes.ACLGroup]: 'ACL그룹'
-        }[condition];
+        }[condition] ?? Object.entries(ACLConditionTypes).find(([_, v]) => v === condition)?.[0] ?? condition;
     }
 
     static ruleToRequiredString(rule) {
@@ -185,7 +184,7 @@ module.exports = class ACL {
                     aclMessage
                 }
             }
-            else if(action === ACLActionTypes.GotoNS) return await rule.namespaceACL.check(aclType, data);
+            else if(action === ACLActionTypes.GotoNS) return await this.namespaceACL.check(aclType, data);
             else if(action === ACLActionTypes.GotoOtherNS) return await rule.otherNamespaceACL.check(aclType, data);
         }
 

@@ -8,8 +8,8 @@
     <div class="nav-block-line">
         <div class="nav-block-content">
             <ul class="nav-block-content-ul">
-                <li><a class="nav-link" href="#document">문서 ACL</a></li>
-                <li><a class="nav-link" href="#namespace">이름공간 ACL</a></li>
+                <li><a class="nav-link" href="#document"<%=editableACL ? ' data-editable' : ''%>>문서 ACL</a></li>
+                <li><a class="nav-link" href="#namespace"<%=editableNSACL ? ' data-editable' : ''%>>이름공간 ACL</a></li>
             </ul>
         </div>
     </div>
@@ -21,7 +21,7 @@
         <div class="nav-block-content">
             <ul class="nav-block-content-ul">
                 <%for(let [key, value] of Object.entries(ACLTypes).slice(1)) {%>
-                    <li><a class="nav-link" href="#document.<%=utils.camelToSnakeCase(key)%>"><%=ACL.aclTypeToString(value)%></a></li>
+                    <li><a class="nav-link" data-type="<%=value%>" href="#document.<%=utils.camelToSnakeCase(key)%>"><%=ACL.aclTypeToString(value)%></a></li>
                 <%}%>
             </ul>
         </div>
@@ -30,7 +30,7 @@
 </div>
 
 <div>
-    <h4 class="title">읽기</h4>
+    <h4 id="acl-title" class="title">카테고리 이름</h4>
 
     <div class="table-elements table-block">
         <table class="table-elements table">
@@ -55,14 +55,24 @@
             <%for(let [key, value] of Object.entries(ACLTypes).slice(1)) {%>
                 <%const rulesGroup = [acl?.aclTypes[value] ?? [], namespaceACL?.aclTypes[value] ?? []];%>
                 <%for(let i in rulesGroup) {%>
-                    <tbody id="<%=i === '1' ? 'ns' : ''%>acl-<%=utils.camelToSnakeCase(key)%>">
-                    <%for(let rule of rulesGroup[i]) {%>
-                        <tr data-rule="<%=rule.uuid%>">
+                    <tbody id="tbody-<%=i === '0' ? 'document' : 'namespace'%>.<%=utils.camelToSnakeCase(key)%>" class="nav-tbody" hidden>
+                    <%const rules = rulesGroup[i];%>
+                    <%const editable = i === '0' ? editableACL : editableNSACL;%>
+                    <%if(rules.length) for(let rule of rules) {%>
+                        <tr data-rule="<%=rule.uuid%>"<%=editable ? ' data-editable' : ''%>>
                             <td><%=rule.order + 1%></td>
                             <td><%=ACL.ruleToConditionString(rule)%></td>
                             <td><%=ACL.actionToString(rule)%></td>
                             <td><%-rule.expiresAt ? getFullDateTag(rule.expiresAt) : '영구'%></td>
-                            <td><a href="/test?acl=<%=rule.uuid%>" class="acl-delete-button thetree-square-button thetree-danger-button">삭제</a></td>
+                            <td>
+                                <%if(editable) {%>
+                                    <a href="/test?acl=<%=rule.uuid%>" class="acl-delete-button thetree-square-button thetree-danger-button">삭제</a>
+                                <%}%>
+                            </td>
+                        </tr>
+                    <%} else {%>
+                        <tr>
+                            <td colspan="5">(규칙이 존재하지 않습니다. 이름공간 ACL이 적용됩니다.)</td>
                         </tr>
                     <%}%>
                     </tbody>
@@ -70,7 +80,10 @@
             <%}%>
         </table>
 
-        <form method="post">
+        <form id="create-acl-form" method="post">
+            <input type="hidden" name="target">
+            <input type="hidden" name="aclType">
+
             <div class="form-inline">
                 <div class="form-group">
                     <label class="form-control-label">Condition</label>
