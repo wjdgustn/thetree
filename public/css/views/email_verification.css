@@ -1,7 +1,7 @@
 @scope (#content-style) {
     form {
         margin: 0 auto;
-        width: 28rem;
+        width: 100%;
     }
 
     .pin-block {

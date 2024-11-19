@@ -7,4 +7,4 @@ document.addEventListener('thetree:pageLoad', () => {
         const target = document.getElementsByName(focusTarget)[0];
         if(target) target.focus();
     }
-});
+}, { once: true });

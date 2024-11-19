@@ -61,7 +61,7 @@ const formHandler = async e => {
     }
 
     const html = await response.text();
-    if(replaceContent(html)) {
+    if(await replaceContent(html)) {
         setupPjax();
 
         const forms = content.querySelectorAll('form');
@@ -105,37 +105,52 @@ async function movePage(response, pushState = true) {
 
     const html = await response.text();
 
-    if(replaceContent(html)) {
-        if(pushState) history.pushState(null, null, response.url);
+    if(await replaceContent(html)) {
+        if(pushState) {
+            const newUrl = new URL(response.url);
+            if(newUrl.pathname !== location.pathname
+                || newUrl.search !== location.search) history.pushState(null, null, response.url);
+        }
 
         setupPjax();
     }
     else location.href = response.url;
 }
 
-function replaceContent(html) {
+async function replaceContent(html) {
     let result = false;
 
-    if(html.includes('<!DOCTYPE html>')) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    let newContent;
 
+    const fullReload = html.includes('<!DOCTYPE html>');
+    if(fullReload) {
+        newContent = doc.getElementById('content');
         document.body.innerHTML = doc.body.innerHTML;
         result = true;
     }
     else {
         if(html.includes('<')) {
+            newContent = doc;
             content.innerHTML = html;
             result = true;
         }
     }
 
     if(result) {
-        const initScript = document.getElementById('initScript');
-        if(initScript) {
-            eval(initScript.textContent);
-            State.page = page;
-            State.session = session;
+        const allScripts = newContent.querySelectorAll('script');
+        for(let script of allScripts) {
+            if(script.src) {
+                const response = await fetch(script.src);
+                const scriptText = await response.text();
+                eval(scriptText);
+            }
+            else eval(script.textContent);
+            if(script.id === 'initScript') {
+                State.page = page;
+                State.session = session;
+            }
         }
     }
 

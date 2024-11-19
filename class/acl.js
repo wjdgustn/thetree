@@ -141,8 +141,8 @@ module.exports = class ACL {
         }
     }
 
-    static ruleToConditionString(rule) {
-        if(rule.conditionType === ACLConditionTypes.Perm) {
+    static ruleToConditionString(rule, formatPerm = true) {
+        if(formatPerm && rule.conditionType === ACLConditionTypes.Perm) {
             return `${ACL.permissionToString(rule.conditionContent)}`
         }
         else if(rule.conditionType === ACLConditionTypes.Member) {

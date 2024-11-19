@@ -85,6 +85,8 @@ document.addEventListener('thetree:pageLoad', () => {
         });
 
         tr.addEventListener('dragenter', _ => {
+            if(!dragging) return;
+
             const childs = [...tr.parentNode.children];
             if(childs.indexOf(tr) < childs.indexOf(dragging))
                 tr.before(dragging);
@@ -93,15 +95,31 @@ document.addEventListener('thetree:pageLoad', () => {
         });
 
         tr.addEventListener('dragover', e => {
+            if(!dragging) return;
+
             e.preventDefault();
         });
 
-        tr.addEventListener('dragend', _ => {
+        tr.addEventListener('dragend', async _ => {
+            dragging = null;
+
             const childs = [...tr.parentNode.children];
-            for(let child of childs) {
-                console.log(`uuid: ${child.dataset.rule}, oldNum: ${child.children[0].innerText}`);
-            }
-            console.log('---');
+            const uuids = childs.map(a => a.dataset.rule);
+
+            const response = await fetch('/action/acl/reorder', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    acls: JSON.stringify(uuids)
+                }).toString()
+            });
+
+            if(response.redirected) return await movePage(response);
+
+            const text = await response.text();
+            if(text) alert(text);
         });
     }
-});
+}, { once: true });

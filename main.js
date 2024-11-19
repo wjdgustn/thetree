@@ -8,6 +8,9 @@ const nodemailer = require('nodemailer');
 const cheerio = require('cheerio');
 const compression = require('compression');
 const useragent = require('express-useragent');
+const { Address4 } = require('ip-address');
+const redis = require('redis');
+const RedisStore = require('connect-redis').default;
 
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
@@ -91,11 +94,24 @@ app.use(express.urlencoded({
     extended: true
 }));
 
+let store;
+if(process.env.USE_REDIS === 'true') {
+    const client = redis.createClient({
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD
+    });
+    client.connect().catch(console.error);
+
+    store = new RedisStore({ client });
+}
+
 app.use(session({
     name: 'kotori',
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store
 }));
 
 app.use(passport.initialize());
@@ -121,6 +137,13 @@ app.get('/js/global.js', (req, res) => {
 });
 
 app.use((req, res, next) => {
+    const slicedIp = req.ip.slice(7);
+    if(Address4.isValid(slicedIp)) Object.defineProperty(req, 'ip', {
+        get() {
+            return slicedIp;
+        }
+    });
+
     app.locals.rmWhitespace = true;
 
     app.locals.fs = fs;
@@ -169,6 +192,8 @@ app.use((req, res, next) => {
         user: req.user,
         ip: req.ip
     }
+
+    app.locals.isDev = req.permissions .includes('developer');
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
