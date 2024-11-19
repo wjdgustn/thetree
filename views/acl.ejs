@@ -58,9 +58,10 @@
                     <tbody id="tbody-<%=i === '0' ? 'document' : 'namespace'%>.<%=utils.camelToSnakeCase(key)%>" class="nav-tbody" hidden>
                     <%const rules = rulesGroup[i];%>
                     <%const editable = i === '0' ? editableACL : editableNSACL;%>
-                    <%if(rules.length) for(let rule of rules) {%>
+                    <%if(rules.length) for(let i in rules) {%>
+                        <%const rule = rules[i];%>
                         <tr data-rule="<%=rule.uuid%>"<%=editable ? ' data-editable' : ''%>>
-                            <td><%=rule.order + 1%></td>
+                            <td><%=parseInt(i) + 1%></td>
                             <td><%=ACL.ruleToConditionString(rule, false)%></td>
                             <td><%=ACL.actionToString(rule)%></td>
                             <td><%-rule.expiresAt ? getFullDateTag(rule.expiresAt) : '영구'%></td>
