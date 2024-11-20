@@ -40,6 +40,14 @@ const newSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    isWarn: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    warnMessage: {
+        type: String
     }
 });
 

@@ -1,0 +1,146 @@
+@scope (#content-style) {
+    form ul {
+        border-bottom: 1px solid #ddd;
+        height: 36px;
+        list-style: none;
+        margin-bottom: 0;
+        margin-top: 0;
+        padding-left: 0;
+    }
+
+    .theseed-dark-mode form ul {
+        border-color: #383b40;
+    }
+
+    form li {
+        float: left;
+        margin-bottom: -1px;
+    }
+
+    form li + li {
+        margin-left: .2rem;
+    }
+
+    form li button {
+        background: none;
+        border: 1px solid transparent;
+        border-radius: .25rem .25rem 0 0;
+        cursor: pointer;
+        display: block;
+        font-size: .9rem;
+        padding: .5em 1em;
+    }
+
+    form li button.selected-tab {
+        background-color: #fff;
+        border-color: #ddd #ddd transparent;
+        color: #55595c;
+    }
+
+    .tabs {
+        border: 1px solid #ddd;
+        border-top: none;
+    }
+
+    .tabs:before {
+        clear: both;
+        content: "";
+        display: table;
+    }
+
+    .tabs > div {
+        display: none;
+    }
+
+    .tabs > .selected-tab-content {
+        display: block;
+    }
+
+    form textarea {
+        border: none;
+        border-radius: 0;
+        color: #55595c;
+        font-family: inherit;
+        font-size: .9rem;
+        height: 30rem;
+        margin: 0;
+        padding: .25rem .5rem;
+        resize: vertical;
+        width: 100%;
+    }
+
+    .theseed-dark-mode form input, .theseed-dark-mode form textarea {
+        background-color: #27292d;
+        border-color: #383b40;
+        color: #ddd;
+    }
+
+    .log-block {
+        margin-bottom: 15px;
+        margin-top: 1rem;
+    }
+
+    form label {
+        display: inline-block;
+        margin-bottom: .5rem;
+    }
+
+    form input[type=text] {
+        background-color: #fff;
+        background-image: none;
+        border: .0625rem solid #ccc;
+        border-radius: 0;
+        color: #55595c;
+        padding: .25rem .5rem;
+        width: 100%;
+    }
+
+    form input[type=checkbox] {
+        color: inherit;
+        line-height: inherit;
+        font: inherit;
+        margin: 0 .25rem 0 0;
+        padding: 0;
+    }
+
+    form div.log-block input {
+        border-radius: 0;
+        font-size: .9rem;
+        line-height: 1.5;
+        padding: .25rem .5rem;
+        width: 100%;
+    }
+
+    @keyframes blinkWhite {
+        0% {
+            color: #000
+        }
+
+        to {
+            color: red
+        }
+    }
+
+    @keyframes blinkDark {
+        0% {
+            color: #fff
+        }
+
+        to {
+            color: red
+        }
+    }
+
+    .ip-warn {
+        animation: blinkWhite 1s infinite alternate;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        margin-top: 0;
+    }
+
+    form > button {
+        float: right;
+        margin-bottom: 2rem;
+        width: 100px;
+    }
+}

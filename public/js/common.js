@@ -18,6 +18,12 @@ window.addEventListener('popstate', async _ => {
     await movePage(document.location.href, false);
 });
 
+function plainAlert(text) {
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    const message = doc.body.textContent;
+    alert(message);
+}
+
 const aClickHandler = async e => {
     if(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
 
@@ -36,6 +42,37 @@ const aClickHandler = async e => {
     await movePage(href);
 }
 
+function backupForm() {
+    const forms = content.querySelectorAll('form');
+    for(let form of forms) {
+        if(!form.id) continue;
+
+        formBackup[form.id] = new FormData(form);
+    }
+}
+
+function restoreForm() {
+    const forms = content.querySelectorAll('form');
+    for(let form of forms) {
+        const backup = formBackup[form.id];
+        if(!backup) continue;
+
+        for(let [key, value] of backup) {
+            const input = form.querySelector(`input[name="${key}"], select[name="${key}"]`);
+            if(!input) continue;
+
+            if(input.type === 'checkbox' || input.type === 'radio')
+                input.checked = !!value;
+            else {
+                if(input._x_model)
+                    input._x_model.set(value);
+                else
+                    input.value = value;
+            }
+        }
+    }
+}
+
 const formBackup = {};
 const formHandler = async e => {
     const form = e.currentTarget;
@@ -51,36 +88,18 @@ const formHandler = async e => {
         body: new URLSearchParams(data).toString()
     });
 
+    backupForm();
+
     if(response.redirected) return await movePage(response);
 
-    const forms = content.querySelectorAll('form');
-    for(let form of forms) {
-        if(!form.id) continue;
-
-        formBackup[form.id] = new FormData(form);
-    }
-
     const html = await response.text();
+    if(response.status.toString().startsWith('4')) return plainAlert(html);
+
     if(await replaceContent(html)) {
         setupPjax();
-
-        const forms = content.querySelectorAll('form');
-        for(let form of forms) {
-            const backup = formBackup[form.id];
-            if(!backup) continue;
-
-            for(let [key, value] of backup) {
-                const input = form.querySelector(`input[name="${key}"]`);
-                if(!input) continue;
-
-                if(input.type === 'checkbox' || input.type === 'radio')
-                    input.checked = !!value;
-                else
-                    input.value = value;
-            }
-        }
+        restoreForm();
     }
-    else alert(html);
+    else plainAlert(html);
 }
 
 function setupPjax() {
@@ -105,7 +124,7 @@ async function movePage(response, pushState = true) {
 
     const html = await response.text();
 
-    if(response.status.toString().startsWith('4')) return alert(html);
+    if(response.status.toString().startsWith('4')) return plainAlert(html);
 
     if(await replaceContent(html)) {
         if(pushState) {
@@ -115,6 +134,7 @@ async function movePage(response, pushState = true) {
         }
 
         setupPjax();
+        restoreForm();
     }
     else location.href = response.url;
 }

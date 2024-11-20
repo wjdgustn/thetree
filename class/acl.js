@@ -36,7 +36,7 @@ module.exports = class ACL {
         }).sort({ order: 1 }).lean();
 
         let namespaceACL;
-        if(document.namespace && !filter.namespace) namespaceACL = await this.get({
+        if(document?.namespace && !filter.namespace) namespaceACL = await this.get({
             namespace: document.namespace
         }, document);
 
@@ -55,7 +55,7 @@ module.exports = class ACL {
             if(rule.actionType === ACLActionTypes.GotoOtherNS) {
                 rule.otherNamespaceACL = await this.get({
                     namespace: rule.actionContent
-                });
+                }, document);
             }
         }
 
@@ -178,11 +178,22 @@ module.exports = class ACL {
                 ...(nsResult?.result ? [ACLActionTypes.GotoNS] : [])
             ].includes(rule.actionType)) allowedRules.push(rule);
 
-            const { action, aclGroupId } = await this.testRule(rule, data);
+            const { action, aclGroupItem } = await this.testRule(rule, data);
 
             if(action === ACLActionTypes.Allow) return { result: true };
             else if(action === ACLActionTypes.Deny) {
-                let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupId)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
+                let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
+                if(aclGroupItem) {
+                    aclMessage += `\n만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
+                    aclMessage += `\n사유 : ${aclGroupItem.memo ?? '없음'}`;
+
+                    if(rule.aclGroup.isWarn) {
+                        aclMessage = rule.aclGroup.warnMessage ?? '경고를 받았습니다.';
+                        aclMessage += `\n\n<a href="/self_unblock?id=${aclGroupItem.id}">[확인했습니다. #${aclGroupItem.id}]</a>`;
+                        aclMessage += `\n사유: ${aclGroupItem.memo ?? '없음'}`;
+                    }
+                }
+
                 if(this.document) aclMessage += this.aclTabMessage;
 
                 return {
@@ -275,7 +286,7 @@ module.exports = class ACL {
                     },
                     user: data.user.uuid
                 });
-                if(userTest) return { action, aclGroupId: userTest.id };
+                if(userTest) return { action, aclGroupItem: userTest };
             }
 
             let ipArr;
@@ -294,7 +305,7 @@ module.exports = class ACL {
                     $gte: ipArr
                 }
             });
-            if(ipTest) return { action, aclGroupId: ipTest.id };
+            if(ipTest) return { action, aclGroupItem: ipTest };
         }
 
         return { action: ACLActionTypes.Skip };

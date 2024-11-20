@@ -1,0 +1,45 @@
+<style>
+    @import "/css/views/edit.css";
+</style>
+
+<script src="/js/edit.js"></script>
+
+<form method="post">
+    <%for(let [key, value] of Object.entries(body).filter(([_, v]) => !!v)) {%>
+        <input type="hidden" name="<%=key%>" value="<%=value%>">
+    <%}%>
+
+    <ul>
+<!--        <li><button type="button">편집기</button></li>-->
+        <li><button type="button" class="selected-tab">RAW 편집</button></li>
+        <li><button type="button">미리보기</button></li>
+    </ul>
+
+    <div class="tabs">
+        <div class="selected-tab-content">
+            <textarea name="text" wrap="soft"><%=content%></textarea>
+        </div>
+
+        <div>
+            im preview
+        </div>
+    </div>
+
+    <div class="log-block">
+        <label for="logInput">요약</label>
+        <input type="text" id="logInput" name="log">
+    </div>
+
+    <label>
+        <input type="checkbox" name="agree" value="Y">
+        <span><%-config.editagree_text%></span>
+    </label>
+
+    <%if(session.account.type !== UserTypes.Account) {%>
+    <div>
+        <p class="ip-warn">비로그인 상태로 편집합니다. 로그인하지 않은 상태로 문서 편집을 저장하면, 편집 역사에 본인이 사용하는 IP(<%=req.ip%>) 주소 전체가 영구히 기록됩니다.</p>
+    </div>
+    <%}%>
+
+    <button class="thetree-square-button thetree-blue-button">저장</button>
+</form>

@@ -85,7 +85,7 @@
             <%}%>
         </table>
 
-        <form id="create-acl-form" method="post" hidden x-data="{ conditionType: 'perm', actionType: 'deny' }">
+        <form id="create-acl-form" method="post" hidden x-data="{ conditionType: '', actionType: '' }">
             <input type="hidden" name="target">
             <input type="hidden" name="aclType">
 
@@ -93,28 +93,28 @@
                 <div class="form-group">
                     <label class="form-control-label">Condition</label>
                     <div>
-                        <select class="form-control" name="conditionType" x-model="conditionType">
+                        <select class="form-control" name="conditionType" x-model="conditionType" x-init="conditionType = $el.value">
                             <%for(let [key, value] of Object.entries(ACLConditionTypes)) {%>
                             <option value="<%=key%>"><%=ACL.conditionToString(value)%></option>
                             <%}%>
                         </select>
 
-                        <%if(isDev) {%><input class="form-control" type="text" list="permissions" name="permission" value="<%=ACLPermissions[0]%>" x-show="conditionType === 'perm'"><%}%>
-                        <<%-isDev ? 'datalist' : 'select class="form-control" name="permission"'%> id="permissions" x-show="conditionType === 'perm'">
+                        <%if(isDev) {%><input class="form-control" type="text" list="permissions" name="permission" value="<%=ACLPermissions[0]%>" x-show="conditionType === 'Perm'"><%}%>
+                        <<%-isDev ? 'datalist' : 'select class="form-control" name="permission"'%> id="permissions" x-show="conditionType === 'Perm'">
                             <%for(let i in ACLPermissions) {%>
                             <%const perm = ACLPermissions[i];%>
                             <option value="<%=perm%>"><%=ACL.permissionToString(perm)%></option>
                             <%}%>
                         </<%=isDev ? 'datalist' : 'select'%>>
 
-                        <input class="form-control" type="text" name="conditionContent" x-show="conditionType !== 'perm'">
+                        <input class="form-control" type="text" name="conditionContent" x-show="conditionType !== 'Perm'">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-control-label">Action :</label>
                     <div>
-                        <select class="form-control" name="actionType" x-model="actionType">
+                        <select class="form-control" name="actionType" x-model="actionType" x-init="actionType = $el.value">
                             <%for(let [key, value] of Object.entries(ACLActionTypes).slice(1, isDev ? undefined : -1)) {%>
                             <option value="<%=key%>"><%=ACL.actionToString(value)%></option>
                             <%}%>

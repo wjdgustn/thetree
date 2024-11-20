@@ -8,6 +8,7 @@
   "logo_image": "",
   "copyright_text": "copyright agree",
   "copyright_url": "https://example.com",
+  "editagree_text": "agree this",
   "footer_html": "hi im footer",
 
   "skin.liberty.navbar_logo_padding": "0.4rem 0 0 0"

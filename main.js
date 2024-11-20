@@ -256,7 +256,7 @@ document.getElementById('initScript').remove();
         }, (err, html) => {
             if(err) {
                 console.error(err);
-                return res.status(500).send('Skin render error');
+                return res.status(500).send('스킨 렌더 오류');
             }
 
             if(sendOnlyContent) {
