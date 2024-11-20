@@ -45,7 +45,8 @@ const newSchema = new Schema({
         type: Number
     },
     log: {
-        type: String
+        type: String,
+        maxLength: 255
     },
     editRequest: {
         type: String
@@ -67,15 +68,23 @@ const newSchema = new Schema({
     }
 });
 
-const model = mongoose.model('History', newSchema);
+newSchema.index({ document: 1, rev: 1 }, { unique: true });
 
 newSchema.pre('save', async function() {
+    const last = await model.findOne({ document: this.document }).sort({ rev: -1 });
+
     if(this.rev == null) {
-        const last = await model.findOne({ document: this.document }).sort({ rev: -1 });
         this.rev = last ? last.rev + 1 : 1;
+    }
+
+    if(this.content == null) {
+        this.content = last ? last.content : null;
+    }
+    else if(this.diffLength == null) {
+        this.diffLength = last ? this.content.length - last.content.length : this.content.length;
     }
 });
 
-newSchema.index({ document: 1, rev: 1 }, { unique: true });
+const model = mongoose.model('History', newSchema);
 
 module.exports = model;

@@ -178,7 +178,6 @@ const renderPinVerification = (res, data = {}) => res.renderSkin('로그인', {
 });
 
 app.get('/member/login', middleware.isLogout, (req, res) => {
-    console.log(`req.isAuthenticated(): ${req.isAuthenticated()}`);
     renderLogin(res);
 });
 

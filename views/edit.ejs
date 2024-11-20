@@ -4,34 +4,39 @@
 
 <script src="/js/edit.js"></script>
 
-<form method="post">
+<%-include('alert', { alert: aclMessage })%>
+
+<form method="post" x-data="{ selectedTab: 'raw' }">
     <%for(let [key, value] of Object.entries(body).filter(([_, v]) => !!v)) {%>
         <input type="hidden" name="<%=key%>" value="<%=value%>">
     <%}%>
 
     <ul>
-<!--        <li><button type="button">편집기</button></li>-->
-        <li><button type="button" class="selected-tab">RAW 편집</button></li>
-        <li><button type="button">미리보기</button></li>
+<!--        <li><button type="button" :class="selectedTab === 'editor' && 'selected-tab'" @click="selectedTab = 'editor'">편집기</button></li>-->
+        <li><button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button></li>
+        <%if(!aclMessage) {%>
+        <li><button type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button></li>
+        <%}%>
     </ul>
 
     <div class="tabs">
-        <div class="selected-tab-content">
-            <textarea name="text" wrap="soft"><%=content%></textarea>
+        <div :class="selectedTab === 'raw' && 'selected-tab-content'">
+            <textarea name="text" wrap="soft"<%=aclMessage ? ' readonly' : ''%>><%=content%></textarea>
         </div>
 
-        <div>
+        <div :class="selectedTab === 'preview' && 'selected-tab-content'">
             im preview
         </div>
     </div>
 
+    <%if(!aclMessage) {%>
     <div class="log-block">
-        <label for="logInput">요약</label>
-        <input type="text" id="logInput" name="log">
+        <label for="logInput" x-ref="logLabel">요약</label>
+        <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">
     </div>
 
     <label>
-        <input type="checkbox" name="agree" value="Y">
+        <input type="checkbox" name="agree" value="Y"<%=req.permissions.includes('contributor') ? ' checked' : ''%>>
         <span><%-config.editagree_text%></span>
     </label>
 
@@ -42,4 +47,5 @@
     <%}%>
 
     <button class="thetree-square-button thetree-blue-button">저장</button>
+    <%}%>
 </form>

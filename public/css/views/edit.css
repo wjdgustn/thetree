@@ -37,9 +37,23 @@
         color: #55595c;
     }
 
+    .theseed-dark-mode form li button {
+        background-color: #27292d;
+        border-color: #383b40;
+        color: #ddd;
+    }
+
+    .theseed-dark-mode form li button.selected-tab {
+        background-color: #383b40;
+    }
+
     .tabs {
         border: 1px solid #ddd;
         border-top: none;
+    }
+
+    .theseed-dark-mode .tabs {
+        border-color: #383b40;
     }
 
     .tabs:before {
@@ -69,10 +83,9 @@
         width: 100%;
     }
 
-    .theseed-dark-mode form input, .theseed-dark-mode form textarea {
-        background-color: #27292d;
-        border-color: #383b40;
-        color: #ddd;
+    form textarea[readonly] {
+        background-color: #eceeef;
+        opacity: 1;
     }
 
     .log-block {
@@ -101,6 +114,12 @@
         font: inherit;
         margin: 0 .25rem 0 0;
         padding: 0;
+    }
+
+    .theseed-dark-mode form input, .theseed-dark-mode form textarea {
+        background-color: #27292d;
+        border-color: #383b40;
+        color: #ddd;
     }
 
     form div.log-block input {

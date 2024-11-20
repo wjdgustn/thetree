@@ -15,6 +15,10 @@ const RedisStore = require('connect-redis').default;
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const types = require('./utils/types');
+const { UserTypes } = types;
+
+const User = require('./schemas/user');
+const History = require('./schemas/history');
 
 const ACL = require('./class/acl');
 
@@ -47,8 +51,6 @@ global.updateConfig = () => {
     global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 }
 updateConfig();
-
-const User = require('./schemas/user');
 
 require('dotenv').config();
 
@@ -136,13 +138,30 @@ app.get('/js/global.js', (req, res) => {
     );
 });
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
     const slicedIp = req.ip.slice(7);
     if(Address4.isValid(slicedIp)) Object.defineProperty(req, 'ip', {
         get() {
             return slicedIp;
         }
     });
+
+    if(!req.session.ipUser) {
+        req.session.ipUser = await User.findOne({
+            ip: req.ip
+        }).lean();
+
+        if(!req.session.ipUser) {
+            const newUser = new User({
+                ip: req.ip,
+                type: UserTypes.IP
+            });
+            await newUser.save();
+            req.session.ipUser = newUser.toJSON();
+        }
+    }
+
+    if(!req.user && req.session.ipUser) req.user = req.session.ipUser;
 
     app.locals.rmWhitespace = true;
 
@@ -173,7 +192,7 @@ app.use((req, res, next) => {
 
     req.permissions.push('any');
 
-    if(req.isAuthenticated()) {
+    if(req.user?.type === UserTypes.Account) {
         req.permissions.push('member');
         if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
             req.permissions.push('member_signup_15days_ago');
@@ -181,6 +200,17 @@ app.use((req, res, next) => {
     else req.permissions.push('ip');
 
     if(req.useragent.isBot) req.permissions.push('bot');
+
+    if(req.session.contributor) req.permissions.push('contributor');
+    else {
+        const contribution = await History.exists({
+            user: req.user.uuid
+        });
+        if(contribution) {
+            req.permissions.push('contributor');
+            req.session.contributor = true;
+        }
+    }
 
     // TODO perms:
     //  document_contributor(at document middleware)
@@ -225,7 +255,7 @@ app.use((req, res, next) => {
             account: {
                 name: req.user?.name ?? req.ip,
                 uuid: req.user?.uuid,
-                type: Number(req.isAuthenticated())
+                type: req.user?.type ?? UserTypes.IP
             },
             gravatar_url: req.user?.avatar,
             user_document_discuss: null,

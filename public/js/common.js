@@ -21,7 +21,14 @@ window.addEventListener('popstate', async _ => {
 function plainAlert(text) {
     const doc = new DOMParser().parseFromString(text, 'text/html');
     const message = doc.body.textContent;
-    alert(message);
+
+    const treeAlert = document.getElementById('thetree-alert');
+    const treeAlertContent = document.getElementById('thetree-alert-content');
+    if(treeAlert && treeAlertContent) {
+        treeAlert.hidden = false;
+        treeAlertContent.textContent = message;
+    }
+    else alert(message);
 }
 
 const aClickHandler = async e => {
@@ -165,6 +172,7 @@ async function replaceContent(html) {
         for(let script of allScripts) {
             if(script.src) {
                 const response = await fetch(script.src);
+                if(!response.ok) continue;
                 const scriptText = await response.text();
                 eval(scriptText);
             }

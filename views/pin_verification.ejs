@@ -3,11 +3,7 @@
 </style>
 
 <%if(typeof alert !== 'undefined') {%>
-<div class="thetree-alert thetree-alert-danger">
-    <div class="thetree-alert-content">
-        <strong>[오류!]</strong>&nbsp; <span><%=alert%></span>
-    </div>
-</div>
+    <%-include('alert', { alert })%>
 <%}%>
 
 <script src="/js/form_focus.js"></script>

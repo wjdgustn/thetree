@@ -38,15 +38,7 @@ app.get('/w/*', async (req, res) => {
     let rev;
     if(dbDocument) rev = await History.findOne({
         document: dbDocument.uuid,
-        type: {
-            $in: [
-                HistoryTypes.Create,
-                HistoryTypes.Edit,
-                HistoryTypes.Delete,
-                HistoryTypes.Rollback
-            ]
-        },
-        rev: parseInt(req.query.rev) || undefined
+        ...(req.query.uuid ? { uuid: req.query.uuid } : {})
     }).sort({ rev: -1 });
 
     const acl = await ACL.get({ document: dbDocument }, document);
@@ -77,7 +69,7 @@ app.get('/w/*', async (req, res) => {
     defaultData.editable = editable || editRequestable;
     defaultData.edit_acl_message = edit_acl_message;
 
-    if(!dbDocument || !rev) return res.renderSkin(undefined, {
+    if(!dbDocument || !rev || rev.content == null) return res.renderSkin(undefined, {
         ...defaultData,
         contentHtml: `
 <p>해당 문서를 찾을 수 없습니다.</p>
@@ -344,18 +336,10 @@ app.get('/edit/*', async (req, res) => {
 
     let rev;
     if(dbDocument) rev = await History.findOne({
-        document: dbDocument.uuid,
-        type: {
-            $in: [
-                HistoryTypes.Create,
-                HistoryTypes.Edit,
-                HistoryTypes.Delete,
-                HistoryTypes.Rollback
-            ]
-        }
+        document: dbDocument.uuid
     }).sort({ rev: -1 });
 
-    const docExists = !!rev?.content;
+    const docExists = rev?.content != null;
 
     // TODO: edit one section(after implement parser)
 
@@ -373,6 +357,62 @@ app.get('/edit/*', async (req, res) => {
             content: docExists ? rev.content : ''
         }
     });
+});
+
+app.post('/edit/*', async (req, res) => {
+    if(req.body.agree !== 'Y') return res.status(400).send('수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.');
+    if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+
+    const section = parseInt(req.query.section);
+
+    const invalidSection = () => res.renderSkin('오류', {
+        contentHtml: '섹션이 올바르지 않습니다.'
+    });
+
+    if(req.query.section && (isNaN(section) || section < 0)) return invalidSection();
+
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    let dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    if(!dbDocument) {
+        dbDocument = new Document({
+            namespace,
+            title
+        });
+        await dbDocument.save();
+    }
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+
+    if(!editable) return res.status(403).send(aclMessage);
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid
+    }).sort({ rev: -1 });
+
+    if((rev?.content ?? '') === req.body.text) return res.status(400).send('이전 내용과 동일합니다.');
+
+    // TODO: automerge
+    const isCreate = rev?.content == null;
+    if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid))
+        return res.status(400).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
+
+    await History.create({
+        user: req.user.uuid,
+        type: isCreate ? HistoryTypes.Create : HistoryTypes.Edit,
+        document: dbDocument.uuid,
+        content: req.body.text,
+        log: req.body.log
+    });
+
+    res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
 module.exports = app;
