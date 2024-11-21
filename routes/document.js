@@ -189,8 +189,9 @@ app.post('/acl/*', async (req, res) => {
     }
 
     if(actionType < ACLActionTypes.Deny
-        || actionType > (target === 'document' ? ACLActionTypes.GotoOtherNS : ACLActionTypes.Allow)) {
-        return res.status(400).send(`${req.body.actionType}은 이 카테고리에 사용할 수 없습니다!`);
+        || (target === 'document' && actionType > ACLActionTypes.GotoOtherNS)
+        || (target === 'namespace' && actionType === ACLActionTypes.GotoNS)) {
+        return res.status(400).send(`${req.body.actionType}는 이 카테고리에 사용할 수 없습니다!`);
     }
 
     const newACL = {
