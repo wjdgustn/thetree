@@ -41,13 +41,13 @@ const newSchema = new Schema({
         required: true,
         default: false
     },
+    aclMessage: {
+        type: String
+    },
     isWarn: {
         type: Boolean,
         required: true,
         default: false
-    },
-    warnMessage: {
-        type: String
     }
 });
 

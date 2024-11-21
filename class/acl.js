@@ -184,11 +184,12 @@ module.exports = class ACL {
             else if(action === ACLActionTypes.Deny) {
                 let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
                 if(aclGroupItem) {
+                    if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
                     aclMessage += `\n만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
                     aclMessage += `\n사유 : ${aclGroupItem.memo ?? '없음'}`;
 
                     if(rule.aclGroup.isWarn) {
-                        aclMessage = rule.aclGroup.warnMessage ?? '경고를 받았습니다.';
+                        aclMessage = rule.aclGroup.aclMessage ?? '경고를 받았습니다.';
                         aclMessage += `\n\n<a href="/self_unblock?id=${aclGroupItem.id}">[확인했습니다. #${aclGroupItem.id}]</a>`;
                         aclMessage += `\n사유: ${aclGroupItem.memo ?? '없음'}`;
                     }
