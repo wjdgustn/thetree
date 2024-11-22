@@ -310,6 +310,12 @@ app.use((req, res, next) => {
     else next();
 });
 
+app.use((err, req, res, next) => {
+    console.error(err);
+    if(debug) res.status(500).send(err);
+    else res.status(500).send('서버 오류');
+});
+
 const port = process.env.port ?? 3000;
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
