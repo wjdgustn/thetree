@@ -60,9 +60,12 @@ function backupForm() {
 
 function restoreForm() {
     const forms = content.querySelectorAll('form');
+    const usedFormIds = [];
     for(let form of forms) {
         const backup = formBackup[form.id];
         if(!backup) continue;
+
+        usedFormIds.push(form.id);
 
         for(let [key, value] of backup) {
             const input = form.querySelector(`input[name="${key}"], select[name="${key}"]`);
@@ -77,6 +80,10 @@ function restoreForm() {
                     input.value = value;
             }
         }
+    }
+
+    for(let key of Object.keys(formBackup)) {
+        if(!usedFormIds.includes(key)) delete formBackup[key];
     }
 }
 
@@ -157,6 +164,7 @@ async function replaceContent(html) {
     if(fullReload) {
         newContent = doc.getElementById('content');
         document.body.innerHTML = doc.body.innerHTML;
+        content = document.getElementById('content');
         result = true;
     }
     else {
