@@ -93,7 +93,8 @@ app.use('/skins', (req, res, next) => {
 });
 
 app.use(express.urlencoded({
-    extended: true
+    extended: true,
+    limit: '10mb'
 }));
 
 let store;
@@ -310,7 +311,7 @@ app.use((req, res, next) => {
     else next();
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res, _) => {
     console.error(err);
     if(debug) res.status(500).send(err);
     else res.status(500).send('서버 오류');
