@@ -2,6 +2,8 @@ const express = require('express');
 const { Address4, Address6 } = require('ip-address');
 // const { body, validationResult } = require('express-validator');
 
+const NamumarkParser = require('../utils/namumark');
+
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const {
@@ -77,9 +79,15 @@ app.get('/w/*', async (req, res) => {
         `.trim()
     });
 
+    const parser = new NamumarkParser({
+        document,
+        aclData: req.aclData
+    });
+    const contentHtml = await parser.parse(rev.content);
+
     res.renderSkin(undefined, {
         ...defaultData,
-        contentHtml: rev.content,
+        contentHtml,
         date: rev.createdAt.getTime(),
         star_count: 0,
         starred: false,
