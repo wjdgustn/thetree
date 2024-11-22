@@ -272,7 +272,7 @@ window.defaultConfig = {
     'wiki.theme': 'auto'
 }
 
-document.getElementById('initScript').remove();
+document.getElementById('initScript')?.remove();
 </script>
         `.trim();
 
