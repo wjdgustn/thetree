@@ -368,6 +368,21 @@ app.get('/edit/*', async (req, res) => {
     });
 });
 
+app.post('/preview/*', async (req, res) => {
+    const content = req.body.content;
+    if(typeof content !== 'string') return res.status(400).send('내용을 입력해주세요.');
+
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const parser = new NamumarkParser({
+        document,
+        aclData: req.aclData
+    });
+    const contentHtml = await parser.parse(content);
+
+    return res.send(contentHtml);
+});
+
 app.post('/edit/*', async (req, res) => {
     if(req.body.agree !== 'Y') return res.status(400).send('수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');

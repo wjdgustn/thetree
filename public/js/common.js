@@ -104,7 +104,10 @@ const formHandler = async e => {
 
     backupForm();
 
-    if(response.redirected) return await movePage(response);
+    if(response.redirected) {
+        window.beforePageLoad = null;
+        return await movePage(response);
+    }
 
     const html = await response.text();
     if(response.status.toString().startsWith('4')) return plainAlert(html);
@@ -129,11 +132,17 @@ function setupPjax() {
         form.addEventListener('submit', formHandler);
     }
 
+    window.beforePageLoad = null;
     emit('thetree:pageLoad');
 }
 
 let content;
 async function movePage(response, pushState = true) {
+    if(typeof window.beforePageLoad === 'function') {
+        const canMove = await window.beforePageLoad();
+        if(!canMove) return;
+    }
+
     if(typeof response === 'string') response = await fetch(response);
 
     const html = await response.text();
@@ -208,6 +217,13 @@ function emit(name) {
     const event = new CustomEvent(name);
     document.dispatchEvent(event);
 }
+
+window.addEventListener('beforeunload', e => {
+    if(typeof window.beforePageLoad !== 'function') return;
+
+    const canMove = window.beforePageLoad();
+    if(!canMove) e.preventDefault();
+});
 
 const localConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
 document.addEventListener('alpine:init', () => {

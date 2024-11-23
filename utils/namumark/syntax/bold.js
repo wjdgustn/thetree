@@ -1,5 +1,5 @@
-const Syntax = require('./');
-
-module.exports = class extends Syntax {
-
+module.exports = {
+    openStr: `'''`,
+    closeStr: `'''`,
+    format: content => `<strong>${content}</strong>`
 }

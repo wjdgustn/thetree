@@ -1,0 +1,116 @@
+.namumark-content {
+    overflow: hidden;
+}
+
+.namumark-block {
+    margin-bottom: 1rem;
+}
+
+.namumark-content strong {
+    font-weight: 700;
+}
+
+.namumark-content em {
+    font-style: italic;
+}
+
+.namumark-content code {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 2px;
+}
+.namumark-content del {
+    color: gray;
+}
+
+.namumark-content del:hover {
+    text-decoration: none;
+}
+
+.namumark-content sup, .namumark-content sub {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+
+.namumark-content sup {
+    top: -.5em;
+}
+
+.namumark-content sub {
+    bottom: -.25em;
+}
+
+.namumark-content .wiki-size-up-1 {
+    font-size: 1.2888888889em;
+}
+
+.namumark-content .wiki-size-up-2 {
+    font-size: 1.3888888889em;
+}
+
+.namumark-content .wiki-size-up-3 {
+    font-size: 1.4814444444em;
+}
+
+.namumark-content .wiki-size-up-4 {
+    font-size: 1.574em;
+}
+
+.namumark-content .wiki-size-up-5 {
+    font-size: 1.6666666667em;
+}
+
+.namumark-content .wiki-size-down-1 {
+    font-size: .9258888889em;
+}
+
+.namumark-content .wiki-size-down-2 {
+    font-size: .8333333333em;
+}
+
+.namumark-content .wiki-size-down-3 {
+    font-size: .7406666667em;
+}
+
+.namumark-content .wiki-size-down-4 {
+    font-size: .6481111111em;
+}
+
+.namumark-content .wiki-size-down-5 {
+    font-size: .6222222222em;
+}
+
+.namumark-content pre {
+    background-color: #eee;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    overflow-x: auto;
+    padding: 7px;
+}
+
+.namumark-content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.namumark-content a {
+    background-color: transparent;
+    color: #0275d8;
+    text-decoration: none;
+}
+
+.theseed-dark-mode .namumark-content a {
+    color: #e69720;
+}
+
+.namumark-content .not-exist {
+    color: red;
+}
+
+.theseed-dark-mode .namumark-content .not-exist {
+    color: #dc4343 !important;
+}

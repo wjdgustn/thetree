@@ -70,6 +70,17 @@
         display: block;
     }
 
+    #preview-tab-content {
+        height: 30rem;
+        overflow: auto;
+        padding: 10px;
+    }
+
+    .preview-tab-loading {
+        background-color: #ccc;
+        text-align: center;
+    }
+
     form textarea {
         border: none;
         border-radius: 0;
