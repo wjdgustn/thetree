@@ -1,3 +1,5 @@
+const processImage = require('./image');
+
 module.exports = {
     openStr: `[[`,
     closeStr: `]]`,
@@ -7,6 +9,9 @@ module.exports = {
 
         let link = splittedSourceContent[0];
         let text = splittedContent.at(-1);
+
+        const image = processImage(content, sourceContent, splittedContent, splittedSourceContent, link, text);
+        if(image) return image;
 
         if(splittedSourceContent.length === 1 && link.slice(1).includes('#')) text = link.split('#')[0];
 
@@ -34,6 +39,6 @@ module.exports = {
         }
 
         console.log(`link: ${link}, text: ${text}`);
-        return `<a href="${link}" title="${title}">${text}</a>`;
+        return `<a class="not-exist" href="${link}" title="${title}">${text}</a>`;
     }
 }

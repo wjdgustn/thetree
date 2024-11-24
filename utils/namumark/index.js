@@ -15,10 +15,10 @@ let syntaxesByLongOpenStr = [];
 // let syntaxesByLongCloseStr = [];
 const syntaxLoader = (subDir = '') => {
     let syntaxFiles = fs.readdirSync(__dirname + '/syntax' + subDir);
-    // if(subDir) {
-    //     if(syntaxFiles.includes('index.js')) syntaxFiles = ['index.js'];
-    //     else syntaxFiles = syntaxFiles.filter(file => file !== 'index.js');
-    // }
+    if(subDir) {
+        if(syntaxFiles.includes('index.js')) syntaxFiles = ['index.js'];
+        else syntaxFiles = syntaxFiles.filter(file => file !== 'index.js');
+    }
 
     for(let file of syntaxFiles) {
         if(!subDir && file === 'index.js') continue;
@@ -31,6 +31,7 @@ const syntaxLoader = (subDir = '') => {
 
             syntax.name = file.replace('.js', '');
             if(subDir) syntax.name = subDir.replaceAll('/', '_').slice(1) + '_' + syntax.name;
+            if(syntax.name.endsWith('_index')) syntax.name = syntax.name.replace('_index', '');
             syntax.openStr = utils.escapeHtml(syntax.openStr);
             syntax.closeStr = utils.escapeHtml(syntax.closeStr);
 
@@ -121,8 +122,8 @@ module.exports = class NamumarkParser {
         }
 
         console.timeEnd();
-        // namumark-block은 ---- 줄 문법으로 분리 시 별도 분리됨
-        const result = `<div class="namumark-content"><div class="namumark-block">${text.replaceAll('\n', '<br>')}</div></div>`;
+        // wiki-paragraph은 ---- 줄 문법으로 분리 시 별도 분리됨
+        const result = `<div class="wiki-content"><div class="wiki-paragraph">${text.replaceAll('\n', '<br>')}</div></div>`;
         // console.log(result);
         return result;
     }

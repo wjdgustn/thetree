@@ -1,89 +1,89 @@
-.namumark-content {
+.wiki-content {
     overflow: hidden;
 }
 
-.namumark-block {
+.wiki-paragraph {
     margin-bottom: 1rem;
 }
 
-.namumark-content strong {
+.wiki-content strong {
     font-weight: 700;
 }
 
-.namumark-content em {
+.wiki-content em {
     font-style: italic;
 }
 
-.namumark-content code {
+.wiki-content code {
     background-color: transparent;
     border: none;
     border-radius: 0;
     padding: 2px;
 }
-.namumark-content del {
+.wiki-content del {
     color: gray;
 }
 
-.namumark-content del:hover {
+.wiki-content del:hover {
     text-decoration: none;
 }
 
-.namumark-content sup, .namumark-content sub {
+.wiki-content sup, .wiki-content sub {
     font-size: 75%;
     line-height: 0;
     position: relative;
     vertical-align: baseline;
 }
 
-.namumark-content sup {
+.wiki-content sup {
     top: -.5em;
 }
 
-.namumark-content sub {
+.wiki-content sub {
     bottom: -.25em;
 }
 
-.namumark-content .wiki-size-up-1 {
+.wiki-content .wiki-size-up-1 {
     font-size: 1.2888888889em;
 }
 
-.namumark-content .wiki-size-up-2 {
+.wiki-content .wiki-size-up-2 {
     font-size: 1.3888888889em;
 }
 
-.namumark-content .wiki-size-up-3 {
+.wiki-content .wiki-size-up-3 {
     font-size: 1.4814444444em;
 }
 
-.namumark-content .wiki-size-up-4 {
+.wiki-content .wiki-size-up-4 {
     font-size: 1.574em;
 }
 
-.namumark-content .wiki-size-up-5 {
+.wiki-content .wiki-size-up-5 {
     font-size: 1.6666666667em;
 }
 
-.namumark-content .wiki-size-down-1 {
+.wiki-content .wiki-size-down-1 {
     font-size: .9258888889em;
 }
 
-.namumark-content .wiki-size-down-2 {
+.wiki-content .wiki-size-down-2 {
     font-size: .8333333333em;
 }
 
-.namumark-content .wiki-size-down-3 {
+.wiki-content .wiki-size-down-3 {
     font-size: .7406666667em;
 }
 
-.namumark-content .wiki-size-down-4 {
+.wiki-content .wiki-size-down-4 {
     font-size: .6481111111em;
 }
 
-.namumark-content .wiki-size-down-5 {
+.wiki-content .wiki-size-down-5 {
     font-size: .6222222222em;
 }
 
-.namumark-content pre {
+.wiki-content pre {
     background-color: #eee;
     border: 1px solid #ddd;
     border-radius: 3px;
@@ -91,26 +91,126 @@
     padding: 7px;
 }
 
-.namumark-content pre code {
+.wiki-content pre code {
     background: none;
     border: none;
     padding: 0;
 }
 
-.namumark-content a {
+.wiki-content a {
     background-color: transparent;
     color: #0275d8;
     text-decoration: none;
 }
 
-.theseed-dark-mode .namumark-content a {
+.theseed-dark-mode .wiki-content a {
     color: #e69720;
 }
 
-.namumark-content .not-exist {
+.wiki-content .not-exist {
     color: red;
 }
 
-.theseed-dark-mode .namumark-content .not-exist {
+.theseed-dark-mode .wiki-content .not-exist {
     color: #dc4343 !important;
+}
+
+.wiki-content .wiki-image-align,
+.wiki-content .wiki-image-align-bottom,
+.wiki-content .wiki-image-align-center,
+.wiki-content .wiki-image-align-left,
+.wiki-content .wiki-image-align-middle,
+.wiki-content .wiki-image-align-normal,
+.wiki-content .wiki-image-align-right,
+.wiki-content .wiki-image-align-top {
+    display: inline-block;
+    font-size: 0;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+.wiki-content .wiki-image-align-bottom {
+    vertical-align: bottom;
+}
+
+.wiki-content .wiki-image-align-center {
+    display: block;
+    text-align: center;
+}
+
+.wiki-content .wiki-image-align-left {
+    float: left;
+}
+
+.wiki-content .wiki-image-align-middle {
+    display: block;
+    text-align: center;
+}
+
+.wiki-content .wiki-image-align-right {
+    float: right;
+}
+
+.wiki-content .wiki-image-align-top {
+    vertical-align: top;
+}
+
+.wiki-content .wiki-image-wrapper {
+    display: inline-block;
+    font-size: 0;
+    max-width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.wiki-content img {
+    display: inline-block;
+    max-width: 100%;
+}
+
+.wiki-content .wiki-image {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.wiki-content .wiki-image-info {
+    background: none;
+    border: none;
+    color: #ec9f19;
+    display: none;
+    font-size: 1.1rem;
+    outline: none;
+    position: absolute;
+    right: 6px;
+    top: 0;
+}
+
+.wiki-content .wiki-image-info:before {
+    content: "●";
+    display: inline-block;
+    /*TODO: put info icon here*/
+}
+
+.wiki-content .wiki-image-wrapper:hover .wiki-image-info:before {
+    content: "●";
+    /*TODO: put filled info icon here*/
+}
+
+.wiki-content .wiki-image-wrapper:hover .wiki-image-info {
+    display: block;
+}
+
+.wiki-content .wiki-theme-dark {
+    display: none;
+}
+
+.theseed-dark-mode .wiki-content .wiki-theme-dark {
+    display: inline-block;
+}
+
+.theseed-dark-mode .wiki-content .wiki-theme-light {
+    display: none;
 }
