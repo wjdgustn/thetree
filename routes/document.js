@@ -81,9 +81,24 @@ app.get('/w/*', async (req, res) => {
 
     const parser = new NamumarkParser({
         document,
-        aclData: req.aclData
+        aclData: req.aclData,
+        req
     });
-    const contentHtml = await parser.parse(rev.content);
+
+    if(rev.content.startsWith('#redirect ')) {
+        const redirectName = rev.content.split('\n')[0].slice(10);
+        const redirectDoc = utils.parseDocumentName(req.params[0]);
+        const checkDoc = await Document.exists({
+            namespace: redirectDoc.namespace,
+            title: redirectName
+        });
+        if(checkDoc) return res.redirect(globalUtils.doc_action_link(redirectDoc, 'w', {
+            from: globalUtils.doc_fulltitle(document),
+            anchor: redirectDoc.anchor
+        }));
+    }
+
+    const { html: contentHtml } = await parser.parse(rev.content);
 
     res.renderSkin(undefined, {
         ...defaultData,
@@ -378,7 +393,7 @@ app.post('/preview/*', async (req, res) => {
         document,
         aclData: req.aclData
     });
-    const contentHtml = await parser.parse(content);
+    const { html: contentHtml } = await parser.parse(content);
 
     return res.send(contentHtml);
 });
@@ -421,7 +436,12 @@ app.post('/edit/*', async (req, res) => {
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
-    if((rev?.content ?? '') === req.body.text) return res.status(400).send('이전 내용과 동일합니다.');
+    let content = req.body.text;
+
+    if(content.startsWith('#넘겨주기 ')) content = content.replace('#넘겨주기 ', '#redirect');
+    if(content.startsWith('#redirect ')) content = content.split('\n')[0];
+
+    if((rev?.content ?? '') === content) return res.status(400).send('이전 내용과 동일합니다.');
 
     // TODO: automerge
     const isCreate = rev?.content == null;
@@ -432,7 +452,7 @@ app.post('/edit/*', async (req, res) => {
         user: req.user.uuid,
         type: isCreate ? HistoryTypes.Create : HistoryTypes.Edit,
         document: dbDocument.uuid,
-        content: req.body.text,
+        content,
         log: req.body.log
     });
 

@@ -19,7 +19,7 @@ module.exports = {
         const probablyNamespace = splitedName.length > 1 ? splitedName[0] : null;
         const namespaceExists = config.namespaces.includes(probablyNamespace);
         const namespace = namespaceExists ? probablyNamespace : '문서';
-        const title = namespaceExists ? splitedName.slice(1).join(':') : originalName;
+        let title = namespaceExists ? splitedName.slice(1).join(':') : originalName;
 
         let forceShowNamespace = null;
 
@@ -28,10 +28,18 @@ module.exports = {
         if(config.namespaces.includes(splitedTitleNamespace)) forceShowNamespace = true;
         else if(namespace === '문서') forceShowNamespace = false;
 
+        let anchor;
+        if(title.includes('#')) {
+            const splittedTitle = title.split('#');
+            anchor = splittedTitle.pop();
+            title = splittedTitle.join('#');
+        }
+
         return {
             namespace,
             title,
-            forceShowNamespace
+            forceShowNamespace,
+            anchor
         }
     },
     camelToSnakeCase(str) {

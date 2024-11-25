@@ -189,14 +189,13 @@
 }
 
 .wiki-content .wiki-image-info:before {
-    content: "●";
+    content: "";
     display: inline-block;
-    /*TODO: put info icon here*/
+    font-family: "Ionicons" !important;
 }
 
-.wiki-content .wiki-image-wrapper:hover .wiki-image-info:before {
-    content: "●";
-    /*TODO: put filled info icon here*/
+.wiki-content .wiki-image-info:hover:before {
+    content: "";
 }
 
 .wiki-content .wiki-image-wrapper:hover .wiki-image-info {
@@ -213,4 +212,25 @@
 
 .theseed-dark-mode .wiki-content .wiki-theme-light {
     display: none;
+}
+
+.wiki-content .wiki-self-link {
+    font-weight: 700;
+}
+
+.wiki-content .wiki-link-external {
+    color: #090 !important;
+}
+
+.wiki-content .wiki-link-external:before {
+    background: green;
+    color: #fff;
+    content: "";
+    font-family: "Ionicons" !important;
+    padding: 0 .15em;
+}
+
+.wiki-content .wiki-media {
+    display: block;
+    max-width: 100%;
 }

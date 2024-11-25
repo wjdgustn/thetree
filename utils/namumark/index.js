@@ -55,11 +55,21 @@ module.exports = class NamumarkParser {
     constructor(data = {}) {
         if(data.document) this.document = data.document;
         if(data.aclData) this.aclData = data.aclData;
+        if(data.req) this.req = data.req;
     }
 
     async parse(input) {
         console.log('parse!');
         console.time();
+
+        this.links = [];
+        this.files = [];
+        this.includes = [];
+
+        this.categories = [];
+
+        this.categoryHtmls = [];
+        this.footnotes = [];
 
         let sourceText = utils.escapeHtml(input);
 
@@ -72,7 +82,7 @@ module.exports = class NamumarkParser {
             const isLineFirst = prevChar === '\n' || i === 0;
 
             if(char === '\\') {
-                text += sourceText[++i];
+                text += sourceText[++i] || '';
                 continue;
             }
 
@@ -90,8 +100,8 @@ module.exports = class NamumarkParser {
                     const content = text.slice(syntax.index + syntax.openStr.length, text.length);
                     const sourceContent = sourceText.slice(syntax.sourceIndex + syntax.openStr.length, i);
                     console.log(`${syntax.name} at ${syntax.index} content: "${content}"`);
-                    const output = await syntax.format(content, sourceContent);
-                    if(output) text = text.slice(0, syntax.index) + output;
+                    const output = await syntax.format(content, sourceContent, this);
+                    if(output != null) text = text.slice(0, syntax.index) + output;
                     else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
                     openedSyntaxes.splice(syntaxIndex, 1);
                     i += syntax.closeStr.length - 1;
@@ -121,10 +131,28 @@ module.exports = class NamumarkParser {
             text += char;
         }
 
+        console.log(`links: ${this.links}`);
+        console.log(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
+        console.log(`footnotes: ${this.footnotes}`);
+
         console.timeEnd();
         // wiki-paragraph은 ---- 줄 문법으로 분리 시 별도 분리됨
-        const result = `<div class="wiki-content"><div class="wiki-paragraph">${text.replaceAll('\n', '<br>')}</div></div>`;
-        // console.log(result);
-        return result;
+        let html = `<div class="wiki-content"><div class="wiki-paragraph">${text.replaceAll('\n', '<br>')}</div></div>`;
+
+        if(this.req.query.from) html = `
+<div class="thetree-alert thetree-alert-primary">
+<div class="thetree-alert-content">
+<a href="/w/${encodeURIComponent(this.req.query.from)}" rel="nofollow" title="${this.req.query.from}">${utils.escapeHtml(this.req.query.from)}</a>에서 넘어옴
+</div>
+</div>
+        `.replaceAll('\n', '').trim() + html;
+
+        // console.log(html);
+        return {
+            html,
+            links: this.links,
+            categories: this.categories,
+            footnotes: this.footnotes
+        }
     }
 }

@@ -153,7 +153,15 @@ async function movePage(response, pushState = true) {
         if(pushState) {
             const newUrl = new URL(response.url);
             if(newUrl.pathname !== location.pathname
-                || newUrl.search !== location.search) history.pushState(null, null, response.url);
+                || newUrl.search !== location.search) {
+                const anchor = newUrl.searchParams.get('anchor');
+                if(anchor) {
+                    const element = document.getElementById(anchor);
+                    if(element) element.scrollIntoView();
+                    newUrl.searchParams.delete('anchor');
+                }
+                history.pushState(null, null, newUrl.toString());
+            }
         }
 
         setupPjax();

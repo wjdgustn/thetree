@@ -7,12 +7,15 @@ const querystring = require('querystring');
 const utils = require('../../utils');
 const globalUtils = require('../../../../utils/global');
 
-module.exports = (content, sourceContent, splittedContent, splittedSourceContent, link) => {
+module.exports = async (content, sourceContent, splittedContent, splittedSourceContent, link) => {
     if(!link.startsWith('파일:')) return;
 
     const options = splittedContent.length === 1 ? {} : querystring.parse(utils.unescapeHtml(splittedSourceContent[1]));
     // TODO: load image from db
-    if(false) return;
+    if(false) return {
+        link,
+        text: link
+    }
 
     options.borderRadius = options['border-radius'];
     delete options['border-radius'];
@@ -91,7 +94,7 @@ module.exports = (content, sourceContent, splittedContent, splittedSourceContent
 
     // TODO: implement data-filesize(for over 1MB remove option), alt, data-doc, loading lazy config, put image size to svg
     return `
-<span class="wiki-image-align${options.align && `-${options.align}`}" style="${imgSpanStyle}">
+<span class="wiki-image-align${options.align ? `-${options.align}` : ''}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
 <img width="100%" height="100%" style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
 <img class="wiki-image" width="100%" height="100%" style="${imgStyle}" src="/test.png" data-filesize="100" data-src="/test.png" data-doc="파일:테스트" loading="lazy">
