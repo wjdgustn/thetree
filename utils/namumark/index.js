@@ -139,7 +139,7 @@ module.exports = class NamumarkParser {
         // wiki-paragraph은 ---- 줄 문법으로 분리 시 별도 분리됨
         let html = `<div class="wiki-content"><div class="wiki-paragraph">${text.replaceAll('\n', '<br>')}</div></div>`;
 
-        if(this.req.query.from) html = `
+        if(this.req?.query.from) html = `
 <div class="thetree-alert thetree-alert-primary">
 <div class="thetree-alert-content">
 <a href="/w/${encodeURIComponent(this.req.query.from)}" rel="nofollow" title="${this.req.query.from}">${utils.escapeHtml(this.req.query.from)}</a>에서 넘어옴
