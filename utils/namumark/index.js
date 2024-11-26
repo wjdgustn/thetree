@@ -107,7 +107,10 @@ module.exports = class NamumarkParser {
 
         let text = '';
         const openedSyntaxes = [];
-        for(let syntax of sortedSyntaxes) {
+        for(let syntaxIndex in sortedSyntaxes) {
+            syntaxIndex = parseInt(syntaxIndex);
+            const syntax = sortedSyntaxes[syntaxIndex];
+            const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
             console.log(`parse syntax: ${syntax.name}`);
             if(text) {
                 sourceText = text;
@@ -127,6 +130,7 @@ module.exports = class NamumarkParser {
                 const isLineFirst = prevChar === '\n' || i === 0;
 
                 if (char === '\\') {
+                    if(!isLastSyntax) text += '\\';
                     text += sourceText[++i] || '';
                     continue;
                 }
