@@ -7,10 +7,10 @@ const querystring = require('querystring');
 const utils = require('../../utils');
 const globalUtils = require('../../../../utils/global');
 
-module.exports = async (content, sourceContent, splittedContent, splittedSourceContent, link) => {
+module.exports = async (content, splittedContent, link) => {
     if(!link.startsWith('파일:')) return;
 
-    const options = splittedContent.length === 1 ? {} : querystring.parse(utils.unescapeHtml(splittedSourceContent[1]));
+    const options = splittedContent.length === 1 ? {} : querystring.parse(utils.unescapeHtml(splittedContent[1]));
     // TODO: load image from db
     if(false) return {
         link,

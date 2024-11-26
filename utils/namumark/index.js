@@ -163,9 +163,8 @@ module.exports = class NamumarkParser {
                         openedSyntaxes.splice(syntaxIndex, 1);
                     } else if (currStr === syntax.closeStr) {
                         const content = text.slice(syntax.index + syntax.openStr.length, text.length);
-                        const sourceContent = sourceText.slice(syntax.sourceIndex + syntax.openStr.length, i);
                         console.log(`${syntax.name} at ${syntax.index} content: "${content}"`);
-                        const output = await syntax.format(content, sourceContent, this);
+                        const output = await syntax.format(content, this);
                         if (output != null) text = text.slice(0, syntax.index) + output;
                         else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
                         openedSyntaxes.splice(syntaxIndex, 1);

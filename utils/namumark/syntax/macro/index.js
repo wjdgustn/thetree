@@ -4,7 +4,7 @@ module.exports = {
     priority: Priority.Macro,
     openStr: `[`,
     closeStr: `]`,
-    format: async (content, sourceContent) => {
+    format: async content => {
         return null;
     }
 }

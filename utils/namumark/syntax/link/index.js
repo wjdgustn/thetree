@@ -8,17 +8,16 @@ module.exports = {
     priority: Priority.ContentChange,
     openStr: `[[`,
     closeStr: `]]`,
-    format: async (content, sourceContent, namumark) => {
+    format: async (content, namumark) => {
         const docTitle = globalUtils.doc_fulltitle(namumark.document);
 
         const splittedContent = content.split('|');
-        const splittedSourceContent = sourceContent.split('|');
 
-        let link = splittedSourceContent[0];
+        let link = splittedContent[0];
         let text = splittedContent.at(-1);
         let notExist = true;
 
-        const image = await processImage(content, sourceContent, splittedContent, splittedSourceContent, link, text);
+        const image = await processImage(content, splittedContent, link, text);
         if(typeof image === 'string') {
             namumark.files.push(link);
             return image;
@@ -35,7 +34,7 @@ module.exports = {
             text = text.slice(3);
             namumark.categories.push({
                 document: link,
-                text: splittedSourceContent[1]
+                text: splittedContent[1]
             });
         }
 
@@ -52,7 +51,7 @@ module.exports = {
         link = link.trim();
         text = text.trim();
 
-        if(splittedSourceContent.length === 1 && link.slice(1).includes('#')) text = link.split('#')[0];
+        if(splittedContent.length === 1 && link.slice(1).includes('#')) text = link.split('#')[0];
 
         let parsedLink;
         try {
