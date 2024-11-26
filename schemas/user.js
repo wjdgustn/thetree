@@ -27,12 +27,10 @@ const newSchema = new Schema({
     },
     ip: {
         type: String,
-        unique: true,
         index: true
     },
     email: {
         type: String,
-        unique: true,
         index: true
     },
     password: {
@@ -40,7 +38,6 @@ const newSchema = new Schema({
     },
     name: {
         type: String,
-        unique: true,
         index: true
     },
     lastNameChange: {
@@ -69,6 +66,27 @@ const newSchema = new Schema({
     },
     lastLoginRequest: {
         type: Date
+    }
+});
+
+newSchema.index({ name: 1 }, {
+    unique: true,
+    partialFilterExpression: {
+        name: { $exists: true }
+    }
+});
+
+newSchema.index({ ip: 1 }, {
+    unique: true,
+    partialFilterExpression: {
+        ip: { $exists: true }
+    }
+});
+
+newSchema.index({ user: 1 }, {
+    unique: true,
+    partialFilterExpression: {
+        user: { $exists: true }
     }
 });
 

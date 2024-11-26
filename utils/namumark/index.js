@@ -3,13 +3,16 @@ const fs = require('fs');
 const utils = require('./utils');
 const { Priority } = require('./types');
 
+const debugLog = debug ? console.log : (_ => {});
+
 const syntaxDefaultValues = {
     openStr: '',
     openOnlyForLineFirst: false,
     closeStr: '',
     closeOnlyForLineLast: false,
     allowMultiline: false,
-    priority: Priority.Format
+    priority: Priority.Format,
+    fullLine: false
 }
 
 const syntaxes = [];
@@ -28,7 +31,11 @@ const syntaxLoader = (subDir = '') => {
         if(file.endsWith('.js')) {
             const syntax = require(__dirname + `/syntax${subDir}/` + file);
             for(let [key, value] of Object.entries(syntaxDefaultValues)) {
-                if(!syntax[key]) syntax[key] = value;
+                if(!syntax[key]) {
+                    syntax[key] = value;
+
+                    if(key === 'priority' && syntax.fullLine) syntax[key] = Priority.FullLine;
+                }
             }
 
             syntax.name = file.replace('.js', '');
@@ -38,7 +45,7 @@ const syntaxLoader = (subDir = '') => {
             syntax.closeStr = utils.escapeHtml(syntax.closeStr);
 
             syntaxes.push(syntax);
-            console.log(`loaded syntax: ${syntax.name}`);
+            debugLog(`loaded syntax: ${syntax.name}`);
         }
         else {
             syntaxLoader(subDir + '/' + file);
@@ -47,7 +54,10 @@ const syntaxLoader = (subDir = '') => {
 
     if(!subDir) {
         sortedSyntaxes = syntaxes
-            .sort((a, b) => a.priority - b.priority || b.openStr.length - a.openStr.length || a.allowMultiline - b.allowMultiline);
+            .sort((a, b) =>
+                a.priority - b.priority
+                || b.openStr.length - a.openStr.length
+                || a.allowMultiline - b.allowMultiline);
         // syntaxesByLongCloseStr = syntaxes.sort((a, b) => b.closeStr.length - a.closeStr.length);
     }
 }
@@ -91,8 +101,8 @@ module.exports = class NamumarkParser {
     }
 
     async parse(input) {
-        console.log('parse!');
-        console.time();
+        debugLog('parse!');
+        if(debug) console.time();
 
         this.links = [];
         this.files = [];
@@ -108,20 +118,28 @@ module.exports = class NamumarkParser {
         let text = '';
         const openedSyntaxes = [];
         for(let syntaxIndex in sortedSyntaxes) {
+            this.syntaxData = {};
+
             syntaxIndex = parseInt(syntaxIndex);
             const syntax = sortedSyntaxes[syntaxIndex];
             const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
-            console.log(`parse syntax: ${syntax.name}`);
+            debugLog(`parse syntax: ${syntax.name}`);
             if(text) {
                 sourceText = text;
                 text = '';
             }
 
-            if(syntax.checkLine) {
+            if(syntax.fullLine) {
                 const lines = sourceText.split('\n');
+                const newLines = [];
                 for(let line of lines) {
-
+                    const output = await syntax.format(line, this);
+                    if(output !== '') {
+                        if(output != null) newLines.push(output);
+                        else newLines.push(line);
+                    }
                 }
+                text = newLines.join('\n');
             }
             else outer: for (let i = 0; i < sourceText.length; i++) {
                 const char = sourceText[i];
@@ -167,7 +185,7 @@ module.exports = class NamumarkParser {
                         openedSyntaxes.splice(syntaxIndex, 1);
                     } else if (currStr === syntax.closeStr) {
                         const content = text.slice(syntax.index + syntax.openStr.length, text.length);
-                        console.log(`${syntax.name} at ${syntax.index} content: "${content}"`);
+                        debugLog(`${syntax.name} at ${syntax.index} content: "${content}"`);
                         const output = await syntax.format(content, this);
                         if (output != null) text = text.slice(0, syntax.index) + output;
                         else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
@@ -186,7 +204,7 @@ module.exports = class NamumarkParser {
                     }
 
                     openedSyntaxes.unshift(item);
-                    console.log(`opened ${syntax.name} at ${text.length}`);
+                    debugLog(`opened ${syntax.name} at ${text.length}`);
                     i += syntax.openStr.length - 1;
                     text += syntax.openStr;
                     continue;
@@ -196,11 +214,10 @@ module.exports = class NamumarkParser {
             }
         }
 
-        console.log(`links: ${this.links}`);
-        console.log(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
-        console.log(`footnotes: ${this.footnotes}`);
+        debugLog(`links: ${this.links}`);
+        debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
+        debugLog(`footnotes: ${this.footnotes}`);
 
-        console.timeEnd();
         // wiki-paragraph은 ---- 줄 문법으로 분리 시 별도 분리됨
         let html = `<div class="wiki-content"><div class="wiki-paragraph">${text.replaceAll('\n', '<br>')}</div></div>`;
 
@@ -212,7 +229,9 @@ module.exports = class NamumarkParser {
 </div>
         `.replaceAll('\n', '').trim() + html;
 
-        // console.log(html);
+        if(debug) console.timeEnd();
+
+        // debugLog(html);
         return {
             html,
             links: this.links,

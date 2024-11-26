@@ -10,9 +10,8 @@ module.exports = {
     format: (content, namumark) => {
         if(Format(content)) return null;
 
-        if(content.includes('\n')) {
+        if(content.includes('\n'))
             return `<pre><code>${namumark.escape(content)}</code></pre>`;
-        }
 
         return `<code>${namumark.escape(content)}</code>`;
     }

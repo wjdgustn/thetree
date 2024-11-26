@@ -213,6 +213,8 @@ app.use(async (req, res, next) => {
         }
     }
 
+    req.permissions = [...new Set(req.permissions)];
+
     // TODO perms:
     //  document_contributor(at document middleware)
     //  contributor(using revision history)

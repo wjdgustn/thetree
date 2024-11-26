@@ -1,8 +1,10 @@
 const { Priority } = require('../../types');
+const processImage = require('./image');
 
+const utils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 
-const processImage = require('./image');
+const Document = require('../../../../schemas/document');
 
 module.exports = {
     priority: Priority.ContentChange,
@@ -15,7 +17,7 @@ module.exports = {
 
         let link = splittedContent[0];
         let text = splittedContent.at(-1);
-        let notExist = true;
+        let notExist = false;
 
         const image = await processImage(content, splittedContent, link, text);
         if(typeof image === 'string') {
@@ -66,6 +68,8 @@ module.exports = {
             ].includes(parsedLink.protocol.slice(0, -1))) parsedLink = null;
         }
 
+        const linkExistsCache = namumark.syntaxData.linkExistsCache ??= [];
+
         let title;
         if(parsedLink) {
             link = parsedLink.href;
@@ -91,6 +95,21 @@ module.exports = {
                 title = link;
                 if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}`;
                 else link = `/w/${link}`;
+            }
+
+            const document = utils.parseDocumentName(title);
+            const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
+            if(cache) notExist = !cache.exists;
+            else {
+                const documentExists = await Document.exists({
+                    namespace: document.namespace,
+                    title: document.title
+                });
+                linkExistsCache.push({
+                    ...document,
+                    exists: documentExists
+                });
+                notExist = !documentExists;
             }
         }
 
