@@ -3,7 +3,10 @@ const {
     validateHTMLColorName
 } = require('validate-color');
 
+const { Priority } = require("../types");
+
 module.exports = {
+    priority: Priority.Literal,
     openStr: `{{{`,
     closeStr: `}}}`,
     allowMultiline: true,

@@ -2,7 +2,8 @@ module.exports = {
     Priority: {
         Macro: 0,
         ContentChange: 1,
-        Format: 2,
-        Footnote: 3
+        Literal: 2,
+        Format: 3,
+        Footnote: 4
     }
 }

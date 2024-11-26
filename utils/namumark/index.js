@@ -47,8 +47,7 @@ const syntaxLoader = (subDir = '') => {
 
     if(!subDir) {
         sortedSyntaxes = syntaxes
-            .sort((a, b) => b.openStr.length - a.openStr.length || a.allowMultiline - b.allowMultiline)
-            .sort((a, b) => b.priority - a.priority);
+            .sort((a, b) => a.priority - b.priority || b.openStr.length - a.openStr.length || a.allowMultiline - b.allowMultiline);
         // syntaxesByLongCloseStr = syntaxes.sort((a, b) => b.closeStr.length - a.closeStr.length);
     }
 }
@@ -59,11 +58,36 @@ const skipNamumarkHtmlTags = [
     'code'
 ]
 
+let escapeTags = [];
+for(let syntax of sortedSyntaxes) {
+    if(syntax.openStr) {
+        escapeTags = escapeTags.filter(t => !t.startsWith(syntax.openStr));
+        escapeTags.push(syntax.openStr);
+    }
+
+    if(syntax.closeStr) {
+        escapeTags = escapeTags.filter(t => !t.endsWith(syntax.closeStr));
+        escapeTags.push(syntax.closeStr);
+    }
+}
+
 module.exports = class NamumarkParser {
     constructor(data = {}) {
         if(data.document) this.document = data.document;
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
+    }
+
+    static escape(str) {
+        for(let tag of escapeTags) {
+            str = str.replaceAll(tag, `\\${tag}`);
+        }
+
+        return str;
+    }
+
+    escape(str) {
+        return NamumarkParser.escape(str);
     }
 
     async parse(input) {
@@ -84,20 +108,36 @@ module.exports = class NamumarkParser {
         let text = '';
         const openedSyntaxes = [];
         for(let syntax of sortedSyntaxes) {
+            console.log(`parse syntax: ${syntax.name}`);
             if(text) {
                 sourceText = text;
                 text = '';
             }
 
-            outer: for (let i = 0; i < sourceText.length; i++) {
+            if(syntax.checkLine) {
+                const lines = sourceText.split('\n');
+                for(let line of lines) {
+
+                }
+            }
+            else outer: for (let i = 0; i < sourceText.length; i++) {
                 const char = sourceText[i];
                 const prevChar = sourceText[i - 1];
-                const nextChar = sourceText[i + 1];
+                // const nextChar = sourceText[i + 1];
                 const isLineFirst = prevChar === '\n' || i === 0;
 
                 if (char === '\\') {
                     text += sourceText[++i] || '';
                     continue;
+                }
+
+                if(char === '<') {
+                    const closeIndex = sourceText.slice(i).indexOf('>');
+                    if(closeIndex !== -1) {
+                        text += sourceText.slice(i, i + closeIndex + 1);
+                        i += closeIndex;
+                        continue;
+                    }
                 }
 
                 for(let tag of skipNamumarkHtmlTags) {
@@ -114,8 +154,6 @@ module.exports = class NamumarkParser {
                     }
                 }
 
-                // const openedSyntaxesByLength = openedSyntaxes
-                //     .sort((a, b) => b.closeStr.length - a.closeStr.length);
                 for (let syntaxIndex in openedSyntaxes) {
                     syntaxIndex = parseInt(syntaxIndex);
                     const syntax = openedSyntaxes[syntaxIndex];
@@ -143,7 +181,6 @@ module.exports = class NamumarkParser {
                         index: text.length,
                         sourceIndex: i
                     }
-                    // const sameOpenedSyntaxIndex = openedSyntaxes.findIndex(s => s.name === syntax.name);
 
                     openedSyntaxes.unshift(item);
                     console.log(`opened ${syntax.name} at ${text.length}`);

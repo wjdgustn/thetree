@@ -110,7 +110,7 @@ module.exports = {
 
         if(parsedLink) rel.push('nofollow', 'noopener', 'ugc');
 
-        const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${text}</a>`;
+        const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
         if(isCategory) {
             namumark.categoryHtmls.push(html);
