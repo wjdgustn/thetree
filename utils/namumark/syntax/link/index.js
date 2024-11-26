@@ -1,8 +1,11 @@
+const { Priority } = require('../../types');
+
 const globalUtils = require('../../../../utils/global');
 
 const processImage = require('./image');
 
 module.exports = {
+    priority: Priority.ContentChange,
     openStr: `[[`,
     closeStr: `]]`,
     format: async (content, sourceContent, namumark) => {

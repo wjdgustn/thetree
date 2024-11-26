@@ -107,7 +107,7 @@
     color: #e69720;
 }
 
-.wiki-content .not-exist {
+.wiki-content .not-exist:not:hover {
     color: red;
 }
 
