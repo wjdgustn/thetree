@@ -50,7 +50,8 @@
       "public/",
       "views/",
       "serverConfig.json",
-      "publicConfig.json"
+      "publicConfig.json",
+      "utils/namumark/syntax/"
     ]
   }
 }

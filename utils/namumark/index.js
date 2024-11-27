@@ -15,10 +15,12 @@ const syntaxDefaultValues = {
     fullLine: false
 }
 
-const syntaxes = [];
+let syntaxes = [];
 let sortedSyntaxes = [];
 // let syntaxesByLongCloseStr = [];
 const syntaxLoader = (subDir = '') => {
+    if(!subDir) syntaxes = [];
+
     let syntaxFiles = fs.readdirSync(__dirname + '/syntax' + subDir);
     if(subDir) {
         if(syntaxFiles.includes('index.js')) syntaxFiles = ['index.js'];
@@ -29,7 +31,9 @@ const syntaxLoader = (subDir = '') => {
         if(!subDir && file === 'index.js') continue;
 
         if(file.endsWith('.js')) {
-            const syntax = require(__dirname + `/syntax${subDir}/` + file);
+            const syntaxPath = require.resolve(__dirname + `/syntax${subDir}/` + file);
+            if(debug) delete require.cache[syntaxPath];
+            const syntax = require(syntaxPath);
             for(let [key, value] of Object.entries(syntaxDefaultValues)) {
                 if(!syntax[key]) {
                     syntax[key] = value;
@@ -93,6 +97,8 @@ const MaximumParagraphTagLength = Math.max(
 
 module.exports = class NamumarkParser {
     constructor(data = {}) {
+        if(debug) syntaxLoader();
+
         if(data.document) this.document = data.document;
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
