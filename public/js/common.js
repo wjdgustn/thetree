@@ -14,8 +14,10 @@ document.addEventListener('alpine:initialized', () => {
     setupPjax();
 });
 
+let firstUrl = location.href;
 window.addEventListener('popstate', async e => {
-    if(e.state !== null) await movePage(document.location.href, false);
+    if(e.state !== null || location.href === firstUrl)
+        await movePage(location.href, false);
 });
 
 function plainAlert(text) {
