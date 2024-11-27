@@ -137,6 +137,7 @@ module.exports = class NamumarkParser {
 
         let sourceText = utils.escapeHtml(input);
 
+        // 문법 파싱
         let text = '';
         const openedSyntaxes = [];
         for(let syntaxIndex in sortedSyntaxes) {
@@ -264,6 +265,7 @@ module.exports = class NamumarkParser {
             text = '';
         }
 
+        // paragraph 제어문 처리
         sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
 
         let insertPos = 0;
@@ -300,17 +302,14 @@ module.exports = class NamumarkParser {
             insertPos++;
         }
 
+        // 빈 paragraph 제거
         text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
 
         debugLog(`links: ${this.links}`);
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
         debugLog(`footnotes: ${this.footnotes}`);
 
-        // wiki-paragraph은 ---- 줄 문법으로 분리 시 별도 분리됨
         let html = `<div class="wiki-content">${text.replaceAll('\n', '<br>')}</div>`;
-        // html = html
-        //     .replaceAll('<paragraphPos/>', '[paragraphPos]')
-        //     .replaceAll('<exitParagraph/>', '[exitParagraph]');
 
         if(this.req?.query.from) html = `
 <div class="thetree-alert thetree-alert-primary">

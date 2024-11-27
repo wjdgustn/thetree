@@ -28,18 +28,18 @@ module.exports = {
         if(config.namespaces.includes(splitedTitleNamespace)) forceShowNamespace = true;
         else if(namespace === '문서') forceShowNamespace = false;
 
-        let anchor;
-        if(title.includes('#')) {
-            const splittedTitle = title.split('#');
-            anchor = splittedTitle.pop();
-            title = splittedTitle.join('#');
-        }
+        // let anchor;
+        // if(title.includes('#')) {
+        //     const splittedTitle = title.split('#');
+        //     anchor = splittedTitle.pop();
+        //     title = splittedTitle.join('#');
+        // }
 
         return {
             namespace,
             title,
             forceShowNamespace,
-            anchor
+            // anchor
         }
     },
     camelToSnakeCase(str) {

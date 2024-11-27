@@ -311,3 +311,17 @@
     height: 0;
     margin: .5em 0;
 }
+
+.wiki-content .wiki-indent {
+    padding-left: 10px;
+}
+
+.wiki-content .wiki-list {
+    padding-left: .5rem;
+    margin: .4em 0 .4em 1.5em;
+}
+
+.wiki-content .wiki-list li {
+    list-style: inherit !important;
+    margin: .4em 0;
+}

@@ -53,7 +53,11 @@ module.exports = {
         link = link.trim();
         text = text.trim();
 
-        if(splittedContent.length === 1 && link.slice(1).includes('#')) text = link.split('#')[0];
+        if(splittedContent.length === 1 && link.slice(1).includes('#')) {
+            const splittedText = link.split('#');
+            splittedText.pop();
+            text = splittedText.join('#');
+        }
 
         let parsedLink;
         try {
@@ -92,6 +96,13 @@ module.exports = {
 
             if(link.startsWith('#')) notExist = false;
             else {
+                const splittedLink = link.split('#');
+                if(splittedLink.length > 2) {
+                    const hash = splittedLink.pop();
+                    const front = splittedLink.join('#').replaceAll('#', '%23');
+                    link = `${front}#${hash}`;
+                }
+
                 title = link;
                 if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}`;
                 else link = `/w/${link}`;
