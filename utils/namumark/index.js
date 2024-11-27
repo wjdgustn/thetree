@@ -81,6 +81,16 @@ for(let syntax of sortedSyntaxes) {
     }
 }
 
+const ParagraphPosTag = '<paragraphPos/>';
+const EnterParagraphTag = '<enterParagraph/>';
+const ExitParagraphTag = '<exitParagraph/>';
+
+const MaximumParagraphTagLength = Math.max(
+    ParagraphPosTag.length,
+    EnterParagraphTag.length,
+    ExitParagraphTag.length
+);
+
 module.exports = class NamumarkParser {
     constructor(data = {}) {
         if(data.document) this.document = data.document;
@@ -124,20 +134,45 @@ module.exports = class NamumarkParser {
             const syntax = sortedSyntaxes[syntaxIndex];
             const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
             debugLog(`parse syntax: ${syntax.name}`);
-            if(text) {
-                sourceText = text;
-                text = '';
-            }
+            // if(text) {
+            //     sourceText = text;
+            //     text = '';
+            // }
 
             if(syntax.fullLine) {
                 const lines = sourceText.split('\n');
                 const newLines = [];
+                let removeNextNewLine = false;
                 for(let line of lines) {
-                    const output = await syntax.format(line, this);
-                    if(output !== '') {
-                        if(output != null) newLines.push(output);
-                        else newLines.push(line);
+                    let output = await syntax.format(line, this, lines);
+                    if(output === '') continue;
+
+                    const pushLine = text => {
+                        if(removeNextNewLine) {
+                            if(!newLines.length) newLines.push(text);
+                            else newLines[newLines.length - 1] += text;
+                            removeNextNewLine = false;
+                        }
+                        else newLines.push(text);
                     }
+
+                    let setRemoveNextNewLine = false;
+                    if(output != null) {
+                        if(output.includes('<removeNextNewLine/>')) {
+                            output = output.replace('<removeNextNewLine/>', '');
+                            setRemoveNextNewLine = true;
+                        }
+
+                        if(output.includes('<removeNewLine/>')) {
+                            output = output.replace('<removeNewLine/>', '');
+                            if(!newLines.length) pushLine(output);
+                            else newLines[newLines.length - 1] += output;
+                        }
+                        else pushLine(output);
+                    }
+                    else pushLine(line);
+
+                    if(setRemoveNextNewLine) removeNextNewLine = true;
                 }
                 text = newLines.join('\n');
             }
@@ -212,14 +247,58 @@ module.exports = class NamumarkParser {
 
                 text += char;
             }
+
+            sourceText = text;
+            text = '';
         }
+
+        sourceText = ParagraphPosTag + sourceText;
+
+        let insertPos = 0;
+        let nextInsertPos = 0;
+        for(let i = 0; i < sourceText.length; i++) {
+            const char = sourceText[i];
+            const frontStrSample = sourceText.slice(i, i + MaximumParagraphTagLength);
+
+            if(frontStrSample.startsWith(ParagraphPosTag)) {
+                const WikiParagraphOpen = '<div class="wiki-paragraph">';
+                const WikiParagraphTag = WikiParagraphOpen + '</div>';
+
+                insertPos += WikiParagraphTag.length;
+
+                nextInsertPos = text.length + WikiParagraphOpen.length;
+                text += WikiParagraphTag;
+                i += ParagraphPosTag.length - 1;
+                continue;
+            }
+
+            if(frontStrSample.startsWith(EnterParagraphTag)) {
+                insertPos = nextInsertPos;
+                i += EnterParagraphTag.length - 1;
+                continue;
+            }
+
+            if(frontStrSample.startsWith(ExitParagraphTag)) {
+                insertPos = text.length;
+                i += ExitParagraphTag.length - 1;
+                continue;
+            }
+
+            text = utils.insertText(text, insertPos, char);
+            insertPos++;
+        }
+
+        text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
 
         debugLog(`links: ${this.links}`);
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
         debugLog(`footnotes: ${this.footnotes}`);
 
         // wiki-paragraph은 ---- 줄 문법으로 분리 시 별도 분리됨
-        let html = `<div class="wiki-content"><div class="wiki-paragraph">${text.replaceAll('\n', '<br>')}</div></div>`;
+        let html = `<div class="wiki-content">${text.replaceAll('\n', '<br>')}</div>`;
+        // html = html
+        //     .replaceAll('<paragraphPos/>', '[paragraphPos]')
+        //     .replaceAll('<exitParagraph/>', '[exitParagraph]');
 
         if(this.req?.query.from) html = `
 <div class="thetree-alert thetree-alert-primary">

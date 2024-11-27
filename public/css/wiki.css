@@ -234,3 +234,72 @@
     display: block;
     max-width: 100%;
 }
+
+.wiki-content .wiki-heading {
+    cursor: pointer;
+}
+
+.wiki-content h1.wiki-heading {
+    font-size: 2em;
+}
+
+.wiki-content h2.wiki-heading {
+    font-size: 1.8em;
+}
+
+.wiki-content h3.wiki-heading {
+    font-size: 1.6em;
+}
+
+.wiki-content h4.wiki-heading {
+    font-size: 1.4em;
+}
+
+.wiki-content h5.wiki-heading {
+    font-size: 1.2em;
+}
+
+.wiki-content h6.wiki-heading {
+    font-size: 1em;
+}
+
+.wiki-content h1.wiki-heading,
+.wiki-content h2.wiki-heading,
+.wiki-content h3.wiki-heading,
+.wiki-content h4.wiki-heading,
+.wiki-content h5.wiki-heading,
+.wiki-content h6.wiki-heading {
+    border-bottom: 1px solid #ccc;
+    margin: 1.2em 0 .8em;
+    padding-bottom: 5px;
+}
+
+.wiki-content .wiki-heading:before {
+    color: #666;
+    content: "";
+    float: left;
+    font-family: "Ionicons";
+    font-size: .8em;
+    font-weight: 400;
+    line-height: 1.8em;
+    margin: 0 .5rem 0 .2rem;
+    text-align: center;
+    width: .9em;
+}
+
+.wiki-content .wiki-heading.wiki-heading-folded {
+    opacity: .5;
+}
+
+.wiki-content .wiki-heading.wiki-heading-folded:before {
+    content: "";
+}
+
+.wiki-content .wiki-heading-content.wiki-heading-content-folded {
+    display: none;
+}
+
+.wiki-content .wiki-edit-section {
+    float: right;
+    font-size: .8rem;
+}

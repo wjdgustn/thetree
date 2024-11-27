@@ -32,5 +32,7 @@ document.addEventListener('thetree:pageLoad', () => {
         previewTabContent.innerHTML = await response.text();
 
         previewTabContent.classList.remove('preview-tab-loading');
+
+        setupWikiHandlers();
     });
 }, { once: true });
