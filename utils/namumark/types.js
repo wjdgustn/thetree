@@ -1,9 +1,9 @@
 module.exports = {
     Priority: {
-        Literal: 0,
-        ContentChange: 1,
-        FullLine: 2,
-        Format: 3,
-        Footnote: 4
+        Literal: 1,
+        ContentChange: 2,
+        FullLine: 3,
+        Format: 4,
+        Footnote: 5
     }
 }
