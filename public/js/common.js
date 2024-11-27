@@ -14,8 +14,8 @@ document.addEventListener('alpine:initialized', () => {
     setupPjax();
 });
 
-window.addEventListener('popstate', async _ => {
-    await movePage(document.location.href, false);
+window.addEventListener('popstate', async e => {
+    if(e.state !== null) await movePage(document.location.href, false);
 });
 
 function plainAlert(text) {
@@ -160,7 +160,7 @@ async function movePage(response, pushState = true) {
                     if(element) element.scrollIntoView();
                     newUrl.searchParams.delete('anchor');
                 }
-                history.pushState(null, null, newUrl.toString());
+                history.pushState({}, null, newUrl.toString());
             }
         }
 

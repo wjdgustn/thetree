@@ -1,4 +1,6 @@
 function headingClickHandler(e) {
+    if(e.target.tagName === 'A') return;
+
     const heading = e.currentTarget;
     const content = heading.nextElementSibling;
     const prevClosed = heading.classList.contains('wiki-heading-folded');
