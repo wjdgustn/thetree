@@ -1,12 +1,13 @@
 function headingClickHandler(e) {
-    const content = e.target.nextElementSibling;
-    const prevClosed = e.target.classList.contains('wiki-heading-folded');
+    const heading = e.currentTarget;
+    const content = heading.nextElementSibling;
+    const prevClosed = heading.classList.contains('wiki-heading-folded');
     if(prevClosed) {
-        e.target.classList.remove('wiki-heading-folded');
+        heading.classList.remove('wiki-heading-folded');
         content.classList.remove('wiki-heading-content-folded');
     }
     else {
-        e.target.classList.add('wiki-heading-folded');
+        heading.classList.add('wiki-heading-folded');
         content.classList.add('wiki-heading-content-folded');
     }
 }
