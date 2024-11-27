@@ -6,6 +6,10 @@
 
 <%-include('alert', { alert: aclMessage })%>
 
+<%if(contentHtml) {%>
+    <%-contentHtml%>
+<%}%>
+
 <form method="post" x-data="{ selectedTab: 'raw' }">
     <%for(let [key, value] of Object.entries(body).filter(([_, v]) => !!v)) {%>
         <input type="hidden" name="<%=key%>" value="<%=value%>">

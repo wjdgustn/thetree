@@ -367,6 +367,16 @@ app.get('/edit/*', async (req, res) => {
 
     // TODO: edit one section(after implement parser)
 
+    let contentHtml;
+    if(rev?.content) {
+        const parser = new NamumarkParser({
+            document,
+            aclData: req.aclData
+        });
+        const { html } = await parser.parseEditorComment(rev.content);
+        contentHtml = html;
+    }
+
     res.renderSkin(undefined, {
         viewName: 'edit',
         contentName: 'edit',
@@ -378,7 +388,8 @@ app.get('/edit/*', async (req, res) => {
         },
         serverData: {
             aclMessage,
-            content: docExists ? rev.content : ''
+            content: docExists ? rev.content : '',
+            contentHtml
         }
     });
 });
