@@ -303,3 +303,11 @@
     float: right;
     font-size: .8rem;
 }
+
+.wiki-content hr {
+    border: 0;
+    border-top: .0625rem solid #ccc;
+    box-sizing: content-box;
+    height: 0;
+    margin: .5em 0;
+}
