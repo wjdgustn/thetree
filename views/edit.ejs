@@ -36,7 +36,7 @@
     </div>
 
     <label>
-        <input type="checkbox" name="agree" value="Y">
+        <input type="checkbox" name="agree" value="Y"<%=req.permissions.includes('contributor') ? ' checked' : ''%>>
         <span><%-config.editagree_text%></span>
     </label>
 
