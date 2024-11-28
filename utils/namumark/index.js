@@ -333,7 +333,6 @@ module.exports = class NamumarkParser {
             for(let i in lines) {
                 i = parseInt(i);
                 const line = lines[i];
-                const isLastLine = i === lines.length - 1;
 
                 let newLine = '';
                 let prevLine = '';
@@ -432,19 +431,30 @@ module.exports = class NamumarkParser {
                 }
                 else {
                     const prevWasList = listCloseTags.length > 0;
-                    for(let tag of listCloseTags) {
-                        prevLine += tag;
-                    }
-                    listCloseTags = [];
-                    openedListSpaces = [];
-                    lastListTypeStr = '';
-                    lastListSpace = 0;
 
-                    if(prevWasList) {
-                        console.log('prevWasList:', prevWasList);
-                        prevLine += '<removeNewline/><div class="wiki-paragraph">';
+                    if(prevWasList && lastListSpace <= listSpace) {
+                        const indentCount = listSpace - lastListSpace;
+                        const trimedLine = line.trimStart();
+                        const prevContent = newLines.at(-1);
+                        const prevWithoutCloseParagraph = prevContent.slice(0, -'</div>'.length);
+                        newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}</div>`;
+                            newLine = null;
                     }
-                    newLine += line;
+                    else {
+                        for(let tag of listCloseTags) {
+                            prevLine += tag;
+                        }
+                        listCloseTags = [];
+                        openedListSpaces = [];
+                        lastListTypeStr = '';
+                        lastListSpace = 0;
+
+                        if(prevWasList) {
+                            console.log('prevWasList:', prevWasList);
+                            prevLine += '<removeNewline/><div class="wiki-paragraph">';
+                        }
+                        newLine += line;
+                    }
                 }
 
                 // 닫는 paragraph 안 지워진 문제 하드코딩
@@ -452,7 +462,7 @@ module.exports = class NamumarkParser {
 
                 if(newLines.length) newLines[newLines.length - 1] += prevLine;
                 else if(prevLine) newLines.push(prevLine);
-                newLines.push(newLine);
+                if(newLine != null) newLines.push(newLine);
             }
 
             console.log(newLines);
