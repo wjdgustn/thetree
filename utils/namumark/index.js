@@ -352,7 +352,11 @@ module.exports = class NamumarkParser {
                     const trimedLine = line.trimStart();
                     const listTypeStr = Object.keys(numberedListTypes).find(a => trimedLine.startsWith(a));
                     let listContent = trimedLine.slice(listTypeStr.length);
-                    if(listContent.startsWith(' ')) listContent = listContent.slice(1);
+                    let noStartNum = false;
+                    if(listContent.startsWith(' ')) {
+                        noStartNum = true;
+                        listContent = listContent.slice(1);
+                    }
 
                     const changeList = listTypeStr !== lastListTypeStr || listSpace !== lastListSpace;
                     const isIncreasing = listSpace > lastListSpace;
@@ -389,8 +393,27 @@ module.exports = class NamumarkParser {
                         if(needOpen) {
                             const tagName = listTypeStr === '*' ? 'ul' : 'ol';
                             const listClass = numberedListTypes[listTypeStr];
+
+                            let startNum = '';
+                            if(tagName === 'ol' && !noStartNum) {
+                                const numbers = [...Array(10).keys()].map(a => a.toString());
+                                for(let i = 0; i < listContent.length; i++) {
+                                    const char = listContent[i];
+                                    console.log(i, char);
+                                    if(!i) {
+                                        if(char === '#') continue;
+                                        break;
+                                    }
+                                    else if(!numbers.includes(char)) break;
+
+                                    startNum += char;
+                                }
+                            }
+
+                            if(startNum) listContent = listContent.slice(startNum.length + 2);
+
                             if(level === 1) prevLine += '</div>';
-                            prevLine += `${'<div class="wiki-indent">'.repeat(indentCount)}<${tagName} class="${`wiki-list ${listClass}`.trim()}">`;
+                            prevLine += `${'<div class="wiki-indent">'.repeat(indentCount)}<${tagName} class="${`wiki-list ${listClass}`.trim()}"${startNum ? ` start="${startNum}"` : ''}>`;
                             console.log(`open list! prevLine: ${prevLine}`);
                             listCloseTags.push(`</li></${tagName}>${'</div>'.repeat(indentCount)}`);
                             openedListSpaces[level - 1] = listSpace;
