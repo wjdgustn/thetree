@@ -12,6 +12,6 @@ module.exports = {
             if(length > 9) return;
         }
 
-        return `<removeNewLine/><removeNextNewLine/></div><hr><div class="wiki-paragraph">`;
+        return `<removeNewlineLater/><removeNextNewline/></div><hr><div class="wiki-paragraph">`;
     }
 }

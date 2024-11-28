@@ -137,6 +137,8 @@ module.exports = class NamumarkParser {
 
         let sourceText = utils.escapeHtml(input);
 
+        if(sourceText.endsWith('\n')) sourceText = sourceText.slice(0, -1);
+
         // 문법 파싱
         let text = '';
         const openedSyntaxes = [];
@@ -171,13 +173,13 @@ module.exports = class NamumarkParser {
 
                     let setRemoveNextNewLine = false;
                     if(output != null) {
-                        if(output.includes('<removeNextNewLine/>')) {
-                            output = output.replace('<removeNextNewLine/>', '');
+                        if(output.includes('<removeNextNewline/>')) {
+                            output = output.replace('<removeNextNewline/>', '');
                             setRemoveNextNewLine = true;
                         }
 
-                        if(output.includes('<removeNewLine/>')) {
-                            output = output.replace('<removeNewLine/>', '');
+                        if(output.includes('<removeNewline/>')) {
+                            output = output.replace('<removeNewline/>', '');
                             if(!newLines.length) pushLine(output);
                             else newLines[newLines.length - 1] += output;
                         }
@@ -265,6 +267,9 @@ module.exports = class NamumarkParser {
             text = '';
         }
 
+        console.log('=== 문법 파싱 후 ===');
+        console.log(sourceText);
+
         // paragraph 제어문 처리
         sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
         text = '';
@@ -276,8 +281,8 @@ module.exports = class NamumarkParser {
             const frontStrSample = sourceText.slice(i, i + MaximumParagraphTagLength);
 
             if(frontStrSample.startsWith(ParagraphPosTag)) {
-                const WikiParagraphOpen = '<div class="wiki-paragraph">\n';
-                const WikiParagraphTag = WikiParagraphOpen + '</div>';
+                const WikiParagraphOpen = '<div class="wiki-paragraph"><removeNewline/>\n';
+                const WikiParagraphTag = WikiParagraphOpen + '\n<removeNewline/></div>';
 
                 insertPos += WikiParagraphTag.length;
 
@@ -303,8 +308,10 @@ module.exports = class NamumarkParser {
             insertPos++;
         }
 
+        console.log('=== paragraph 제어문 처리 후 ===');
+        console.log(text);
+
         // 리스트
-        // TODO: 이게 맨 앞에 <br> 만듬
         {
             sourceText = text;
 
@@ -321,9 +328,13 @@ module.exports = class NamumarkParser {
             const newLines = [];
             let listCloseTags = [];
             let openedListSpaces = [];
-            let lastLineTypeStr = '';
+            let lastListTypeStr = '';
             let lastListSpace = 0;
-            for(let line of lines) {
+            for(let i in lines) {
+                i = parseInt(i);
+                const line = lines[i];
+                const isLastLine = i === lines.length - 1;
+
                 let newLine = '';
                 let prevLine = '';
 
@@ -343,71 +354,100 @@ module.exports = class NamumarkParser {
                     let listContent = trimedLine.slice(listTypeStr.length);
                     if(listContent.startsWith(' ')) listContent = listContent.slice(1);
 
-                    const changeList = listTypeStr !== lastLineTypeStr || listSpace !== lastListSpace;
+                    const changeList = listTypeStr !== lastListTypeStr || listSpace !== lastListSpace;
+                    const isIncreasing = listSpace > lastListSpace;
+                    let level = listCloseTags.length;
+                    const levelDiff = changeList
+                        ? (isIncreasing ? 1 : (openedListSpaces.findIndex(a => a >= listSpace) + 1) - listCloseTags.length)
+                        : 0;
+                    level += levelDiff;
+                    const indentCount = listSpace - level;
 
-                    console.log('\nopenedListSpaces', openedListSpaces);
-                    console.log('listCloseTags', listCloseTags);
-                    console.log(`listTypeStr: ${listTypeStr} listSpace: ${listSpace} lastListSpace: ${lastListSpace} changeList: ${changeList} line: ${line}`);
-
-                    const goToParentList = () => {
-                        console.log('gotoParentList');
-                        prevLine += listCloseTags.pop();
-                        const parentListSpace = openedListSpaces.at(-2);
-                        console.log(`parentListSpace: ${parentListSpace}`);
-                        if(parentListSpace === listSpace) {
-                            openedListSpaces.pop();
-                            prevLine += '</div>';
-                            goToParentList();
-                        }
-                    }
+                    console.log(`\nlistTypeStr: ${listTypeStr} listSpace: ${listSpace} lastListSpace: ${lastListSpace} changeList: ${changeList} listTypeStr ${listTypeStr} listContent: ${listContent} indentCount: ${indentCount}`);
+                    console.log(`level: ${level} isIncreasing: ${isIncreasing} levelDiff: ${levelDiff}`);
 
                     if(changeList) {
-                        if(listCloseTags.length) prevLine += listCloseTags.pop();
+                        if(levelDiff < 0) for(let i = 0; i < -levelDiff; i++) {
+                            openedListSpaces.pop();
 
-                        const tagName = listTypeStr === '*' ? 'ul' : 'ol';
-                        const listClass = numberedListTypes[listTypeStr];
-                        prevLine = `</div><${tagName} class="${`wiki-list ${listClass}`.trim()}">`;
-                        listCloseTags.push(`</li></${tagName}>`);
-                        openedListSpaces.push(listSpace);
+                            let tag = listCloseTags.pop();
+                            if(i > 0) tag = tag.slice('</li>'.length);
+                            prevLine += tag;
+                        }
+
+                        const needSameLevelReopen =
+                            // 인덴트 레벨이 변한 경우
+                            (levelDiff === 0 && listSpace !== lastListSpace)
+                            // 세는 리스트 타입이 변한 경우
+                            || (levelDiff === 0 && lastListTypeStr && listTypeStr !== lastListTypeStr);
+                        if(needSameLevelReopen) prevLine += listCloseTags.pop();
+
+                        const needOpen = levelDiff > 0 || listTypeStr !== lastListTypeStr || needSameLevelReopen;
+                        console.log('needOpen:', needOpen);
+                        if(levelDiff < 0 && needOpen) prevLine += listCloseTags.pop().slice('</li>'.length);
+
+                        if(needOpen) {
+                            const tagName = listTypeStr === '*' ? 'ul' : 'ol';
+                            const listClass = numberedListTypes[listTypeStr];
+                            if(level === 1) prevLine += '</div>';
+                            prevLine += `${'<div class="wiki-indent">'.repeat(indentCount)}<${tagName} class="${`wiki-list ${listClass}`.trim()}">`;
+                            console.log(`open list! prevLine: ${prevLine}`);
+                            listCloseTags.push(`</li></${tagName}>${'</div>'.repeat(indentCount)}`);
+                            openedListSpaces[level - 1] = listSpace;
+                        }
                     }
                     else {
-                        prevLine = `</div></li><div class="wiki-paragraph">`;
+                        prevLine = `</li>`;
+                        console.log(`close prev item! prevLine: ${prevLine}`);
                     }
 
-                    console.log(`level: ${listCloseTags.length}`);
-
-                    // const frontSpaces = ' '.repeat(Math.max(0, (listSpace - 1) - (listCloseTags.length - 1)));
-                    // console.log(`listSpace: ${listSpace} listCloseTags.length: ${listCloseTags.length} frontSpaces: ${frontSpaces.length}`);
-
-                    newLine += '<removeNewline/><li><div class="wiki-paragraph">' + listContent;
+                    newLine += `<removeNewline/><li><div class="wiki-paragraph">${listContent}</div>`;
+                    console.log(`add item! newLine: ${newLine}`);
 
                     lastListSpace = listSpace;
-                    lastLineTypeStr = listTypeStr;
+                    lastListTypeStr = listTypeStr;
                 }
                 else {
+                    const prevWasList = listCloseTags.length > 0;
                     for(let tag of listCloseTags) {
-                        newLine += tag;
+                        prevLine += tag;
                     }
                     listCloseTags = [];
                     openedListSpaces = [];
-                    lastLineTypeStr = '';
+                    lastListTypeStr = '';
                     lastListSpace = 0;
 
+                    if(prevWasList) {
+                        console.log('prevWasList:', prevWasList);
+                        prevLine += '<removeNewline/><div class="wiki-paragraph">';
+                    }
                     newLine += line;
                 }
 
-                if(newLines.length) {
-                    newLines[newLines.length - 1] += prevLine;
-                    newLines.push(newLine);
-                }
-                else newLines.push(prevLine, newLine);
+                // 닫는 paragraph 안 지워진 문제 하드코딩
+                // if(isLastLine && newLine.endsWith('</div>')) newLine = newLine.slice(0, -'</div>'.length);
+
+                if(newLines.length) newLines[newLines.length - 1] += prevLine;
+                else if(prevLine) newLines.push(prevLine);
+                newLines.push(newLine);
             }
 
+            console.log(newLines);
             text = newLines.join('\n');
+            console.log('=== 리스트 파싱 후 ===');
+            console.log(text);
+            console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
         }
 
         // removeNewline 처리
-        text = text.replaceAll('\n<removeNewline/>', '');
+        text = text
+            .replaceAll('<removeNewlineLater/>', '<removeNewline/>')
+            .replaceAll('\n<removeNewline/>', '')
+            .replaceAll('<removeNewline/>\n', '')
+            .replaceAll('<removeNewline/>', '');
+
+        console.log('=== removeNewline 처리 후 ===');
+        console.log(text);
 
         // 인덴트
         {

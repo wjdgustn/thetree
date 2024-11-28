@@ -76,10 +76,10 @@ module.exports = {
         const paragraphNumText = paragraphNumTextArr.join('.');
 
         return `
-<removeNewLine/>
-<removeNextNewLine/>
+<removeNewline/>
+<removeNextNewline/>
 <exitParagraph/>
-<h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
+<removeNewlineLater/><h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#toc">${paragraphNumText}.</a>
  <span :id="$el.innerText">${text}
 <span class="wiki-edit-section">
@@ -92,6 +92,7 @@ module.exports = {
 <div class="wiki-heading-content${defaultClosed ? ' wiki-heading-folded' : ''}">
 <paragraphPos/>
 </div>
+<removeNewlineLater/>
 `.replaceAll('\n', '') + '\n<enterParagraph/>';
     }
 }
