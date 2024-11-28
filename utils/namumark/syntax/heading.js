@@ -10,7 +10,10 @@ const getLevel = content => {
 
         if(char === ' ') break;
         else if(char !== '=') {
-            if(char === '#') defaultClosed = true;
+            if(char === '#') {
+                defaultClosed = true;
+                break;
+            }
             else return;
         }
 
