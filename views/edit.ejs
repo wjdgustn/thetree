@@ -15,11 +15,11 @@
         <input type="hidden" name="<%=key%>" value="<%=value%>">
     <%}%>
 
-    <ul>
-<!--        <li><button type="button" :class="selectedTab === 'editor' && 'selected-tab'" @click="selectedTab = 'editor'">편집기</button></li>-->
-        <li><button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button></li>
+    <ul class="form-ul">
+<!--        <li class="form-li"><button type="button" :class="selectedTab === 'editor' && 'selected-tab'" @click="selectedTab = 'editor'">편집기</button></li>-->
+        <li class="form-li"><button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button></li>
         <%if(!aclMessage) {%>
-        <li><button id="preview-tab-button" type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button></li>
+        <li class="form-li"><button id="preview-tab-button" type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button></li>
         <%}%>
     </ul>
 

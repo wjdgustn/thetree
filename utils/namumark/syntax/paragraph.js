@@ -82,16 +82,16 @@ module.exports = {
 <h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#toc">${paragraphNumText}.</a>
  <span :id="$el.innerText">${text}
- <span class="wiki-edit-section">
- <a href="${globalUtils.doc_action_link(namumark.document, 'edit', {
-     section: sectionNum
+<span class="wiki-edit-section">
+<a href="${globalUtils.doc_action_link(namumark.document, 'edit', {
+    section: sectionNum
 })}" rel="nofollow">[편집]</a>
- </span>
- </span>
- </h${level}>
- <div class="wiki-heading-content${defaultClosed ? ' wiki-heading-folded' : ''}">
- <paragraphPos/>
- </div>
- <enterParagraph/>`.replaceAll('\n', '');
+</span>
+</span>
+</h${level}>
+<div class="wiki-heading-content${defaultClosed ? ' wiki-heading-folded' : ''}">
+<paragraphPos/>
+</div>
+`.replaceAll('\n', '') + '\n<enterParagraph/>';
     }
 }

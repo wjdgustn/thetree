@@ -1,5 +1,5 @@
 @scope (#content-style) {
-    form ul {
+    form .form-ul {
         border-bottom: 1px solid #ddd;
         height: 36px;
         list-style: none;
@@ -8,11 +8,11 @@
         padding-left: 0;
     }
 
-    .theseed-dark-mode form ul {
+    .theseed-dark-mode form .form-ul {
         border-color: #383b40;
     }
 
-    form li {
+    form .form-li {
         float: left;
         margin-bottom: -1px;
     }

@@ -6,6 +6,10 @@
     margin-bottom: 1rem;
 }
 
+.wiki-list li .wiki-paragraph {
+    margin-bottom: 0;
+}
+
 .wiki-content strong {
     font-weight: 700;
 }
@@ -324,4 +328,20 @@
 .wiki-content .wiki-list li {
     list-style: inherit !important;
     margin: .4em 0;
+}
+
+.wiki-content .wiki-list-alpha {
+    list-style: lower-alpha;
+}
+
+.wiki-content .wiki-list-upper-alpha {
+    list-style: upper-alpha;
+}
+
+.wiki-content .wiki-list-roman {
+    list-style: lower-roman;
+}
+
+.wiki-content .wiki-list-upper-roman {
+    list-style: upper-roman;
 }

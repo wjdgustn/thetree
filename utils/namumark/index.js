@@ -267,6 +267,7 @@ module.exports = class NamumarkParser {
 
         // paragraph 제어문 처리
         sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
+        text = '';
 
         let insertPos = 0;
         let nextInsertPos = 0;
@@ -275,7 +276,7 @@ module.exports = class NamumarkParser {
             const frontStrSample = sourceText.slice(i, i + MaximumParagraphTagLength);
 
             if(frontStrSample.startsWith(ParagraphPosTag)) {
-                const WikiParagraphOpen = '<div class="wiki-paragraph">';
+                const WikiParagraphOpen = '<div class="wiki-paragraph">\n';
                 const WikiParagraphTag = WikiParagraphOpen + '</div>';
 
                 insertPos += WikiParagraphTag.length;
@@ -302,8 +303,162 @@ module.exports = class NamumarkParser {
             insertPos++;
         }
 
+        // 리스트
+        // TODO: 이게 맨 앞에 <br> 만듬
+        {
+            sourceText = text;
+
+            const numberedListTypes = {
+                '*': '',
+                '1.': '',
+                'a.': 'wiki-list-alpha',
+                'A.': 'wiki-list-upper-alpha',
+                'i.': 'wiki-list-roman',
+                'I.': 'wiki-list-upper-roman'
+            }
+
+            const lines = sourceText.split('\n');
+            const newLines = [];
+            let listCloseTags = [];
+            let openedListSpaces = [];
+            let lastLineTypeStr = '';
+            let lastListSpace = 0;
+            for(let line of lines) {
+                let newLine = '';
+                let prevLine = '';
+
+                const isList = line.startsWith(' ')
+                    && Object.keys(numberedListTypes).some(a => line.trim().startsWith(a));
+
+                let listSpace = 0;
+                for(let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if(char !== ' ') break;
+                    listSpace++;
+                }
+
+                if(isList) {
+                    const trimedLine = line.trimStart();
+                    const listTypeStr = Object.keys(numberedListTypes).find(a => trimedLine.startsWith(a));
+                    let listContent = trimedLine.slice(listTypeStr.length);
+                    if(listContent.startsWith(' ')) listContent = listContent.slice(1);
+
+                    const changeList = listTypeStr !== lastLineTypeStr || listSpace !== lastListSpace;
+
+                    console.log('\nopenedListSpaces', openedListSpaces);
+                    console.log('listCloseTags', listCloseTags);
+                    console.log(`listTypeStr: ${listTypeStr} listSpace: ${listSpace} lastListSpace: ${lastListSpace} changeList: ${changeList} line: ${line}`);
+
+                    const goToParentList = () => {
+                        console.log('gotoParentList');
+                        prevLine += listCloseTags.pop();
+                        const parentListSpace = openedListSpaces.at(-2);
+                        console.log(`parentListSpace: ${parentListSpace}`);
+                        if(parentListSpace === listSpace) {
+                            openedListSpaces.pop();
+                            prevLine += '</div>';
+                            goToParentList();
+                        }
+                    }
+
+                    if(changeList) {
+                        if(listCloseTags.length) prevLine += listCloseTags.pop();
+
+                        const tagName = listTypeStr === '*' ? 'ul' : 'ol';
+                        const listClass = numberedListTypes[listTypeStr];
+                        prevLine = `</div><${tagName} class="${`wiki-list ${listClass}`.trim()}">`;
+                        listCloseTags.push(`</li></${tagName}>`);
+                        openedListSpaces.push(listSpace);
+                    }
+                    else {
+                        prevLine = `</div></li><div class="wiki-paragraph">`;
+                    }
+
+                    console.log(`level: ${listCloseTags.length}`);
+
+                    // const frontSpaces = ' '.repeat(Math.max(0, (listSpace - 1) - (listCloseTags.length - 1)));
+                    // console.log(`listSpace: ${listSpace} listCloseTags.length: ${listCloseTags.length} frontSpaces: ${frontSpaces.length}`);
+
+                    newLine += '<removeNewline/><li><div class="wiki-paragraph">' + listContent;
+
+                    lastListSpace = listSpace;
+                    lastLineTypeStr = listTypeStr;
+                }
+                else {
+                    for(let tag of listCloseTags) {
+                        newLine += tag;
+                    }
+                    listCloseTags = [];
+                    openedListSpaces = [];
+                    lastLineTypeStr = '';
+                    lastListSpace = 0;
+
+                    newLine += line;
+                }
+
+                if(newLines.length) {
+                    newLines[newLines.length - 1] += prevLine;
+                    newLines.push(newLine);
+                }
+                else newLines.push(prevLine, newLine);
+            }
+
+            text = newLines.join('\n');
+        }
+
+        // removeNewline 처리
+        text = text.replaceAll('\n<removeNewline/>', '');
+
+        // 인덴트
+        {
+            sourceText = text;
+
+            const lines = sourceText.split('\n');
+            const newLines = [];
+            let prevSpaceCount = 0;
+            for(let line of lines) {
+                let spaceCount = 0;
+                for(let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if(char === '<') {
+                        const closeIndex = line.slice(i).indexOf('>');
+                        if(closeIndex !== -1) {
+                            i += closeIndex;
+                            continue;
+                        }
+                    }
+                    if(char !== ' ') break;
+                    spaceCount++;
+                }
+
+                line = line.trimStart();
+
+                if(spaceCount > prevSpaceCount) {
+                    line = '</div><div class="wiki-indent"><div class="wiki-paragraph">' + line;
+                }
+                else if(spaceCount < prevSpaceCount) {
+                    line = '</div></div><div class="wiki-paragraph">' + line;
+                }
+
+                if(!newLines.length || spaceCount === prevSpaceCount) newLines.push(line);
+                else newLines[newLines.length - 1] += line;
+
+                prevSpaceCount = spaceCount;
+            }
+
+            for(let i = prevSpaceCount; i > 0; i--) {
+                newLines[newLines.length - 1] += '</div></div><div class="wiki-paragraph">';
+            }
+
+            text = newLines.join('\n');
+        }
+
+        // paragraph 다음 줄바꿈 정리
+        text = text.replaceAll('<div class="wiki-paragraph">\n', '<div class="wiki-paragraph">');
+
         // 빈 paragraph 제거
         text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
+        if(text.endsWith('<div class="wiki-paragraph">')) text = text.slice(0, -'<div class="wiki-paragraph">'.length);
 
         debugLog(`links: ${this.links}`);
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
