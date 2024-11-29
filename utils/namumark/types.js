@@ -3,7 +3,8 @@ module.exports = {
         Literal: 1,
         ContentChange: 2,
         FullLine: 3,
-        Format: 4,
-        Footnote: 5
+        LiteralFormat: 4,
+        Format: 5,
+        Footnote: 6
     }
 }

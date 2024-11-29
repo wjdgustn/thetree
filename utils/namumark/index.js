@@ -91,6 +91,9 @@ const ParagraphPosTag = '<paragraphPos/>';
 const EnterParagraphTag = '<enterParagraph/>';
 const ExitParagraphTag = '<exitParagraph/>';
 
+const BrIsNewLineStart = '<brIsNewLineStart/>';
+const BrIsNewLineEnd = '<brIsNewLineEnd/>';
+
 const MaximumParagraphTagLength = Math.max(
     ParagraphPosTag.length,
     EnterParagraphTag.length,
@@ -150,7 +153,7 @@ module.exports = class NamumarkParser {
             syntaxIndex = parseInt(syntaxIndex);
             const syntax = sortedSyntaxes[syntaxIndex];
             const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
-            debugLog(`parse syntax: ${syntax.name}`);
+            debugLog(`\nparse syntax: ${syntax.name}`);
             // if(text) {
             //     sourceText = text;
             //     text = '';
@@ -193,90 +196,119 @@ module.exports = class NamumarkParser {
                 }
                 text = newLines.join('\n');
             }
-            else outer: for (let i = 0; i < sourceText.length; i++) {
-                const char = sourceText[i];
-                const prevChar = sourceText[i - 1];
-                // const nextChar = sourceText[i + 1];
-                const isLineFirst = prevChar === '\n' || i === 0;
+            else {
+                let brIsNewLineMode = false;
 
-                if (char === '\\') {
-                    if(!isLastSyntax) text += '\\';
-                    text += sourceText[++i] || '';
-                    continue;
-                }
+                outer: for (let i = 0; i < sourceText.length; i++) {
+                    const char = sourceText[i];
+                    const prevChar = sourceText[i - 1];
+                    const prevIsbr = sourceText.slice(i - 4, i) === '<br>';
+                    // const nextChar = sourceText[i + 1];
+                    const isLineFirstByBr = brIsNewLineMode && prevIsbr;
+                    const isLineFirst = prevChar === '\n' || i === 0 || isLineFirstByBr;
 
-                if(char === '<') {
-                    const closeIndex = sourceText.slice(i).indexOf('>');
-                    if(closeIndex !== -1) {
-                        text += sourceText.slice(i, i + closeIndex + 1);
-                        i += closeIndex;
+                    if(isLineFirst) {
+                        console.log(`new line! sample: ${sourceText.slice(i, i + 30)} openedSyntaxes: ${openedSyntaxes.map(a => a.name)}`);
+                        for(let syntaxIndex in openedSyntaxes) {
+                            syntaxIndex = parseInt(syntaxIndex);
+                            const syntax = openedSyntaxes[syntaxIndex];
+
+                            if(!syntax.allowMultiline) {
+                                console.log(`break! syntax: ${syntax.name} isLineFirst: ${isLineFirst} allowMultiline: ${syntax.allowMultiline}`);
+                                openedSyntaxes.splice(syntaxIndex, 1);
+                            }
+                        }
+                    }
+
+                    if(char === '\\') {
+                        if(!isLastSyntax) text += '\\';
+                        text += sourceText[++i] || '';
                         continue;
                     }
-                }
 
-                for(let tag of skipNamumarkHtmlTags) {
-                    const openTag = `<${tag}>`;
-                    const closeTag = `</${tag}>`;
+                    if(char === '<') {
+                        const closeIndex = sourceText.slice(i).indexOf('>');
+                        if(closeIndex !== -1) {
+                            const tagStr = sourceText.slice(i, i + closeIndex + 1);
 
-                    if(sourceText.slice(i).startsWith(openTag)) {
-                        const codeEndIndex = sourceText.slice(i).indexOf(closeTag);
-                        if(codeEndIndex !== -1) {
-                            text += sourceText.slice(i, i + codeEndIndex + closeTag.length);
-                            i += codeEndIndex + closeTag.length - 1;
+                            if(tagStr === BrIsNewLineStart) {
+                                brIsNewLineMode = true;
+                                console.log('brIsNewLineMode start!');
+                            }
+                            else if(tagStr === BrIsNewLineEnd) {
+                                brIsNewLineMode = false;
+                                console.log('brIsNewLineMode end!');
+                            }
+
+                            text += sourceText.slice(i, i + closeIndex + 1);
+
+                            i += closeIndex;
+                            continue;
+                        }
+                    }
+
+                    for(let tag of skipNamumarkHtmlTags) {
+                        const openTag = `<${tag}>`;
+                        const closeTag = `</${tag}>`;
+
+                        if(sourceText.slice(i).startsWith(openTag)) {
+                            const codeEndIndex = sourceText.slice(i).indexOf(closeTag);
+                            if(codeEndIndex !== -1) {
+                                text += sourceText.slice(i, i + codeEndIndex + closeTag.length);
+                                i += codeEndIndex + closeTag.length - 1;
+                                continue outer;
+                            }
+                        }
+                    }
+
+                    for(let syntaxIndex in openedSyntaxes) {
+                        syntaxIndex = parseInt(syntaxIndex);
+                        const syntax = openedSyntaxes[syntaxIndex];
+                        const currStr = sourceText.slice(i, i + syntax.closeStr.length);
+
+                        if (currStr === syntax.closeStr) {
+                            const content = text.slice(syntax.index + syntax.openStr.length, text.length);
+                            debugLog(`${syntax.name} at ${syntax.index} content: "${content}"`);
+                            if(content) {
+                                const output = await syntax.format(content, this);
+                                if(output != null) text = text.slice(0, syntax.index) + output;
+                                else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
+                                openedSyntaxes.splice(syntaxIndex, 1);
+                            }
+                            else {
+                                text = text.slice(0, syntax.index) + syntax.openStr + syntax.closeStr;
+                                syntax.index = i;
+                            }
+                            i += syntax.closeStr.length - 1;
                             continue outer;
                         }
                     }
-                }
 
-                for (let syntaxIndex in openedSyntaxes) {
-                    syntaxIndex = parseInt(syntaxIndex);
-                    const syntax = openedSyntaxes[syntaxIndex];
-                    const currStr = sourceText.slice(i, i + syntax.closeStr.length);
-
-                    if (isLineFirst && !syntax.allowMultiline) {
-                        openedSyntaxes.splice(syntaxIndex, 1);
-                    } else if (currStr === syntax.closeStr) {
-                        const content = text.slice(syntax.index + syntax.openStr.length, text.length);
-                        debugLog(`${syntax.name} at ${syntax.index} content: "${content}"`);
-                        if(content) {
-                            const output = await syntax.format(content, this);
-                            if(output != null) text = text.slice(0, syntax.index) + output;
-                            else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
-                            openedSyntaxes.splice(syntaxIndex, 1);
+                    const currStr = sourceText.slice(i, i + syntax.openStr.length);
+                    if (currStr === syntax.openStr) {
+                        const item = {
+                            ...syntax,
+                            index: text.length,
+                            sourceIndex: i
                         }
-                        else {
-                            text = text.slice(0, syntax.index) + syntax.openStr + syntax.closeStr;
-                            syntax.index = i;
-                        }
-                        i += syntax.closeStr.length - 1;
-                        continue outer;
-                    }
-                }
 
-                const currStr = sourceText.slice(i, i + syntax.openStr.length);
-                if (currStr === syntax.openStr) {
-                    const item = {
-                        ...syntax,
-                        index: text.length,
-                        sourceIndex: i
+                        openedSyntaxes.unshift(item);
+                        debugLog(`opened ${syntax.name} at ${text.length}`);
+                        i += syntax.openStr.length - 1;
+                        text += syntax.openStr;
+                        continue;
                     }
 
-                    openedSyntaxes.unshift(item);
-                    debugLog(`opened ${syntax.name} at ${text.length}`);
-                    i += syntax.openStr.length - 1;
-                    text += syntax.openStr;
-                    continue;
+                    text += char;
                 }
-
-                text += char;
             }
 
             sourceText = text;
             text = '';
         }
 
-        console.log('=== 문법 파싱 후 ===');
-        console.log(sourceText);
+        // console.log('=== 문법 파싱 후 ===');
+        // console.log(sourceText);
 
         // paragraph 제어문 처리
         sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
@@ -316,8 +348,8 @@ module.exports = class NamumarkParser {
             insertPos++;
         }
 
-        console.log('=== paragraph 제어문 처리 후 ===');
-        console.log(text);
+        // console.log('=== paragraph 제어문 처리 후 ===');
+        // console.log(text);
 
         // 리스트
         {
@@ -375,8 +407,8 @@ module.exports = class NamumarkParser {
                     level += levelDiff;
                     const indentCount = listSpace - level;
 
-                    console.log(`\nlistTypeStr: ${listTypeStr} listSpace: ${listSpace} lastListSpace: ${lastListSpace} changeList: ${changeList} listTypeStr ${listTypeStr} indentCount: ${indentCount} listContent: ${listContent}`);
-                    console.log(`level: ${level} isIncreasing: ${isIncreasing} levelDiff: ${levelDiff}`);
+                    // console.log(`\nlistTypeStr: ${listTypeStr} listSpace: ${listSpace} lastListSpace: ${lastListSpace} changeList: ${changeList} listTypeStr ${listTypeStr} indentCount: ${indentCount} listContent: ${listContent}`);
+                    // console.log(`level: ${level} isIncreasing: ${isIncreasing} levelDiff: ${levelDiff}`);
 
                     if(changeList) {
                         if(levelDiff < 0) for(let i = 0; i < -levelDiff; i++) {
@@ -395,7 +427,7 @@ module.exports = class NamumarkParser {
                         if(needSameLevelReopen) prevLine += listCloseTags.pop();
 
                         const needOpen = levelDiff > 0 || listTypeStr !== lastListTypeStr || needSameLevelReopen;
-                        console.log('needOpen:', needOpen);
+                        // console.log('needOpen:', needOpen);
                         if(levelDiff < 0 && needOpen) prevLine += listCloseTags.pop().slice('</li>'.length);
 
                         if(needOpen) {
@@ -407,7 +439,7 @@ module.exports = class NamumarkParser {
                                 const numbers = [...Array(10).keys()].map(a => a.toString());
                                 for(let i = 0; i < listContent.length; i++) {
                                     const char = listContent[i];
-                                    console.log(i, char);
+                                    // console.log(i, char);
                                     if(!i) {
                                         if(char === '#') continue;
                                         break;
@@ -422,18 +454,18 @@ module.exports = class NamumarkParser {
 
                             if(level === 1) prevLine += '</div>';
                             prevLine += `${'<div class="wiki-indent">'.repeat(indentCount)}<${tagName} class="${`wiki-list ${listClass}`.trim()}"${startNum ? ` start="${startNum}"` : ''}>`;
-                            console.log(`open list! prevLine: ${prevLine}`);
+                            // console.log(`open list! prevLine: ${prevLine}`);
                             listCloseTags.push(`</li></${tagName}>${'</div>'.repeat(indentCount)}`);
                             openedListSpaces[level - 1] = listSpace;
                         }
                     }
                     else {
                         prevLine = `</li>`;
-                        console.log(`close prev item! prevLine: ${prevLine}`);
+                        // console.log(`close prev item! prevLine: ${prevLine}`);
                     }
 
                     newLine += `<removeNewline/><li><div class="wiki-paragraph">${listContent}</div>`;
-                    console.log(`add item! newLine: ${newLine}`);
+                    // console.log(`add item! newLine: ${newLine}`);
 
                     lastListSpace = listSpace;
                     lastListTypeStr = listTypeStr;
@@ -462,7 +494,7 @@ module.exports = class NamumarkParser {
                         lastListSpace = 0;
 
                         if(prevWasList) {
-                            console.log('prevWasList:', prevWasList);
+                            // console.log('prevWasList:', prevWasList);
                             prevLine += '<removeNewline/><div class="wiki-paragraph">';
                         }
                         newLine += line;
@@ -477,11 +509,11 @@ module.exports = class NamumarkParser {
                 if(newLine != null) newLines.push(newLine);
             }
 
-            console.log(newLines);
+            // console.log(newLines);
             text = newLines.join('\n');
-            console.log('=== 리스트 파싱 후 ===');
-            console.log(text);
-            console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
+            // console.log('=== 리스트 파싱 후 ===');
+            // console.log(text);
+            // console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
         }
 
         // removeNewline 처리
@@ -491,8 +523,8 @@ module.exports = class NamumarkParser {
             .replaceAll('<removeNewline/>\n', '')
             .replaceAll('<removeNewline/>', '');
 
-        console.log('=== removeNewline 처리 후 ===');
-        console.log(text);
+        // console.log('=== removeNewline 처리 후 ===');
+        // console.log(text);
 
         // 인덴트
         {
@@ -550,7 +582,12 @@ module.exports = class NamumarkParser {
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
         debugLog(`footnotes: ${this.footnotes}`);
 
-        let html = `<div class="wiki-content">${text.replaceAll('\n', '<br>')}</div>`;
+        let html = `<div class="wiki-content">${
+            text
+                .replaceAll('\n', '<br>')
+                .replaceAll('<br><removebr/>', '')
+                .replaceAll('<removebr/>', '')
+        }</div>`;
 
         if(this.req?.query.from) html = `
 <div class="thetree-alert thetree-alert-primary">
