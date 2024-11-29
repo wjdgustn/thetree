@@ -2,8 +2,36 @@ const {
     validateHTMLColorHex,
     validateHTMLColorName
 } = require('validate-color');
+const sanitizeHtml = require('sanitize-html');
 
 const utils = require('../../utils');
+const CSSFilter = require('./cssFilter');
+
+const sanitizeHtmlOptions = {
+    disallowedTagsMode: 'completelyDiscard',
+    allowedAttributes: {
+        '*': ['style'],
+        a: ['href']
+    },
+    allowedSchemes: ['http', 'https', 'ftp'],
+    transformTags: {
+        '*': (tagName, attribs) => {
+            if(!attribs.style) return { tagName, attribs };
+
+            const style = CSSFilter(attribs.style);
+
+            return {
+                tagName,
+                attribs: { ...attribs, style }
+            }
+        },
+        a: sanitizeHtml.simpleTransform('a', {
+            class: 'wiki-link-external',
+            rel: 'nofollow noopener ugc',
+            target: '_blank'
+        })
+    }
+}
 
 module.exports = content => {
     const splittedContent = content.split(' ');
@@ -21,7 +49,7 @@ module.exports = content => {
         const darkStyleEndIndex = wikiParamsStr.indexOf(styleCloseStr, darkStyleIndex + darkStyleOpenStr.length);
         let darkStyle;
         if(darkStyleIndex >= 0 && darkStyleEndIndex >= 0) {
-            darkStyle = wikiParamsStr.slice(darkStyleIndex + darkStyleOpenStr.length, darkStyleEndIndex);
+            darkStyle = CSSFilter(wikiParamsStr.slice(darkStyleIndex + darkStyleOpenStr.length, darkStyleEndIndex));
             wikiParamsStr = wikiParamsStr.slice(0, darkStyleIndex) + wikiParamsStr.slice(darkStyleEndIndex + styleCloseStr.length);
         }
 
@@ -30,22 +58,23 @@ module.exports = content => {
         const styleEndIndex = wikiParamsStr.indexOf('&quot;', styleIndex + styleOpenStr.length);
         let style;
         if(styleIndex >= 0 && styleEndIndex >= 0) {
-            style = wikiParamsStr.slice(styleIndex + styleOpenStr.length, styleEndIndex);
+            style = CSSFilter(wikiParamsStr.slice(styleIndex + styleOpenStr.length, styleEndIndex));
             // wikiParamsStr = wikiParamsStr.slice(0, styleIndex) + wikiParamsStr.slice(styleEndIndex + styleCloseStr.length);
         }
 
         let text = lines.slice(1).join('\n');
         if(text.endsWith('\n')) text = text.slice(0, -1);
-        text = text.replaceAll('\n', '<br>');
+        text = text.replaceAll('\n', '<newLine/>');
 
-        // TODO: sanitize css
-        return `<removebr/><div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><brIsNewLineStart/>${text}<brIsNewLineEnd/></div>`;
+        return `<removebr/><div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}>${text}</div>`;
     }
 
     if(firstParam.startsWith('#!html')) {
-        let html = utils.unescapeHtml(content.slice('#!html'.length).trim());
-        // TODO: sanitize html
-        return `${html}`;
+        const html = utils.unescapeHtml(content.slice('#!html'.length).trim());
+        console.log('html:', html);
+        const safeHtml = sanitizeHtml(html, sanitizeHtmlOptions);
+        console.log('safeHtml:', safeHtml);
+        return `${safeHtml}`;
     }
 
     if(firstParam.startsWith('+')) {

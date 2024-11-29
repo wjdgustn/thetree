@@ -91,8 +91,9 @@ const ParagraphPosTag = '<paragraphPos/>';
 const EnterParagraphTag = '<enterParagraph/>';
 const ExitParagraphTag = '<exitParagraph/>';
 
-const BrIsNewLineStart = '<brIsNewLineStart/>';
-const BrIsNewLineEnd = '<brIsNewLineEnd/>';
+const NewLineTag = '<newLine/>';
+// const BrIsNewLineStart = '<brIsNewLineStart/>';
+// const BrIsNewLineEnd = '<brIsNewLineEnd/>';
 
 const MaximumParagraphTagLength = Math.max(
     ParagraphPosTag.length,
@@ -197,24 +198,23 @@ module.exports = class NamumarkParser {
                 text = newLines.join('\n');
             }
             else {
-                let brIsNewLineMode = false;
+                // let brIsNewLineMode = false;
 
                 outer: for (let i = 0; i < sourceText.length; i++) {
                     const char = sourceText[i];
                     const prevChar = sourceText[i - 1];
-                    const prevIsbr = sourceText.slice(i - 4, i) === '<br>';
+                    const prevIsNewLineTag = sourceText.slice(i - NewLineTag.length, i) === NewLineTag;
+                    // const prevIsbr = sourceText.slice(i - 4, i) === '<br>';
                     // const nextChar = sourceText[i + 1];
-                    const isLineFirstByBr = brIsNewLineMode && prevIsbr;
-                    const isLineFirst = prevChar === '\n' || i === 0 || isLineFirstByBr;
+                    // const isLineFirstByBr = brIsNewLineMode && prevIsbr;
+                    const isLineFirst = prevChar === '\n' || i === 0 || prevIsNewLineTag;
 
                     if(isLineFirst) {
-                        console.log(`new line! sample: ${sourceText.slice(i, i + 30)} openedSyntaxes: ${openedSyntaxes.map(a => a.name)}`);
                         for(let syntaxIndex in openedSyntaxes) {
                             syntaxIndex = parseInt(syntaxIndex);
                             const syntax = openedSyntaxes[syntaxIndex];
 
                             if(!syntax.allowMultiline) {
-                                console.log(`break! syntax: ${syntax.name} isLineFirst: ${isLineFirst} allowMultiline: ${syntax.allowMultiline}`);
                                 openedSyntaxes.splice(syntaxIndex, 1);
                             }
                         }
@@ -231,14 +231,14 @@ module.exports = class NamumarkParser {
                         if(closeIndex !== -1) {
                             const tagStr = sourceText.slice(i, i + closeIndex + 1);
 
-                            if(tagStr === BrIsNewLineStart) {
-                                brIsNewLineMode = true;
-                                console.log('brIsNewLineMode start!');
-                            }
-                            else if(tagStr === BrIsNewLineEnd) {
-                                brIsNewLineMode = false;
-                                console.log('brIsNewLineMode end!');
-                            }
+                            // if(tagStr === BrIsNewLineStart) {
+                            //     brIsNewLineMode = true;
+                            //     console.log('brIsNewLineMode start!');
+                            // }
+                            // else if(tagStr === BrIsNewLineEnd) {
+                            //     brIsNewLineMode = false;
+                            //     console.log('brIsNewLineMode end!');
+                            // }
 
                             text += sourceText.slice(i, i + closeIndex + 1);
 
@@ -516,12 +516,16 @@ module.exports = class NamumarkParser {
             // console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
         }
 
-        // removeNewline 처리
+        // removeNewline 및 특수기능 제거 처리
         text = text
             .replaceAll('<removeNewlineLater/>', '<removeNewline/>')
             .replaceAll('\n<removeNewline/>', '')
             .replaceAll('<removeNewline/>\n', '')
-            .replaceAll('<removeNewline/>', '');
+            .replaceAll('<removeNewline/>', '')
+            .replaceAll('<newLine/>', '<br>');
+
+            // .replaceAll(BrIsNewLineStart, '')
+            // .replaceAll(BrIsNewLineEnd, '');
 
         // console.log('=== removeNewline 처리 후 ===');
         // console.log(text);

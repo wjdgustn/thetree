@@ -22,6 +22,7 @@
     "cheerio": "^1.0.0",
     "compression": "^1.7.5",
     "connect-redis": "^7.1.1",
+    "cssfilter": "^0.0.11",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
