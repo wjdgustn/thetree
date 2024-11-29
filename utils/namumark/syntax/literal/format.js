@@ -8,7 +8,9 @@ const utils = require('../../utils');
 const CSSFilter = require('./cssFilter');
 
 const sanitizeHtmlOptions = {
-    disallowedTagsMode: 'completelyDiscard',
+    allowedTags: sanitizeHtml.defaults.allowedTags.filter(a => ![
+        'code'
+    ].includes(a)),
     allowedAttributes: {
         '*': ['style'],
         a: ['href']
@@ -71,9 +73,7 @@ module.exports = content => {
 
     if(firstParam.startsWith('#!html')) {
         const html = utils.unescapeHtml(content.slice('#!html'.length).trim());
-        console.log('html:', html);
-        const safeHtml = sanitizeHtml(html, sanitizeHtmlOptions);
-        console.log('safeHtml:', safeHtml);
+        const safeHtml = sanitizeHtml(html, sanitizeHtmlOptions).replaceAll('\n', ' ');
         return `${safeHtml}`;
     }
 
