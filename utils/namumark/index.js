@@ -500,9 +500,10 @@ module.exports = class NamumarkParser {
                 for(let i = 0; i < line.length; i++) {
                     const char = line[i];
                     if(char === '<') {
-                        const closeIndex = line.slice(i).indexOf('>');
+                        const closeStr = '/>';
+                        const closeIndex = line.slice(i).indexOf(closeStr);
                         if(closeIndex !== -1) {
-                            i += closeIndex;
+                            i += closeIndex + closeStr.length - 1;
                             continue;
                         }
                     }
