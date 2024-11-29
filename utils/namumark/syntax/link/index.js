@@ -86,7 +86,7 @@ module.exports = {
                     const splittedDocument = docTitle.split('/');
                     splittedDocument.pop();
                     const document = splittedDocument.join('/');
-                    link = `${document}${document ? '/' : ''}${link}`;
+                    link = `${document}${(document && link) ? '/' : ''}${link}`;
 
                     link ||= docTitle;
                 }
