@@ -582,17 +582,23 @@ module.exports = class NamumarkParser {
             text = newLines.join('\n');
         }
 
+        // removeNewLineAfterIndent 처리
+        text = text
+            .replaceAll('<removeNewLineAfterIndent/>\n', '')
+            .replaceAll('\n<removeNewLineAfterIndent/>', '')
+            .replaceAll('<removeNewLineAfterIndent/>', '');
+
         // paragraph 다음 줄바꿈 정리
         text = text.replaceAll(ParagraphOpen + '\n', ParagraphOpen);
 
         // 빈 paragraph 제거
-        // text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
+        text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
         if(text.startsWith(FullParagraphTag)) text = text.slice(FullParagraphTag.length);
         if(text.endsWith(ParagraphOpen)) text = text.slice(0, -ParagraphOpen.length);
         if(text.endsWith(FullParagraphTag)) text = text.slice(0, -FullParagraphTag.length);
 
         // indent 전 빈 paragraph 제거
-        text = text.replaceAll(FullParagraphTag + '<div class="wiki-indent">', '<div class="wiki-indent">');
+        // text = text.replaceAll(FullParagraphTag + '<div class="wiki-indent">', '<div class="wiki-indent">');
 
         debugLog(`links: ${this.links}`);
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);

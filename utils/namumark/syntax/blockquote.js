@@ -36,12 +36,12 @@ ${text}
 </blockquote>
 ${'</div>'.repeat(indentCount)}
 <div class="wiki-paragraph">
-<removeNewlineLater/>
+${content.startsWith(' ') ? '<removeNewLineAfterIndent/>' : '<removeNewlineLater/>'}
 `
                     .replaceAll('\n', '')
                     .replaceAll('<br><removeNewlineLater/>', '')
                     .replaceAll('<removeNewlineLater/><br>', '')
-                + (isQuote ? '' : content + '\n');
+                + (isQuote ? '' : (content.startsWith(' ') ? '\n' : '') + content + '\n');
         }
 
         if(shouldMakeNewQuote && !isLastLine) makeNewQuote();

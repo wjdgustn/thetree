@@ -358,3 +358,7 @@
 .wiki-content .wiki-quote .wiki-paragraph {
     margin-bottom: 0;
 }
+
+.wiki-content .wiki-quote:not(:has(+ .wiki-paragraph)):not(:first-child) {
+    margin-top: 1rem;
+}
