@@ -13,7 +13,7 @@ const sanitizeHtmlOptions = {
     ].includes(a)),
     allowedAttributes: {
         '*': ['style'],
-        a: ['href']
+        a: ['href', 'class', 'rel', 'target']
     },
     allowedSchemes: ['http', 'https', 'ftp'],
     transformTags: {
