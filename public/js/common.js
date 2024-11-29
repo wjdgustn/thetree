@@ -16,6 +16,11 @@ document.addEventListener('alpine:initialized', () => {
 
 let firstUrl = location.href;
 window.addEventListener('popstate', async e => {
+    if(typeof window.beforePopstate === 'function') {
+        const canMove = await window.beforePopstate(e);
+        if(!canMove) return;
+    }
+
     if(e.state !== null || location.href === firstUrl)
         await movePage(location.href, false);
 });
@@ -108,6 +113,7 @@ const formHandler = async e => {
 
     if(response.redirected) {
         window.beforePageLoad = null;
+        window.beforePopstate = null;
         return await movePage(response);
     }
 
@@ -135,6 +141,7 @@ function setupPjax() {
     }
 
     window.beforePageLoad = null;
+    window.beforePopstate = null;
     emit('thetree:pageLoad');
 }
 

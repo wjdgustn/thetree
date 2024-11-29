@@ -50,8 +50,17 @@ function updateNavs() {
 }
 
 document.addEventListener('thetree:pageLoad', () => {
+    window.beforePopstate = e => {
+        if(e.state === null) {
+            updateNavs();
+            return false;
+        }
+        return true;
+    }
+
     title = document.getElementById('acl-title');
     navLinks = document.querySelectorAll('.nav-block-content-ul > li > .nav-link');
+    const contentNavLinks = document.getElementsByClassName('content-nav-link');
     navTableBodies = document.getElementsByClassName('nav-tbody');
 
     createACLForm = document.getElementById('create-acl-form');
@@ -60,7 +69,10 @@ document.addEventListener('thetree:pageLoad', () => {
 
     updateNavs();
 
-    for(let navLink of navLinks) {
+    for(let navLink of [
+        ...navLinks,
+        ...contentNavLinks
+    ]) {
         navLink.addEventListener('click', e => {
             const href = navLink.getAttribute('href');
             if(!href.startsWith('#')) return;

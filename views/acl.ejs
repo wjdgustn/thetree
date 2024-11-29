@@ -74,7 +74,7 @@
                     <%} else {%>
                         <tr>
                             <%if(i === '0') {%>
-                                <td colspan="5">(규칙이 존재하지 않습니다. 이름공간 ACL이 적용됩니다.)</td>
+                                <td colspan="5">(규칙이 존재하지 않습니다. <a href="#namespace.<%=utils.camelToSnakeCase(key)%>" class="content-nav-link">이름공간 ACL</a>이 적용됩니다.)</td>
                             <%} else {%>
                                 <td colspan="5">(규칙이 존재하지 않습니다. 모두 거부됩니다.)</td>
                             <%}%>
