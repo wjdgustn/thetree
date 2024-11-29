@@ -26,8 +26,7 @@ module.exports = {
             namumark.syntaxData.lastQuoteLevel = null;
 
             output = `
-<removeNewline/>
-<removeNextNewline/>
+<removeNewlineLater/>
 </div>
 ${'<div class="wiki-indent">'.repeat(indentCount)}
 <blockquote class="wiki-quote">
@@ -37,6 +36,7 @@ ${text}
 </blockquote>
 ${'</div>'.repeat(indentCount)}
 <div class="wiki-paragraph">
+<removeNewlineLater/>
 `
                     .replaceAll('\n', '')
                     .replaceAll('<br><removeNewlineLater/>', '')
