@@ -139,6 +139,16 @@ module.exports = {
 
         if(parsedLink) rel.push('nofollow', 'noopener', 'ugc');
 
+        while(text.includes('<a') || text.includes('</a>')) {
+            const aOpenText = '<a';
+            const aPos = text.indexOf(aOpenText);
+            const aCloseText = '</a>';
+            const aClosePos = text.indexOf(aCloseText, aPos);
+            const aClosePosEnd = aClosePos + aCloseText.length;
+
+            text = text.slice(0, aPos) + text.slice(aClosePosEnd);
+        }
+
         const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
         if(isCategory) {

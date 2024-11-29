@@ -99,5 +99,6 @@ module.exports = async (content, splittedContent, link) => {
 <img width="100%" height="100%" style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
 <img class="wiki-image" width="100%" height="100%" style="${imgStyle}" src="/test.png" data-filesize="100" data-src="/test.png" data-doc="파일:테스트" loading="lazy">
 <a class="wiki-image-info" href="${globalUtils.doc_action_link('파일:테스트', 'w')}" rel="nofollow noopener"></a>
+</span>
 </span>`.replaceAll('\n', '');
 }
