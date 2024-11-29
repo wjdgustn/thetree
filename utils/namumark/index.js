@@ -3,6 +3,8 @@ const fs = require('fs');
 const utils = require('./utils');
 const { Priority } = require('./types');
 
+const hrSyntax = require('./syntax/hr');
+
 const debugLog = debug ? console.log : (_ => {});
 
 const syntaxDefaultValues = {
@@ -362,6 +364,7 @@ module.exports = class NamumarkParser {
                         noStartNum = true;
                         listContent = listContent.slice(1);
                     }
+                    if(hrSyntax.check(listContent)) listContent = hrSyntax.format(listContent);
 
                     const changeList = listTypeStr !== lastListTypeStr || listSpace !== lastListSpace;
                     const isIncreasing = listSpace > lastListSpace;
@@ -372,7 +375,7 @@ module.exports = class NamumarkParser {
                     level += levelDiff;
                     const indentCount = listSpace - level;
 
-                    console.log(`\nlistTypeStr: ${listTypeStr} listSpace: ${listSpace} lastListSpace: ${lastListSpace} changeList: ${changeList} listTypeStr ${listTypeStr} listContent: ${listContent} indentCount: ${indentCount}`);
+                    console.log(`\nlistTypeStr: ${listTypeStr} listSpace: ${listSpace} lastListSpace: ${lastListSpace} changeList: ${changeList} listTypeStr ${listTypeStr} indentCount: ${indentCount} listContent: ${listContent}`);
                     console.log(`level: ${level} isIncreasing: ${isIncreasing} levelDiff: ${levelDiff}`);
 
                     if(changeList) {
@@ -440,11 +443,14 @@ module.exports = class NamumarkParser {
 
                     if(prevWasList && lastListSpace <= listSpace) {
                         const indentCount = listSpace - lastListSpace;
-                        const trimedLine = line.trimStart();
+                        let trimedLine = line.trimStart();
                         const prevContent = newLines.at(-1);
                         const prevWithoutCloseParagraph = prevContent.slice(0, -'</div>'.length);
+
+                        if(hrSyntax.check(trimedLine)) trimedLine = hrSyntax.format(trimedLine);
+
                         newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}</div>`;
-                            newLine = null;
+                        newLine = null;
                     }
                     else {
                         for(let tag of listCloseTags) {
