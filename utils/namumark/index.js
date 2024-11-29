@@ -593,14 +593,6 @@ module.exports = class NamumarkParser {
                 .replaceAll('<removebr/>', '')
         }</div>`;
 
-        if(this.req?.query.from) html = `
-<div class="thetree-alert thetree-alert-primary">
-<div class="thetree-alert-content">
-<a href="/w/${encodeURIComponent(this.req.query.from)}" rel="nofollow" title="${this.req.query.from}">${utils.escapeHtml(this.req.query.from)}</a>에서 넘어옴
-</div>
-</div>
-        `.replaceAll('\n', '').trim() + html;
-
         if(debug) console.timeEnd();
 
         // debugLog(html);

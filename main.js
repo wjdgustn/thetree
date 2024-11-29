@@ -14,6 +14,7 @@ const RedisStore = require('connect-redis').default;
 
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
+const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
 const { UserTypes } = types;
 
@@ -278,6 +279,16 @@ window.defaultConfig = {
 document.getElementById('initScript')?.remove();
 </script>
         `.trim();
+
+        if(data.contentHtml && req.query.from && req.path.startsWith('/w/')) {
+            data.contentHtml = `
+<div class="thetree-alert thetree-alert-primary">
+<div class="thetree-alert-content">
+<a href="/w/${encodeURIComponent(req.query.from)}" rel="nofollow" title="${req.query.from}">${namumarkUtils.escapeHtml(req.query.from)}</a>에서 넘어옴
+</div>
+</div>
+        `.replaceAll('\n', '').trim() + data.contentHtml;
+        }
 
         app.render('main', {
             ...data,
