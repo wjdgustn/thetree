@@ -235,7 +235,7 @@ module.exports = class NamumarkParser {
                     if(char === '<') {
                         const closeIndex = sourceText.slice(i).indexOf('>');
                         if(closeIndex !== -1) {
-                            const tagStr = sourceText.slice(i, i + closeIndex + 1);
+                            // const tagStr = sourceText.slice(i, i + closeIndex + 1);
 
                             // if(tagStr === BrIsNewLineStart) {
                             //     brIsNewLineMode = true;
