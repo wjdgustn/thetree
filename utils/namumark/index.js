@@ -90,6 +90,9 @@ for(let syntax of sortedSyntaxes) {
 const ParagraphPosTag = '<paragraphPos/>';
 const EnterParagraphTag = '<enterParagraph/>';
 const ExitParagraphTag = '<exitParagraph/>';
+const ParagraphOpen = '<div class="wiki-paragraph">';
+const ParagraphClose = '</div>';
+const FullParagraphTag = ParagraphOpen + ParagraphClose;
 
 const NewLineTag = '<newLine/>';
 // const BrIsNewLineStart = '<brIsNewLineStart/>';
@@ -164,8 +167,12 @@ module.exports = class NamumarkParser {
                 const lines = sourceText.split('\n');
                 const newLines = [];
                 let removeNextNewLine = false;
-                for(let line of lines) {
-                    let output = await syntax.format(line, this, lines);
+                for(let i in lines) {
+                    i = parseInt(i);
+                    const line = lines[i];
+                    const isLastLine = i === lines.length - 1;
+
+                    let output = await syntax.format(line, this, lines, isLastLine);
                     if(output === '') continue;
 
                     const pushLine = text => {
@@ -576,11 +583,16 @@ module.exports = class NamumarkParser {
         }
 
         // paragraph 다음 줄바꿈 정리
-        text = text.replaceAll('<div class="wiki-paragraph">\n', '<div class="wiki-paragraph">');
+        text = text.replaceAll(ParagraphOpen + '\n', ParagraphOpen);
 
         // 빈 paragraph 제거
-        text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
-        if(text.endsWith('<div class="wiki-paragraph">')) text = text.slice(0, -'<div class="wiki-paragraph">'.length);
+        // text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
+        if(text.startsWith(FullParagraphTag)) text = text.slice(FullParagraphTag.length);
+        if(text.endsWith(ParagraphOpen)) text = text.slice(0, -ParagraphOpen.length);
+        if(text.endsWith(FullParagraphTag)) text = text.slice(0, -FullParagraphTag.length);
+
+        // indent 전 빈 paragraph 제거
+        text = text.replaceAll(FullParagraphTag + '<div class="wiki-indent">', '<div class="wiki-indent">');
 
         debugLog(`links: ${this.links}`);
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
