@@ -1,3 +1,4 @@
+const listParser = require('../listParser');
 const hrSyntax = require('../syntax/hr');
 
 module.exports = {
@@ -19,7 +20,7 @@ module.exports = {
         const makeNewQuote = () => {
             console.log('makeNewQuote! quoteLines', quoteLines);
             const indentCount = isLastLine ? lineSpaces : lastLineSpaces;
-            const text = quoteLines.join('<br>');
+            const text = quoteLines.join('\n');
 
             quoteLines.length = 0;
             namumark.syntaxData.lastLineSpaces = null;
@@ -31,7 +32,7 @@ module.exports = {
 ${'<div class="wiki-indent">'.repeat(indentCount)}
 <blockquote class="wiki-quote">
 <div class="wiki-paragraph">
-${text}
+${listParser(text).replaceAll('\n<removeNewline/>', '').replaceAll('\n', '<br>')}
 </div>
 </blockquote>
 ${'</div>'.repeat(indentCount)}
@@ -47,12 +48,18 @@ ${content.startsWith(' ') ? '<removeNewLineAfterIndent/>' : '<removeNewlineLater
         if(shouldMakeNewQuote && !isLastLine) makeNewQuote();
 
         if(isQuote) {
-            let text = slicedContent.slice('&gt;'.length).trimStart();
+            let text = slicedContent.slice('&gt;'.length);
+            const prevLength = text.length;
+            text = text.trimStart();
             let quoteLevel = 1;
+            let spaceCount = prevLength - text.length;
             while(text.startsWith('&gt;')) {
+                const prevLength = text.length;
                 text = text.slice('&gt;'.length).trimStart();
+                spaceCount = prevLength - text.length;
                 quoteLevel++;
             }
+            text = ' '.repeat(spaceCount) + text;
             if(quoteLevel > 8) quoteLevel = 8;
             const lastQuoteLevel = namumark.syntaxData.lastQuoteLevel;
             console.log('quoteLevel', quoteLevel, 'lastQuoteLevel', lastQuoteLevel, 'text', text);
