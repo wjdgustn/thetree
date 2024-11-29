@@ -80,6 +80,7 @@ module.exports = async (content, splittedContent, link) => {
         'crisp-edges'
     ].includes(options.rendering)) delete options.rendering;
 
+    const imgSpanClassList = [`wiki-image-align${options.align ? `-${options.align}` : ''}`];
     let imgSpanStyle = ``;
     let imgWrapperStyle = `width: 100%; height: 100%;`;
     let imgStyle = ``;
@@ -92,9 +93,11 @@ module.exports = async (content, splittedContent, link) => {
     if(options.borderRadius) imgStyle += `border-radius:${options.borderRadius}${borderRadiusUnit};`;
     if(options.rendering) imgStyle += `image-rendering:${options.rendering};`;
 
+    if(options.theme) imgSpanClassList.push(`wiki-theme-${options.theme}`);
+
     // TODO: implement data-filesize(for over 1MB remove option), alt, data-doc, loading lazy config, put image size to svg
     return `
-<span class="wiki-image-align${options.align ? `-${options.align}` : ''}" style="${imgSpanStyle}">
+<span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
 <img width="100%" height="100%" style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
 <img class="wiki-image" width="100%" height="100%" style="${imgStyle}" src="/test.png" data-filesize="100" data-src="/test.png" data-doc="파일:테스트" loading="lazy">
