@@ -14,7 +14,8 @@ module.exports = {
         }
         const slicedContent = content.slice(lineSpaces);
         const isQuote = slicedContent.startsWith('&gt;');
-        const shouldMakeNewQuote = !!quoteLines.length && (!isQuote || lineSpaces !== lastLineSpaces || isLastLine);
+        const getShouldMakeNewQuote = () => !!quoteLines.length && (!isQuote || lineSpaces !== lastLineSpaces || isLastLine);
+        const shouldMakeNewQuote = getShouldMakeNewQuote();
 
         let output;
         const makeNewQuote = () => {
@@ -94,7 +95,7 @@ ${needNewline ? '<removeNewLineAfterIndent/>' : '<removeNewlineLater/>'}
             if(!shouldMakeNewQuote) output = '';
         }
 
-        if(shouldMakeNewQuote && isLastLine) makeNewQuote();
+        if(getShouldMakeNewQuote() && isLastLine) makeNewQuote();
 
         return output;
     }
