@@ -20,15 +20,21 @@ module.exports = {
         const makeNewQuote = () => {
             console.log('makeNewQuote! quoteLines', quoteLines);
             const indentCount = isLastLine ? lineSpaces : lastLineSpaces;
-            const text = quoteLines.join('\n');
+            let text = quoteLines.join('\n');
 
             quoteLines.length = 0;
             namumark.syntaxData.lastLineSpaces = null;
             namumark.syntaxData.lastQuoteLevel = null;
 
+            // wiki 문법 안 인용문 하드코딩
+            const removeNewParagraph = text.includes('<removeNewParagraph/>');
+            const needNewline = content.startsWith(' ') || removeNewParagraph;
+
+            if(removeNewParagraph) text = text.replaceAll('<removeNewParagraph/>', '');
+
             output = `
 <removeNewlineLater/>
-</div>
+${removeNewParagraph ? '' : '</div>'}
 ${'<div class="wiki-indent">'.repeat(indentCount)}
 <blockquote class="wiki-quote">
 <div class="wiki-paragraph">
@@ -36,13 +42,13 @@ ${listParser(text).replaceAll('\n<removeNewline/>', '').replaceAll('\n', '<br>')
 </div>
 </blockquote>
 ${'</div>'.repeat(indentCount)}
-<div class="wiki-paragraph">
-${content.startsWith(' ') ? '<removeNewLineAfterIndent/>' : '<removeNewlineLater/>'}
+${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}
+${needNewline ? '<removeNewLineAfterIndent/>' : '<removeNewlineLater/>'}
 `
                     .replaceAll('\n', '')
                     .replaceAll('<br><removeNewlineLater/>', '')
                     .replaceAll('<removeNewlineLater/><br>', '')
-                + (isQuote ? '' : (content.startsWith(' ') ? '\n' : '') + content + '\n');
+                + (isQuote ? '' : (needNewline ? '\n' : '') + content + (removeNewParagraph ? '' : '\n'));
         }
 
         if(shouldMakeNewQuote && !isLastLine) makeNewQuote();
