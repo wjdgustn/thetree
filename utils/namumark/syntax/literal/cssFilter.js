@@ -1,7 +1,6 @@
 const CSSFilter = require('cssfilter');
 
 const allowedNames = require('./allowedNames.json');
-console.log(allowedNames);
 
 const filter = new CSSFilter.FilterCSS({
     whiteList: {
