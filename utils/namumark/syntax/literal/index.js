@@ -1,7 +1,8 @@
 const Format = require('./format');
 
-const { Priority } = require("../../types");
-const CSSFilter = require("./cssFilter");
+const { Priority } = require('../../types');
+const CSSFilter = require('./cssFilter');
+const listParser = require('../../listParser');
 
 module.exports = {
     priority: Priority.Literal,
@@ -13,7 +14,7 @@ module.exports = {
         const firstParam = splittedContent[0];
 
         if(firstParam.startsWith('#!wiki')) {
-            const lines = content.split('\n');
+            let lines = content.split('\n');
             let wikiParamsStr = lines[0].slice('#!wiki '.length);
 
             const styleCloseStr = '&quot;';
@@ -36,16 +37,33 @@ module.exports = {
                 // wikiParamsStr = wikiParamsStr.slice(0, styleIndex) + wikiParamsStr.slice(styleEndIndex + styleCloseStr.length);
             }
 
-            let text = lines.slice(1).join('\n');
-            if(text.endsWith('\n')) text = text.slice(0, -1);
+            lines = lines.slice(1);
 
             // wiki 문법 안 인용문 하드코딩
-            text = text.split('\n').map(a =>
+            lines = lines.map(a =>
                 a.trimStart().startsWith('&gt;')
                     ? a.replace('&gt;', '&gt;<removeNewParagraph/>')
                     : a
-            ).join('\n');
+            );
 
+            // wiki 문법 안 리스트 하드코딩
+            let hasList = false;
+            lines = lines.map(a => {
+                let listTypeStr;
+                const result = (listTypeStr = listParser.getListTypeStr(a))
+                    ? a.replace(listTypeStr, `${listTypeStr}<removeNewParagraph/>`)
+                    : a;
+                if(listTypeStr) hasList = true;
+                return result;
+            });
+
+            let text = lines.join('\n');
+            if(text.endsWith('\n')) text = text.slice(0, -1);
+            // 리스트 미리 파싱
+            if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
+                .replaceAll('\n<removeNewline/>', '')
+                .replaceAll('<removeNewline/>\n', '')
+                .replaceAll('<removeNewline/>', '');
             text = text.replaceAll('\n', '<newLine/>');
 
             return `<removebr/><div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><removeNewlineLater/>\n${text}\n<removeNewlineLater/></div>`;

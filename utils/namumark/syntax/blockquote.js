@@ -38,7 +38,7 @@ ${removeNewParagraph ? '' : '</div>'}
 ${'<div class="wiki-indent">'.repeat(indentCount)}
 <blockquote class="wiki-quote">
 <div class="wiki-paragraph">
-${listParser(text).replaceAll('\n<removeNewline/>', '').replaceAll('\n', '<br>')}
+${listParser.parse(text).replaceAll('\n<removeNewline/>', '').replaceAll('\n', '<br>')}
 </div>
 </blockquote>
 ${'</div>'.repeat(indentCount)}

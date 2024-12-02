@@ -358,7 +358,7 @@ module.exports = class NamumarkParser {
         // console.log(text);
 
         // 리스트
-        text = listParser(text);
+        text = listParser.parse(text);
 
         // removeNewline 및 특수기능 제거 처리
         text = text
