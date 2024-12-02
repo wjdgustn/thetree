@@ -34,9 +34,16 @@ module.exports = {
         if(link.startsWith('분류:')) {
             isCategory = true;
             text = text.slice(3);
+
+            let blur;
+            if(link.endsWith('#blur')) {
+                link = link.slice(0, -'#blur'.length);
+                blur = true;
+            }
             namumark.categories.push({
                 document: link,
-                text: splittedContent[1]
+                text: splittedContent[1],
+                blur
             });
         }
 
