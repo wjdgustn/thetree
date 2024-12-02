@@ -363,3 +363,24 @@
 .wiki-content .wiki-indent .wiki-quote:not(:has(+ .wiki-paragraph)) {
     margin-top: 1rem;
 }
+
+.wiki-content .wiki-table-wrap {
+    display: block;
+    margin: 10px 0;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.wiki-content .wiki-table {
+    background-color: #f5f5f5;
+    border-collapse: collapse;
+}
+
+.wiki-content .wiki-table td {
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+}
+
+.wiki-table td .wiki-paragraph {
+    margin-bottom: 0;
+}
