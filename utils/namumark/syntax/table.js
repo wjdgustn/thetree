@@ -137,7 +137,7 @@ module.exports = {
                 if(align) tdStyle += `text-align:${align};`;
 
                 htmlValues.push(`
-<td${tdStyle ? ` style="${tdStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${tdClassList ? `class="${tdClassList.join(' ')}"` : ''}><div class="wiki-paragraph"><removeNewlineLater/>
+<td${tdStyle ? ` style="${tdStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${tdClassList ? ` class="${tdClassList.join(' ')}"` : ''}><div class="wiki-paragraph"><removeNewlineLater/>
 ${value}
 <removeNewlineLater/></div></td>
 `.trim());
