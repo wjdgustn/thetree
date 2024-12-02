@@ -40,10 +40,6 @@ module.exports = content => {
     const firstParam = splittedContent[0];
     const paramContent = splittedContent.slice(1).join(' ');
 
-    if(firstParam.startsWith('#!wiki')) {
-        return;
-    }
-
     if(firstParam.startsWith('#!html')) {
         const html = utils.unescapeHtml(content.slice('#!html'.length).trim());
         const safeHtml = sanitizeHtml(html, sanitizeHtmlOptions).replaceAll('\n', ' ');
