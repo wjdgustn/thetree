@@ -155,7 +155,7 @@ ${value}
         if(tableAlign) tableWrapperClassList.push(`table-${tableAlign}`);
 
         // TODO: 임시 [br] 매크로 제거
-        const table = `<removeNewline/></div><div class="${tableWrapperClassList.join(' ')}"><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div><div class="wiki-paragraph"><removeNewlineAfterFullline/>`.trim().replaceAll('[br]', '<br>');
+        const table = `<removeNewlineLater/></div><div class="${tableWrapperClassList.join(' ')}"><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div><div class="wiki-paragraph"><removeNewlineLater/>\n`.replaceAll('[br]', '<br>');
 
         return table + '\n' + (fromLastLine ? '' : content);
     },
