@@ -6,7 +6,7 @@ module.exports = {
     openStr: '||',
     makeTable(content, namumark, fromLastLine = false) {
         const rows = namumark.syntaxData.rows ??= [];
-        if(!rows.length) return content;
+        if(!rows.length) return null;
 
         console.log('=== make table! ===');
         console.log(rows);
