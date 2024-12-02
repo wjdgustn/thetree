@@ -359,6 +359,7 @@
     margin-bottom: 0;
 }
 
-.wiki-content .wiki-quote:not(:has(+ .wiki-paragraph)):not(:first-child) {
+.wiki-content .wiki-quote:not(:has(+ .wiki-paragraph)):not(:first-child),
+.wiki-content .wiki-indent .wiki-quote:not(:has(+ .wiki-paragraph)) {
     margin-top: 1rem;
 }

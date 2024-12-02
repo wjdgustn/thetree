@@ -59,14 +59,14 @@ ${needNewline ? '<removeNewLineAfterIndent/>' : '<removeNewlineLater/>'}
             const prevLength = text.length;
             text = text.trimStart();
             let quoteLevel = 1;
-            let spaceCount = prevLength - text.length;
+            // let spaceCount = prevLength - text.length;
             while(text.startsWith('&gt;')) {
-                const prevLength = text.length;
+                // const prevLength = text.length;
                 text = text.slice('&gt;'.length).trimStart();
-                spaceCount = prevLength - text.length;
+                // spaceCount = prevLength - text.length;
                 quoteLevel++;
             }
-            text = ' '.repeat(spaceCount) + text;
+            // text = ' '.repeat(spaceCount) + text;
             if(quoteLevel > 8) quoteLevel = 8;
             const lastQuoteLevel = namumark.syntaxData.lastQuoteLevel;
             console.log('quoteLevel', quoteLevel, 'lastQuoteLevel', lastQuoteLevel, 'text', text);
