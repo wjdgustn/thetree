@@ -16,7 +16,6 @@ module.exports = {
         return 'wow table' + '\n' + (fromLastLine ? '' : content);
     },
     format(content, namumark, _, isLastLine) {
-        console.log(content);
         const rows = namumark.syntaxData.rows ??= [];
         const rowText = namumark.syntaxData.rowText ??= '';
 
@@ -29,8 +28,8 @@ module.exports = {
 
         const newRowText = namumark.syntaxData.rowText += (rowText ? '\n' : '') + content;
 
-        if(newRowText.endsWith('||')) {
-            rows.push(newRowText);
+        if(newRowText.length > 2 && newRowText.endsWith('||')) {
+            rows.push(newRowText.split('||').slice(1, -1));
             namumark.syntaxData.rowText = '';
         }
 
