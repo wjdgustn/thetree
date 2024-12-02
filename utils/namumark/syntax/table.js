@@ -136,6 +136,8 @@ module.exports = {
                 }
                 if(align) tdStyle += `text-align:${align};`;
 
+                if(value.endsWith('\n')) value = value.slice(0, -1);
+
                 htmlValues.push(`
 <td${tdStyle ? ` style="${tdStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${tdClassList ? ` class="${tdClassList.join(' ')}"` : ''}><div class="wiki-paragraph"><removeNewlineLater/>
 ${value}
