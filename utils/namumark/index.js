@@ -165,8 +165,6 @@ module.exports = class NamumarkParser {
 
             if(syntax.priority === Priority.FullLine
                 && syntax.priority !== nextSyntax.priority) {
-                console.log(`wow ${syntax.name} is last fullline syntax!`);
-                console.log(sourceText);
                 sourceText = sourceText
                     .replaceAll('\n<removeNewlineAfterFullline/>', '')
                     .replaceAll('<removeNewlineAfterFullline/>\n', '')
