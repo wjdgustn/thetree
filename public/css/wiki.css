@@ -364,6 +364,11 @@
     margin-top: 1rem;
 }
 
+.wiki-content .wiki-table-wrap:not(:has(+ .wiki-paragraph)):not(:first-child),
+.wiki-content .wiki-indent .wiki-table-wrap:not(:has(+ .wiki-paragraph)) {
+    margin-top: 1rem;
+}
+
 .wiki-content .wiki-table-wrap {
     display: block;
     margin: 10px 0;
@@ -381,6 +386,24 @@
     padding: 5px 10px;
 }
 
-.wiki-table td .wiki-paragraph {
+.wiki-content .wiki-table td .wiki-paragraph {
     margin-bottom: 0;
+}
+
+.wiki-content .wiki-table-wrap.table-center {
+    margin: 10px auto;
+}
+
+.wiki-content .table-center .wiki-table {
+    margin: auto;
+}
+
+.wiki-content .wiki-table-wrap.table-right {
+    float: right;
+    margin-bottom: 20px;
+    margin-left: 20px;
+}
+
+.wiki-content .wiki-table td.wiki-table-nopadding {
+    padding: 0;
 }
