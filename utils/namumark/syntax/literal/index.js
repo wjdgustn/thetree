@@ -64,9 +64,9 @@ module.exports = {
                 .replaceAll('\n<removeNewline/>', '')
                 .replaceAll('<removeNewline/>\n', '')
                 .replaceAll('<removeNewline/>', '');
-            text = text.replaceAll('\n', '<newLine/>');
+            // text = text.replaceAll('\n', '<newLine/>');
 
-            return `<removebr/><div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><removeNewlineLater/>\n${text}\n<removeNewlineLater/></div>`;
+            return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><removeNewlineAfterFullline/>\n${text}\n<removeNewlineAfterFullline/></div>`;
         }
 
         if(Format(content) !== undefined) return null;

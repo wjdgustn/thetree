@@ -155,12 +155,23 @@ module.exports = class NamumarkParser {
 
             syntaxIndex = parseInt(syntaxIndex);
             const syntax = sortedSyntaxes[syntaxIndex];
+            const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
             const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
             debugLog(`\nparse syntax: ${syntax.name}`);
             // if(text) {
             //     sourceText = text;
             //     text = '';
             // }
+
+            if(syntax.priority === Priority.FullLine
+                && syntax.priority !== nextSyntax.priority) {
+                console.log(`wow ${syntax.name} is last fullline syntax!`);
+                console.log(sourceText);
+                sourceText = sourceText
+                    .replaceAll('\n<removeNewlineAfterFullline/>', '')
+                    .replaceAll('<removeNewlineAfterFullline/>\n', '')
+                    .replaceAll('<removeNewlineAfterFullline/>', '');
+            }
 
             if(syntax.fullLine) {
                 const lines = sourceText.split('\n');
