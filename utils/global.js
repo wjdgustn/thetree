@@ -23,7 +23,7 @@ module.exports = {
         let str = `/${route}/${encodeURIComponent(this.doc_fulltitle(document))}`;
         if(Object.keys(query).length > 0) {
             str += '?';
-            str += Object.keys(query).map(k => `${k}=${query[k]}`).join('&');
+            str += Object.keys(query).filter(k => query[k]).map(k => `${k}=${query[k]}`).join('&');
         }
         return str;
     },

@@ -284,7 +284,7 @@ document.getElementById('initScript')?.remove();
             data.contentHtml = `
 <div class="thetree-alert thetree-alert-primary">
 <div class="thetree-alert-content">
-<a href="/w/${encodeURIComponent(req.query.from)}" rel="nofollow" title="${req.query.from}">${namumarkUtils.escapeHtml(req.query.from)}</a>에서 넘어옴
+<a href="/w/${encodeURIComponent(req.query.from)}?noredirect=1" rel="nofollow" title="${req.query.from}">${namumarkUtils.escapeHtml(req.query.from)}</a>에서 넘어옴
 </div>
 </div>
         `.replaceAll('\n', '').trim() + data.contentHtml;

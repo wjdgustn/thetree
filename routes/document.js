@@ -85,12 +85,12 @@ app.get('/w/*', async (req, res) => {
         req
     });
 
-    if(rev.content.startsWith('#redirect ')) {
+    if(!req.query.noredirect && rev.content.startsWith('#redirect ')) {
         const redirectName = rev.content.split('\n')[0].slice(10);
-        const redirectDoc = utils.parseDocumentName(req.params[0]);
+        const redirectDoc = utils.parseDocumentName(redirectName);
         const checkDoc = await Document.exists({
             namespace: redirectDoc.namespace,
-            title: redirectName
+            title: redirectDoc.title
         });
         if(checkDoc) return res.redirect(globalUtils.doc_action_link(redirectDoc, 'w', {
             from: globalUtils.doc_fulltitle(document),
