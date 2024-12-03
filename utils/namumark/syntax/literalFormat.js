@@ -7,11 +7,11 @@ module.exports = {
     openStr: `{{{`,
     closeStr: `}}}`,
     allowMultiline: true,
-    format: content => {
+    format: (content, namumark) => {
         if(debug) {
             delete require.cache[require.resolve('./literal/format')];
             return require('./literal/format')(content);
         }
-        return Format(content);
+        return Format(content, namumark);
     }
 }

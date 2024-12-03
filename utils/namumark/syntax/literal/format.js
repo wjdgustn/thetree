@@ -35,7 +35,7 @@ const sanitizeHtmlOptions = {
     }
 }
 
-module.exports = content => {
+module.exports = (content, namumark) => {
     const splittedContent = content.split(' ');
     const firstParam = splittedContent[0];
     const paramContent = splittedContent.slice(1).join(' ');
@@ -44,6 +44,17 @@ module.exports = content => {
         const html = utils.unescapeHtml(content.slice('#!html'.length).trim());
         const safeHtml = sanitizeHtml(html, sanitizeHtmlOptions).replaceAll('\n', ' ');
         return `${safeHtml}`;
+    }
+
+    if(firstParam.startsWith('#!folding')) {
+        const lines = content.split('\n');
+        const foldingText = namumark.escape(lines[0].slice('#!folding '.length));
+        const foldingContent = lines.slice(1).join('\n');
+
+        return JSON.stringify({
+            foldingText,
+            foldingContent
+        });
     }
 
     if(firstParam.startsWith('+')) {

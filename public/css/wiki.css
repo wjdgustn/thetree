@@ -411,3 +411,36 @@
 .wiki-content .wiki-table .wiki-table-keepall {
     word-break: keep-all;
 }
+
+.wiki-content dl.wiki-folding {
+    margin: 0;
+}
+
+.wiki-content dl.wiki-folding dt {
+    cursor: pointer;
+    font-weight: 700;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.wiki-content dl.wiki-folding dd {
+    margin: 0;
+    max-height: 0;
+    max-width: 0;
+    overflow: hidden;
+}
+
+.wiki-content .wiki-folding dd.wiki-folding-opened {
+    max-height: none;
+    max-width: none;
+}
+
+.wiki-content .wiki-folding dd.wiki-folding-content {
+    transition: all .15s ease-out;
+}
+
+.wiki-content .wiki-folding dd.wiki-folding-opening {
+    opacity: 1;
+    transition: all .15s ease-in;
+}

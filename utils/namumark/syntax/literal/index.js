@@ -75,7 +75,7 @@ module.exports = {
             return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><removeNewlineAfterFullline/>\n${text}\n<removeNewlineAfterFullline/></div>`;
         }
 
-        if(Format(content) !== undefined) return null;
+        if(Format(content, namumark) !== undefined) return null;
 
         if(content.includes('\n'))
             return `<pre><code>${namumark.escape(content)}</code></pre>`;
