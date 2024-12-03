@@ -203,7 +203,6 @@ module.exports = {
                         if(trStyle.includes('background-color:')) break;
 
                         trStyle += `background-color:${light};`;
-                        console.log(`\nrowbgcolor!!! assigning ${light} to ${colIndex}`);
                         if(dark) trDarkStyle += `background-color:${dark};`;
                     }
                     else if(name === 'color') {
@@ -237,6 +236,11 @@ module.exports = {
                     else if(tagStr === 'colkeepall') {
                         if(colKeepAll.includes(rowIndex)) break;
                         colKeepAll[rowIndex] = true;
+                    }
+                    else if(validateHTMLColorHex(tagStr) || validateHTMLColorName(tagStr)) {
+                        if(tdStyle.includes('background-color:')) break;
+
+                        tdStyle += `background-color:${tagStr};`;
                     }
                     else break;
 
