@@ -6,10 +6,6 @@
 
   "logo_text": "테스트위키",
   "logo_image": "",
-  "copyright_text": "copyright agree",
-  "copyright_url": "https://example.com",
-  "editagree_text": "문서 편집을 <strong>저장</strong>하면 당신은 기여한 내용을 <strong>라이선스</strong>으로 배포하고 기여한 문서에 대한 하이퍼링크나 URL을 이용하여 저작자 표시를 하는 것으로 충분하다는 데 동의하는 것입니다. 이 <strong>동의는 철회할 수 없습니다.</strong>",
-  "footer_html": "hi im footer",
 
   "skin.liberty.navbar_logo_padding": "0.4rem 0 0 0"
 }
