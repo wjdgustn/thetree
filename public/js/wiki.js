@@ -60,12 +60,10 @@ function setupWikiHandlers() {
             if(opened) {
                 setSizeToOffsetSize();
 
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    foldingContent.classList.remove('wiki-folding-open-anim');
-                    foldingContent.classList.remove('wiki-folding-opened');
+                foldingContent.classList.remove('wiki-folding-open-anim');
+                foldingContent.classList.remove('wiki-folding-opened');
 
-                    removeSize();
-                }));
+                removeSize();
             }
             else {
                 foldingContent.classList.add('wiki-folding-open-anim');
