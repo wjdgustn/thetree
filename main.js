@@ -52,7 +52,7 @@ global.updateConfig = () => {
     global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
     global.stringConfig = JSON.parse(fs.readFileSync('./stringConfig.json').toString());
 
-    global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
+    if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 }
 updateConfig();
 
