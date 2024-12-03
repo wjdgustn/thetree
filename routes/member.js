@@ -50,7 +50,7 @@ app.post('/member/signup',
     const existingToken = await SignupToken.findOne({
         email
     });
-    if(existingToken && Date.now() - existingToken.createdAt < 1000 * 60 * 10) return renderSignup(res, {
+    if(config.use_email_verification && existingToken && Date.now() - existingToken.createdAt < 1000 * 60 * 10) return renderSignup(res, {
         fieldErrors: [{
             path: 'email',
             msg: '해당 이메일로 이미 계정 생성 인증 메일을 보냈습니다.'
@@ -67,24 +67,28 @@ app.post('/member/signup',
     });
     await newToken.save();
 
-    res.renderSkin('계정 만들기', {
-        contentName: 'signup_email_sent',
-        email
-    });
+    const signupUrl = `/member/signup/${newToken.token}`;
+    if(config.use_email_verification) {
+        res.renderSkin('계정 만들기', {
+            contentName: 'signup_email_sent',
+            email
+        });
 
-    await mailTransporter.sendMail({
-        from: config.smtp_sender,
-        to: email,
-        subject: `[${config.site_name}] 계정 생성 이메일 주소 인증`,
-        html: `
+        await mailTransporter.sendMail({
+            from: config.smtp_sender,
+            to: email,
+            subject: `[${config.site_name}] 계정 생성 이메일 주소 인증`,
+            html: `
 안녕하세요. ${config.site_name} 입니다.
 ${config.site_name} 계정 생성 이메일 인증 메일입니다.
 직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.
-<a href="${new URL(`/member/signup/${newToken.token}`, config.base_url)}">[인증]</a>
+<a href="${new URL(signupUrl, config.base_url)}">[인증]</a>
 이 메일은 24시간동안 유효합니다.
 요청 아이피 : ${req.ip}
         `.trim().replaceAll('\n', '<br>')
-    });
+        });
+    }
+    else res.redirect(signupUrl);
 });
 
 const renderFinalSignup = (res, data = {}) => res.renderSkin('계정 만들기', {
@@ -204,11 +208,14 @@ app.post('/member/login',
             alert: info.message
         });
 
-        const checkTrusted = await LoginHistory.findOne({
+        let checkTrusted = await LoginHistory.findOne({
             uuid: user.uuid,
             ip: req.ip,
             trusted: true
         });
+
+        if(!user.totpToken && !config.use_email_verification) checkTrusted = true;
+
         if(checkTrusted) return req.login(user, err => {
             if(err) console.error(err);
             if(!res.headersSent) {
