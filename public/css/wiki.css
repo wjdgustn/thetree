@@ -359,13 +359,11 @@
     margin-bottom: 0;
 }
 
-.wiki-content .wiki-quote:not(:has(+ .wiki-paragraph)):not(:first-child),
-.wiki-content .wiki-indent .wiki-quote:not(:has(+ .wiki-paragraph)) {
+.wiki-content .wiki-quote + .wiki-quote {
     margin-top: 1rem;
 }
 
-.wiki-content .wiki-table-wrap:not(:has(+ .wiki-paragraph)):not(:first-child),
-.wiki-content .wiki-indent .wiki-table-wrap:not(:has(+ .wiki-paragraph)) {
+.wiki-content .wiki-table-wrap + .wiki-table-wrap {
     margin-top: 1rem;
 }
 
@@ -436,11 +434,11 @@
     max-width: none;
 }
 
-.wiki-content .wiki-folding dd.wiki-folding-content {
+.wiki-content .wiki-folding dd.wiki-folding-close-anim {
     transition: all .15s ease-out;
 }
 
-.wiki-content .wiki-folding dd.wiki-folding-opening {
+.wiki-content .wiki-folding dd.wiki-folding-open-anim {
     opacity: 1;
     transition: all .15s ease-in;
 }

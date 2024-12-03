@@ -153,8 +153,10 @@ module.exports = {
 
                     if(prevWasList) {
                         // console.log('prevWasList:', prevWasList);
-                        prevLine += '<removeNewline/>';
-                        if(!dontOpenParagraphOnClose) prevLine += '<div class="wiki-paragraph">';
+                        if(!dontOpenParagraphOnClose) {
+                            prevLine += '<removeNewline/>';
+                            prevLine += '<div class="wiki-paragraph">';
+                        }
                     }
                     dontOpenParagraphOnClose = false;
 

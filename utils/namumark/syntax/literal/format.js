@@ -46,17 +46,6 @@ module.exports = (content, namumark) => {
         return `${safeHtml}`;
     }
 
-    if(firstParam.startsWith('#!folding')) {
-        const lines = content.split('\n');
-        const foldingText = namumark.escape(lines[0].slice('#!folding '.length));
-        const foldingContent = lines.slice(1).join('\n');
-
-        return JSON.stringify({
-            foldingText,
-            foldingContent
-        });
-    }
-
     if(firstParam.startsWith('+')) {
         const size = parseInt(firstParam.slice(1));
         if(!isNaN(size) && size >= 1 && size <= 5)

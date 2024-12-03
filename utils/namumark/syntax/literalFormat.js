@@ -10,7 +10,7 @@ module.exports = {
     format: (content, namumark) => {
         if(debug) {
             delete require.cache[require.resolve('./literal/format')];
-            return require('./literal/format')(content);
+            return require('./literal/format')(content, namumark);
         }
         return Format(content, namumark);
     }

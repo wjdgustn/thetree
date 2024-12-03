@@ -44,12 +44,13 @@ ${listParser.parse(text).replaceAll('\n<removeNewline/>', '').replaceAll('\n', '
 </blockquote>
 ${'</div>'.repeat(indentCount)}
 ${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}
-${needNewline ? '<removeNewLineAfterIndent/>' : '<removeNewlineLater/>'}
+${needNewline ? '' : '<removeNewlineLater/>'}
 `
                     .replaceAll('\n', '')
                     .replaceAll('<br><removeNewlineLater/>', '')
                     .replaceAll('<removeNewlineLater/><br>', '')
                 + (isQuote ? '' : (needNewline ? '\n' : '') + content + (removeNewParagraph ? '' : '\n'));
+            console.log(output);
         }
 
         if(shouldMakeNewQuote && !isLastLine) makeNewQuote();

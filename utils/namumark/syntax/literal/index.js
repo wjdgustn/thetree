@@ -1,6 +1,7 @@
 const Format = require('./format');
 
 const { Priority } = require('../../types');
+const utils = require('../../utils');
 const CSSFilter = require('./cssFilter');
 const listParser = require('../../listParser');
 const tableSyntax = require('../table');
@@ -40,25 +41,7 @@ module.exports = {
 
             lines = lines.slice(1);
 
-            // wiki 문법 안 인용문 하드코딩
-            lines = lines.map(a =>
-                a.trimStart().startsWith('&gt;')
-                    ? a.replace('&gt;', '&gt;<removeNewParagraph/>')
-                    : a
-            );
-
-            // wiki 문법 안 리스트 하드코딩
-            let hasList = false;
-            lines = lines.map(a => {
-                let listTypeStr;
-                const result = (listTypeStr = listParser.getListTypeStr(a))
-                    ? a.replace(listTypeStr, `${listTypeStr}<removeNewParagraph/>`)
-                    : a;
-                if(listTypeStr) hasList = true;
-                return result;
-            });
-
-            let text = lines.join('\n');
+            let { text, hasList } = utils.removeNewParagraphHardcode(lines.join('\n'));
             if(text.endsWith('\n')) text = text.slice(0, -1);
 
             // 리스트 미리 파싱
@@ -73,6 +56,23 @@ module.exports = {
             // text = text.replaceAll('\n', '<newLine/>');
 
             return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><removeNewlineAfterFullline/>\n${text}\n<removeNewlineAfterFullline/></div>`;
+        }
+
+        if(firstParam.startsWith('#!folding')) {
+            const lines = content.split('\n');
+            const foldingText = namumark.escape(lines[0].slice('#!folding'.length) || 'More');
+            let { text, hasList } = utils.removeNewParagraphHardcode(lines.slice(1).join('\n'));
+
+            // 리스트 미리 파싱
+            if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
+                .replaceAll('\n<removeNewline/>', '')
+                .replaceAll('<removeNewline/>\n', '')
+                .replaceAll('<removeNewline/>', '');
+
+            // 표 미리 파싱
+            text = tableSyntax.parse(text, true);
+
+            return `<dl class="wiki-folding"><dt>${foldingText}</dt><dd class="wiki-folding-close-anim"><removeNewlineAfterFullline/>\n${text}\n<removeNewlineAfterFullline/></dd></dl>`;
         }
 
         if(Format(content, namumark) !== undefined) return null;
