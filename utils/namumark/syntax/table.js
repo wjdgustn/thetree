@@ -3,8 +3,8 @@ const {
     validateHTMLColorName
 } = require('validate-color');
 
+const utils = require('../utils');
 const { Priority } = require('../types');
-const listParser = require('../listParser');
 
 module.exports = {
     fullLine: true,
@@ -18,13 +18,32 @@ module.exports = {
         console.log(rows);
 
         let tableAlign;
+        const colBgColors = [];
+        const colDarkBgColors = [];
+        const colColors = [];
+        const colDarkColors = [];
+        const colKeepAll = [];
+
+        const trClassList = [];
+
+        let tableWrapStyle = '';
         let tableStyle = '';
+        let tableDarkStyle = '';
 
         const htmlRows = [];
-        for(let row of rows) {
+        for(let colIndex in rows) {
+            colIndex = parseInt(colIndex);
+            const row = rows[colIndex];
             const htmlValues = [];
+
             let colspan = 1;
-            for(let value of row) {
+
+            let trStyle = '';
+            let trDarkStyle = '';
+
+            for(let rowIndex in row) {
+                rowIndex = parseInt(rowIndex);
+                let value = row[rowIndex];
                 if(!value) {
                     colspan++;
                     continue;
@@ -32,8 +51,12 @@ module.exports = {
 
                 const tdClassList = [];
                 let tdStyle = '';
+                let tdDarkStyle = '';
                 let align;
+                let rowspan;
                 let colspanAssigned = false;
+                let colBgColorAssigned = false;
+                let colColorAssigned = false;
 
                 let paramStr = value;
                 const prevParamStrLength = paramStr.length;
@@ -44,14 +67,33 @@ module.exports = {
                     const tagStr = paramStr.slice('&lt;'.length, closeIndex);
                     console.log('tagStr', tagStr);
 
+                    const splittedTagStr = tagStr.split('=');
+                    const [name, value] = splittedTagStr;
+
+                    const splittedValue = value?.split(',') ?? [];
+                    const [light, dark] = splittedValue;
+
+                    if(!tagStr.startsWith('table')
+                        && name.includes('color')) {
+                        if(splittedValue.length > 2) break;
+                        if(splittedValue
+                            .some(v => !validateHTMLColorHex(v) && !validateHTMLColorName(v))) break;
+                    }
+
                     if(tagStr.startsWith('table')) {
-                        const splittedTagStr = tagStr.slice('table'.length).trimStart().split('=');
-                        if(splittedTagStr.length !== 2) break;
+                        const splittedTableStr = tagStr.slice('table'.length).trimStart().split('=');
+                        if(splittedTableStr.length !== 2) break;
 
-                        console.log('splittedTagStr', splittedTagStr);
+                        const [name, value] = splittedTableStr;
+                        const splittedValue = value.split(',');
 
-                        const name = splittedTagStr[0];
-                        const value = splittedTagStr[1];
+                        const [light, dark] = splittedValue;
+
+                        if(name.includes('color')) {
+                            if(splittedValue.length > 2) break;
+                            if(splittedValue
+                                .some(v => !validateHTMLColorHex(v) && !validateHTMLColorName(v))) break;
+                        }
 
                         if(name === 'align') {
                             if(tableAlign) break;
@@ -61,12 +103,32 @@ module.exports = {
                             else if(value === 'right') tableAlign = 'right';
                             else break;
                         }
-                        else if(name === 'bordercolor') {
-                            // TODO: 쉼표로 다크용 색 가능
-                            if(!validateHTMLColorHex(value)
-                                && !validateHTMLColorName(value)) break;
+                        else if(name === 'color') {
+                            if(tableStyle.includes('color:')) break;
 
-                            tableStyle += `border:2px solid ${value};`;
+                            tableStyle += `color:${light};`;
+                            if(dark) tableDarkStyle += `color:${dark};`;
+                        }
+                        else if(name === 'bgcolor') {
+                            if(tableStyle.includes('background-color:')) break;
+
+                            tableStyle += `background-color:${light};`;
+                            if(dark) tableDarkStyle += `background-color:${dark};`;
+                        }
+                        else if(name === 'bordercolor') {
+                            if(tableStyle.includes('border:')) break;
+
+                            tableStyle += `border:2px solid ${light};`;
+                            if(dark) tableDarkStyle += `border:2px solid ${dark};`;
+                        }
+                        else if(name === 'width') {
+                            if(tableWrapStyle.includes('width:')) break;
+
+                            const size = utils.parseSize(value);
+                            if(!size) return;
+
+                            tableWrapStyle += `width:${size.value}${size.unit};`;
+                            tableStyle += `width:100%;`;
                         }
                         else break;
                     }
@@ -79,6 +141,22 @@ module.exports = {
                         colspan = num;
                         colspanAssigned = true;
                     }
+                    else if(tagStr.startsWith('|') || tagStr.slice(1).startsWith('|')) {
+                        if(rowspan) break;
+
+                        let newStyle = '';
+                        if(!tagStr.startsWith('|')) {
+                            if(tagStr[0] === '^') newStyle += 'vertical-align:top;';
+                            else if(tagStr[0] === 'v') newStyle += 'vertical-align:bottom;';
+                            else break;
+                        }
+
+                        const num = parseInt(tagStr.slice(newStyle ? 2 : 1));
+                        if(isNaN(num) || num < 0) break;
+
+                        rowspan = num;
+                        tdStyle += newStyle;
+                    }
                     else if(['(', ':', ')'].includes(tagStr)) {
                         if(align) break;
 
@@ -86,32 +164,79 @@ module.exports = {
                         else if(tagStr === ':') align = 'center';
                         else if(tagStr === ')') align = 'right';
                     }
-                    else if(tagStr.startsWith('width=')) {
-                        if(tdStyle.includes('width')) break;
+                    else if(name === 'width') {
+                        if(tdStyle.includes('width:')) break;
 
-                        const width = tagStr.slice('width='.length);
+                        const size = utils.parseSize(value);
+                        if(!size) return;
 
-                        let value = Number(width);
-                        let unit = 'px';
+                        tdStyle += `width:${size.value}${size.unit};`;
+                    }
+                    else if(name === 'height') {
+                        if(tdStyle.includes('height:')) break;
 
-                        if(isNaN(value)) {
-                            if(width.endsWith('%')) {
-                                value = parseFloat(width.slice(0, -1));
-                                unit = '%';
-                            }
-                            else if(width.endsWith('px')) {
-                                value = parseFloat(width.slice(0, -2));
-                            }
-                        }
-                        if(isNaN(value)) break;
-                        if(value < 0) break;
+                        const size = utils.parseSize(value);
+                        if(!size) return;
 
-                        tdStyle += `width:${value}${unit};`;
+                        tdStyle += `height:${size.value}${size.unit};`;
                     }
                     else if(tagStr === 'nopad') {
                         if(tdClassList.includes('wiki-table-nopadding')) break;
 
                         tdClassList.push('wiki-table-nopadding');
+                    }
+                    else if(name === 'bgcolor') {
+                        if(tdStyle.includes('background-color:')) break;
+
+                        tdStyle += `background-color:${light};`;
+                        if(dark) tdDarkStyle += `background-color:${dark};`;
+                    }
+                    else if(name === 'colbgcolor') {
+                        if(colBgColorAssigned) break;
+
+                        colBgColors[rowIndex] = light;
+                        if(dark) colDarkBgColors[rowIndex] = dark;
+
+                        colBgColorAssigned = true;
+                    }
+                    else if(name === 'rowbgcolor') {
+                        if(trStyle.includes('background-color:')) break;
+
+                        trStyle += `background-color:${light};`;
+                        console.log(`\nrowbgcolor!!! assigning ${light} to ${colIndex}`);
+                        if(dark) trDarkStyle += `background-color:${dark};`;
+                    }
+                    else if(name === 'color') {
+                        if(tdStyle.includes('color:')) break;
+
+                        tdStyle += `color:${light};`;
+                        if(dark) tdDarkStyle += `color:${dark};`;
+                    }
+                    else if(name === 'colcolor') {
+                        if(colColorAssigned) break;
+
+                        colColors[rowIndex] = light;
+                        if(dark) colDarkColors[rowIndex] = dark;
+
+                        colColorAssigned = true;
+                    }
+                    else if(name === 'rowcolor') {
+                        if(trStyle.includes('color:')) break;
+
+                        trStyle += `color:${light};`;
+                        if(dark) trDarkStyle += `color:${dark};`;
+                    }
+                    else if(tagStr === 'keepall') {
+                        if(tdClassList.includes('wiki-table-keepall')) break;
+                        tdClassList.push('wiki-table-keepall');
+                    }
+                    else if(tagStr === 'rowkeepall') {
+                        if(trClassList.includes('wiki-table-keepall')) break;
+                        trClassList.push('wiki-table-keepall');
+                    }
+                    else if(tagStr === 'colkeepall') {
+                        if(colKeepAll.includes(rowIndex)) break;
+                        colKeepAll[rowIndex] = true;
                     }
                     else break;
 
@@ -137,10 +262,24 @@ module.exports = {
                 }
                 if(align) tdStyle += `text-align:${align};`;
 
+                const visualRowIndex = rowIndex + colspan - 1;
+                if(!tdStyle.includes('background-color:') && colBgColors[visualRowIndex])
+                    tdStyle += `background-color:${colBgColors[visualRowIndex]};`;
+                if(!tdDarkStyle.includes('background-color:') && colDarkBgColors[visualRowIndex])
+                    tdDarkStyle += `background-color:${colDarkBgColors[visualRowIndex]};`;
+
+                if(!tdStyle.includes('color:') && colColors[visualRowIndex])
+                    tdStyle += `color:${colColors[visualRowIndex]};`;
+                if(!tdDarkStyle.includes('color:') && colDarkColors[visualRowIndex])
+                    tdDarkStyle += `color:${colDarkColors[visualRowIndex]};`;
+
+                if(!tdClassList.includes('wiki-table-keepall') && colKeepAll[visualRowIndex])
+                    tdClassList.push('wiki-table-keepall');
+
                 if(value.endsWith('\n')) value = value.slice(0, -1);
 
                 htmlValues.push(`
-<td${tdStyle ? ` style="${tdStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${tdClassList ? ` class="${tdClassList.join(' ')}"` : ''}><div class="wiki-paragraph"><removeNewlineLater/>
+<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}><div class="wiki-paragraph"><removeNewlineLater/>
 ${value}
 <removeNewlineLater/></div></td>
 `.trim());
@@ -148,7 +287,7 @@ ${value}
                 colspan = 1;
             }
 
-            htmlRows.push(`<tr>${htmlValues.join('')}</tr>`);
+            htmlRows.push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}>${htmlValues.join('')}</tr>`);
         }
 
         rows.length = 0;
@@ -158,9 +297,9 @@ ${value}
         if(tableAlign) tableWrapperClassList.push(`table-${tableAlign}`);
 
         // TODO: 임시 [br] 매크로 제거
-        const table = `<removeNewlineLater/>${removeNewParagraph ? '' : '</div>'}<div class="${tableWrapperClassList.join(' ')}"><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}<removeNewlineLater/>\n`.replaceAll('[br]', '<br>');
+        const table = `<removeNewlineLater/>${removeNewParagraph ? '' : '</div>'}<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}<removeNewlineLater/>\n`.replaceAll('[br]', '<br>');
 
-        return table + '\n' + (fromLastLine ? '' : content);
+        return table + (fromLastLine ? '' : '\n' + content);
     },
     format(content, namumark, _, isLastLine, removeNewParagraph = false) {
         const rows = namumark.syntaxData.rows ??= [];
@@ -176,7 +315,7 @@ ${value}
         const newRowText = namumark.syntaxData.rowText += (rowText ? '\n' : '') + content;
 
         if(newRowText.length > 2 && newRowText.endsWith('||')) {
-            rows.push(newRowText.split('||').slice(1, -1));
+            rows.push(newRowText.split(/(?<!\\)\|\|/).slice(1, -1).map(a => a.replaceAll('\\||', '||')));
             namumark.syntaxData.rowText = '';
         }
 

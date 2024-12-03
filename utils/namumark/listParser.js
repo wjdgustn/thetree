@@ -1,4 +1,5 @@
 const hrSyntax = require('./syntax/hr');
+const tableSyntax = require('./syntax/table');
 
 const numberedListTypes = {
     '*': '',
@@ -14,8 +15,8 @@ module.exports = {
         && Object.keys(numberedListTypes).some(a => line.trim().startsWith(a)),
     getListTypeStr: line => Object.keys(numberedListTypes).find(a => line.trimStart().startsWith(a)),
     parse: function(sourceText) {
-        console.log('=== 리스트 파싱 전 ===');
-        console.log(sourceText);
+        // console.log('=== 리스트 파싱 전 ===');
+        // console.log(sourceText);
 
         const lines = sourceText.split('\n');
         const newLines = [];
@@ -50,6 +51,7 @@ module.exports = {
                     listContent = listContent.slice(1);
                 }
                 if(hrSyntax.check(listContent)) listContent = hrSyntax.format(listContent);
+                listContent = tableSyntax.parse(listContent);
 
                 const removeNewParagraph = listContent.includes('<removeNewParagraph/>');
                 if(removeNewParagraph) listContent = listContent.replaceAll('<removeNewParagraph/>', '');
@@ -136,6 +138,7 @@ module.exports = {
                     const prevWithoutCloseParagraph = prevContent.slice(0, -'</div>'.length);
 
                     if(hrSyntax.check(trimedLine)) trimedLine = hrSyntax.format(trimedLine);
+                    trimedLine = tableSyntax.parse(trimedLine);
 
                     newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}</div>`;
                     newLine = null;
@@ -168,9 +171,9 @@ module.exports = {
         }
 
         // console.log(newLines);
-        console.log('=== 리스트 파싱 후 ===');
-        console.log(newLines.join('\n'));
+        // console.log('=== 리스트 파싱 후 ===');
+        // console.log(newLines.join('\n'));
         // console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
-        return newLines.join('\n');
+        return tableSyntax.parse(newLines.join('\n'));
     }
 }

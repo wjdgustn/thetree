@@ -407,3 +407,7 @@
 .wiki-content .wiki-table td.wiki-table-nopadding {
     padding: 0;
 }
+
+.wiki-content .wiki-table .wiki-table-keepall {
+    word-break: keep-all;
+}

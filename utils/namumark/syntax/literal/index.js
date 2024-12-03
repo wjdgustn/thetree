@@ -3,7 +3,7 @@ const Format = require('./format');
 const { Priority } = require('../../types');
 const CSSFilter = require('./cssFilter');
 const listParser = require('../../listParser');
-const tableParser = require('../table');
+const tableSyntax = require('../table');
 
 module.exports = {
     priority: Priority.Literal,
@@ -68,7 +68,7 @@ module.exports = {
                 .replaceAll('<removeNewline/>', '');
 
             // 표 미리 파싱
-            text = tableParser.parse(text, true);
+            text = tableSyntax.parse(text, true);
 
             // text = text.replaceAll('\n', '<newLine/>');
 
