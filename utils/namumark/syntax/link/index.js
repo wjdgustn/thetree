@@ -131,8 +131,6 @@ module.exports = {
             }
         }
 
-        console.log(`link: ${link}, text: ${text}`);
-
         const classList = [];
 
         if(notExist) classList.push('not-exist');
