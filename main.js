@@ -84,7 +84,7 @@ passport.deserializeUser(async (uuid, done) => {
 if(!debug) {
     app.use(compression());
 }
-app.use(express.static(`./public${debug ? '' : './public/dist'}`));
+app.use(express.static(`./public`));
 
 const skinsStatic = express.static('./skins');
 app.use('/skins', (req, res, next) => {
