@@ -333,7 +333,7 @@ app.use((err, req, res, _) => {
     else res.status(500).send('서버 오류');
 });
 
-const port = process.env.port ?? 3000;
+const port = process.env.PORT ?? 3000;
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
