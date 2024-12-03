@@ -25,12 +25,14 @@ const ACL = require('./class/acl');
 
 global.publicConfig = {};
 global.serverConfig = {};
+global.stringConfig = {};
 
 Object.defineProperty(global, 'config', {
     get() {
         return {
             ...global.publicConfig,
             ...global.serverConfig,
+            ...global.stringConfig,
             namespaces: [...new Set([
                 '문서',
                 '틀',
@@ -48,6 +50,7 @@ Object.defineProperty(global, 'config', {
 global.updateConfig = () => {
     global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
     global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
+    global.stringConfig = JSON.parse(fs.readFileSync('./stringConfig.json').toString());
 
     global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 }
