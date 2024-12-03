@@ -262,7 +262,8 @@ module.exports = {
                 }
                 if(align) tdStyle += `text-align:${align};`;
 
-                const visualRowIndex = rowIndex + colspan - 1;
+                const visualRowIndex = rowIndex + Math.min(colspan, row.length) - 1;
+                console.log('rowIndex', rowIndex, 'visualRowIndex', visualRowIndex, 'colBgColors', colBgColors);
                 if(!tdStyle.includes('background-color:') && colBgColors[visualRowIndex])
                     tdStyle += `background-color:${colBgColors[visualRowIndex]};`;
                 if(!tdDarkStyle.includes('background-color:') && colDarkBgColors[visualRowIndex])
