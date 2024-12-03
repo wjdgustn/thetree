@@ -3,6 +3,7 @@ const Format = require('./format');
 const { Priority } = require('../../types');
 const CSSFilter = require('./cssFilter');
 const listParser = require('../../listParser');
+const tableParser = require('../table');
 
 module.exports = {
     priority: Priority.Literal,
@@ -59,11 +60,16 @@ module.exports = {
 
             let text = lines.join('\n');
             if(text.endsWith('\n')) text = text.slice(0, -1);
+
             // 리스트 미리 파싱
             if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
                 .replaceAll('\n<removeNewline/>', '')
                 .replaceAll('<removeNewline/>\n', '')
                 .replaceAll('<removeNewline/>', '');
+
+            // 표 미리 파싱
+            text = tableParser.parse(text, true);
+
             // text = text.replaceAll('\n', '<newLine/>');
 
             return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><removeNewlineAfterFullline/>\n${text}\n<removeNewlineAfterFullline/></div>`;

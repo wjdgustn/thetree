@@ -10,7 +10,7 @@ module.exports = {
     fullLine: true,
     priority: Priority.Table,
     openStr: '||',
-    makeTable(content, namumark, fromLastLine = false) {
+    makeTable(content, namumark, fromLastLine = false, removeNewParagraph = false) {
         const rows = namumark.syntaxData.rows ??= [];
         if(!rows.length) return null;
 
@@ -62,6 +62,7 @@ module.exports = {
                             else break;
                         }
                         else if(name === 'bordercolor') {
+                            // TODO: 쉼표로 다크용 색 가능
                             if(!validateHTMLColorHex(value)
                                 && !validateHTMLColorName(value)) break;
 
@@ -157,15 +158,15 @@ ${value}
         if(tableAlign) tableWrapperClassList.push(`table-${tableAlign}`);
 
         // TODO: 임시 [br] 매크로 제거
-        const table = `<removeNewlineLater/></div><div class="${tableWrapperClassList.join(' ')}"><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div><div class="wiki-paragraph"><removeNewlineLater/>\n`.replaceAll('[br]', '<br>');
+        const table = `<removeNewlineLater/>${removeNewParagraph ? '' : '</div>'}<div class="${tableWrapperClassList.join(' ')}"><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}<removeNewlineLater/>\n`.replaceAll('[br]', '<br>');
 
         return table + '\n' + (fromLastLine ? '' : content);
     },
-    format(content, namumark, _, isLastLine) {
+    format(content, namumark, _, isLastLine, removeNewParagraph = false) {
         const rows = namumark.syntaxData.rows ??= [];
         const rowText = namumark.syntaxData.rowText ??= '';
 
-        const makeTable = (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine);
+        const makeTable = (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine, removeNewParagraph);
 
         const trimedContent = content.trim();
         if(!trimedContent.startsWith('||') && !rowText) {
@@ -182,5 +183,53 @@ ${value}
         if(isLastLine) return makeTable(true);
 
         return '';
+    },
+    parse(content, removeNewParagraph = false) {
+        const fakeNamumark = {
+            syntaxData: {}
+        }
+
+        const lines = content.split('\n');
+
+        const newLines = [];
+        let removeNextNewLine = false;
+        const pushLine = text => {
+            // if(removeNextNewLine) {
+            //     if(!newLines.length) newLines.push(text);
+            //     else newLines[newLines.length - 1] += text;
+            //     removeNextNewLine = false;
+            // }
+            // else newLines.push(text);
+            newLines.push(text);
+        }
+
+        for(let i in lines) {
+            i = parseInt(i);
+            const line = lines[i];
+            const isLastLine = i === lines.length - 1;
+            let output = this.format(line, fakeNamumark, lines, isLastLine, removeNewParagraph);
+
+            let setRemoveNextNewLine = false;
+            if(output === '') continue;
+            if(output != null) {
+                // if(output.includes('<removeNextNewline/>')) {
+                //     output = output.replace('<removeNextNewline/>', '');
+                //     setRemoveNextNewLine = true;
+                // }
+                //
+                // if(output.includes('<removeNewline/>')) {
+                //     output = output.replace('<removeNewline/>', '');
+                //     if(!newLines.length) pushLine(output);
+                //     else newLines[newLines.length - 1] += output;
+                // }
+                // else pushLine(output);
+                pushLine(output);
+            }
+            else pushLine(line);
+
+            if(setRemoveNextNewLine) removeNextNewLine = true;
+        }
+
+        return newLines.join('\n');
     }
 }
