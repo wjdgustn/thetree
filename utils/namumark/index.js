@@ -164,10 +164,26 @@ module.exports = class NamumarkParser {
             const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
             const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
             debugLog(`\nparse syntax: ${syntax.name}`);
+            if(syntax.name === 'link') console.log(sourceText);
             // if(text) {
             //     sourceText = text;
             //     text = '';
             // }
+
+            // 링크 처리 시 잠깐 removeNewlineAfterFullline 줄바꿈 제거
+            if(syntax.priority === Priority.ContentChange
+                && syntax.priority !== nextSyntax.priority) {
+                sourceText = sourceText
+                    .replaceAll('\n<removeNewlineAfterFullline/>', '<removeNewlineAfterFulllineFront/>')
+                    .replaceAll('<removeNewlineAfterFullline/>\n', '<removeNewlineAfterFulllineBack/>');
+            }
+
+            if(syntax.priority === Priority.ContentChange + 1
+                && syntax.priority !== nextSyntax.priority) {
+                sourceText = sourceText
+                    .replaceAll('<removeNewlineAfterFulllineFront/>', '\n<removeNewlineAfterFullline/>')
+                    .replaceAll('<removeNewlineAfterFulllineBack/>', '<removeNewlineAfterFullline/>\n');
+            }
 
             if(syntax.priority === Priority.FullLine
                 && syntax.priority !== nextSyntax.priority) {
