@@ -356,13 +356,20 @@ module.exports = class NamumarkParser {
         sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
         text = '';
 
+        console.log(sourceText);
+
         let insertPos = 0;
         let nextInsertPos = 0;
-        for(let i = 0; i < sourceText.length; i++) {
-            const char = sourceText[i];
-            const frontStrSample = sourceText.slice(i, i + MaximumParagraphTagLength);
+        let sourceTextPos = 0;
+        while(sourceTextPos < sourceText.length) {
+            const paragraphPosTagPos = sourceText.indexOf(ParagraphPosTag, sourceTextPos);
+            const enterParagraphTagPos = sourceText.indexOf(EnterParagraphTag, sourceTextPos);
+            const exitParagraphTagPos = sourceText.indexOf(ExitParagraphTag, sourceTextPos);
+            const posList = [paragraphPosTagPos, enterParagraphTagPos, exitParagraphTagPos].filter(a => a !== -1);
 
-            if(frontStrSample.startsWith(ParagraphPosTag)) {
+            const fastestPos = posList.length ? Math.min(...posList) : sourceText.length;
+
+            if(paragraphPosTagPos === sourceTextPos) {
                 const WikiParagraphOpen = '<div class="wiki-paragraph"><removeNewline/>\n';
                 const WikiParagraphTag = WikiParagraphOpen + '\n<removeNewline/></div>';
 
@@ -370,24 +377,24 @@ module.exports = class NamumarkParser {
 
                 nextInsertPos = text.length + WikiParagraphOpen.length;
                 text += WikiParagraphTag;
-                i += ParagraphPosTag.length - 1;
+                sourceTextPos += ParagraphPosTag.length;
                 continue;
             }
-
-            if(frontStrSample.startsWith(EnterParagraphTag)) {
+            else if(enterParagraphTagPos === sourceTextPos) {
                 insertPos = nextInsertPos;
-                i += EnterParagraphTag.length - 1;
+                sourceTextPos += EnterParagraphTag.length;
                 continue;
             }
-
-            if(frontStrSample.startsWith(ExitParagraphTag)) {
+            else if(exitParagraphTagPos === sourceTextPos) {
                 insertPos = text.length;
-                i += ExitParagraphTag.length - 1;
+                sourceTextPos += ExitParagraphTag.length;
                 continue;
             }
 
-            text = utils.insertText(text, insertPos, char);
-            insertPos++;
+            const newTag = sourceText.slice(sourceTextPos, fastestPos);
+            text = utils.insertText(text, insertPos, newTag);
+            insertPos += newTag.length;
+            sourceTextPos = fastestPos;
         }
 
         // console.log('=== paragraph 제어문 처리 후 ===');
