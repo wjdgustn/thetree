@@ -50,8 +50,8 @@ function updateNavs() {
 }
 
 document.addEventListener('thetree:pageLoad', () => {
-    window.beforePopstate = e => {
-        if(e.state === null) {
+    window.beforePopstate = isHashChange => {
+        if(isHashChange) {
             updateNavs();
             return false;
         }

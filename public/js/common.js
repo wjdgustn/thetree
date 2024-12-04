@@ -14,15 +14,20 @@ document.addEventListener('alpine:initialized', () => {
     setupDocument();
 });
 
-let firstUrl = location.href;
+let currentUrl = location.href;
 window.addEventListener('popstate', async e => {
+    const prevUrl = currentUrl;
+    currentUrl = location.href;
+
+    const isHashChange = prevUrl.split('#')[0] === currentUrl.split('#')[0];
+
     if(typeof window.beforePopstate === 'function') {
-        const canMove = await window.beforePopstate(e);
+        const canMove = await window.beforePopstate(isHashChange);
         if(!canMove) return;
     }
 
-    if(e.state !== null || location.href === firstUrl)
-        await movePage(location.href, false);
+    if(isHashChange) focusAnchor();
+    else await movePage(location.href, false);
 });
 
 function plainAlert(text) {
@@ -158,6 +163,20 @@ function updateTimeTag() {
     }
 }
 
+function focusAnchor() {
+    const hash = location.hash.slice(1);
+    if(hash) {
+        let element;
+        if(hash === 'toc')
+            element = document.getElementsByClassName('wiki-macro-toc')[0];
+        else
+            element = document.getElementById(hash);
+
+        if(element) element.scrollIntoView();
+    }
+    else window.scrollTo(0, 0);
+}
+
 function setupDocument() {
     const aElements = document.getElementsByTagName('a');
     for(let a of aElements) {
@@ -172,17 +191,7 @@ function setupDocument() {
     }
 
     updateTimeTag();
-
-    const hash = location.hash.slice(1);
-    if(hash) {
-        let element;
-        if(hash === 'toc')
-            element = document.getElementsByClassName('wiki-macro-toc')[0];
-        else
-            element = document.getElementById(hash);
-
-        if(element) element.scrollIntoView();
-    }
+    focusAnchor();
 
     window.beforePageLoad = null;
     window.beforePopstate = null;
@@ -214,6 +223,7 @@ async function movePage(response, pushState = true) {
                     newUrl.searchParams.delete('anchor');
                 }
                 history.pushState({}, null, newUrl.toString());
+                currentUrl = newUrl.toString();
             }
         }
 
