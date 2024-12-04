@@ -356,8 +356,6 @@ module.exports = class NamumarkParser {
         sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
         text = '';
 
-        console.log(sourceText);
-
         let insertPos = 0;
         let nextInsertPos = 0;
         let sourceTextPos = 0;
