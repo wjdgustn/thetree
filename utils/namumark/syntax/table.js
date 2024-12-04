@@ -18,9 +18,9 @@ module.exports = {
 
         const trClassList = [];
 
-        let tableWrapStyle = '';
-        let tableStyle = '';
-        let tableDarkStyle = '';
+        let tableWrapStyle = ';';
+        let tableStyle = ';';
+        let tableDarkStyle = ';';
 
         const htmlRows = [];
         for(let colIndex in rows) {
@@ -30,8 +30,8 @@ module.exports = {
 
             let colspan = 1;
 
-            let trStyle = '';
-            let trDarkStyle = '';
+            let trStyle = ';';
+            let trDarkStyle = ';';
 
             for(let rowIndex in row) {
                 rowIndex = parseInt(rowIndex);
@@ -42,8 +42,8 @@ module.exports = {
                 }
 
                 const tdClassList = [];
-                let tdStyle = '';
-                let tdDarkStyle = '';
+                let tdStyle = ';';
+                let tdDarkStyle = ';';
                 let align;
                 let rowspan;
                 let colspanAssigned = false;
@@ -95,25 +95,25 @@ module.exports = {
                             else break;
                         }
                         else if(name === 'color') {
-                            if(tableStyle.includes('color:')) break;
+                            if(tableStyle.includes(';color:')) break;
 
                             tableStyle += `color:${light};`;
                             if(dark) tableDarkStyle += `color:${dark};`;
                         }
                         else if(name === 'bgcolor') {
-                            if(tableStyle.includes('background-color:')) break;
+                            if(tableStyle.includes(';background-color:')) break;
 
                             tableStyle += `background-color:${light};`;
                             if(dark) tableDarkStyle += `background-color:${dark};`;
                         }
                         else if(name === 'bordercolor') {
-                            if(tableStyle.includes('border:')) break;
+                            if(tableStyle.includes(';border:')) break;
 
                             tableStyle += `border:2px solid ${light};`;
                             if(dark) tableDarkStyle += `border:2px solid ${dark};`;
                         }
                         else if(name === 'width') {
-                            if(tableWrapStyle.includes('width:')) break;
+                            if(tableWrapStyle.includes(';width:')) break;
 
                             const size = utils.parseSize(value);
                             if(!size) return;
@@ -156,7 +156,7 @@ module.exports = {
                         else if(tagStr === ')') align = 'right';
                     }
                     else if(name === 'width') {
-                        if(tdStyle.includes('width:')) break;
+                        if(tdStyle.includes(';width:')) break;
 
                         const size = utils.parseSize(value);
                         if(!size) return;
@@ -164,7 +164,7 @@ module.exports = {
                         tdStyle += `width:${size.value}${size.unit};`;
                     }
                     else if(name === 'height') {
-                        if(tdStyle.includes('height:')) break;
+                        if(tdStyle.includes(';height:')) break;
 
                         const size = utils.parseSize(value);
                         if(!size) return;
@@ -177,7 +177,7 @@ module.exports = {
                         tdClassList.push('wiki-table-nopadding');
                     }
                     else if(name === 'bgcolor') {
-                        if(tdStyle.includes('background-color:')) break;
+                        if(tdStyle.includes(';background-color:')) break;
 
                         tdStyle += `background-color:${light};`;
                         if(dark) tdDarkStyle += `background-color:${dark};`;
@@ -191,13 +191,13 @@ module.exports = {
                         colBgColorAssigned = true;
                     }
                     else if(name === 'rowbgcolor') {
-                        if(trStyle.includes('background-color:')) break;
+                        if(trStyle.includes(';background-color:')) break;
 
                         trStyle += `background-color:${light};`;
                         if(dark) trDarkStyle += `background-color:${dark};`;
                     }
                     else if(name === 'color') {
-                        if(tdStyle.includes('color:')) break;
+                        if(tdStyle.includes(';color:')) break;
 
                         tdStyle += `color:${light};`;
                         if(dark) tdDarkStyle += `color:${dark};`;
@@ -211,7 +211,7 @@ module.exports = {
                         colColorAssigned = true;
                     }
                     else if(name === 'rowcolor') {
-                        if(trStyle.includes('color:')) break;
+                        if(trStyle.includes(';color:')) break;
 
                         trStyle += `color:${light};`;
                         if(dark) trDarkStyle += `color:${dark};`;
@@ -229,7 +229,7 @@ module.exports = {
                         colKeepAll[rowIndex] = true;
                     }
                     else if(utils.validateColor(tagStr)) {
-                        if(tdStyle.includes('background-color:')) break;
+                        if(tdStyle.includes(';background-color:')) break;
 
                         tdStyle += `background-color:${tagStr};`;
                     }
@@ -258,20 +258,23 @@ module.exports = {
                 if(align) tdStyle += `text-align:${align};`;
 
                 const visualRowIndex = rowIndex + Math.min(colspan, row.length) - 1;
-                if(!tdStyle.includes('background-color:') && colBgColors[visualRowIndex])
+                if(!tdStyle.includes(';background-color:') && colBgColors[visualRowIndex])
                     tdStyle += `background-color:${colBgColors[visualRowIndex]};`;
-                if(!tdDarkStyle.includes('background-color:') && colDarkBgColors[visualRowIndex])
+                if(!tdDarkStyle.includes(';background-color:') && colDarkBgColors[visualRowIndex])
                     tdDarkStyle += `background-color:${colDarkBgColors[visualRowIndex]};`;
 
-                if(!tdStyle.includes('color:') && colColors[visualRowIndex])
+                if(!tdStyle.includes(';color:') && colColors[visualRowIndex])
                     tdStyle += `color:${colColors[visualRowIndex]};`;
-                if(!tdDarkStyle.includes('color:') && colDarkColors[visualRowIndex])
+                if(!tdDarkStyle.includes(';color:') && colDarkColors[visualRowIndex])
                     tdDarkStyle += `color:${colDarkColors[visualRowIndex]};`;
 
                 if(!tdClassList.includes('wiki-table-keepall') && colKeepAll[visualRowIndex])
                     tdClassList.push('wiki-table-keepall');
 
                 if(value.endsWith('\n')) value = value.slice(0, -1);
+
+                tdStyle = tdStyle.slice(1);
+                tdDarkStyle = tdDarkStyle.slice(1);
 
                 htmlValues.push(`
 <td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}><div class="wiki-paragraph"><removeNewlineLater/>
@@ -282,6 +285,8 @@ ${value}
                 colspan = 1;
             }
 
+            trStyle = trStyle.slice(1);
+            trDarkStyle = trDarkStyle.slice(1);
             htmlRows.push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}>${htmlValues.join('')}</tr>`);
         }
 
@@ -290,6 +295,10 @@ ${value}
         const tableWrapperClassList = ['wiki-table-wrap'];
 
         if(tableAlign) tableWrapperClassList.push(`table-${tableAlign}`);
+
+        tableWrapStyle = tableWrapStyle.slice(1);
+        tableStyle = tableStyle.slice(1);
+        tableDarkStyle = tableDarkStyle.slice(1);
 
         const table = `<removeNewlineLater/>${removeNewParagraph ? '' : '</div>'}<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}<removeNewlineLater/>\n`;
 
