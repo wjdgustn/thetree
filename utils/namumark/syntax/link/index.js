@@ -111,6 +111,7 @@ module.exports = {
                 }
 
                 title = link;
+                if(link.startsWith('문서:')) link = link.slice(3);
                 if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}`;
                 else link = `/w/${link}`;
             }
