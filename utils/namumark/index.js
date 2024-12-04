@@ -113,6 +113,7 @@ module.exports = class NamumarkParser {
         if(data.document) this.document = data.document;
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
+        if(data.includeData) this.includeData = data.includeData;
     }
 
     static escape(str) {
@@ -452,15 +453,18 @@ module.exports = class NamumarkParser {
         // indent 전 빈 paragraph 제거
         // text = text.replaceAll(FullParagraphTag + '<div class="wiki-indent">', '<div class="wiki-indent">');
 
+        // 남은 removeNewParagraph 제거
+        text = text.replaceAll('<removeNewParagraph/>', '');
+
         debugLog(`links: ${this.links}`);
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
 
-        let html = `<div class="wiki-content">${
+        let html = `${this.includeData ? '' : '<div class="wiki-content">'}${
             text
                 .replaceAll('\n', '<br>')
                 .replaceAll('<br><removebr/>', '')
                 .replaceAll('<removebr/>', '')
-        }</div>`;
+        }${this.includeData ? '' : '</div>'}`;
 
         if(debug) console.timeEnd();
 

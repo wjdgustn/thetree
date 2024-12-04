@@ -21,8 +21,12 @@ module.exports = text => {
         return result;
     });
 
+    // include 매크로 하드코딩
+    let newText = lines.join('\n');
+    newText = newText.replaceAll('[include(', '[include(<removeNewParagraph/>');
+
     return {
-        text: lines.join('\n'),
+        text: newText,
         hasList
     }
 }
