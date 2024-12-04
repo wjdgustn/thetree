@@ -111,6 +111,7 @@ module.exports = class NamumarkParser {
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
         if(data.includeData) this.includeData = data.includeData;
+        if(data.linkExistsCache) this.linkExistsCache = data.linkExistsCache;
     }
 
     get NamumarkParser() {

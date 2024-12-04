@@ -79,7 +79,7 @@ module.exports = {
             ].includes(parsedLink.protocol.slice(0, -1))) parsedLink = null;
         }
 
-        const linkExistsCache = namumark.syntaxData.linkExistsCache ??= [];
+        const linkExistsCache = namumark.syntaxData.linkExistsCache ??= namumark.linkExistsCache ?? [];
 
         let title;
         if(parsedLink) {
