@@ -12,12 +12,6 @@ const LoginHistory = require('../schemas/loginHistory');
 
 const app = express.Router();
 
-app.get('/member/login', middleware.isLogout, (req, res) => {
-    res.renderSkin('로그인', {
-        contentName: 'login'
-    });
-});
-
 const renderSignup = (res, data = {}) => res.renderSkin('계정 만들기', {
     ...data,
     contentName: 'signup'
