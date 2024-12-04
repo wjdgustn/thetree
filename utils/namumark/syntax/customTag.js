@@ -14,12 +14,10 @@ module.exports = {
         const displayFootnotes = [];
         for(let footnote of [...footnoteList]) {
             const footnoteIndex = sourceText.indexOf(`<span id="rfn-${footnote.index}">`);
-            console.log('pos', pos, 'footnoteIndex', footnoteIndex, 'footnote.index', footnote.index);
             if(footnoteIndex > pos) break;
 
             displayFootnotes.push(footnoteList.shift());
         }
-        console.log(displayFootnotes);
 
         if(!displayFootnotes.length) return '';
 
