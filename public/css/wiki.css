@@ -471,3 +471,22 @@
 .wiki-content .toc-indent {
     padding-left: 20px;
 }
+
+.wiki-content .wiki-fn-content {
+    font-size: .8em;
+    vertical-align: super;
+    white-space: nowrap;
+}
+
+.wiki-content .wiki-macro-footnote {
+    border-top: 1px solid #777;
+    margin: 1.5em 0;
+    padding: .5em 0;
+}
+
+.wiki-content .footnote-list {
+    display: block;
+    line-height: 1.75;
+    margin-bottom: .5em;
+    word-break: break-all;
+}

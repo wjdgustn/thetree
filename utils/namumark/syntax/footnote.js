@@ -4,17 +4,26 @@ module.exports = {
     priority: Priority.Footnote,
     openStr: '[*',
     closeStr: ']',
-    format: (content, namumark) => {
+    format: (content, namumark, pos) => {
+        namumark.syntaxData.index ??= 0;
         namumark.syntaxData.numName ??= 0;
-        const values = namumark.syntaxData.values ??= {};
+
+        const index = ++namumark.syntaxData.index;
+        const values = namumark.footnoteValues;
+        const footnoteList = namumark.footnoteList;
 
         const splittedContent = content.split(' ');
 
-        let name = splittedContent[0] || ++namumark.syntaxData.numName;
+        let name = splittedContent[0] || index.toString();
         const value = values[name] ?? splittedContent.slice(1).join(' ');
 
         values[name] ??= value;
 
-        return JSON.stringify({name, value});
+        footnoteList.push({
+            name: name.toString(),
+            index
+        });
+
+        return `<a class="wiki-fn-content" href="#fn-${name}"><span id="rfn-${index}"></span>[${name}]</a>`;
     }
 }

@@ -6,6 +6,7 @@ module.exports = {
         FullLine: 4,
         LiteralFormat: 5,
         Format: 6,
-        Footnote: 7
+        Footnote: 7,
+        Last: 8
     }
 }

@@ -10,6 +10,7 @@ const syntaxDefaultValues = {
     openStr: '',
     openOnlyForLineFirst: false,
     closeStr: '',
+    escapeOpenAndClose: true,
     closeOnlyForLineLast: false,
     allowMultiline: false,
     priority: Priority.Format,
@@ -36,7 +37,7 @@ const syntaxLoader = (subDir = '') => {
             if(debug) delete require.cache[syntaxPath];
             const syntax = require(syntaxPath);
             for(let [key, value] of Object.entries(syntaxDefaultValues)) {
-                if(!syntax[key]) {
+                if(syntax[key] == null) {
                     syntax[key] = value;
 
                     if(key === 'priority' && syntax.fullLine) syntax[key] = Priority.FullLine;
@@ -46,8 +47,10 @@ const syntaxLoader = (subDir = '') => {
             syntax.name = file.replace('.js', '');
             if(subDir) syntax.name = subDir.replaceAll('/', '_').slice(1) + '_' + syntax.name;
             if(syntax.name.endsWith('_index')) syntax.name = syntax.name.replace('_index', '');
-            syntax.openStr = utils.escapeHtml(syntax.openStr);
-            syntax.closeStr = utils.escapeHtml(syntax.closeStr);
+            if(syntax.escapeOpenAndClose) {
+                syntax.openStr = utils.escapeHtml(syntax.openStr);
+                syntax.closeStr = utils.escapeHtml(syntax.closeStr);
+            }
 
             syntaxes.push(syntax);
             debugLog(`loaded syntax: ${syntax.name}`);
@@ -142,9 +145,10 @@ module.exports = class NamumarkParser {
 
         this.categoryHtmls = [];
         this.headings = [];
-        this.footnotes = [];
+        this.footnoteValues = {};
+        this.footnoteList = [];
 
-        let sourceText = utils.escapeHtml(input);
+        let sourceText = utils.escapeHtml(input) + '<exitParagraph/><[footnotePos]>';
 
         if(sourceText.endsWith('\n')) sourceText = sourceText.slice(0, -1);
 
@@ -219,6 +223,7 @@ module.exports = class NamumarkParser {
                 outer: for (let i = 0; i < sourceText.length; i++) {
                     const char = sourceText[i];
                     const prevChar = sourceText[i - 1];
+                    const nextChar = sourceText[i + 1];
                     const prevIsNewLineTag = sourceText.slice(i - NewLineTag.length, i) === NewLineTag;
                     // const prevIsbr = sourceText.slice(i - 4, i) === '<br>';
                     // const nextChar = sourceText[i + 1];
@@ -242,7 +247,7 @@ module.exports = class NamumarkParser {
                         continue;
                     }
 
-                    if(char === '<') {
+                    if(char === '<' && nextChar !== '[') {
                         const closeIndex = sourceText.slice(i).indexOf('>');
                         if(closeIndex !== -1) {
                             // const tagStr = sourceText.slice(i, i + closeIndex + 1);
@@ -286,7 +291,7 @@ module.exports = class NamumarkParser {
                             const content = text.slice(syntax.index + syntax.openStr.length, text.length);
                             debugLog(`${syntax.name} at ${syntax.index} content: "${content}"`);
                             if(content) {
-                                const output = await syntax.format(content, this);
+                                const output = await syntax.format(content, this, i, sourceText);
                                 if(output != null) text = text.slice(0, syntax.index) + output;
                                 else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
                                 openedSyntaxes.splice(syntaxIndex, 1);
@@ -449,7 +454,6 @@ module.exports = class NamumarkParser {
 
         debugLog(`links: ${this.links}`);
         debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
-        debugLog(`footnotes: ${this.footnotes}`);
 
         let html = `<div class="wiki-content">${
             text
@@ -464,8 +468,7 @@ module.exports = class NamumarkParser {
         return {
             html,
             links: this.links,
-            categories: this.categories,
-            footnotes: this.footnotes
+            categories: this.categories
         }
     }
 }
