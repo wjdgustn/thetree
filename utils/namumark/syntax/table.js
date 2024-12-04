@@ -9,9 +9,6 @@ module.exports = {
         const rows = namumark.syntaxData.rows ??= [];
         if(!rows.length) return null;
 
-        console.log('=== make table! ===');
-        console.log(rows);
-
         let tableAlign;
         const colBgColors = [];
         const colDarkBgColors = [];
@@ -60,7 +57,6 @@ module.exports = {
                     if(closeIndex === -1) break;
 
                     const tagStr = paramStr.slice('&lt;'.length, closeIndex);
-                    console.log('tagStr', tagStr);
 
                     const splittedTagStr = tagStr.split('=');
                     const [name, value] = splittedTagStr;
@@ -262,7 +258,6 @@ module.exports = {
                 if(align) tdStyle += `text-align:${align};`;
 
                 const visualRowIndex = rowIndex + Math.min(colspan, row.length) - 1;
-                console.log('rowIndex', rowIndex, 'visualRowIndex', visualRowIndex, 'colBgColors', colBgColors);
                 if(!tdStyle.includes('background-color:') && colBgColors[visualRowIndex])
                     tdStyle += `background-color:${colBgColors[visualRowIndex]};`;
                 if(!tdDarkStyle.includes('background-color:') && colDarkBgColors[visualRowIndex])
