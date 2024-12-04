@@ -14,7 +14,7 @@ module.exports = {
         return `//secure.gravatar.com/avatar/${hash}?d=retro`;
     },
     parseDocumentName(name) {
-        const originalName = name;
+        const originalName = name.trim();
         const splitedName = originalName.split(':');
         const probablyNamespace = splitedName.length > 1 ? splitedName[0] : null;
         const namespaceExists = config.namespaces.includes(probablyNamespace);

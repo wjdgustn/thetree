@@ -17,6 +17,8 @@ module.exports = {
         const firstParam = splittedContent[0];
 
         if(firstParam.startsWith('#!wiki')) {
+            content = utils.parseIncludeParams(content, namumark.includeData);
+
             let lines = content.split('\n');
             let wikiParamsStr = lines[0].slice('#!wiki '.length);
 

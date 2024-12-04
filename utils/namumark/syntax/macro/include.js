@@ -53,14 +53,30 @@ module.exports = async (params, namumark) => {
     const removeNewParagraph = params.startsWith('<removeNewParagraph/>');
     if(removeNewParagraph) params = params.slice('<removeNewParagraph/>'.length);
 
-    const document = await getCachedDocument(params, namumark);
+    params = params.split(/(?<!\\),/).map(a => a.replaceAll('\\,', ','));
+
+    const docName = params[0];
+    params = params.slice(1);
+
+    const includeData = {};
+    for(let param of params) {
+        const splittedParam = param.split('=');
+        if(splittedParam.length < 2) continue;
+
+        const key = splittedParam[0].trim();
+        includeData[key] = splittedParam.slice(1).join('=');
+    }
+
+    const document = await getCachedDocument(docName, namumark);
     if(!document.readable) return '';
+
+    console.log('includeData', includeData);
 
     const parser = new namumark.NamumarkParser({
         document: document.document,
         aclData: namumark.aclData,
         req: namumark.req,
-        includeData: {}
+        includeData
     });
 
     const { html: contentHtml } = await parser.parse(document.content);

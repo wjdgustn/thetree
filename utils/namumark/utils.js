@@ -52,5 +52,34 @@ module.exports = {
     },
     validateColor(color) {
         return validateHTMLColorHex(color) || validateHTMLColorName(color);
+    },
+    parseIncludeParams(text, includeData = {}) {
+        let newText = '';
+        let textPos = 0;
+        while(true) {
+            const startPos = text.indexOf('@', textPos);
+            if(startPos === -1) break;
+            const endPos = text.indexOf('@', startPos + 1);
+            if(endPos === -1) break;
+
+            newText += text.slice(textPos, startPos);
+            textPos = endPos + 1;
+
+            const content = text.slice(startPos + 1, endPos);
+            const splittedContent = content.split('=');
+            const key = splittedContent[0];
+            const value = splittedContent.slice(1).join('=');
+
+            if(splittedContent.length > 1 && !value) {
+                newText += `@${content}@`;
+                continue;
+            }
+
+            newText += includeData[key] ?? value;
+        }
+
+        newText += text.slice(textPos);
+
+        return newText;
     }
 }
