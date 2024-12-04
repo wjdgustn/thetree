@@ -27,8 +27,6 @@ module.exports = {
                 namumark.tocHtml += '</div>';
         }
 
-        console.log(namumark.tocHtml);
-
         return namumark.tocHtml;
     }
 }
