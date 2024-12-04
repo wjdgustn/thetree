@@ -168,7 +168,6 @@ module.exports = class NamumarkParser {
             const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
             const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
             debugLog(`\nparse syntax: ${syntax.name}`);
-            if(syntax.name === 'link') console.log(sourceText);
             // if(text) {
             //     sourceText = text;
             //     text = '';
