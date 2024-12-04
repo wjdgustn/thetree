@@ -5,6 +5,7 @@ const utils = require('../../utils');
 const CSSFilter = require('./cssFilter');
 const listParser = require('../../listParser');
 const tableSyntax = require('../table');
+const removeNewParagraph = require('../../removeNewParagraph');
 
 module.exports = {
     priority: Priority.Literal,
@@ -41,7 +42,7 @@ module.exports = {
 
             lines = lines.slice(1);
 
-            let { text, hasList } = utils.removeNewParagraphHardcode(lines.join('\n'));
+            let { text, hasList } = removeNewParagraph(lines.join('\n'));
             if(text.endsWith('\n')) text = text.slice(0, -1);
 
             // 리스트 미리 파싱
@@ -61,7 +62,7 @@ module.exports = {
         if(firstParam.startsWith('#!folding')) {
             const lines = content.split('\n');
             const foldingText = namumark.escape(lines[0].slice('#!folding'.length) || 'More');
-            let { text, hasList } = utils.removeNewParagraphHardcode(lines.slice(1).join('\n'));
+            let { text, hasList } = removeNewParagraph(lines.slice(1).join('\n'));
 
             // 리스트 미리 파싱
             if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
