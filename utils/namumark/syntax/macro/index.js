@@ -25,7 +25,7 @@ module.exports = {
     openStr: `[`,
     closeStr: `]`,
     format: async (content, namumark) => {
-        if(debug) loadMacros();
+        // if(debug) loadMacros();
 
         const openParamIndex = content.indexOf('(');
 

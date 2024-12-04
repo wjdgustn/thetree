@@ -105,7 +105,7 @@ const MaximumParagraphTagLength = Math.max(
 
 module.exports = class NamumarkParser {
     constructor(data = {}) {
-        if(debug) syntaxLoader();
+        // if(debug) syntaxLoader();
 
         if(data.document) this.document = data.document;
         if(data.aclData) this.aclData = data.aclData;
@@ -192,6 +192,7 @@ module.exports = class NamumarkParser {
             }
 
             if(syntax.fullLine) {
+                console.time('fullLine ' + syntax.name);
                 const lines = sourceText.split('\n');
                 const newLines = [];
                 let removeNextNewLine = false;
@@ -231,10 +232,12 @@ module.exports = class NamumarkParser {
                     if(setRemoveNextNewLine) removeNextNewLine = true;
                 }
                 text = newLines.join('\n');
+                console.timeEnd('fullLine ' + syntax.name);
             }
             else {
                 // let brIsNewLineMode = false;
 
+                if(debug) console.time('syntax ' + syntax.name);
                 outer: for (let i = 0; i < sourceText.length; i++) {
                     const char = sourceText[i];
                     const prevChar = sourceText[i - 1];
@@ -335,6 +338,7 @@ module.exports = class NamumarkParser {
 
                     text += char;
                 }
+                if(debug) console.timeEnd('syntax ' + syntax.name);
             }
 
             sourceText = text;
