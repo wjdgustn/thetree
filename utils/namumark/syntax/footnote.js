@@ -4,7 +4,9 @@ module.exports = {
     priority: Priority.Footnote,
     openStr: '[*',
     closeStr: ']',
-    format: (content, namumark, pos) => {
+    format: (content, namumark) => {
+        if(content.includes('<a class="wiki-fn-content"')) return;
+
         namumark.syntaxData.index ??= 0;
         namumark.syntaxData.numName ??= 0;
 
