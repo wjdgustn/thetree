@@ -19,7 +19,6 @@ module.exports = {
 
         let output;
         const makeNewQuote = () => {
-            console.log('makeNewQuote! quoteLines', quoteLines);
             const indentCount = isLastLine ? lineSpaces : lastLineSpaces;
             let text = quoteLines.join('\n');
 
@@ -50,14 +49,13 @@ ${needNewline ? '' : '<removeNewlineLater/>'}
                     .replaceAll('<br><removeNewlineLater/>', '')
                     .replaceAll('<removeNewlineLater/><br>', '')
                 + (isQuote ? '' : (needNewline ? '\n' : '') + content + (removeNewParagraph ? '' : '\n'));
-            console.log(output);
         }
 
         if(shouldMakeNewQuote && !isLastLine) makeNewQuote();
 
         if(isQuote) {
             let text = slicedContent.slice('&gt;'.length);
-            const prevLength = text.length;
+            // const prevLength = text.length;
             text = text.trimStart();
             let quoteLevel = 1;
             // let spaceCount = prevLength - text.length;
@@ -70,7 +68,6 @@ ${needNewline ? '' : '<removeNewlineLater/>'}
             // text = ' '.repeat(spaceCount) + text;
             if(quoteLevel > 8) quoteLevel = 8;
             const lastQuoteLevel = namumark.syntaxData.lastQuoteLevel;
-            console.log('quoteLevel', quoteLevel, 'lastQuoteLevel', lastQuoteLevel, 'text', text);
 
             if(hrSyntax.check(text)) text = hrSyntax.format(text);
 
