@@ -32,24 +32,6 @@ module.exports = {
     insertText: (text, index, insertText) => {
         return text.slice(0, index) + insertText + text.slice(index);
     },
-    parseSize(text) {
-        let value = Number(text);
-        let unit = 'px';
-
-        if(isNaN(value)) {
-            if(text.endsWith('%')) {
-                value = parseFloat(text.slice(0, -1));
-                unit = '%';
-            }
-            else if(text.endsWith('px')) {
-                value = parseFloat(text.slice(0, -2));
-            }
-        }
-        if(isNaN(value)) return;
-        if(value < 0) return;
-
-        return { value, unit };
-    },
     removeNewParagraphHardcode(text) {
         let lines = text.split('\n');
 

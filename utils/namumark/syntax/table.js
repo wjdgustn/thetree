@@ -1,6 +1,25 @@
 const utils = require('../utils');
 const { Priority } = require('../types');
 
+const parseSize = text => {
+    let value = Number(text);
+    let unit = 'px';
+
+    if(isNaN(value)) {
+        if(text.endsWith('%')) {
+            value = parseFloat(text.slice(0, -1));
+            unit = '%';
+        }
+        else if(text.endsWith('px')) {
+            value = parseFloat(text.slice(0, -2));
+        }
+    }
+    if(isNaN(value)) return;
+    if(value < 0) return;
+
+    return { value, unit };
+}
+
 module.exports = {
     fullLine: true,
     priority: Priority.Table,
