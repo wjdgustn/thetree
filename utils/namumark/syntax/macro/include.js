@@ -1,4 +1,3 @@
-const NamumarkParser = require('../../');
 const utils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 const {
@@ -55,10 +54,9 @@ module.exports = async (params, namumark) => {
     if(removeNewParagraph) params = params.slice('<removeNewParagraph/>'.length);
 
     const document = await getCachedDocument(params, namumark);
-    console.log('contentCache', namumark.syntaxData.contentCache);
     if(!document.readable) return '';
 
-    const parser = new NamumarkParser({
+    const parser = new namumark.NamumarkParser({
         document: document.document,
         aclData: namumark.aclData,
         req: namumark.req,

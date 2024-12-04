@@ -116,6 +116,10 @@ module.exports = class NamumarkParser {
         if(data.includeData) this.includeData = data.includeData;
     }
 
+    get NamumarkParser() {
+        return module.exports;
+    }
+
     static escape(str) {
         for(let tag of escapeTags) {
             str = str.replaceAll(tag, `\\${tag}`);
