@@ -171,12 +171,20 @@ module.exports = class ACL {
         let nsResult;
         if(rules.some(r => r.actionType === ACLActionTypes.GotoNS)) nsResult = await this.namespaceACL.check(aclType, data);
 
+        const otherNSResults = {};
+
         const allowedRules = [];
         for(let rule of rules) {
+            if(rule.actionType === ACLActionTypes.GotoOtherNS && !otherNSResults[rule.actionContent]) {
+                otherNSResults[rule.actionContent] = await rule.otherNamespaceACL.check(aclType, data);
+            }
+
             if([
                 ACLActionTypes.Allow,
                 ...(nsResult?.result ? [ACLActionTypes.GotoNS] : [])
             ].includes(rule.actionType)) allowedRules.push(rule);
+            else if(rule.actionType === ACLActionTypes.GotoOtherNS
+                && otherNSResults[rule.actionContent].result) allowedRules.push(rule);
 
             const { action, aclGroupItem } = await this.testRule(rule, data);
 
