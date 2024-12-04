@@ -27,6 +27,8 @@ module.exports = {
         }
         return newText;
     },
+    removeHtmlTags: text => text
+        .replaceAll(/<[^>]+>/g, ''),
     insertText: (text, index, insertText) => {
         return text.slice(0, index) + insertText + text.slice(index);
     },

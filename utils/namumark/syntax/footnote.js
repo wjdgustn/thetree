@@ -1,4 +1,5 @@
 const { Priority } = require('../types');
+const utils = require('../utils');
 
 module.exports = {
     priority: Priority.Footnote,
@@ -26,6 +27,6 @@ module.exports = {
             index
         });
 
-        return `<a class="wiki-fn-content" title="${values[name]}" href="#fn-${name}"><span id="rfn-${index}"></span>[${name}]</a>`;
+        return `<a class="wiki-fn-content" title="${utils.removeHtmlTags(values[name])}" href="#fn-${name}"><span id="rfn-${index}"></span>[${name}]</a>`;
     }
 }
