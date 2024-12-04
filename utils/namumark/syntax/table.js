@@ -138,7 +138,7 @@ module.exports = {
                         else if(name === 'width') {
                             if(tableWrapStyle.includes('width:')) break;
 
-                            const size = utils.parseSize(value);
+                            const size = parseSize(value);
                             if(!size) return;
 
                             tableWrapStyle += `width:${size.value}${size.unit};`;
@@ -181,7 +181,7 @@ module.exports = {
                     else if(name === 'width') {
                         if(tdStyle.includes('width:')) break;
 
-                        const size = utils.parseSize(value);
+                        const size = parseSize(value);
                         if(!size) return;
 
                         tdStyle += `width:${size.value}${size.unit};`;
@@ -189,7 +189,7 @@ module.exports = {
                     else if(name === 'height') {
                         if(tdStyle.includes('height:')) break;
 
-                        const size = utils.parseSize(value);
+                        const size = parseSize(value);
                         if(!size) return;
 
                         tdStyle += `height:${size.value}${size.unit};`;
