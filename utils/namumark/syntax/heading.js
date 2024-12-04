@@ -97,7 +97,7 @@ module.exports = {
 </span>
 </span>
 </h${level}>
-<div class="wiki-heading-content${defaultClosed ? ' wiki-heading-folded' : ''}">
+<div class="wiki-heading-content${defaultClosed ? ' wiki-heading-content-folded' : ''}">
 <paragraphPos/>
 </div>
 <removeNewlineLater/>
