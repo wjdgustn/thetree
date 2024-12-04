@@ -1,4 +1,7 @@
 const dayjs = require('dayjs');
+const dayjsUtc = require('dayjs/plugin/utc');
+
+dayjs.extend(dayjsUtc);
 
 module.exports = {
     doc_fulltitle(document) {
@@ -43,11 +46,11 @@ module.exports = {
                 dateObj.getSeconds()
             ]).map(a => a.toString().padStart(2, '0')).join(olderThanToday ? '/' : ':');
     },
-    getFullDateTag(date) {
-        const dateObj = dayjs(date);
+    getFullDateTag(date, type) {
+        const dateObj = dayjs.utc(date);
         const isoStr = dateObj.toISOString();
         const dateStr = dateObj.format('YYYY-MM-DD HH:mm:ss');
 
-        return `<time datetime="${isoStr}">${dateStr}</time>`;
+        return `<time${type ? ` data-type="${type}"` : ''} datetime="${isoStr}">${dateStr}</time>`;
     }
 }

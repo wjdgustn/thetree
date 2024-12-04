@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('alpine:initialized', () => {
-    setupPjax();
+    setupDocument();
 });
 
 let firstUrl = location.href;
@@ -121,23 +121,67 @@ const formHandler = async e => {
     if(response.status.toString().startsWith('4')) return plainAlert(html);
 
     if(await replaceContent(html)) {
-        setupPjax();
+        setupDocument();
         restoreForm();
     }
     else plainAlert(html);
 }
 
-function setupPjax() {
-    const aElements = document.querySelectorAll('a');
+function updateTimeTag() {
+    const times = document.getElementsByTagName('time');
+    for(let time of times) {
+        const type = time.dataset.type;
+        const date = new Date(time.dateTime);
+
+        if(type === 'keep') continue;
+
+        const dateStr = [
+            date.getFullYear(),
+            date.getMonth() + 1,
+            date.getDate()
+        ].map(num => num.toString().padStart(2, '0')).join('-');
+
+        const timeStr = [
+            date.getHours(),
+            date.getMinutes(),
+            date.getSeconds()
+        ].map(num => num.toString().padStart(2, '0')).join(':');
+
+        let result = dateStr + ' ' + timeStr;
+
+        if(type === 'timezone') {
+            const offset = -(date.getTimezoneOffset() / 60);
+            result += (offset > 0 ? '+' : '-') + (offset * 100).toString().padStart(4, '0');
+        }
+
+        time.textContent = result;
+    }
+}
+
+function setupDocument() {
+    const aElements = document.getElementsByTagName('a');
     for(let a of aElements) {
         a.removeEventListener('click', aClickHandler);
         a.addEventListener('click', aClickHandler);
     }
 
-    const forms = document.querySelectorAll('form');
+    const forms = document.getElementsByTagName('form');
     for(let form of forms) {
         form.removeEventListener('submit', formHandler);
         form.addEventListener('submit', formHandler);
+    }
+
+    updateTimeTag();
+
+    const hash = location.hash.slice(1);
+    if(hash) {
+        let element;
+        if(hash === 'toc')
+            element = document.getElementsByClassName('wiki-macro-toc')[0];
+        else
+            element = document.getElementById(hash);
+
+        if(element) element.scrollIntoView();
     }
 
     window.beforePageLoad = null;
@@ -173,7 +217,7 @@ async function movePage(response, pushState = true) {
             }
         }
 
-        setupPjax();
+        setupDocument();
         restoreForm();
     }
     else location.href = response.url;

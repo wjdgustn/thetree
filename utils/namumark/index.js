@@ -141,6 +141,7 @@ module.exports = class NamumarkParser {
         this.categories = [];
 
         this.categoryHtmls = [];
+        this.headings = [];
         this.footnotes = [];
 
         let sourceText = utils.escapeHtml(input);

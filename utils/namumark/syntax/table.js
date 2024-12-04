@@ -1,8 +1,3 @@
-const {
-    validateHTMLColorHex,
-    validateHTMLColorName
-} = require('validate-color');
-
 const utils = require('../utils');
 const { Priority } = require('../types');
 
@@ -77,7 +72,7 @@ module.exports = {
                         && name.includes('color')) {
                         if(splittedValue.length > 2) break;
                         if(splittedValue
-                            .some(v => !validateHTMLColorHex(v) && !validateHTMLColorName(v))) break;
+                            .some(v => !utils.validateColor(v))) break;
                     }
 
                     if(tagStr.startsWith('table')) {
@@ -92,7 +87,7 @@ module.exports = {
                         if(name.includes('color')) {
                             if(splittedValue.length > 2) break;
                             if(splittedValue
-                                .some(v => !validateHTMLColorHex(v) && !validateHTMLColorName(v))) break;
+                                .some(v => !utils.validateColor(v))) break;
                         }
 
                         if(name === 'align') {
@@ -237,7 +232,7 @@ module.exports = {
                         if(colKeepAll.includes(rowIndex)) break;
                         colKeepAll[rowIndex] = true;
                     }
-                    else if(validateHTMLColorHex(tagStr) || validateHTMLColorName(tagStr)) {
+                    else if(utils.validateColor(tagStr)) {
                         if(tdStyle.includes('background-color:')) break;
 
                         tdStyle += `background-color:${tagStr};`;
@@ -301,8 +296,7 @@ ${value}
 
         if(tableAlign) tableWrapperClassList.push(`table-${tableAlign}`);
 
-        // TODO: 임시 [br] 매크로 제거
-        const table = `<removeNewlineLater/>${removeNewParagraph ? '' : '</div>'}<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}<removeNewlineLater/>\n`.replaceAll('[br]', '<br>');
+        const table = `<removeNewlineLater/>${removeNewParagraph ? '' : '</div>'}<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}<removeNewlineLater/>\n`;
 
         return table + (fromLastLine ? '' : '\n' + content);
     },

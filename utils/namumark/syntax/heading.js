@@ -78,6 +78,11 @@ module.exports = {
         }
         const paragraphNumText = paragraphNumTextArr.join('.');
 
+        namumark.headings.push({
+            num: paragraphNumText,
+            text
+        });
+
         return `
 <removeNewline/>
 <removeNextNewline/>

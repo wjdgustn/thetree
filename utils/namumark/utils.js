@@ -1,3 +1,8 @@
+const {
+    validateHTMLColorHex,
+    validateHTMLColorName
+} = require('validate-color');
+
 const listParser = require('./listParser');
 
 module.exports = {
@@ -70,5 +75,8 @@ module.exports = {
             text: lines.join('\n'),
             hasList
         }
+    },
+    validateColor(color) {
+        return validateHTMLColorHex(color) || validateHTMLColorName(color);
     }
 }

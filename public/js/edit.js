@@ -34,5 +34,6 @@ document.addEventListener('thetree:pageLoad', () => {
         previewTabContent.classList.remove('preview-tab-loading');
 
         setupWikiHandlers();
+        updateTimeTag();
     });
 }, { once: true });

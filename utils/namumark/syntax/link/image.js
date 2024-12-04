@@ -1,7 +1,3 @@
-const {
-    validateHTMLColorHex,
-    validateHTMLColorName
-} = require('validate-color');
 const querystring = require('querystring');
 
 const utils = require('../../utils');
@@ -64,8 +60,7 @@ module.exports = async (content, splittedContent, link) => {
         'top'
     ].includes(options.align)) delete options.align;
 
-    if(!validateHTMLColorHex(options.bgcolor)
-        && !validateHTMLColorName(options.bgcolor)) delete options.bgcolor;
+    if(!utils.validateColor(options.bgcolor)) delete options.bgcolor;
 
     if(![
         'light',

@@ -2,11 +2,11 @@
     overflow: hidden;
 }
 
-.wiki-paragraph {
+.wiki-content .wiki-paragraph {
     margin-bottom: 1rem;
 }
 
-.wiki-list li .wiki-paragraph {
+.wiki-content .wiki-list li .wiki-paragraph {
     margin-bottom: 0;
 }
 
@@ -441,4 +441,33 @@
 .wiki-content .wiki-folding dd.wiki-folding-open-anim {
     opacity: 1;
     transition: all .15s ease-in;
+}
+
+.wiki-content .wiki-clearfix {
+    clear: both;
+}
+
+.wiki-content .wiki-macro-toc {
+    border: 1px solid #ccc;
+    display: inline-block;
+    margin-left: 5px;
+    padding: 12px 20px 18px 0;
+}
+
+.wiki-content .wiki-macro-toc:before {
+    content: "목차";
+    font-size: 1.25em;
+    margin-left: 14px;
+}
+
+.wiki-content .wiki-macro-toc>.toc-indent:first-of-type {
+    margin-top: 12px;
+}
+
+.wiki-content .toc-item {
+    display: block;
+}
+
+.wiki-content .toc-indent {
+    padding-left: 20px;
 }
