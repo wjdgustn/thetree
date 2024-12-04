@@ -26,6 +26,6 @@ module.exports = {
             index
         });
 
-        return `<a class="wiki-fn-content" href="#fn-${name}"><span id="rfn-${index}"></span>[${name}]</a>`;
+        return `<a class="wiki-fn-content" title="${values[name]}" href="#fn-${name}"><span id="rfn-${index}"></span>[${name}]</a>`;
     }
 }
