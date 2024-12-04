@@ -4,8 +4,6 @@ const utils = require('./utils');
 const { Priority } = require('./types');
 const listParser = require('./listParser');
 
-const debugLog = debug ? console.log : (_ => {});
-
 const syntaxDefaultValues = {
     openStr: '',
     openOnlyForLineFirst: false,
@@ -53,7 +51,6 @@ const syntaxLoader = (subDir = '') => {
             }
 
             syntaxes.push(syntax);
-            debugLog(`loaded syntax: ${syntax.name}`);
         }
         else {
             syntaxLoader(subDir + '/' + file);
@@ -139,8 +136,7 @@ module.exports = class NamumarkParser {
     }
 
     async parse(input) {
-        debugLog('parse!');
-        if(debug) console.time();
+        if(debug) console.time(`parse "${this.document.title}"`);
 
         this.links = [];
         this.files = [];
@@ -167,7 +163,6 @@ module.exports = class NamumarkParser {
             const syntax = sortedSyntaxes[syntaxIndex];
             const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
             const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
-            debugLog(`\nparse syntax: ${syntax.name}`);
             // if(text) {
             //     sourceText = text;
             //     text = '';
@@ -309,7 +304,6 @@ module.exports = class NamumarkParser {
 
                         if (currStr === syntax.closeStr) {
                             const content = text.slice(syntax.index + syntax.openStr.length, text.length);
-                            debugLog(`${syntax.name} at ${syntax.index} content: "${content}"`);
                             if(content) {
                                 const output = await syntax.format(content, this, i, sourceText);
                                 if(output != null) text = text.slice(0, syntax.index) + output;
@@ -334,7 +328,6 @@ module.exports = class NamumarkParser {
                         }
 
                         openedSyntaxes.unshift(item);
-                        debugLog(`opened ${syntax.name} at ${text.length}`);
                         i += syntax.openStr.length - 1;
                         text += syntax.openStr;
                         continue;
@@ -480,9 +473,6 @@ module.exports = class NamumarkParser {
         // 남은 removeNewParagraph 제거
         text = text.replaceAll('<removeNewParagraph/>', '');
 
-        debugLog(`links: ${this.links}`);
-        debugLog(`categories: ${this.categories.map(a => JSON.stringify(a))}`);
-
         let html = `${this.includeData ? '' : '<div class="wiki-content">'}${
             text
                 .replaceAll('\n', '<br>')
@@ -490,9 +480,8 @@ module.exports = class NamumarkParser {
                 .replaceAll('<removebr/>', '')
         }${this.includeData ? '' : '</div>'}`;
 
-        if(debug) console.timeEnd();
+        if(debug) console.timeEnd(`parse "${this.document.title}"`);
 
-        // debugLog(html);
         return {
             html,
             links: this.links,

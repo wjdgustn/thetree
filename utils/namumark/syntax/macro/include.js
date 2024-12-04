@@ -70,8 +70,6 @@ module.exports = async (params, namumark) => {
     const document = await getCachedDocument(docName, namumark);
     if(!document.readable) return '';
 
-    console.log('includeData', includeData);
-
     const parser = new namumark.NamumarkParser({
         document: document.document,
         aclData: namumark.aclData,
