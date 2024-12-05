@@ -95,6 +95,12 @@
     padding: 7px;
 }
 
+.theseed-dark-mode .wiki-content pre {
+    background-color: #2d2f34;
+    border-color: #383b40;
+    color: #ddd;
+}
+
 .wiki-content pre code {
     background: none;
     border: none;

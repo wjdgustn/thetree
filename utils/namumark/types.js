@@ -8,5 +8,33 @@ module.exports = {
         Format: 6,
         Footnote: 7,
         Last: 8
-    }
+    },
+    AllowedLanguages: [
+        'basic',
+        'cpp',
+        'csharp',
+        'css',
+        'erlang',
+        'go',
+        'html',
+        'java',
+        'javascript',
+        'json',
+        'kotlin',
+        'lisp',
+        'lua',
+        'markdown',
+        'objectivec',
+        'perl',
+        'php',
+        'powershell',
+        'python',
+        'ruby',
+        'rust',
+        'sh',
+        'sql',
+        'swift',
+        'typescript',
+        'xml'
+    ].sort((a, b) => b.length - a.length)
 }

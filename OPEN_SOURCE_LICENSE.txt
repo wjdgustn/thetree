@@ -1,0 +1,11 @@
+/**
+ * alpine.js
+ * (c) 2019-2021 Caleb Porzio and contributors
+ * @license MIT
+ */
+
+ /**
+  * highlight.js
+  * (c) 2006, Ivan Sagalaev.
+  * @license BSD-3-Clause
+  */
