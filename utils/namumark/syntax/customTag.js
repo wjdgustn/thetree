@@ -5,7 +5,7 @@ module.exports = {
     openStr: '<[',
     closeStr: ']>',
     escapeOpenAndClose: false,
-    format(content, namumark, pos, sourceText) {
+    format(content, namumark, _, pos, sourceText) {
         if(content !== 'footnotePos') return;
 
         const footnoteValues = namumark.footnoteValues;

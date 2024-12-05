@@ -8,13 +8,13 @@ module.exports = {
     openStr: `{{{`,
     closeStr: `}}}`,
     allowMultiline: true,
-    format: (content, namumark) => {
+    format: (content, namumark, originalContent) => {
         if(Format(content, namumark) !== undefined) return null;
         if(ContentChange(content, namumark) !== undefined) return null;
 
         if(content.includes('\n'))
-            return `<pre><code>${namumark.escape(content)}</code></pre>`;
+            return `<pre><code>${namumark.escape(originalContent)}</code></pre>`;
 
-        return `<code>${namumark.escape(content)}</code>`;
+        return `<code>${namumark.escape(originalContent)}</code>`;
     }
 }
