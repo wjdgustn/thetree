@@ -108,9 +108,14 @@ button.thetree-blue-button:not([disabled]):hover {
 }
 
 a.thetree-mint-button {
-    background-color: #5bc0de;
-    border-color: #5bc0de;
+    background-color: #5bc0de !important;
+    border-color: #5bc0de !important;
     color: white !important;
+}
+
+a.thetree-mint-button:hover, button.thetree-mint-button:hover {
+    background-color: #31b0d5 !important;
+    border-color: #2aabd2 !important;
 }
 
 a.thetree-danger-button, button.thetree-danger-button {

@@ -6,6 +6,53 @@
     <div class="menu-block">
         <label for="usernameInput">사용자 이름</label>
         <p><%=user.name%></p>
-        <a class="thetree-mint-button" href="/member/change_name">이름 변경</a>
+        <a class="thetree-square-button thetree-mint-button" href="/member/change_name">이름 변경</a>
+    </div>
+
+    <div class="menu-block">
+        <label for="emailInput">사용자 이름</label>
+        <p>
+            <%=user.email%>
+            <a class="thetree-square-button thetree-mint-button" href="/member/change_email">이메일 변경</a>
+        </p>
+    </div>
+
+    <div class="menu-block">
+        <label for="permInput">권한</label>
+        <p><%=req.displayPermissions.join(', ')%></p>
+    </div>
+
+    <div class="menu-block">
+        <label for="passwordInput">비밀번호</label>
+        <a class="thetree-square-button thetree-mint-button" href="/member/change_password">비밀번호 변경</a>
+    </div>
+
+    <div class="menu-block">
+        <label for="skinInput">스킨</label>
+        <select id="skinInput" name="skin">
+            <option value="default">기본 스킨</option>
+            <%for(let skin of skins) {%>
+                <option value="<%=skin%>"><%=skin%></option>
+            <%}%>
+        </select>
+    </div>
+
+    <div class="menu-block">
+        <label>이중인증</label>
+        <%if(user.totpToken) {%>
+            <a class="thetree-square-button thetree-danger-button" href="/member/deactivate_otp">TOTP 비활성화</a>
+        <%} else {%>
+            <a class="thetree-square-button thetree-mint-button" href="/member/activate_otp">TOTP 활성화</a>
+        <%}%>
+    </div>
+
+    <div class="menu-block">
+        <label for="passwordInput">API Token</label>
+        <button class="thetree-square-button thetree-danger-button" type="button">발급</button>
+    </div>
+
+    <div class="button-block">
+        <a class="thetree-square-button thetree-danger-button" href="/member/withdraw">계정 삭제</a>
+        <button class="thetree-square-button thetree-blue-button">변경</button>
     </div>
 </form>

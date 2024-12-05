@@ -19,7 +19,7 @@
             display: block;
         }
     }
-    
+
     form input, form select {
         background-color: rgb(255, 255, 255);
         background-image: none;
@@ -32,5 +32,11 @@
         margin: 0 0 0 0.7rem;
         padding: 0.25rem 0.5rem;
         width: calc(100% - 0.7rem);
+    }
+
+    .theseed-dark-mode form select {
+        background-color: #27292d;
+        border-color: #383b40;
+        color: #ddd;
     }
 }

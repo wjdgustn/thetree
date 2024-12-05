@@ -53,6 +53,8 @@ global.updateConfig = () => {
     global.stringConfig = JSON.parse(fs.readFileSync('./stringConfig.json').toString());
 
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
+
+    global.skins = fs.readdirSync('./skins');
 }
 updateConfig();
 
@@ -218,6 +220,12 @@ app.use(async (req, res, next) => {
     }
 
     req.permissions = [...new Set(req.permissions)];
+    req.displayPermissions = req.permissions.filter(a => ![
+        'any',
+        'member',
+        'ip',
+        'contributor'
+    ].includes(a));
 
     // TODO perms:
     //  document_contributor(at document middleware)
@@ -234,6 +242,7 @@ app.use(async (req, res, next) => {
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
+
     res.renderSkin = (title, data = {}) => {
         const viewName = data.viewName || null;
         if (viewName) delete data.viewName;
