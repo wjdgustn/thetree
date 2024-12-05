@@ -15,8 +15,8 @@ module.exports = {
         && Object.keys(numberedListTypes).some(a => line.trim().startsWith(a)),
     getListTypeStr: line => Object.keys(numberedListTypes).find(a => line.trimStart().startsWith(a)),
     parse: function(sourceText) {
-        // console.log('=== 리스트 파싱 전 ===');
-        // console.log(sourceText);
+        console.log('=== 리스트 파싱 전 ===');
+        console.log(sourceText);
 
         const lines = sourceText.split('\n');
         const newLines = [];
@@ -25,14 +25,24 @@ module.exports = {
         let lastListTypeStr = '';
         let lastListSpace = 0;
         let dontOpenParagraphOnClose = false;
+
+        let hardcodedTableOpen = false;
+        let continueOne = false;
         for(let i in lines) {
+            if(continueOne) {
+                continueOne = false;
+                continue;
+            }
+
             i = parseInt(i);
-            const line = lines[i];
+            let line = lines[i];
+            console.log('line:', line);
 
             let newLine = '';
             let prevLine = '';
 
             const isList = this.lineIsList(line);
+            const prevWasList = listCloseTags.length > 0;
 
             let listSpace = 0;
             for(let i = 0; i < line.length; i++) {
@@ -40,6 +50,34 @@ module.exports = {
                 if(char !== ' ') break;
                 listSpace++;
             }
+
+            if(prevWasList && lastListSpace && !hardcodedTableOpen) {
+                const indentTableHardcodeOpen = `<removeNewlineLater/></div>${'<div class="wiki-indent">'.repeat(lastListSpace)}<div class="wiki-table-wrap">`;
+
+                if(!hardcodedTableOpen && line.startsWith(indentTableHardcodeOpen)) {
+                    console.log('hardcoded table open');
+                    // console.log(line);
+                    line = `${' '.repeat(lastListSpace)}<div class="wiki-table-wrap">` + line.slice(indentTableHardcodeOpen.length);
+                    listSpace = lastListSpace;
+                    hardcodedTableOpen = true;
+                }
+            }
+            else if(hardcodedTableOpen) {
+                const indentTableHardcodeClose = `</table></div>${'</div>'.repeat(lastListSpace)}<div class="wiki-paragraph"><removeNewlineLater/>`;
+                console.log('indentTableHardcodeClose:', indentTableHardcodeClose);
+
+                listSpace = lastListSpace;
+
+                if(line.endsWith(indentTableHardcodeClose)) {
+                    console.log('close hardcoded table');
+                    line = line.slice(0, -indentTableHardcodeClose.length) + `</table></div><div class="wiki-paragraph"><removeNewlineLater/>`;
+                    // listSpace = lastListSpace;
+                    hardcodedTableOpen = false;
+                    continueOne = true;
+                }
+            }
+            console.log('listSpace:', listSpace);
+
 
             if(isList) {
                 const trimedLine = line.trimStart();
@@ -129,8 +167,6 @@ module.exports = {
                 lastListSpace = listSpace;
                 lastListTypeStr = listTypeStr;
             } else {
-                const prevWasList = listCloseTags.length > 0;
-
                 if(prevWasList && lastListSpace <= listSpace) {
                     const indentCount = listSpace - lastListSpace;
                     let trimedLine = line.trimStart();
@@ -143,6 +179,7 @@ module.exports = {
                     newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}</div>`;
                     newLine = null;
                 } else {
+                    console.log('close all lists');
                     for(let tag of listCloseTags) {
                         prevLine += tag;
                     }
@@ -173,8 +210,8 @@ module.exports = {
         }
 
         // console.log(newLines);
-        // console.log('=== 리스트 파싱 후 ===');
-        // console.log(newLines.join('\n'));
+        console.log('=== 리스트 파싱 후 ===');
+        console.log(newLines.join('\n'));
         // console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
         return tableSyntax.parse(newLines.join('\n'));
     }
