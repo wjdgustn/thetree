@@ -342,7 +342,7 @@ ${value}
             namumark.syntaxData.rowText = '';
         }
 
-        if(nextSpaceCount !== spaceCount) {
+        if(nextSpaceCount !== spaceCount && !namumark.syntaxData.rowText) {
             return makeTable(true);
         }
 
