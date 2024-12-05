@@ -15,8 +15,8 @@ module.exports = {
         && Object.keys(numberedListTypes).some(a => line.trim().startsWith(a)),
     getListTypeStr: line => Object.keys(numberedListTypes).find(a => line.trimStart().startsWith(a)),
     parse: function(sourceText) {
-        console.log('=== 리스트 파싱 전 ===');
-        console.log(sourceText);
+        // console.log('=== 리스트 파싱 전 ===');
+        // console.log(sourceText);
 
         const lines = sourceText.split('\n');
         const newLines = [];
@@ -36,7 +36,7 @@ module.exports = {
 
             i = parseInt(i);
             let line = lines[i];
-            console.log('line:', line);
+            // console.log('line:', line);
 
             let newLine = '';
             let prevLine = '';
@@ -55,7 +55,7 @@ module.exports = {
                 const indentTableHardcodeOpen = `<removeNewlineLater/></div>${'<div class="wiki-indent">'.repeat(lastListSpace)}<div class="wiki-table-wrap">`;
 
                 if(!hardcodedTableOpen && line.startsWith(indentTableHardcodeOpen)) {
-                    console.log('hardcoded table open');
+                    // console.log('hardcoded table open');
                     // console.log(line);
                     line = `${' '.repeat(lastListSpace)}<div class="wiki-table-wrap">` + line.slice(indentTableHardcodeOpen.length);
                     listSpace = lastListSpace;
@@ -64,19 +64,19 @@ module.exports = {
             }
             else if(hardcodedTableOpen) {
                 const indentTableHardcodeClose = `</table></div>${'</div>'.repeat(lastListSpace)}<div class="wiki-paragraph"><removeNewlineLater/>`;
-                console.log('indentTableHardcodeClose:', indentTableHardcodeClose);
+                // console.log('indentTableHardcodeClose:', indentTableHardcodeClose);
 
                 listSpace = lastListSpace;
 
                 if(line.endsWith(indentTableHardcodeClose)) {
-                    console.log('close hardcoded table');
+                    // console.log('close hardcoded table');
                     line = line.slice(0, -indentTableHardcodeClose.length) + `</table></div><div class="wiki-paragraph"><removeNewlineLater/>`;
                     // listSpace = lastListSpace;
                     hardcodedTableOpen = false;
                     continueOne = true;
                 }
             }
-            console.log('listSpace:', listSpace);
+            // console.log('listSpace:', listSpace);
 
 
             if(isList) {
@@ -179,7 +179,7 @@ module.exports = {
                     newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}</div>`;
                     newLine = null;
                 } else {
-                    console.log('close all lists');
+                    // console.log('close all lists');
                     for(let tag of listCloseTags) {
                         prevLine += tag;
                     }
@@ -210,8 +210,8 @@ module.exports = {
         }
 
         // console.log(newLines);
-        console.log('=== 리스트 파싱 후 ===');
-        console.log(newLines.join('\n'));
+        // console.log('=== 리스트 파싱 후 ===');
+        // console.log(newLines.join('\n'));
         // console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
         return tableSyntax.parse(newLines.join('\n'));
     }
