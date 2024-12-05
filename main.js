@@ -197,14 +197,14 @@ app.use(async (req, res, next) => {
 
     req.permissions = req.user?.permissions ?? [];
 
-    req.permissions.push('any');
+    req.permissions.unshift('any');
 
     if(req.user?.type === UserTypes.Account) {
-        req.permissions.push('member');
+        req.permissions.unshift('member');
         if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
             req.permissions.push('member_signup_15days_ago');
     }
-    else req.permissions.push('ip');
+    else req.permissions.unshift('ip');
 
     if(req.useragent.isBot) req.permissions.push('bot');
 
@@ -222,8 +222,6 @@ app.use(async (req, res, next) => {
     req.permissions = [...new Set(req.permissions)];
     req.displayPermissions = req.permissions.filter(a => ![
         'any',
-        'member',
-        'ip',
         'contributor'
     ].includes(a));
 
@@ -266,8 +264,11 @@ app.use(async (req, res, next) => {
             ])
         }
 
+        const sessionMenus = [];
+        // if(req.permissions.includes('grant'))
+
         const session = {
-            menus: [],
+            menus: sessionMenus,
             account: {
                 name: req.user?.name ?? req.ip,
                 uuid: req.user?.uuid,
