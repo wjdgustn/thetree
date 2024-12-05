@@ -137,7 +137,7 @@ module.exports = class NamumarkParser {
     }
 
     async parse(input) {
-        if(debug) console.time(`parse "${this.document.title}"`);
+        if(debug||true) console.time(`parse "${this.document.title}"`);
 
         this.links = [];
         this.files = [];
@@ -494,7 +494,7 @@ module.exports = class NamumarkParser {
                 .replaceAll('<removebr/>', '')
         }${this.includeData ? '' : '</div>'}`;
 
-        if(debug) console.timeEnd(`parse "${this.document.title}"`);
+        if(debug||true) console.timeEnd(`parse "${this.document.title}"`);
 
         return {
             html,
