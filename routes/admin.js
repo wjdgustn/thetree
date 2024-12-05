@@ -1,5 +1,6 @@
 const express = require('express');
 const util = require('util');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
 
@@ -46,6 +47,23 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), async (
         });
         return res.status(204).end();
     }
+});
+
+app.post('/admin/config/configjson', middleware.permission('developer'), (req, res) => {
+    const config = req.body.config;
+    if(config.includes('/') || !config.endsWith('.json')) return res.status(400).send('Invalid config file');
+    fs.writeFileSync(config, req.body.content);
+    updateConfig();
+    return res.status(204).end();
+});
+
+app.post('/admin/config/stringconfig', middleware.permission('developer'), (req, res) => {
+    let newObj = {};
+    for(let key of Object.keys(stringConfig)) {
+        newObj[key] = req.body[key] || '';
+    }
+    fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    return res.status(204).end();
 });
 
 app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {

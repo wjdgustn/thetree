@@ -31,6 +31,8 @@ window.addEventListener('popstate', async e => {
 });
 
 function plainAlert(text) {
+    if(!text) return;
+
     const doc = new DOMParser().parseFromString(text, 'text/html');
     const message = doc.body.textContent;
 

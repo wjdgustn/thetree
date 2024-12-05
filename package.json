@@ -54,6 +54,7 @@
       "views/",
       "serverConfig.json",
       "publicConfig.json",
+      "stringConfig.json",
       "utils/namumark/syntax/"
     ]
   }
