@@ -82,13 +82,13 @@ a.thetree-square-button, button.thetree-square-button {
 }
 
 .thetree-primary-button {
-    background-color: #3f82e6;
-    border-color: #7eaaed;
+    background-color: #3f82e6 !important;
+    border-color: #7eaaed !important;
     color: #fff !important;
 }
 
 .thetree-primary-button:hover {
-    background-color: #4078cd;
+    background-color: #4078cd !important;
 }
 
 .thetree-square-button:not([disabled]):hover {
@@ -97,8 +97,8 @@ a.thetree-square-button, button.thetree-square-button {
 }
 
 button.thetree-blue-button {
-    background-color: #0275d8;
-    border-color: #0275d8;
+    background-color: #0275d8 !important;
+    border-color: #0275d8 !important;
     color: white !important;
 }
 

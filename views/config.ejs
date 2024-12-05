@@ -1,0 +1,76 @@
+<style>
+#evalOutputParent {
+    width: 100%;
+    height: 200px;
+    resize: vertical;
+}
+</style>
+
+<script>
+document.addEventListener('thetree:pageLoad', () => {
+    const evalOutput = document.getElementById('evalOutput');
+    const evalContent = document.getElementById('evalContent');
+    const evalRun = document.getElementById('evalRun');
+
+    evalRun.addEventListener('click', async () => {
+        if(!evalContent.value) return;
+
+        const response = await fetch('/admin/config/eval', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                code: evalContent.value
+            }).toString()
+        });
+        evalOutput.innerHTML = await response.text();
+    });
+
+    evalContent.addEventListener('keydown', e => {
+        if(!e.shiftKey && e.key === 'Enter') {
+            e.preventDefault();
+            evalRun.click();
+        }
+    })
+}, { once: true });
+</script>
+
+<div class="wiki-content">
+    <h2 class="wiki-heading">도구</h2>
+    <div class="wiki-heading-content">
+        <a class="thetree-button thetree-primary-button" href="/admin/config/tools/getgrant">grant 권한 받기</a>
+    </div>
+
+    <h2 class="wiki-heading">설정</h2>
+    <div class="wiki-heading-content">
+        <%for(let config of [
+            'publicConfig.json',
+            'serverConfig.json'
+        ]) {%>
+        <h3 class="wiki-heading wiki-heading-folded"><%=config%></h3>
+        <div class="wiki-heading-content wiki-heading-content-folded">
+            <textarea id="configInput_<%=config%>" rows="15"><%-fs.readFileSync(config)%></textarea>
+            <button class="thetree-square-button thetree-blue-button configApplyButtons" data-name="<%=config%>">적용</button>
+        </div>
+        <%}%>
+
+        <h3 class="wiki-heading wiki-heading-folded">텍스트</h3>
+        <div class="wiki-heading-content wiki-heading-content-folded">
+            <form method="post" action="/admin/config/stringconfig">
+                <%for(let [key, value] of Object.entries(stringConfig)) {%>
+                    <p><%=key%></p>
+                    <textarea name="<%=key%>" rows="10"><%-value%></textarea>
+                <%}%>
+                <button class="thetree-square-button thetree-blue-button">적용</button>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="wiki-heading">Eval</h2>
+    <div class="wiki-heading-content">
+        <pre id="evalOutputParent"><code id="evalOutput"></code></pre>
+        <textarea id="evalContent" rows="5"></textarea>
+        <button id="evalRun" class="thetree-square-button thetree-blue-button">실행</button>
+    </div>
+</div>

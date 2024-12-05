@@ -10,5 +10,11 @@ module.exports = {
         if(req.user?.type === UserTypes.Account)
             return res.redirect('/');
         next();
+    },
+    permission: perm => (req, res, next) => {
+        if(!req.permissions.includes(perm)) return res.renderSkin('오류', {
+            contentHtml: '권한이 부족합니다.'
+        });
+        next();
     }
 }

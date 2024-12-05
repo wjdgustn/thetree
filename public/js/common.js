@@ -103,6 +103,8 @@ const formBackup = {};
 const formHandler = async e => {
     const form = e.currentTarget;
 
+    if(form.method === 'get') return;
+
     e.preventDefault();
 
     const data = new FormData(form);

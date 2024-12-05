@@ -16,7 +16,7 @@ const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
-const { UserTypes } = types;
+const { UserTypes, permissionMenus } = types;
 
 const User = require('./schemas/user');
 const History = require('./schemas/history');
@@ -265,7 +265,11 @@ app.use(async (req, res, next) => {
         }
 
         const sessionMenus = [];
-        // if(req.permissions.includes('grant'))
+        for(let [key, value] of Object.entries(permissionMenus)) {
+            if(req.permissions.includes(key)) {
+                sessionMenus.push(...value);
+            }
+        }
 
         const session = {
             menus: sessionMenus,

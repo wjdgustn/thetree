@@ -63,5 +63,23 @@ module.exports = {
         'document_contributor',
         'match_username_and_document_title',
         'ip'
-    ]
+    ],
+    permissionMenus: {
+        'grant': [{
+            l: '/admin/grant',
+            t: '권한'
+        }],
+        'login_history': [{
+            l: '/admin/login_history',
+            t: '로그인 기록 조회'
+        }],
+        'admin': [{
+            l: '/aclgroup',
+            t: 'ACL Group'
+        }],
+        'developer': [{
+            l: '/admin/config',
+            t: '개발자 설정'
+        }]
+    }
 }
