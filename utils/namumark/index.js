@@ -170,7 +170,7 @@ module.exports = class NamumarkParser {
             // }
 
             if(syntax.fullLine) {
-                console.time('fullLine ' + syntax.name);
+                if(debug) console.time('fullLine ' + syntax.name);
                 const lines = sourceText.split('\n');
                 const newLines = [];
                 let removeNextNewLine = false;
@@ -210,7 +210,7 @@ module.exports = class NamumarkParser {
                     if(setRemoveNextNewLine) removeNextNewLine = true;
                 }
                 text = newLines.join('\n');
-                console.timeEnd('fullLine ' + syntax.name);
+                if(debug) console.timeEnd('fullLine ' + syntax.name);
             }
             else {
                 // let brIsNewLineMode = false;
