@@ -101,7 +101,10 @@ module.exports = {
 
             if(link.startsWith('/')) link = docTitle + link;
 
-            if(link.startsWith('#')) notExist = false;
+            if(link.startsWith('#')) {
+                title = docTitle;
+                notExist = false;
+            }
             else {
                 const splittedLink = link.split('#');
                 if(splittedLink.length > 2) {
