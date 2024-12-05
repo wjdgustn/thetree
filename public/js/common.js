@@ -50,6 +50,8 @@ const aClickHandler = async e => {
 
     const aElement = e.currentTarget;
 
+    if(aElement.target === '_blank') return;
+
     let href = aElement.getAttribute('href');
     if(!href || href.startsWith('#')) return;
 
@@ -105,7 +107,7 @@ const formBackup = {};
 const formHandler = async e => {
     const form = e.currentTarget;
 
-    if(form.method === 'get') return;
+    if(form.method === 'get' || form.enctype === 'multipart/form-data') return;
 
     e.preventDefault();
 

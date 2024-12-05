@@ -86,6 +86,8 @@ passport.deserializeUser(async (uuid, done) => {
 if(!debug) {
     app.use(compression());
 }
+if(!fs.existsSync('./customStatic')) fs.mkdirSync('./customStatic');
+app.use(express.static(`./customStatic`));
 app.use(express.static(`./public`));
 
 const skinsStatic = express.static('./skins');

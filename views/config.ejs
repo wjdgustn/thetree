@@ -4,6 +4,14 @@
     height: 200px;
     resize: vertical;
 }
+
+.static-file {
+    width: 50%;
+}
+
+.delete-file {
+    float: right;
+}
 </style>
 
 <script>
@@ -42,6 +50,13 @@ document.addEventListener('thetree:pageLoad', () => {
         <a class="thetree-button thetree-primary-button" href="/admin/config/tools/getgrant">grant 권한 받기</a>
     </div>
 
+    <h2 class="wiki-heading wiki-heading-folded">Eval</h2>
+    <div class="wiki-heading-content wiki-heading-content-folded">
+        <pre id="evalOutputParent"><code id="evalOutput"></code></pre>
+        <textarea id="evalContent" rows="5"></textarea>
+        <button id="evalRun" class="thetree-button thetree-primary-button">실행</button>
+    </div>
+
     <h2 class="wiki-heading">설정</h2>
     <div class="wiki-heading-content">
         <%for(let config of [
@@ -70,10 +85,21 @@ document.addEventListener('thetree:pageLoad', () => {
         </div>
     </div>
 
-    <h2 class="wiki-heading">Eval</h2>
+    <h2 class="wiki-heading">정적 파일</h2>
     <div class="wiki-heading-content">
-        <pre id="evalOutputParent"><code id="evalOutput"></code></pre>
-        <textarea id="evalContent" rows="5"></textarea>
-        <button id="evalRun" class="thetree-button thetree-primary-button">실행</button>
+        <%for(let file of customStaticFiles) {%>
+            <p class="static-file">
+                <a href="<%=file%>" target="_blank"><%=file%></a>
+                <a class="thetree-square-button thetree-danger-button delete-file" href="/admin/config/tools/deletestaticfile?path=<%=file%>">삭제</a>
+            </p>
+        <%}%>
+
+        <hr>
+
+        <form method="post" action="/admin/config/staticfile" enctype="multipart/form-data">
+            <input name="path" placeholder="경로" value="/">
+            <input type="file" name="file">
+            <button class="thetree-button thetree-primary-button">업로드</button>
+        </form>
     </div>
 </div>
