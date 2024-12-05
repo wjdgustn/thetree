@@ -148,14 +148,13 @@ app.post('/member/signup/:token',
         .custom(value => value[0].match(/[a-zA-Z]/))
         .withMessage('사용자 이름은 영문으로 시작해야 합니다.')
         .custom(async value => {
-            const existingUser = await User.findOne({
+            const existingUser = await User.exists({
                 name: {
                     $regex: new RegExp(`^${value}$`, 'i')
                 }
             });
-            return !existingUser;
-        })
-        .withMessage('사용자 이름이 이미 존재합니다.'),
+            if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
+        }),
     body('password')
         .notEmpty()
         .withMessage('비밀번호의 값은 필수입니다.'),
