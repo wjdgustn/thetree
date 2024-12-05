@@ -97,8 +97,9 @@ document.addEventListener('thetree:pageLoad', () => {
         <hr>
 
         <form method="post" action="/admin/config/staticfile" enctype="multipart/form-data">
-            <input name="path" placeholder="경로" value="/">
-            <input type="file" name="file">
+            <input name="path" placeholder="경로" value="/" required>
+            <input name="filename" placeholder="파일 이름">
+            <input type="file" name="file" required>
             <button class="thetree-button thetree-primary-button">업로드</button>
         </form>
     </div>

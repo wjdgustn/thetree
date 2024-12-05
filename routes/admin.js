@@ -112,7 +112,10 @@ const uploadStaticFile = multer({
             cb(null, path);
         },
         filename: (req, file, cb) => {
-            cb(null, file.originalname);
+            const filename = req.body.filename || file.originalname;
+            if(filename.includes('/') || filename.includes('..')) return cb('invalid filename');
+
+            cb(null, filename);
         }
     }),
     limits: {
