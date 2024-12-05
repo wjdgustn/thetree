@@ -1,8 +1,8 @@
 module.exports = {
     fullLine: true,
-    openStr: '## ',
+    openStr: '##',
     format(content) {
-        if(!content.startsWith('## ') && !content.startsWith('##@ ')) return;
+        if(!content.startsWith('##') && !content.startsWith('##@')) return;
 
         return '';
     }

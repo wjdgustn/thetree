@@ -132,7 +132,7 @@ module.exports = class NamumarkParser {
 
     async parseEditorComment(input) {
         const lines = input.split('\n');
-        const editorLines = lines.filter(l => l.startsWith('##@ ')).map(l => l.slice(4));
+        const editorLines = lines.filter(l => l.startsWith('##@')).map(l => l.slice(3));
         return await this.parse(editorLines.join('\n'));
     }
 
