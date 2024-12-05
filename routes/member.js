@@ -41,6 +41,36 @@ app.post('/member/signup',
 
     const email = req.body.email;
 
+    const checkUserExists = await User.exists({
+        email
+    });
+    if(!!checkUserExists) {
+        if(config.use_email_verification) {
+            res.renderSkin('계정 만들기', {
+                contentName: 'signup_email_sent',
+                email
+            });
+
+            await mailTransporter.sendMail({
+                from: config.smtp_sender,
+                to: email,
+                subject: `[${config.site_name}] 계정 생성 이메일 주소 인증`,
+                html: `
+안녕하세요. ${config.site_name} 입니다.
+${config.site_name} 계정 생성 이메일 인증 메일입니다.
+누군가 이 이메일로 계정 생성을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.
+
+요청 아이피 : ${req.ip}
+        `.trim().replaceAll('\n', '<br>')
+            });
+        }
+        else renderSignup(res, {
+            alert: '이미 가입된 이메일입니다.'
+        });
+
+        return;
+    }
+
     const existingToken = await SignupToken.findOne({
         email
     });
@@ -116,7 +146,16 @@ app.post('/member/signup/:token',
         .custom(value => /^[a-zA-Z0-9_]+$/.test(value))
         .withMessage('사용자 이름은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.')
         .custom(value => value[0].match(/[a-zA-Z]/))
-        .withMessage('사용자 이름은 영문으로 시작해야 합니다.'),
+        .withMessage('사용자 이름은 영문으로 시작해야 합니다.')
+        .custom(async value => {
+            const existingUser = await User.findOne({
+                name: {
+                    $regex: new RegExp(`^${value}$`, 'i')
+                }
+            });
+            return !existingUser;
+        })
+        .withMessage('사용자 이름이 이미 존재합니다.'),
     body('password')
         .notEmpty()
         .withMessage('비밀번호의 값은 필수입니다.'),
