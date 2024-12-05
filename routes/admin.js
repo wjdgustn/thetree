@@ -63,6 +63,7 @@ app.post('/admin/config/stringconfig', middleware.permission('developer'), (req,
         newObj[key] = req.body[key] || '';
     }
     fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    updateConfig();
     return res.status(204).end();
 });
 
