@@ -43,7 +43,7 @@
     <%for(let perm of grantablePermissions) {%>
         <p>
             <label for="perm_<%=perm%>"><%=perm%></label>
-            <input type="checkbox" id="perm_<%=perm%>" name="<%=perm%>" value="Y"<%=req.permissions.includes(perm) ? ' checked' : ''%>>
+            <input type="checkbox" id="perm_<%=perm%>" name="<%=perm%>" value="Y"<%=targetUser.permissions.includes(perm) ? ' checked' : ''%>>
         </p>
     <%}%>
 
