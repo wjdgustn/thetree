@@ -9,6 +9,9 @@ module.exports = {
         const rows = namumark.syntaxData.rows ??= [];
         if(!rows.length) return null;
 
+        const spaceCount = namumark.syntaxData.spaceCount ??= 0;
+        namumark.syntaxData.spaceCount = 0;
+
         let tableAlign;
         const colBgColors = [];
         const colDarkBgColors = [];
@@ -300,26 +303,47 @@ ${value}
         tableStyle = tableStyle.slice(1);
         tableDarkStyle = tableDarkStyle.slice(1);
 
-        const table = `<removeNewlineLater/>${removeNewParagraph ? '' : '</div>'}<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}<removeNewlineLater/>\n`;
+        const table = `<removeNewlineLater/>${removeNewParagraph ? ' '.repeat(spaceCount) : ('</div>' + '<div class="wiki-indent">'.repeat(spaceCount))}<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : ('</div>'.repeat(spaceCount) + '<div class="wiki-paragraph">')}<removeNewlineLater/>\n`;
 
         return table + (fromLastLine ? '' : '\n' + content);
     },
-    format(content, namumark, _, isLastLine, removeNewParagraph = false) {
+    format(content, namumark, lines, isLastLine, i, removeNewParagraph = false) {
         const rows = namumark.syntaxData.rows ??= [];
         const rowText = namumark.syntaxData.rowText ??= '';
 
         const makeTable = (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine, removeNewParagraph);
 
-        const trimedContent = content.trim();
+        let spaceCount = 0;
+        for(let char of content) {
+            if(char !== ' ') break;
+            spaceCount++;
+        }
+
+        const nextContent = lines[i + 1];
+        let nextSpaceCount = 0;
+        if(nextContent) for(let char of nextContent) {
+            if(char !== ' ') break;
+            nextSpaceCount++;
+        }
+
+        const trimedContent = content.slice(spaceCount);
         if(!trimedContent.startsWith('||') && !rowText) {
             return makeTable();
         }
 
-        const newRowText = namumark.syntaxData.rowText += (rowText ? '\n' : '') + content;
+        const newRowText = namumark.syntaxData.rowText += (rowText ? '\n' : '') + (rowText ? content : trimedContent);
+
+        if(!rowText) {
+            namumark.syntaxData.spaceCount = spaceCount;
+        }
 
         if(newRowText.length > 2 && newRowText.endsWith('||')) {
             rows.push(newRowText.split(/(?<!\\)\|\|/).slice(1, -1).map(a => a.replaceAll('\\||', '||')));
             namumark.syntaxData.rowText = '';
+        }
+
+        if(nextSpaceCount !== spaceCount) {
+            return makeTable(true);
         }
 
         if(isLastLine) return makeTable(true);
@@ -349,7 +373,7 @@ ${value}
             i = parseInt(i);
             const line = lines[i];
             const isLastLine = i === lines.length - 1;
-            let output = this.format(line, fakeNamumark, lines, isLastLine, removeNewParagraph);
+            let output = this.format(line, fakeNamumark, lines, isLastLine, i, removeNewParagraph);
 
             let setRemoveNextNewLine = false;
             if(output === '') continue;
