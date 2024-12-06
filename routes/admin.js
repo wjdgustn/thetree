@@ -115,6 +115,7 @@ const uploadStaticFile = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
             if(req.body.path.includes('..')) return cb('invalid path');
+            if(req.body.path === '/admin') return cb(`can't override admin page`);
 
             const path = './customStatic' + req.body.path;
             if(!fs.existsSync(path)) {
