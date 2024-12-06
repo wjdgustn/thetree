@@ -31,20 +31,24 @@ module.exports = {
         }
 
         let isCategory = false;
+        let newCategory;
         if(link.startsWith('분류:')) {
             isCategory = true;
             text = text.slice(3);
 
-            let blur;
-            if(link.endsWith('#blur')) {
-                link = link.slice(0, -'#blur'.length);
-                blur = true;
+            if(!namumark.categories.find(a => a.document === link)) {
+                let blur;
+                if(link.endsWith('#blur')) {
+                    link = link.slice(0, -'#blur'.length);
+                    blur = true;
+                }
+                newCategory = {
+                    document: link,
+                    text: splittedContent[1],
+                    blur
+                }
+                namumark.categories.push(newCategory);
             }
-            namumark.categories.push({
-                document: link,
-                text: splittedContent[1],
-                blur
-            });
         }
 
         if(link.startsWith(':')) {
@@ -132,6 +136,8 @@ module.exports = {
                     exists: documentExists
                 });
                 notExist = !documentExists;
+
+                if(newCategory) newCategory.notExist = notExist;
             }
         }
 
@@ -161,8 +167,8 @@ module.exports = {
         const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
         if(isCategory) {
-            namumark.categoryHtmls.push(html);
-            return '';
+            // namumark.categoryHtmls.push(html);
+            return '<removeNewline/>';
         }
 
         if(!parsedLink) namumark.links.push(title);

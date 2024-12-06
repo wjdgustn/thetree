@@ -98,11 +98,18 @@ app.get('/w/*', async (req, res) => {
         }));
     }
 
-    const { html: contentHtml } = await parser.parse(rev.content);
+    const { html: contentHtml, categories } = await parser.parse(rev.content);
+    let categoryHtml;
+    try {
+        categoryHtml = await utils.renderCategory(categories);
+    } catch (e) {
+        return res.status(500).send('카테고리 렌더 오류');
+    }
 
     res.renderSkin(undefined, {
         ...defaultData,
         contentHtml,
+        categoryHtml,
         date: rev.createdAt.getTime(),
         star_count: 0,
         starred: false,
@@ -404,9 +411,15 @@ app.post('/preview/*', async (req, res) => {
         document,
         aclData: req.aclData
     });
-    const { html: contentHtml } = await parser.parse(content);
+    const { html: contentHtml, categories } = await parser.parse(content);
+    let categoryHtml = '';
+    try {
+        categoryHtml = await utils.renderCategory(categories);
+    } catch (e) {
+        return res.status(500).send('카테고리 렌더 오류');
+    }
 
-    return res.send(contentHtml);
+    return res.send(categoryHtml + contentHtml);
 });
 
 app.post('/edit/*', async (req, res) => {

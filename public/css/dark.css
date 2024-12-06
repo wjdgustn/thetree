@@ -36,3 +36,12 @@
     background-color: #1555b5;
     border-color: #052e6d;
 }
+
+.theseed-dark-mode .category-list {
+    background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
+    border-color: #555;
+}
+
+.theseed-dark-mode .category-list-more {
+    background: linear-gradient(90deg, transparent, var(--dark-article-background-color, var(--article-background-color, #1c1d1f)), var(--dark-article-background-color, var(--article-background-color, #1c1d1f)));
+}

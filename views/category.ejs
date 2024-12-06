@@ -1,0 +1,10 @@
+<div class="category-list">
+    <span class="category-list-name">분류</span>
+    <ul class="category-list-content">
+        <%for(let category of categories) {%>
+            <li class="category-list-item<%=category.blur ? ' category-list-item-blur' : ''%><%=category.notExist ? ' category-list-item-not-exist' : ''%>">
+                <a href="/w/<%=category.document.replaceAll('#', '%23')%>"><%=category.text || category.document.slice(3)%></a>
+            </li>
+        <%}%>
+    </ul>
+</div>

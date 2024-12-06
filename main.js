@@ -65,6 +65,7 @@ global.debug = process.env.NODE_ENV === 'development';
 require('./schemas')();
 
 const app = express();
+global.expressApp = app;
 
 app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
@@ -263,6 +264,7 @@ app.use(async (req, res, next) => {
             data: utils.withoutKeys(data, [
                 'contentName',
                 'contentHtml',
+                'categoryHtml',
                 'serverData'
             ])
         }
@@ -308,6 +310,10 @@ document.getElementById('initScript')?.remove();
 </div>
 </div>
         `.replaceAll('\n', '').trim() + data.contentHtml;
+        }
+
+        if(data.categoryHtml) {
+            data.contentHtml = data.categoryHtml + data.contentHtml;
         }
 
         app.render('main', {

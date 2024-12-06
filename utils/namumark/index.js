@@ -146,7 +146,6 @@ module.exports = class NamumarkParser {
 
         this.categories = [];
 
-        this.categoryHtmls = [];
         this.headings = [];
         this.footnoteValues = {};
         this.footnoteList = [];
@@ -501,6 +500,8 @@ module.exports = class NamumarkParser {
         return {
             html,
             links: this.links,
+            files: this.files,
+            includes: this.includes,
             categories: this.categories
         }
     }
