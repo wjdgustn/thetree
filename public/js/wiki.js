@@ -76,6 +76,65 @@ function setupWikiHandlers() {
             }
         });
     }
+
+    setupFootnoteTooltip();
+}
+
+function setupFootnoteTooltip() {
+    const tooltip = document.getElementById('tooltip');
+    const tooltipContent = document.getElementById('tooltip-content');
+
+    let cleanup;
+    let hovering = 0;
+    const mouseLeaveHandler = _ => {
+        requestAnimationFrame(() => {
+            console.log('oh mouse leave', hovering);
+            hovering--;
+
+            if(!hovering) {
+                tooltip.style.display = 'none';
+                if (cleanup) cleanup();
+            }
+        });
+    }
+    tooltip.addEventListener('mouseenter', _ => {
+        hovering++;
+    });
+    tooltip.addEventListener('mouseleave', mouseLeaveHandler);
+
+    const footnotes = document.getElementsByClassName('wiki-fn-content');
+    for(let footnote of footnotes) {
+        const targetId = footnote.getAttribute('href').slice(1);
+        const contentElement = document.getElementById(targetId).parentElement;
+
+        footnote.title = '';
+
+        const update = () => FloatingUIDOM.computePosition(footnote, tooltip, {
+            placement: 'top',
+            middleware: [
+                FloatingUIDOM.offset(5),
+                FloatingUIDOM.flip(),
+                FloatingUIDOM.shift()
+            ]
+        }).then(({x, y, placement, middlewareData}) => {
+            tooltip.setAttribute('x-placement', placement);
+            Object.assign(tooltip.style, {
+                left: `${x}px`,
+                top: `${y}px`,
+            });
+        });
+
+        footnote.addEventListener('mouseenter', _ => {
+            console.log('oh mouse enter');
+            hovering++;
+
+            tooltip.style.display = 'block';
+            tooltipContent.innerHTML = contentElement.innerHTML;
+            cleanup = FloatingUIDOM.autoUpdate(footnote, tooltip, update);
+        });
+
+        footnote.addEventListener('mouseleave', mouseLeaveHandler);
+    }
 }
 
 document.addEventListener('thetree:pageLoad', () => {

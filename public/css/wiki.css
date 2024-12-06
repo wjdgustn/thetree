@@ -505,12 +505,12 @@
     padding: 15px;
     position: absolute;
     word-break: break-all;
-    z-index: 1
+    z-index: 1;
 }
 
 .theseed-dark-mode .popper {
     background: #383b40;
-    box-shadow: 0 0 2px hsla(0,0%,100%,.5)
+    box-shadow: 0 0 2px hsla(0,0%,100%,.5);
 }
 
 .popper .popper__arrow {
@@ -519,15 +519,15 @@
     height: 0;
     margin: 5px;
     position: absolute;
-    width: 0
+    width: 0;
 }
 
 .theseed-dark-mode .popper .popper__arrow {
-    border-color: #ccc
+    border-color: #ccc;
 }
 
 .popper[x-placement^=top] {
-    margin-bottom: 5px
+    margin-bottom: 5px;
 }
 
 .popper[x-placement^=top] .popper__arrow {
@@ -536,7 +536,7 @@
     border-right-color: transparent;
     border-width: 5px 5px 0;
     bottom: -5px;
-    left: calc(50% - 5px);
+    left: calc(50% - 10px);
     margin-bottom: 0;
     margin-top: 0;
 }
@@ -550,10 +550,10 @@
     border-right-color: transparent;
     border-top-color: transparent;
     border-width: 0 5px 5px;
-    left: calc(50% - 5px);
+    left: calc(50% - 10px);
     margin-bottom: 0;
     margin-top: 0;
-    top: -5px
+    top: -5px;
 }
 
 .popper[x-placement^=right] {
@@ -568,11 +568,11 @@
     left: -5px;
     margin-left: 0;
     margin-right: 0;
-    top: calc(50% - 5px)
+    top: calc(50% - 10px);
 }
 
 .popper[x-placement^=left] {
-    margin-right: 5px
+    margin-right: 5px;
 }
 
 .popper[x-placement^=left] .popper__arrow {
@@ -583,5 +583,5 @@
     margin-left: 0;
     margin-right: 0;
     right: -5px;
-    top: calc(50% - 5px)
+    top: calc(50% - 10px);
 }

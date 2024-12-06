@@ -4,8 +4,14 @@
  * @license MIT
  */
 
- /**
-  * highlight.js
-  * (c) 2006, Ivan Sagalaev.
-  * @license BSD-3-Clause
-  */
+/**
+ * highlight.js
+ * (c) 2006, Ivan Sagalaev.
+ * @license BSD-3-Clause
+ */
+
+/**
+ * floating-ui
+ * (c) 2021 Floating UI contributors
+ * @license MIT
+ */
