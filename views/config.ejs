@@ -75,6 +75,8 @@ document.addEventListener('thetree:pageLoad', () => {
 
         <h3 class="wiki-heading wiki-heading-folded">텍스트</h3>
         <div class="wiki-heading-content wiki-heading-content-folded">
+            <a class="thetree-button thetree-primary-button" href="/admin/config/tools/fixstringconfig">stringConfig.example.json 필드 추가</a>
+
             <form method="post" action="/admin/config/stringconfig">
                 <%for(let [key, value] of Object.entries(stringConfig)) {%>
                     <p><%=key%></p>

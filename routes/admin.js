@@ -78,6 +78,18 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), async (
         return res.redirect('/admin/config');
     }
 
+    if(tool === 'fixstringconfig') {
+        const newStringConfig = {};
+        const exampleStringConfig = JSON.parse(fs.readFileSync('./stringConfig.example.json').toString());
+        for(let [key, defaultValue] of Object.entries(exampleStringConfig)) {
+            newStringConfig[key] = config[key] || defaultValue;
+        }
+        fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        updateConfig();
+
+        return res.redirect('/admin/config');
+    }
+
     return res.status(404).send('tool not found');
 });
 
