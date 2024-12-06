@@ -89,7 +89,6 @@ function setupFootnoteTooltip() {
     let hovering = 0;
     const mouseLeaveHandler = _ => {
         requestAnimationFrame(() => {
-            console.log('oh mouse leave', hovering);
             hovering--;
 
             if(!hovering) {
@@ -128,7 +127,6 @@ function setupFootnoteTooltip() {
         });
 
         footnote.addEventListener('mouseenter', _ => {
-            console.log('oh mouse enter');
             hovering++;
 
             tooltip.style.display = 'block';
