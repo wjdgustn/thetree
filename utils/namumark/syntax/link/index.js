@@ -16,7 +16,7 @@ module.exports = {
         const splittedContent = content.split('|');
 
         let link = splittedContent[0];
-        let text = splittedContent.at(-1);
+        let text = splittedContent.slice(1).join('|');
         let notExist = false;
 
         const image = await processImage(content, splittedContent, link, text);
