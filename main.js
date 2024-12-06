@@ -224,7 +224,8 @@ app.use(async (req, res, next) => {
     req.permissions = [...new Set(req.permissions)];
     req.displayPermissions = req.permissions.filter(a => ![
         'any',
-        'contributor'
+        'contributor',
+        'member_signup_15days_ago'
     ].includes(a));
 
     // TODO perms:
