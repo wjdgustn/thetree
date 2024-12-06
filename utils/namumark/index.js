@@ -12,7 +12,8 @@ const syntaxDefaultValues = {
     closeOnlyForLineLast: false,
     allowMultiline: false,
     priority: Priority.Format,
-    fullLine: false
+    fullLine: false,
+    noEscapeChar: false
 }
 
 let syntaxes = [];
@@ -237,7 +238,7 @@ module.exports = class NamumarkParser {
                         }
                     }
 
-                    if(char === '\\') {
+                    if(!syntax.noEscapeChar && char === '\\') {
                         if(!isLastSyntax) text += '\\';
                         text += sourceText[++i] || '';
                         continue;

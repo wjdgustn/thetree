@@ -11,9 +11,12 @@ module.exports = {
     openStr: `{{{`,
     closeStr: `}}}`,
     allowMultiline: true,
+    noEscapeChar: true,
     format: (content, namumark, originalContent) => {
         if(Format(content, namumark) !== undefined) return null;
         if(ContentChange(content, namumark) !== undefined) return null;
+
+        originalContent = originalContent.replaceAll('\\', '\\\\');
 
         if(content.includes('\n')) {
             let result = namumark.escape(originalContent);
