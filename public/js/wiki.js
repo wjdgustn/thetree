@@ -82,6 +82,7 @@ function setupWikiHandlers() {
 
 function setupFootnoteTooltip() {
     const tooltip = document.getElementById('tooltip');
+    const tooltipArrow = document.getElementById('tooltip-arrow');
     const tooltipContent = document.getElementById('tooltip-content');
 
     let cleanup;
@@ -122,6 +123,8 @@ function setupFootnoteTooltip() {
                 left: `${x}px`,
                 top: `${y}px`,
             });
+
+            tooltipArrow.style.left = `calc(50% - 10px - ${middlewareData.shift.x}px)`;
         });
 
         footnote.addEventListener('mouseenter', _ => {
