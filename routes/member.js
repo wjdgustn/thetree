@@ -347,4 +347,44 @@ app.get('/member/mypage', middleware.isLogin, (req, res) => {
     });
 });
 
+const renderChangePassword = (res, data = {}) => res.renderSkin('비밀번호 변경', {
+    ...data,
+    contentName: 'change_password'
+});
+
+app.get('/member/change_password', middleware.isLogin, (req, res) => {
+    renderChangePassword(res);
+});
+
+app.post('/member/change_password',
+    middleware.isLogin,
+    body('old_password')
+        .notEmpty().withMessage('old_password의 값은 필수입니다.')
+        .custom(async (value, {req}) => {
+            const result = await bcrypt.compare(value, req.user.password);
+            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
+            return true;
+        }),
+    body('password')
+        .notEmpty().withMessage('비밀번호의 값은 필수입니다.'),
+    body('password_confirm')
+        .notEmpty().withMessage('비밀번호 확인의 값은 필수입니다.')
+        .custom((value, { req }) => value === req.body.password)
+        .withMessage('패스워드 확인이 올바르지 않습니다.'),
+    async (req, res) => {
+    const result = validationResult(req);
+    if(!result.isEmpty()) return renderChangePassword(res, {
+        fieldErrors: result.array()
+    });
+
+    const hash = await bcrypt.hash(req.body.password, 12);
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        password: hash
+    });
+
+    return res.redirect('/member/mypage');
+});
+
 module.exports = app;
