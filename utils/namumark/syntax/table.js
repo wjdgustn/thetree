@@ -25,6 +25,9 @@ module.exports = {
         let tableStyle = ';';
         let tableDarkStyle = ';';
 
+        let prevColspan = 1;
+        const aliveRowSpans = [];
+
         const htmlRows = [];
         for(let colIndex in rows) {
             colIndex = parseInt(colIndex);
@@ -36,6 +39,12 @@ module.exports = {
             let trStyle = ';';
             let trDarkStyle = ';';
 
+            for(let i = 0; i < aliveRowSpans.length; i++) {
+                const val = aliveRowSpans[i];
+                if(val > 0) aliveRowSpans[i]--;
+            }
+
+            let visualRowIndex = -1;
             for(let rowIndex in row) {
                 rowIndex = parseInt(rowIndex);
                 let value = row[rowIndex];
@@ -43,6 +52,10 @@ module.exports = {
                     colspan++;
                     continue;
                 }
+                visualRowIndex += prevColspan;
+
+                const aliveRowSpan = aliveRowSpans[visualRowIndex];
+                if(aliveRowSpan > 0) visualRowIndex++;
 
                 const tdClassList = [];
                 let tdStyle = ';';
@@ -188,8 +201,8 @@ module.exports = {
                     else if(name === 'colbgcolor') {
                         if(colBgColorAssigned) break;
 
-                        colBgColors[rowIndex] = light;
-                        if(dark) colDarkBgColors[rowIndex] = dark;
+                        colBgColors[visualRowIndex] = light;
+                        if(dark) colDarkBgColors[visualRowIndex] = dark;
 
                         colBgColorAssigned = true;
                     }
@@ -208,8 +221,8 @@ module.exports = {
                     else if(name === 'colcolor') {
                         if(colColorAssigned) break;
 
-                        colColors[rowIndex] = light;
-                        if(dark) colDarkColors[rowIndex] = dark;
+                        colColors[visualRowIndex] = light;
+                        if(dark) colDarkColors[visualRowIndex] = dark;
 
                         colColorAssigned = true;
                     }
@@ -260,7 +273,6 @@ module.exports = {
                 }
                 if(align) tdStyle += `text-align:${align};`;
 
-                const visualRowIndex = rowIndex + Math.min(colspan, row.length) - 1;
                 if(!tdStyle.includes(';background-color:') && colBgColors[visualRowIndex])
                     tdStyle += `background-color:${colBgColors[visualRowIndex]};`;
                 if(!tdDarkStyle.includes(';background-color:') && colDarkBgColors[visualRowIndex])
@@ -285,6 +297,11 @@ ${value}
 <removeNewlineLater/></div></td>
 `.trim());
 
+                for(let i = 0; i < colspan; i++) {
+                    aliveRowSpans[visualRowIndex + i] = rowspan ?? 0;
+                }
+
+                prevColspan = colspan;
                 colspan = 1;
             }
 
