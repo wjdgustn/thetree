@@ -8,3 +8,5 @@
 publicConfig.json
 serverConfig.json
 stringConfig.json
+
+.DS_Store
