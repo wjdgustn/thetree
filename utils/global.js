@@ -23,7 +23,7 @@ module.exports = {
         return `/contribution/${uuid}/discuss`;
     },
     doc_action_link(document, route, query = {}) {
-        let str = `/${route}/${encodeURIComponent(this.doc_fulltitle(document))}`;
+        let str = `/${route}/${this.doc_fulltitle(document).replaceAll('#', '%23')}`;
         if(Object.keys(query).length > 0) {
             str += '?';
             str += Object.keys(query).filter(k => query[k]).map(k => `${k}=${query[k]}`).join('&');
