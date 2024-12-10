@@ -308,6 +308,8 @@ ${value}
             trStyle = trStyle.slice(1);
             trDarkStyle = trDarkStyle.slice(1);
             htmlRows.push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}>${htmlValues.join('')}</tr>`);
+
+            prevColspan = 1;
         }
 
         rows.length = 0;
