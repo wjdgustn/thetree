@@ -50,8 +50,10 @@ const getCachedDocument = async (name, namumark) => {
 module.exports = async (params, namumark) => {
     if(namumark.includeData) return '';
 
-    const removeNewParagraph = params.startsWith('<removeNewParagraph/>');
-    if(removeNewParagraph) params = params.slice('<removeNewParagraph/>'.length);
+    // const removeNewParagraph = params.startsWith('<removeNewParagraph/>');
+    // if(removeNewParagraph) params = params.slice('<removeNewParagraph/>'.length);
+    const removeNoParagraph = params.startsWith('<noParagraph>');
+    if(removeNoParagraph) params = params.slice('<noParagraph>'.length);
 
     params = params.split(/(?<!\\),/).map(a => a.replaceAll('\\,', ','));
 
@@ -78,5 +80,5 @@ module.exports = async (params, namumark) => {
     });
 
     const { html: contentHtml } = await parser.parse(document.content);
-    return `${removeNewParagraph ? '' : '</div>'}${contentHtml}${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}`;
+    return `${removeNoParagraph ? '' : '<noParagraph>'}${contentHtml}${removeNoParagraph ? '' : '</noParagraph>'}`;
 }

@@ -42,7 +42,7 @@ module.exports = (content, namumark) => {
 
     if(firstParam.startsWith('#!html')) {
         const html = utils.unescapeHtml(content.slice('#!html'.length).trim());
-        const safeHtml = sanitizeHtml(html, sanitizeHtmlOptions).replaceAll('\n', ' ');
+        const safeHtml = sanitizeHtml(html.replaceAll('<newLine/>', ' '), sanitizeHtmlOptions);
         return `${safeHtml}`;
     }
 

@@ -365,13 +365,13 @@
     margin-bottom: 0;
 }
 
-.wiki-content .wiki-quote + .wiki-quote {
-    margin-top: 1rem;
-}
+/*.wiki-content .wiki-quote + .wiki-quote {*/
+/*    margin-top: 1rem;*/
+/*}*/
 
-.wiki-content .wiki-table-wrap + .wiki-table-wrap {
-    margin-top: 1rem;
-}
+/*.wiki-content .wiki-table-wrap + .wiki-table-wrap {*/
+/*    margin-top: 1rem;*/
+/*}*/
 
 .wiki-content .wiki-table-wrap {
     display: block;

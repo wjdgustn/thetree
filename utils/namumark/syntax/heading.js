@@ -86,8 +86,9 @@ module.exports = {
         return `
 <removeNewline/>
 <removeNextNewline/>
-<exitParagraph/>
-<removeNewlineLater/><h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
+<cursorToEnd/>
+<noParagraph>
+<h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#toc">${paragraphNumText}.</a>
  <span :id="$el.innerText">${text}
 <span class="wiki-edit-section">
@@ -98,9 +99,8 @@ module.exports = {
 </span>
 </h${level}>
 <div class="wiki-heading-content${defaultClosed ? ' wiki-heading-content-folded' : ''}">
-<paragraphPos/>
+<cursorPos/>
 </div>
-<removeNewlineLater/>
-`.replaceAll('\n', '') + '\n<enterParagraph/>';
+`.replaceAll('\n', '') + '\n<goToCursor/></noParagraph><removeNewlineLater/><newLine/>';
     }
 }

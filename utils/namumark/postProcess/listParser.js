@@ -1,5 +1,6 @@
-const hrSyntax = require('./syntax/hr');
-const tableSyntax = require('./syntax/table');
+const hrSyntax = require('../syntax/hr');
+// const tableSyntax = require('../syntax/table');
+const postProcessNoList = require('./postProcessNoList');
 
 const numberedListTypes = {
     '*': '',
@@ -18,21 +19,26 @@ module.exports = {
         // console.log('=== 리스트 파싱 전 ===');
         // console.log(sourceText);
 
-        const lines = sourceText.split('\n');
+        // const lines = sourceText.split('<newLine/>');
+        const lines = sourceText
+            // .replaceAll('<noParagraph>', '<noParagraph>' + '<tempNewline/><newLine/>')
+            // .replaceAll('</noParagraph>', '</noParagraph>' + '<tempNewline/><newLine/>')
+            .split('<newLine/>');
         const newLines = [];
         let listCloseTags = [];
         let openedListSpaces = [];
         let lastListTypeStr = '';
         let lastListSpace = 0;
-        let dontOpenParagraphOnClose = false;
+        // let dontOpenParagraphOnClose = false;
+        let dontCloseNoParagraphOnClose = false;
 
-        let hardcodedTableOpen = false;
-        let continueOne = false;
+        // let hardcodedTableOpen = false;
+        // let continueOne = false;
         for(let i in lines) {
-            if(continueOne) {
-                continueOne = false;
-                continue;
-            }
+            // if(continueOne) {
+            //     continueOne = false;
+            //     continue;
+            // }
 
             i = parseInt(i);
             let line = lines[i];
@@ -51,31 +57,31 @@ module.exports = {
                 listSpace++;
             }
 
-            if(prevWasList && lastListSpace && !hardcodedTableOpen) {
-                const indentTableHardcodeOpen = `<removeNewlineLater/></div>${'<div class="wiki-indent">'.repeat(lastListSpace)}<div class="wiki-table-wrap">`;
-
-                if(!hardcodedTableOpen && line.startsWith(indentTableHardcodeOpen)) {
-                    // console.log('hardcoded table open');
-                    // console.log(line);
-                    line = `${' '.repeat(lastListSpace)}<div class="wiki-table-wrap">` + line.slice(indentTableHardcodeOpen.length);
-                    listSpace = lastListSpace;
-                    hardcodedTableOpen = true;
-                }
-            }
-            else if(hardcodedTableOpen) {
-                const indentTableHardcodeClose = `</table></div>${'</div>'.repeat(lastListSpace)}<div class="wiki-paragraph"><removeNewlineLater/>`;
-                // console.log('indentTableHardcodeClose:', indentTableHardcodeClose);
-
-                listSpace = lastListSpace;
-
-                if(line.endsWith(indentTableHardcodeClose)) {
-                    // console.log('close hardcoded table');
-                    line = line.slice(0, -indentTableHardcodeClose.length) + `</table></div><div class="wiki-paragraph"><removeNewlineLater/>`;
-                    // listSpace = lastListSpace;
-                    hardcodedTableOpen = false;
-                    continueOne = true;
-                }
-            }
+            // if(prevWasList && lastListSpace && !hardcodedTableOpen) {
+            //     const indentTableHardcodeOpen = `<removeNewline/></div>${'<div class="wiki-indent">'.repeat(lastListSpace)}<div class="wiki-table-wrap">`;
+            //
+            //     if(!hardcodedTableOpen && line.startsWith(indentTableHardcodeOpen)) {
+            //         // console.log('hardcoded table open');
+            //         // console.log(line);
+            //         line = `${' '.repeat(lastListSpace)}<div class="wiki-table-wrap">` + line.slice(indentTableHardcodeOpen.length);
+            //         listSpace = lastListSpace;
+            //         hardcodedTableOpen = true;
+            //     }
+            // }
+            // else if(hardcodedTableOpen) {
+            //     const indentTableHardcodeClose = `</table></div>${'</div>'.repeat(lastListSpace)}<div class="wiki-paragraph"><removeNewlineLater/>`;
+            //     // console.log('indentTableHardcodeClose:', indentTableHardcodeClose);
+            //
+            //     listSpace = lastListSpace;
+            //
+            //     if(line.endsWith(indentTableHardcodeClose)) {
+            //         // console.log('close hardcoded table');
+            //         line = line.slice(0, -indentTableHardcodeClose.length) + `</table></div><div class="wiki-paragraph"><removeNewlineLater/>`;
+            //         // listSpace = lastListSpace;
+            //         hardcodedTableOpen = false;
+            //         continueOne = true;
+            //     }
+            // }
             // console.log('listSpace:', listSpace);
 
 
@@ -89,10 +95,15 @@ module.exports = {
                     listContent = listContent.slice(1);
                 }
                 if(hrSyntax.check(listContent)) listContent = hrSyntax.format(listContent);
-                listContent = tableSyntax.parse(listContent);
+                // listContent = tableSyntax.parse(listContent);
 
-                const removeNewParagraph = listContent.includes('<removeNewParagraph/>');
-                if(removeNewParagraph) listContent = listContent.replaceAll('<removeNewParagraph/>', '');
+                // const removeNewParagraph = listContent.includes('<removeNewParagraph/>');
+                // if(removeNewParagraph) listContent = listContent.replaceAll('<removeNewParagraph/>', '');
+                const removeNoParagraph = listContent.includes('<removeNoParagraph/>');
+                if(removeNoParagraph) listContent = listContent.replaceAll('<removeNoParagraph/>', '');
+
+                const noParagraphOpen = removeNoParagraph ? '' : '<noParagraph>';
+                const noParagraphClose = removeNoParagraph ? '' : '</noParagraph>';
 
                 const changeList = listTypeStr !== lastListTypeStr || listSpace !== lastListSpace;
                 const isIncreasing = listSpace > lastListSpace;
@@ -148,8 +159,9 @@ module.exports = {
                         if(startNum) listContent = listContent.slice(startNum.length + 2);
 
                         if(level === 1) {
-                            if(removeNewParagraph) dontOpenParagraphOnClose = true;
-                            else prevLine += '</div>';
+                            // if(removeNewParagraph) dontOpenParagraphOnClose = true;
+                            if(removeNoParagraph) dontCloseNoParagraphOnClose = true;
+                            else prevLine += noParagraphOpen;
                         }
                         prevLine += `${'<div class="wiki-indent">'.repeat(indentCount)}<${tagName} class="${`wiki-list ${listClass}`.trim()}"${startNum ? ` start="${startNum}"` : ''}>`;
                         // console.log(`open list! prevLine: ${prevLine}`);
@@ -161,7 +173,7 @@ module.exports = {
                     // console.log(`close prev item! prevLine: ${prevLine}`);
                 }
 
-                newLine += `<removeNewline/><li><div class="wiki-paragraph">${listContent}</div>`;
+                newLine += `<removeNewline/><li>${noParagraphClose}${removeNoParagraph ? postProcessNoList(listContent) : listContent}${noParagraphOpen}`;
                 // console.log(`add item! newLine: ${newLine}`);
 
                 lastListSpace = listSpace;
@@ -171,15 +183,16 @@ module.exports = {
                     const indentCount = listSpace - lastListSpace;
                     let trimedLine = line.trimStart();
                     const prevContent = newLines.at(-1);
-                    const prevWithoutCloseParagraph = prevContent.slice(0, -'</div>'.length);
+                    const closeParagraph = dontCloseNoParagraphOnClose ? '</div>' : '<noParagraph>';
+                    const prevWithoutCloseParagraph = prevContent.slice(0, -(closeParagraph).length);
 
                     if(hrSyntax.check(trimedLine)) trimedLine = hrSyntax.format(trimedLine);
-                    trimedLine = tableSyntax.parse(trimedLine);
+                    // trimedLine = tableSyntax.parse(trimedLine);
 
-                    newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}</div>`;
+                    newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}${closeParagraph}`;
                     newLine = null;
                 } else {
-                    // console.log('close all lists');
+                    // console.log('close all lists', line);
                     for(let tag of listCloseTags) {
                         prevLine += tag;
                     }
@@ -190,12 +203,12 @@ module.exports = {
 
                     if(prevWasList) {
                         // console.log('prevWasList:', prevWasList);
-                        if(!dontOpenParagraphOnClose) {
+                        if(!dontCloseNoParagraphOnClose) {
+                            prevLine += '</noParagraph>';
                             prevLine += '<removeNewline/>';
-                            prevLine += '<div class="wiki-paragraph">';
                         }
                     }
-                    dontOpenParagraphOnClose = false;
+                    dontCloseNoParagraphOnClose = false;
 
                     newLine += line;
                 }
@@ -213,6 +226,6 @@ module.exports = {
         // console.log('=== 리스트 파싱 후 ===');
         // console.log(newLines.join('\n'));
         // console.log(`lines.length: ${lines.length} newLines.length: ${newLines.length}`);
-        return tableSyntax.parse(newLines.join('\n'));
+        return newLines.join('<newLine/>')/*.replaceAll('<tempNewline/><newLine/>', '')*/;
     }
 }

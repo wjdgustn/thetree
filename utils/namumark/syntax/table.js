@@ -1,5 +1,6 @@
 const utils = require('../utils');
 const { Priority } = require('../types');
+const listParser = require('../postProcess/listParser');
 
 module.exports = {
     fullLine: true,
@@ -11,6 +12,8 @@ module.exports = {
 
         const spaceCount = namumark.syntaxData.spaceCount ??= 0;
         namumark.syntaxData.spaceCount = 0;
+        const listTypeStr = namumark.syntaxData.listTypeStr ??= '';
+        namumark.syntaxData.listTypeStr = '';
 
         let tableAlign;
         const colBgColors = [];
@@ -286,15 +289,15 @@ module.exports = {
                 if(!tdClassList.includes('wiki-table-keepall') && colKeepAll[visualRowIndex])
                     tdClassList.push('wiki-table-keepall');
 
-                if(value.endsWith('\n')) value = value.slice(0, -1);
+                if(value.endsWith('<newLine/>')) value = value.slice(0, -1);
 
                 tdStyle = tdStyle.slice(1);
                 tdDarkStyle = tdDarkStyle.slice(1);
 
                 htmlValues.push(`
-<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}><div class="wiki-paragraph"><removeNewlineLater/>
+<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}></noParagraph>
 ${value}
-<removeNewlineLater/></div></td>
+<noParagraph></td>
 `.trim());
 
                 for(let i = 0; i < colspan; i++) {
@@ -320,9 +323,9 @@ ${value}
         tableStyle = tableStyle.slice(1);
         tableDarkStyle = tableDarkStyle.slice(1);
 
-        const table = `<removeNewlineLater/>${removeNewParagraph ? ' '.repeat(spaceCount) : ('</div>' + '<div class="wiki-indent">'.repeat(spaceCount))}<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>${removeNewParagraph ? '' : ('</div>'.repeat(spaceCount) + '<div class="wiki-paragraph">')}<removeNewlineLater/>\n`;
+        const table = `<removeNextNewline/>${' '.repeat(spaceCount)}${listTypeStr}<noParagraph><div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div></noParagraph>`;
 
-        return table + (fromLastLine ? '' : '\n' + content);
+        return table + (fromLastLine ? '' : '<newLine/>' + content);
     },
     format(content, namumark, lines, isLastLine, i, removeNewParagraph = false) {
         const rows = namumark.syntaxData.rows ??= [];
@@ -343,15 +346,19 @@ ${value}
             nextSpaceCount++;
         }
 
-        const trimedContent = content.slice(spaceCount);
+        const isList = listParser.lineIsList(content);
+        const listTypeStr = listParser.getListTypeStr(content);
+        let trimedContent = content.slice(spaceCount);
+        if(isList) trimedContent = trimedContent.slice(1);
         if(!trimedContent.startsWith('||') && !rowText) {
             return makeTable();
         }
 
-        const newRowText = namumark.syntaxData.rowText += (rowText ? '\n' : '') + (rowText ? content : trimedContent);
+        const newRowText = namumark.syntaxData.rowText += (rowText ? '<newLine/>' : '') + (rowText ? content : trimedContent);
 
         if(!rowText) {
             namumark.syntaxData.spaceCount = spaceCount;
+            if(isList) namumark.syntaxData.listTypeStr = listTypeStr;
         }
 
         if(newRowText.length > 2 && newRowText.endsWith('||')) {
@@ -372,7 +379,7 @@ ${value}
             syntaxData: {}
         }
 
-        const lines = content.split('\n');
+        const lines = content.split('<newLine/>');
 
         const newLines = [];
         let removeNextNewLine = false;
@@ -413,6 +420,6 @@ ${value}
             if(setRemoveNextNewLine) removeNextNewLine = true;
         }
 
-        return newLines.join('\n');
+        return newLines.join('<newLine/>');
     }
 }

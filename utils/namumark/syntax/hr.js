@@ -1,11 +1,13 @@
 module.exports = {
     fullLine: true,
     check: content => {
-        if(!content.startsWith('----')) return false;
+        const trimedContent = content.trimStart();
+
+        if(!trimedContent.startsWith('----')) return false;
 
         let length = 0;
-        for(let i = 0; i < content.length; i++) {
-            const char = content[i];
+        for(let i = 0; i < trimedContent.length; i++) {
+            const char = trimedContent[i];
             if(char !== '-') return false;
             length++;
 
@@ -17,6 +19,9 @@ module.exports = {
     format(content) {
         if(!this.check(content)) return;
 
-        return `<removeNewlineLater/></div><hr><div class="wiki-paragraph"><removeNewlineLater/>`;
+        const trimedContent = content.trimStart();
+        const spaceCount = content.length - trimedContent.length;
+
+        return `<noParagraph>${' '.repeat(spaceCount)}<hr></noParagraph>`;
     }
 }

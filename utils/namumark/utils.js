@@ -2,6 +2,9 @@ const {
     validateHTMLColorHex,
     validateHTMLColorName
 } = require('validate-color');
+// const cheerio = require('cheerio');
+
+const { SelfClosingTags } = require('./types');
 
 module.exports = {
     escapeHtml: text => text
@@ -81,5 +84,50 @@ module.exports = {
         newText += text.slice(textPos);
 
         return newText;
+    },
+    isPlainHtmlTag(text) {
+        // console.log('isPlainHtmlTag text:', text);
+        // console.time('isPlainHtmlTag');
+        // const $ = cheerio.load(text);
+        // let childs = $('body').children();
+        // while(childs.length > 0) {
+        //     if(childs.length > 1) {
+        //         console.timeEnd('isPlainHtmlTag');
+        //         return false;
+        //     }
+        //     childs = childs.children();
+        // }
+        // console.timeEnd('isPlainHtmlTag');
+        // return true;
+
+        console.log('isPlainHtmlTag text:', text);
+        console.time('isPlainHtmlTag');
+        const tagStack = [];
+        let textPos = 0;
+        while(true) {
+            const startPos = text.indexOf('<', textPos);
+            if(startPos === -1) break;
+            const endPos = text.indexOf('>', startPos + 1);
+            if(endPos === -1) break;
+
+            const tag = text.slice(startPos + 1, endPos);
+            if(tag.startsWith('/')) {
+                const lastTag = tagStack.pop();
+                if(!lastTag || lastTag !== tag.slice(1)) {
+                    console.timeEnd('isPlainHtmlTag');
+                    return false;
+                }
+            }
+            else if(SelfClosingTags.includes(tag)) {
+                continue;
+            }
+            else {
+                tagStack.push(tag);
+            }
+
+            textPos = endPos + 1;
+        }
+        console.timeEnd('isPlainHtmlTag');
+        return true;
     }
 }

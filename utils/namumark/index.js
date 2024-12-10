@@ -2,7 +2,9 @@ const fs = require('fs');
 
 const utils = require('./utils');
 const { Priority } = require('./types');
-const listParser = require('./listParser');
+// const listParser = require('./postProcess/listParser');
+// const makeParagraph = require('./makeParagraph');
+const postProcess = require('./postProcess');
 
 const syntaxDefaultValues = {
     openStr: '',
@@ -18,6 +20,7 @@ const syntaxDefaultValues = {
 
 let syntaxes = [];
 let sortedSyntaxes = [];
+let lastSyntaxCount = 0;
 // let syntaxesByLongCloseStr = [];
 const syntaxLoader = (subDir = '') => {
     if(!subDir) syntaxes = [];
@@ -64,6 +67,7 @@ const syntaxLoader = (subDir = '') => {
                 a.priority - b.priority
                 || b.openStr.length - a.openStr.length
                 || a.allowMultiline - b.allowMultiline);
+        lastSyntaxCount = sortedSyntaxes.filter(a => a.priority === Priority.Last).length;
         // syntaxesByLongCloseStr = syntaxes.sort((a, b) => b.closeStr.length - a.closeStr.length);
     }
 }
@@ -90,9 +94,15 @@ for(let syntax of sortedSyntaxes) {
 const ParagraphPosTag = '<paragraphPos/>';
 const EnterParagraphTag = '<enterParagraph/>';
 const ExitParagraphTag = '<exitParagraph/>';
+const RemoveBrTag = '<removebr/>';
 const ParagraphOpen = '<div class="wiki-paragraph">';
+// const ParagraphOpenStr = ParagraphOpen + RemoveBrTag;
+const TempParagraphClose = '<paragraphClose/>';
 const ParagraphClose = '</div>';
+// const ParagraphCloseStr = RemoveBrTag + ParagraphClose;
 const FullParagraphTag = ParagraphOpen + ParagraphClose;
+const NoParagraphOpen = '<noParagraph>';
+const NoParagraphClose = '</noParagraph>';
 
 const NewLineTag = '<newLine/>';
 // const BrIsNewLineStart = '<brIsNewLineStart/>';
@@ -117,6 +127,10 @@ module.exports = class NamumarkParser {
 
     get NamumarkParser() {
         return module.exports;
+    }
+
+    get sortedSyntaxes() {
+        return sortedSyntaxes;
     }
 
     static escape(str) {
@@ -154,6 +168,8 @@ module.exports = class NamumarkParser {
 
         if(sourceText.endsWith('\n')) sourceText = sourceText.slice(0, -1);
 
+        sourceText = sourceText.replaceAll('\n', NewLineTag);
+
         // 문법 파싱
         let text = '';
         const openedSyntaxes = [];
@@ -163,7 +179,8 @@ module.exports = class NamumarkParser {
             syntaxIndex = parseInt(syntaxIndex);
             const syntax = sortedSyntaxes[syntaxIndex];
             const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
-            const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
+            // 각주에 들어가는 이스케이프 문자 제거해야 함, Priority.Last 문법은 이스케이프 문자 영향 안 받음(파싱 중 생성됨)
+            const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1 - lastSyntaxCount;
             // if(text) {
             //     sourceText = text;
             //     text = '';
@@ -171,7 +188,12 @@ module.exports = class NamumarkParser {
 
             if(syntax.fullLine) {
                 if(debug) console.time('fullLine ' + syntax.name);
-                const lines = sourceText.split('\n');
+                const lines = sourceText
+                    .replaceAll(NoParagraphOpen, NoParagraphOpen + '<tempNewline/><newLine/>')
+                    .replaceAll(NoParagraphClose, NoParagraphClose + '<tempNewline/><newLine/>')
+                    .replaceAll('<*', NoParagraphClose + '<tempNewline/><newLine/>')
+                    .replaceAll('*>', NoParagraphClose + '<tempNewline/><newLine/>')
+                    .split(NewLineTag);
                 const newLines = [];
                 let removeNextNewLine = false;
                 for(let i in lines) {
@@ -193,6 +215,8 @@ module.exports = class NamumarkParser {
 
                     let setRemoveNextNewLine = false;
                     if(output != null) {
+                        output = output.replaceAll('\n', '');
+
                         if(output.includes('<removeNextNewline/>')) {
                             output = output.replace('<removeNextNewline/>', '');
                             setRemoveNextNewLine = true;
@@ -209,7 +233,7 @@ module.exports = class NamumarkParser {
 
                     if(setRemoveNextNewLine) removeNextNewLine = true;
                 }
-                text = newLines.join('\n');
+                text = newLines.join(NewLineTag).replaceAll('<tempNewline/><newLine/>', '');
                 if(debug) console.timeEnd('fullLine ' + syntax.name);
             }
             else {
@@ -224,7 +248,7 @@ module.exports = class NamumarkParser {
                     // const prevIsbr = sourceText.slice(i - 4, i) === '<br>';
                     // const nextChar = sourceText[i + 1];
                     // const isLineFirstByBr = brIsNewLineMode && prevIsbr;
-                    const isLineFirst = prevChar === '\n' || i === 0 || prevIsNewLineTag;
+                    const isLineFirst = i === 0 || prevIsNewLineTag;
 
                     if(isLineFirst) {
                         for(let syntaxIndex in openedSyntaxes) {
@@ -243,7 +267,7 @@ module.exports = class NamumarkParser {
                         continue;
                     }
 
-                    if(char === '<' && nextChar !== '[') {
+                    if(char === '<' && nextChar !== '[' && nextChar !== '*') {
                         const closeIndex = sourceText.slice(i).indexOf('>');
                         if(closeIndex !== -1) {
                             // const tagStr = sourceText.slice(i, i + closeIndex + 1);
@@ -288,7 +312,7 @@ module.exports = class NamumarkParser {
                             const originalContent = sourceText.slice(syntax.sourceIndex + syntax.openStr.length, i);
                             if(content) {
                                 const output = await syntax.format(content, this, originalContent, i, sourceText);
-                                if(output != null) text = text.slice(0, syntax.index) + output;
+                                if(output != null) text = text.slice(0, syntax.index) + output.replaceAll('\n', '');
                                 else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
                                 openedSyntaxes.splice(syntaxIndex, 1);
                             }
@@ -323,36 +347,10 @@ module.exports = class NamumarkParser {
             sourceText = text;
             text = '';
 
-            // 링크 처리 시 잠깐 removeNewlineAfterFullline 줄바꿈 제거
-            // ContentChange 직전
-            if(syntax.priority === Priority.ContentChange - 1
-                && syntax.priority !== nextSyntax.priority) {
-                sourceText = sourceText
-                    .replaceAll('\n<removeNewlineAfterFullline/>', '<removeNewlineAfterFulllineFront/>')
-                    .replaceAll('<removeNewlineAfterFullline/>\n', '<removeNewlineAfterFulllineBack/>');
-            }
-
-            // ContentChange 마지막
-            if(syntax.priority === Priority.ContentChange
-                && syntax.priority !== nextSyntax.priority) {
-                sourceText = sourceText
-                    .replaceAll('<removeNewlineAfterFulllineFront/>', '\n<removeNewlineAfterFullline/>')
-                    .replaceAll('<removeNewlineAfterFulllineBack/>', '<removeNewlineAfterFullline/>\n');
-            }
-
-            // FullLine 마지막
-            if(syntax.priority === Priority.FullLine
-                && syntax.priority !== nextSyntax.priority) {
-                sourceText = sourceText
-                    .replaceAll('\n<removeNewlineAfterFullline/>', '')
-                    .replaceAll('<removeNewlineAfterFullline/>\n', '')
-                    .replaceAll('<removeNewlineAfterFullline/>', '');
-            }
-
             // Last 직전
             if(syntax.priority === Priority.Last - 1
                 && syntax.priority !== nextSyntax.priority) {
-                sourceText += '<exitParagraph/><[footnotePos]>';
+                sourceText += '<noParagraph><cursorToEnd/><[footnotePos]></noParagraph>';
             }
         }
 
@@ -360,61 +358,61 @@ module.exports = class NamumarkParser {
         // console.log(sourceText);
 
         // paragraph 제어문 처리
-        sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
-        text = '';
-
-        let insertPos = 0;
-        let nextInsertPos = 0;
-        let sourceTextPos = 0;
-        while(sourceTextPos < sourceText.length) {
-            const paragraphPosTagPos = sourceText.indexOf(ParagraphPosTag, sourceTextPos);
-            const enterParagraphTagPos = sourceText.indexOf(EnterParagraphTag, sourceTextPos);
-            const exitParagraphTagPos = sourceText.indexOf(ExitParagraphTag, sourceTextPos);
-            const posList = [paragraphPosTagPos, enterParagraphTagPos, exitParagraphTagPos].filter(a => a !== -1);
-
-            const fastestPos = posList.length ? Math.min(...posList) : sourceText.length;
-
-            if(paragraphPosTagPos === sourceTextPos) {
-                const WikiParagraphOpen = '<div class="wiki-paragraph"><removeNewline/>\n';
-                const WikiParagraphTag = WikiParagraphOpen + '\n<removeNewline/></div>';
-
-                insertPos += WikiParagraphTag.length;
-
-                nextInsertPos = text.length + WikiParagraphOpen.length;
-                text += WikiParagraphTag;
-                sourceTextPos += ParagraphPosTag.length;
-                continue;
-            }
-            else if(enterParagraphTagPos === sourceTextPos) {
-                insertPos = nextInsertPos;
-                sourceTextPos += EnterParagraphTag.length;
-                continue;
-            }
-            else if(exitParagraphTagPos === sourceTextPos) {
-                insertPos = text.length;
-                sourceTextPos += ExitParagraphTag.length;
-                continue;
-            }
-
-            const newTag = sourceText.slice(sourceTextPos, fastestPos);
-            text = utils.insertText(text, insertPos, newTag);
-            insertPos += newTag.length;
-            sourceTextPos = fastestPos;
-        }
+        // sourceText = ParagraphPosTag + EnterParagraphTag + sourceText;
+        // text = '';
+        //
+        // let insertPos = 0;
+        // let nextInsertPos = 0;
+        // let sourceTextPos = 0;
+        // while(sourceTextPos < sourceText.length) {
+        //     const paragraphPosTagPos = sourceText.indexOf(ParagraphPosTag, sourceTextPos);
+        //     const enterParagraphTagPos = sourceText.indexOf(EnterParagraphTag, sourceTextPos);
+        //     const exitParagraphTagPos = sourceText.indexOf(ExitParagraphTag, sourceTextPos);
+        //     const posList = [paragraphPosTagPos, enterParagraphTagPos, exitParagraphTagPos].filter(a => a !== -1);
+        //
+        //     const fastestPos = posList.length ? Math.min(...posList) : sourceText.length;
+        //
+        //     if(paragraphPosTagPos === sourceTextPos) {
+        //         const WikiParagraphOpen = '<div class="wiki-paragraph"><removeNewline/>\n';
+        //         const WikiParagraphTag = WikiParagraphOpen + '\n<removeNewline/></div>';
+        //
+        //         insertPos += WikiParagraphTag.length;
+        //
+        //         nextInsertPos = text.length + WikiParagraphOpen.length;
+        //         text += WikiParagraphTag;
+        //         sourceTextPos += ParagraphPosTag.length;
+        //         continue;
+        //     }
+        //     else if(enterParagraphTagPos === sourceTextPos) {
+        //         insertPos = nextInsertPos;
+        //         sourceTextPos += EnterParagraphTag.length;
+        //         continue;
+        //     }
+        //     else if(exitParagraphTagPos === sourceTextPos) {
+        //         insertPos = text.length;
+        //         sourceTextPos += ExitParagraphTag.length;
+        //         continue;
+        //     }
+        //
+        //     const newTag = sourceText.slice(sourceTextPos, fastestPos);
+        //     text = utils.insertText(text, insertPos, newTag);
+        //     insertPos += newTag.length;
+        //     sourceTextPos = fastestPos;
+        // }
 
         // console.log('=== paragraph 제어문 처리 후 ===');
         // console.log(text);
 
         // 리스트
-        text = listParser.parse(text);
+        // text = listParser.parse(sourceText);
 
         // removeNewline 및 특수기능 제거 처리
-        text = text
-            .replaceAll('<removeNewlineLater/>', '<removeNewline/>')
-            .replaceAll('\n<removeNewline/>', '')
-            .replaceAll('<removeNewline/>\n', '')
-            .replaceAll('<removeNewline/>', '')
-            .replaceAll('<newLine/>', '<br>');
+        // text = text
+            // .replaceAll('<removeNewlineLater/>', '<removeNewline/>')
+            // .replaceAll('<newLine/><removeNewline/>', '')
+            // .replaceAll('<removeNewline/><newLine/>', '')
+            // .replaceAll('<removeNewline/>', '')
+            // .replaceAll('<newLine/>', '<br>');
 
             // .replaceAll(BrIsNewLineStart, '')
             // .replaceAll(BrIsNewLineEnd, '');
@@ -422,19 +420,30 @@ module.exports = class NamumarkParser {
         // console.log('=== removeNewline 처리 후 ===');
         // console.log(text);
 
+        // console.log('== 리스트 파싱 후 ==');
+        // console.log(text);
         // 인덴트
-        {
+        if(false){
             sourceText = text;
 
-            const lines = sourceText.split('\n');
+            const lines = sourceText.split(NewLineTag);
             const newLines = [];
             let prevSpaceCount = 0;
             for(let line of lines) {
+                let removeNoParagraph = false;
+                if(line.startsWith('<removeNoParagraph/>')) {
+                    line = line.slice('<removeNoParagraph/>'.length);
+                    removeNoParagraph = true;
+                }
+
+                const noParagraphOpen = removeNoParagraph ? '' : '<noParagraph>';
+                const noParagraphClose = removeNoParagraph ? '' : '</noParagraph>';
+
                 let spaceCount = 0;
                 for(let i = 0; i < line.length; i++) {
                     const char = line[i];
                     if(char === '<') {
-                        const closeStr = '/>';
+                        const closeStr = '>';
                         const closeIndex = line.slice(i).indexOf(closeStr);
                         if(closeIndex !== -1) {
                             i += closeIndex + closeStr.length - 1;
@@ -448,10 +457,16 @@ module.exports = class NamumarkParser {
                 line = line.trimStart();
 
                 if(spaceCount > prevSpaceCount) {
-                    line = '</div><div class="wiki-indent"><div class="wiki-paragraph">' + line;
+                    line = noParagraphOpen
+                        + '<div class="wiki-indent">'.repeat(spaceCount - prevSpaceCount)
+                        + noParagraphClose
+                        + line;
                 }
                 else if(spaceCount < prevSpaceCount) {
-                    line = '</div></div><div class="wiki-paragraph">' + line;
+                    line = noParagraphOpen
+                        + '</div>'.repeat(prevSpaceCount - spaceCount)
+                        + noParagraphClose
+                        + line;
                 }
 
                 if(!newLines.length || spaceCount === prevSpaceCount) newLines.push(line);
@@ -460,39 +475,52 @@ module.exports = class NamumarkParser {
                 prevSpaceCount = spaceCount;
             }
 
-            for(let i = prevSpaceCount; i > 0; i--) {
-                newLines[newLines.length - 1] += '</div></div><div class="wiki-paragraph">';
+            if(prevSpaceCount > 0) {
+                newLines[newLines.length - 1] += NoParagraphOpen
+                    + '</div>'.repeat(prevSpaceCount)
+                    + NoParagraphClose;
             }
 
-            text = newLines.join('\n');
+            text = newLines.join(NewLineTag);
         }
 
+        // sourceText = text
+            // .replaceAll('<newLine/>' + NoParagraphOpen, NoParagraphOpen)
+            // .replaceAll(NoParagraphClose + '<newLine/>', NoParagraphClose);
+        // text = '';
+
+        // console.log(sourceText);
+
+        text = postProcess(sourceText);
+
+        // console.log(text);
+
         // removeNewLineAfterIndent 처리
-        text = text
-            .replaceAll('<removeNewLineAfterIndent/>\n', '')
-            .replaceAll('\n<removeNewLineAfterIndent/>', '')
-            .replaceAll('<removeNewLineAfterIndent/>', '');
+        // text = text
+        //     .replaceAll('<removeNewLineAfterIndent/>\n', '')
+        //     .replaceAll('\n<removeNewLineAfterIndent/>', '')
+        //     .replaceAll('<removeNewLineAfterIndent/>', '');
 
         // paragraph 다음 줄바꿈 정리
-        text = text.replaceAll(ParagraphOpen + '\n', ParagraphOpen);
+        // text = text.replaceAll(ParagraphOpen + '\n', ParagraphOpen);
 
         // 빈 paragraph 제거
-        text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
-        if(text.startsWith(FullParagraphTag)) text = text.slice(FullParagraphTag.length);
-        if(text.endsWith(ParagraphOpen)) text = text.slice(0, -ParagraphOpen.length);
-        if(text.endsWith(FullParagraphTag)) text = text.slice(0, -FullParagraphTag.length);
+        // text = text.replaceAll('<div class="wiki-paragraph"></div>', '');
+        // if(text.startsWith(FullParagraphTag)) text = text.slice(FullParagraphTag.length);
+        // if(text.endsWith(ParagraphOpen)) text = text.slice(0, -ParagraphOpen.length);
+        // if(text.endsWith(FullParagraphTag)) text = text.slice(0, -FullParagraphTag.length);
 
         // indent 전 빈 paragraph 제거
         // text = text.replaceAll(FullParagraphTag + '<div class="wiki-indent">', '<div class="wiki-indent">');
 
-        // 남은 removeNewParagraph 제거
-        text = text.replaceAll('<removeNewParagraph/>', '');
+        // 남은 removeNoParagraph 제거
+        text = text.replaceAll('<removeNoParagraph/>', '');
 
         let html = `${this.includeData ? '' : '<div class="wiki-content">'}${
             text
-                .replaceAll('\n', '<br>')
-                .replaceAll('<br><removebr/>', '')
-                .replaceAll('<removebr/>', '')
+                .replaceAll(NewLineTag, '<br>')
+                // .replaceAll('<br><removebr/>', '')
+                // .replaceAll('<removebr/>', '')
         }${this.includeData ? '' : '</div>'}`;
 
         if(debug||true) console.timeEnd(`parse "${this.document.title}"`);

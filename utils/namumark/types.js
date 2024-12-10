@@ -1,13 +1,14 @@
 module.exports = {
     Priority: {
         Literal: 1,
-        ContentChange: 2,
-        Table: 3,
-        FullLine: 4,
-        LiteralFormat: 5,
-        Format: 6,
-        Footnote: 7,
-        Last: 8
+        Comment: 2,
+        ContentChange: 3,
+        Table: 4,
+        FullLine: 5,
+        LiteralFormat: 6,
+        Format: 7,
+        Footnote: 8,
+        Last: 9
     },
     AllowedLanguages: [
         'basic',
@@ -36,5 +37,17 @@ module.exports = {
         'swift',
         'typescript',
         'xml'
-    ].sort((a, b) => b.length - a.length)
+    ].sort((a,
+b) => b.length - a.length),
+    SelfClosingTags: [
+        'img',
+        'br',
+        'hr',
+        'area',
+        'base',
+        'basefont',
+        'input',
+        'link',
+        'meta'
+    ],
 }

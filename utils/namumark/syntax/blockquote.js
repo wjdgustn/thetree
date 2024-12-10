@@ -1,5 +1,7 @@
-const listParser = require('../listParser');
 const hrSyntax = require('../syntax/hr');
+// const makeParagraph = require('../makeParagraph');
+const postProcess = require('../postProcess');
+const listParser = require('../postProcess/listParser');
 
 module.exports = {
     fullLine: true,
@@ -17,38 +19,44 @@ module.exports = {
         const getShouldMakeNewQuote = () => !!quoteLines.length && (!isQuote || lineSpaces !== lastLineSpaces || isLastLine);
         const shouldMakeNewQuote = getShouldMakeNewQuote();
 
+        console.log('lineSpaces:', lineSpaces, 'lastLineSpaces:', lastLineSpaces, ' content:', content);
+
         let output;
         const makeNewQuote = () => {
-            const indentCount = isLastLine ? lineSpaces : lastLineSpaces;
-            let text = quoteLines.join('\n');
+            const indentCount = (isQuote && isLastLine) ? lineSpaces : lastLineSpaces;
+            let text = quoteLines.join('<newLine/>');
 
             quoteLines.length = 0;
             namumark.syntaxData.lastLineSpaces = null;
             namumark.syntaxData.lastQuoteLevel = null;
 
             // wiki 문법 안 인용문 하드코딩
-            const removeNewParagraph = text.includes('<removeNewParagraph/>');
-            const needNewline = content.startsWith(' ') || removeNewParagraph;
+            // const removeNewParagraph = text.includes('<removeNewParagraph/>');
+            const removeNoParagraph = text.includes('<removeNoParagraph/>');
+            // const needNewline = content.startsWith(' ') || removeNewParagraph;
 
-            if(removeNewParagraph) text = text.replaceAll('<removeNewParagraph/>', '');
+            // if(removeNewParagraph) text = text.replaceAll('<removeNewParagraph/>', '');
+            if(removeNoParagraph) text = text.replaceAll('<removeNoParagraph/>', '');
 
+            const noParagraphOpen = removeNoParagraph ? '' : '<noParagraph>';
+            const noParagraphClose = removeNoParagraph ? '' : '</noParagraph>';
+
+            console.log('makeNewQuote! indentCount:', indentCount, 'text:', text);
             output = `
-<removeNewlineLater/>
-${removeNewParagraph ? '' : '</div>'}
+${noParagraphOpen}
 ${'<div class="wiki-indent">'.repeat(indentCount)}
 <blockquote class="wiki-quote">
-<div class="wiki-paragraph">
-${listParser.parse(text).replaceAll('\n<removeNewline/>', '').replaceAll('\n', '<br>')}
-</div>
+${noParagraphClose}
+${removeNoParagraph ? postProcess(text) : text}
+${noParagraphOpen}
 </blockquote>
 ${'</div>'.repeat(indentCount)}
-${removeNewParagraph ? '' : '<div class="wiki-paragraph">'}
-${needNewline ? '' : '<removeNewlineLater/>'}
+${noParagraphClose}
 `
-                    .replaceAll('\n', '')
-                    .replaceAll('<br><removeNewlineLater/>', '')
-                    .replaceAll('<removeNewlineLater/><br>', '')
-                + (isQuote ? '' : (needNewline ? '\n' : '') + content + (removeNewParagraph ? '' : '\n'));
+                    // .replaceAll('\n', '')
+                    // .replaceAll('<br><removeNewlineLater/>', '')
+                    // .replaceAll('<removeNewlineLater/><br>', '')
+                + (isQuote ? '' : '<newLine/>' + content + '<newLine/>');
         }
 
         if(shouldMakeNewQuote && !isLastLine) makeNewQuote();
@@ -71,7 +79,7 @@ ${needNewline ? '' : '<removeNewlineLater/>'}
 
             if(hrSyntax.check(text)) text = hrSyntax.format(text);
 
-            const childQuoteCloseStr = '</div></blockquote><div class="wiki-paragraph"><removeNewlineLater/>';
+            const childQuoteCloseStr = '<noParagraph></blockquote></noParagraph>';
 
             if(lastQuoteLevel && quoteLevel !== 1 && lastQuoteLevel !== 1) {
                 const sliceCount = quoteLevel < lastQuoteLevel
@@ -83,7 +91,9 @@ ${needNewline ? '' : '<removeNewlineLater/>'}
 
             const repeatCount = Math.max(0, quoteLevel - (lastQuoteLevel ?? 1));
             quoteLines.push(
-                '</div><blockquote class="wiki-quote"><div class="wiki-paragraph">'.repeat(repeatCount)
+                '<noParagraph>'
+                + '<blockquote class="wiki-quote">'.repeat(repeatCount)
+                + '</noParagraph>'
                 + text
                 + childQuoteCloseStr.repeat(quoteLevel - 1)
             );

@@ -1,8 +1,6 @@
 const utils = require('../../utils');
 const CSSFilter = require('./cssFilter');
-const listParser = require('../../listParser');
-const tableSyntax = require('../table');
-const removeNewParagraph = require('../../removeNewParagraph');
+const removeNoParagraph = require('../../removeNoParagraph');
 
 module.exports = (content, namumark) => {
     const splittedContent = content.split(' ');
@@ -11,7 +9,7 @@ module.exports = (content, namumark) => {
     if(firstParam.startsWith('#!wiki')) {
         content = utils.parseIncludeParams(content, namumark.includeData);
 
-        let lines = content.split('\n');
+        let lines = content.split('<newLine/>');
         let wikiParamsStr = lines[0].slice('#!wiki '.length);
 
         const styleCloseStr = '&quot;';
@@ -36,37 +34,38 @@ module.exports = (content, namumark) => {
 
         lines = lines.slice(1);
 
-        let { text, hasList } = removeNewParagraph(lines.join('\n'));
-        if(text.endsWith('\n')) text = text.slice(0, -1);
+        let { text } = removeNoParagraph(lines.join('<newLine/>'));
+        if(text.endsWith('<newLine/>')) text = text.slice(0, -'<newLine/>'.length);
 
         // 리스트 미리 파싱
-        if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
-            .replaceAll('\n<removeNewline/>', '')
-            .replaceAll('<removeNewline/>\n', '')
-            .replaceAll('<removeNewline/>', '');
+        // if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
+        //     .replaceAll('\n<removeNewline/>', '')
+        //     .replaceAll('<removeNewline/>\n', '')
+        //     .replaceAll('<removeNewline/>', '');
 
         // 표 미리 파싱
-        text = tableSyntax.parse(text, true);
+        // text = tableSyntax.parse(text, true);
 
         // text = text.replaceAll('\n', '<newLine/>');
 
-        return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><removeNewlineAfterFullline/>\n${text}\n<removeNewlineAfterFullline/></div>`;
+        return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><*${text}*></div>`;
     }
 
     if(firstParam.startsWith('#!folding')) {
-        const lines = content.split('\n');
+        const lines = content.split('<newLine/>');
         const foldingText = namumark.escape(lines[0].slice('#!folding'.length) || 'More');
-        let { text, hasList } = removeNewParagraph(lines.slice(1).join('\n'));
+        // let { text, hasList } = removeNewParagraph(lines.slice(1).join('\n'));
+        let text = lines.slice(1).join('<newLine/>');
 
         // 리스트 미리 파싱
-        if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
-            .replaceAll('\n<removeNewline/>', '')
-            .replaceAll('<removeNewline/>\n', '')
-            .replaceAll('<removeNewline/>', '');
+        // if(hasList) text = listParser.parse(text + '\n').slice(0, -1)
+        //     .replaceAll('\n<removeNewline/>', '')
+        //     .replaceAll('<removeNewline/>\n', '')
+        //     .replaceAll('<removeNewline/>', '');
 
         // 표 미리 파싱
-        text = tableSyntax.parse(text, true);
+        // text = tableSyntax.parse(text, true);
 
-        return `<dl class="wiki-folding"><dt>${foldingText}</dt><dd class="wiki-folding-close-anim"><removeNewlineAfterFullline/>\n${text}\n<removeNewlineAfterFullline/></dd></dl>`;
+        return `<dl class="wiki-folding"><dt>${foldingText}</dt><dd class="wiki-folding-close-anim">${text}</dd></dl>`;
     }
 }

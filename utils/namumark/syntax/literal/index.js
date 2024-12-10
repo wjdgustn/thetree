@@ -18,17 +18,17 @@ module.exports = {
 
         originalContent = originalContent.replaceAll('\\', '\\\\');
 
-        if(content.includes('\n')) {
+        if(content.includes('<newLine/>')) {
             let result = namumark.escape(originalContent);
 
-            const firstLine = content.split('\n')[0];
+            const firstLine = content.split('<newLine/>')[0];
             if(firstLine.startsWith('#!syntax ')) {
                 const param = firstLine.slice('#!syntax '.length);
                 const language = AllowedLanguages.find(a => param.startsWith(a));
                 if(language) {
                     let codeStr = utils.unescapeHtml(originalContent.slice('#!syntax '.length + language.length));
-                    if(codeStr.startsWith('\n')) codeStr = codeStr.slice(1);
-                    result = highlight(codeStr, { language }).value.replaceAll('\n', '<br>');
+                    if(codeStr.startsWith('<newLine/>')) codeStr = codeStr.slice(1);
+                    result = highlight(codeStr, { language }).value.replaceAll('<newLine/>', '<br>');
                     console.log(result);
                 }
             }
