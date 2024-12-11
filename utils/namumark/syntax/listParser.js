@@ -189,13 +189,15 @@ module.exports = {
                     const indentCount = listSpace - lastListSpace;
                     let trimedLine = line.trimStart();
                     const prevContent = newLines.at(-1);
-                    const closeParagraph = dontCloseNoParagraphOnClose ? '</div>' : '<!noParagraph>';
+                    // const closeParagraph = dontCloseNoParagraphOnClose ? '</div>' : '<!noParagraph>';
+                    const closeParagraph = '</div>';
                     const prevWithoutCloseParagraph = prevContent.slice(0, -(closeParagraph).length);
 
                     // if(hrSyntax.check(trimedLine)) trimedLine = hrSyntax.format(trimedLine);
                     // trimedLine = tableSyntax.parse(trimedLine);
 
-                    newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}${closeParagraph}`;
+                    // TODO: 이전 라인과 문법 한번에 처리
+                    newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}<newLine/>${'<div class="wiki-indent">'.repeat(indentCount)}${(await namumark.parse(trimedLine, true, true)).html}${'</div>'.repeat(indentCount)}${closeParagraph}`;
                     newLine = null;
                 } else {
                     // console.log('close all lists', line);
