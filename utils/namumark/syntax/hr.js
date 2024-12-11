@@ -22,6 +22,6 @@ module.exports = {
         const trimedContent = content.trimStart();
         const spaceCount = content.length - trimedContent.length;
 
-        return `<noParagraph>${' '.repeat(spaceCount)}<hr></noParagraph>`;
+        return `<!noParagraph>${' '.repeat(spaceCount)}<hr><!/noParagraph>`;
     }
 }

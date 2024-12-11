@@ -1,6 +1,8 @@
-const hrSyntax = require('../syntax/hr');
+const { Priority } = require('../types');
+
+// const hrSyntax = require('../syntax/hr');
 // const tableSyntax = require('../syntax/table');
-const postProcessNoList = require('./postProcessNoList');
+// const postProcessNoList = require('./index');
 
 const numberedListTypes = {
     '*': '',
@@ -12,17 +14,19 @@ const numberedListTypes = {
 }
 
 module.exports = {
+    priority: Priority.ChildParser,
+    fullContent: true,
     lineIsList: line => line.startsWith(' ')
         && Object.keys(numberedListTypes).some(a => line.trim().startsWith(a)),
     getListTypeStr: line => Object.keys(numberedListTypes).find(a => line.trimStart().startsWith(a)),
-    parse: function(sourceText) {
+    format: async function(sourceText, namumark) {
         // console.log('=== 리스트 파싱 전 ===');
         // console.log(sourceText);
 
         // const lines = sourceText.split('<newLine/>');
         const lines = sourceText
-            // .replaceAll('<noParagraph>', '<noParagraph>' + '<tempNewline/><newLine/>')
-            // .replaceAll('</noParagraph>', '</noParagraph>' + '<tempNewline/><newLine/>')
+            // .replaceAll('<!noParagraph>', '<!noParagraph>' + '<tempNewline/><newLine/>')
+            // .replaceAll('<!/noParagraph>', '<!/noParagraph>' + '<tempNewline/><newLine/>')
             .split('<newLine/>');
         const newLines = [];
         let listCloseTags = [];
@@ -94,7 +98,7 @@ module.exports = {
                     noStartNum = true;
                     listContent = listContent.slice(1);
                 }
-                if(hrSyntax.check(listContent)) listContent = hrSyntax.format(listContent);
+                // if(hrSyntax.check(listContent)) listContent = hrSyntax.format(listContent);
                 // listContent = tableSyntax.parse(listContent);
 
                 // const removeNewParagraph = listContent.includes('<removeNewParagraph/>');
@@ -102,8 +106,8 @@ module.exports = {
                 const removeNoParagraph = listContent.includes('<removeNoParagraph/>');
                 if(removeNoParagraph) listContent = listContent.replaceAll('<removeNoParagraph/>', '');
 
-                const noParagraphOpen = removeNoParagraph ? '' : '<noParagraph>';
-                const noParagraphClose = removeNoParagraph ? '' : '</noParagraph>';
+                const noParagraphOpen = removeNoParagraph ? '' : '<!noParagraph>';
+                const noParagraphClose = removeNoParagraph ? '' : '<!/noParagraph>';
 
                 const changeList = listTypeStr !== lastListTypeStr || listSpace !== lastListSpace;
                 const isIncreasing = listSpace > lastListSpace;
@@ -160,8 +164,9 @@ module.exports = {
 
                         if(level === 1) {
                             // if(removeNewParagraph) dontOpenParagraphOnClose = true;
-                            if(removeNoParagraph) dontCloseNoParagraphOnClose = true;
-                            else prevLine += noParagraphOpen;
+                            // if(removeNoParagraph) dontCloseNoParagraphOnClose = true;
+                            // else prevLine += noParagraphOpen;
+                            prevLine += noParagraphOpen;
                         }
                         prevLine += `${'<div class="wiki-indent">'.repeat(indentCount)}<${tagName} class="${`wiki-list ${listClass}`.trim()}"${startNum ? ` start="${startNum}"` : ''}>`;
                         // console.log(`open list! prevLine: ${prevLine}`);
@@ -173,7 +178,8 @@ module.exports = {
                     // console.log(`close prev item! prevLine: ${prevLine}`);
                 }
 
-                newLine += `<removeNewline/><li>${noParagraphClose}${removeNoParagraph ? postProcessNoList(listContent) : listContent}${noParagraphOpen}`;
+                // console.log('listContent:', listContent);
+                newLine += `<removeNewline/><li>${(await namumark.parse(listContent, true)).html}`;
                 // console.log(`add item! newLine: ${newLine}`);
 
                 lastListSpace = listSpace;
@@ -183,10 +189,10 @@ module.exports = {
                     const indentCount = listSpace - lastListSpace;
                     let trimedLine = line.trimStart();
                     const prevContent = newLines.at(-1);
-                    const closeParagraph = dontCloseNoParagraphOnClose ? '</div>' : '<noParagraph>';
+                    const closeParagraph = dontCloseNoParagraphOnClose ? '</div>' : '<!noParagraph>';
                     const prevWithoutCloseParagraph = prevContent.slice(0, -(closeParagraph).length);
 
-                    if(hrSyntax.check(trimedLine)) trimedLine = hrSyntax.format(trimedLine);
+                    // if(hrSyntax.check(trimedLine)) trimedLine = hrSyntax.format(trimedLine);
                     // trimedLine = tableSyntax.parse(trimedLine);
 
                     newLines[newLines.length - 1] = `${prevWithoutCloseParagraph}\n${'<div class="wiki-indent">'.repeat(indentCount)}${trimedLine}${'</div>'.repeat(indentCount)}${closeParagraph}`;
@@ -204,7 +210,7 @@ module.exports = {
                     if(prevWasList) {
                         // console.log('prevWasList:', prevWasList);
                         if(!dontCloseNoParagraphOnClose) {
-                            prevLine += '</noParagraph>';
+                            prevLine += '<!/noParagraph>';
                             prevLine += '<removeNewline/>';
                         }
                     }

@@ -1,13 +1,13 @@
 const utils = require('../utils');
 const { SelfClosingTags } = require('../types');
 
-const NoParagraphOpen = '<noParagraph>';
-const NoParagraphClose = '</noParagraph>';
+const NoParagraphOpen = '<!noParagraph>';
+const NoParagraphClose = '<!/noParagraph>';
 const ParagraphOpen = '<div class="wiki-paragraph">';
 const TempParagraphClose = '<paragraphClose/>';
 const ParagraphClose = '</div>';
 
-module.exports = (sourceText, noTopParagraph = false) => {
+module.exports = (sourceText, childParse = false, disableNoParagraph = false) => {
     let text = '';
 
     let paragraphOpened = false;
@@ -24,9 +24,9 @@ module.exports = (sourceText, noTopParagraph = false) => {
         const noParagraphPos = sourceText.indexOf(NoParagraphOpen, sourceTextPos);
         const noParagraphClosePos = sourceText.indexOf(NoParagraphClose, sourceTextPos);
         // const closeParagraphPos = sourceText.indexOf('<closeParagraph/>', sourceTextPos);
-        const cursorPosPos = sourceText.indexOf('<cursorPos/>', sourceTextPos);
-        const goToCursorPos = sourceText.indexOf('<goToCursor/>', sourceTextPos);
-        const cursorToEndPos = sourceText.indexOf('<cursorToEnd/>', sourceTextPos);
+        const cursorPosPos = sourceText.indexOf('<!cursorPos/>', sourceTextPos);
+        const goToCursorPos = sourceText.indexOf('<!goToCursor/>', sourceTextPos);
+        const cursorToEndPos = sourceText.indexOf('<!cursorToEnd/>', sourceTextPos);
         // const posList = [
         //     noParagraphPos,
         //     noParagraphClosePos,
@@ -66,17 +66,17 @@ module.exports = (sourceText, noTopParagraph = false) => {
         }
         else if(cursorPosPos === sourceTextPos) {
             nextCursorPos = text.length;
-            sourceTextPos += '<cursorPos/>'.length;
+            sourceTextPos += '<!cursorPos/>'.length;
             continue;
         }
         else if(goToCursorPos === sourceTextPos) {
             cursorPos = nextCursorPos;
-            sourceTextPos += '<goToCursor/>'.length;
+            sourceTextPos += '<!goToCursor/>'.length;
             continue;
         }
         else if(cursorToEndPos === sourceTextPos) {
             cursorPos = text.length;
-            sourceTextPos += '<cursorToEnd/>'.length;
+            sourceTextPos += '<!cursorToEnd/>'.length;
             continue;
         }
 
@@ -103,13 +103,13 @@ module.exports = (sourceText, noTopParagraph = false) => {
             }
         }
 
-        if(!paragraphOpened && !noParagraph && (!noTopParagraph/* || htmlLevel > 0*/)) {
+        if(!paragraphOpened && !noParagraph && !disableNoParagraph) {
             // console.log('open paragraph, noParagraph:', noParagraph, 'htmlLevel:', htmlLevel);
             newText += ParagraphOpen;
             paragraphOpened = true;
         }
 
-        let nextTagPos = sourceText.indexOf('<', sourceTextPos + 1);
+        let nextTagPos = sourceText.indexOf('<!', sourceTextPos + 1);
         if(nextTagPos < 0) nextTagPos = sourceText.length;
 
         newText += sourceText.slice(sourceTextPos, nextTagPos);
@@ -125,10 +125,15 @@ module.exports = (sourceText, noTopParagraph = false) => {
 
         .replaceAll('<newLine/>' + TempParagraphClose, '</div>')
         .replaceAll(TempParagraphClose, '</div>')
+
         .replaceAll('<removeNewlineLater/>', '<removeNewline/>')
         .replaceAll('<newLine/><removeNewline/>', '')
         .replaceAll('<removeNewline/><newLine/>', '')
         .replaceAll('<removeNewline/>', '');
+
+    if(!childParse) text = text
+        .replaceAll('<*', '')
+        .replaceAll('*>', '');
 
     const emptyTempParagraph = ParagraphOpen + ParagraphClose;
     if(text.startsWith(emptyTempParagraph)) text = text.slice(emptyTempParagraph.length);

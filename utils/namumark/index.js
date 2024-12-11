@@ -15,7 +15,8 @@ const syntaxDefaultValues = {
     allowMultiline: false,
     priority: Priority.Format,
     fullLine: false,
-    noEscapeChar: false
+    noEscapeChar: false,
+    fullContent: false
 }
 
 let syntaxes = [];
@@ -41,8 +42,6 @@ const syntaxLoader = (subDir = '') => {
             for(let [key, value] of Object.entries(syntaxDefaultValues)) {
                 if(syntax[key] == null) {
                     syntax[key] = value;
-
-                    if(key === 'priority' && syntax.fullLine) syntax[key] = Priority.FullLine;
                 }
             }
 
@@ -74,9 +73,9 @@ const syntaxLoader = (subDir = '') => {
 
 syntaxLoader();
 
-const skipNamumarkHtmlTags = [
-    'code'
-]
+// const skipNamumarkHtmlTags = [
+//     'code'
+// ]
 
 let escapeTags = [];
 for(let syntax of sortedSyntaxes) {
@@ -101,8 +100,8 @@ const TempParagraphClose = '<paragraphClose/>';
 const ParagraphClose = '</div>';
 // const ParagraphCloseStr = RemoveBrTag + ParagraphClose;
 const FullParagraphTag = ParagraphOpen + ParagraphClose;
-const NoParagraphOpen = '<noParagraph>';
-const NoParagraphClose = '</noParagraph>';
+const NoParagraphOpen = '<!noParagraph>';
+const NoParagraphClose = '<!/noParagraph>';
 
 const NewLineTag = '<newLine/>';
 // const BrIsNewLineStart = '<brIsNewLineStart/>';
@@ -145,26 +144,35 @@ module.exports = class NamumarkParser {
         return NamumarkParser.escape(str);
     }
 
+    get syntaxData() {
+        return this.syntaxDataList[this.childDepth];
+    }
+
     async parseEditorComment(input) {
         const lines = input.split('\n');
         const editorLines = lines.filter(l => l.startsWith('##@')).map(l => l.slice(3));
         return await this.parse(editorLines.join('\n'));
     }
 
-    async parse(input) {
-        if(debug||true) console.time(`parse "${this.document.title}"`);
+    async parse(input, childParse = false, disableNoParagraph = false) {
+        if((debug||true) && !childParse) console.time(`parse "${this.document.title}"`);
 
-        this.links = [];
-        this.files = [];
-        this.includes = [];
+        if(!childParse) {
+            this.childDepth = 0;
 
-        this.categories = [];
+            this.links = [];
+            this.files = [];
+            this.includes = [];
 
-        this.headings = [];
-        this.footnoteValues = {};
-        this.footnoteList = [];
+            this.categories = [];
 
-        let sourceText = utils.escapeHtml(input);
+            this.headings = [];
+            this.footnoteValues = {};
+            this.footnoteList = [];
+        }
+        else this.childDepth++;
+
+        let sourceText = childParse ? input : utils.escapeHtml(input);
 
         if(sourceText.endsWith('\n')) sourceText = sourceText.slice(0, -1);
 
@@ -174,25 +182,31 @@ module.exports = class NamumarkParser {
         let text = '';
         const openedSyntaxes = [];
         for(let syntaxIndex in sortedSyntaxes) {
-            this.syntaxData = {};
+            this.syntaxDataList ??= [];
+            this.syntaxDataList[this.childDepth] = {};
 
             syntaxIndex = parseInt(syntaxIndex);
             const syntax = sortedSyntaxes[syntaxIndex];
             const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
             // 각주에 들어가는 이스케이프 문자 제거해야 함, Priority.Last 문법은 이스케이프 문자 영향 안 받음(파싱 중 생성됨)
-            const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1 - lastSyntaxCount;
+            const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
             // if(text) {
             //     sourceText = text;
             //     text = '';
             // }
 
-            if(syntax.fullLine) {
-                if(debug) console.time('fullLine ' + syntax.name);
+            if(childParse
+                && (
+                    syntax.priority <= Priority.Footnote
+                    || syntax.priority >= Priority.Last
+                )) continue;
+
+            if(syntax.fullContent) {
+                text = await syntax.format(sourceText, this);
+            }
+            else if(syntax.fullLine) {
+                if(debug && !childParse) console.time('fullLine ' + syntax.name);
                 const lines = sourceText
-                    .replaceAll(NoParagraphOpen, NoParagraphOpen + '<tempNewline/><newLine/>')
-                    .replaceAll(NoParagraphClose, NoParagraphClose + '<tempNewline/><newLine/>')
-                    .replaceAll('<*', NoParagraphClose + '<tempNewline/><newLine/>')
-                    .replaceAll('*>', NoParagraphClose + '<tempNewline/><newLine/>')
                     .split(NewLineTag);
                 const newLines = [];
                 let removeNextNewLine = false;
@@ -233,13 +247,13 @@ module.exports = class NamumarkParser {
 
                     if(setRemoveNextNewLine) removeNextNewLine = true;
                 }
-                text = newLines.join(NewLineTag).replaceAll('<tempNewline/><newLine/>', '');
-                if(debug) console.timeEnd('fullLine ' + syntax.name);
+                text = newLines.join(NewLineTag);
+                if(debug && !childParse) console.timeEnd('fullLine ' + syntax.name);
             }
             else {
                 // let brIsNewLineMode = false;
 
-                if(debug) console.time('syntax ' + syntax.name);
+                if(debug && !childParse) console.time('syntax ' + syntax.name);
                 outer: for (let i = 0; i < sourceText.length; i++) {
                     const char = sourceText[i];
                     const prevChar = sourceText[i - 1];
@@ -261,14 +275,15 @@ module.exports = class NamumarkParser {
                         }
                     }
 
-                    if(!syntax.noEscapeChar && char === '\\') {
+                    if((!syntax.noEscapeChar || !openedSyntaxes.length) && char === '\\') {
                         if(!isLastSyntax) text += '\\';
                         text += sourceText[++i] || '';
                         continue;
                     }
 
-                    if(char === '<' && nextChar !== '[' && nextChar !== '*') {
-                        const closeIndex = sourceText.slice(i).indexOf('>');
+                    if(char === '<' && nextChar !== '[') {
+                        const closeStr = nextChar === '*' ? '*>' : '>';
+                        const closeIndex = sourceText.slice(i).indexOf(closeStr);
                         if(closeIndex !== -1) {
                             // const tagStr = sourceText.slice(i, i + closeIndex + 1);
 
@@ -281,26 +296,26 @@ module.exports = class NamumarkParser {
                             //     console.log('brIsNewLineMode end!');
                             // }
 
-                            text += sourceText.slice(i, i + closeIndex + 1);
+                            text += sourceText.slice(i, i + closeIndex + closeStr.length);
 
-                            i += closeIndex;
+                            i += closeIndex + closeStr.length - 1;
                             continue;
                         }
                     }
 
-                    for(let tag of skipNamumarkHtmlTags) {
-                        const openTag = `<${tag}>`;
-                        const closeTag = `</${tag}>`;
-
-                        if(sourceText.slice(i).startsWith(openTag)) {
-                            const codeEndIndex = sourceText.slice(i).indexOf(closeTag);
-                            if(codeEndIndex !== -1) {
-                                text += sourceText.slice(i, i + codeEndIndex + closeTag.length);
-                                i += codeEndIndex + closeTag.length - 1;
-                                continue outer;
-                            }
-                        }
-                    }
+                    // for(let tag of skipNamumarkHtmlTags) {
+                    //     const openTag = `<${tag}>`;
+                    //     const closeTag = `</${tag}>`;
+                    //
+                    //     if(sourceText.slice(i).startsWith(openTag)) {
+                    //         const codeEndIndex = sourceText.slice(i).indexOf(closeTag);
+                    //         if(codeEndIndex !== -1) {
+                    //             text += sourceText.slice(i, i + codeEndIndex + closeTag.length);
+                    //             i += codeEndIndex + closeTag.length - 1;
+                    //             continue outer;
+                    //         }
+                    //     }
+                    // }
 
                     for(let syntaxIndex in openedSyntaxes) {
                         syntaxIndex = parseInt(syntaxIndex);
@@ -341,16 +356,17 @@ module.exports = class NamumarkParser {
 
                     text += char;
                 }
-                if(debug) console.timeEnd('syntax ' + syntax.name);
+                if(debug && !childParse) console.timeEnd('syntax ' + syntax.name);
             }
 
             sourceText = text;
             text = '';
 
             // Last 직전
-            if(syntax.priority === Priority.Last - 1
+            if(!childParse
+                && syntax.priority === Priority.Last - 1
                 && syntax.priority !== nextSyntax.priority) {
-                sourceText += '<noParagraph><cursorToEnd/><[footnotePos]></noParagraph>';
+                sourceText += '<!noParagraph><!cursorToEnd/><[footnotePos]><!/noParagraph>';
             }
         }
 
@@ -436,8 +452,8 @@ module.exports = class NamumarkParser {
                     removeNoParagraph = true;
                 }
 
-                const noParagraphOpen = removeNoParagraph ? '' : '<noParagraph>';
-                const noParagraphClose = removeNoParagraph ? '' : '</noParagraph>';
+                const noParagraphOpen = removeNoParagraph ? '' : '<!noParagraph>';
+                const noParagraphClose = removeNoParagraph ? '' : '<!/noParagraph>';
 
                 let spaceCount = 0;
                 for(let i = 0; i < line.length; i++) {
@@ -491,7 +507,7 @@ module.exports = class NamumarkParser {
 
         // console.log(sourceText);
 
-        text = postProcess(sourceText);
+        text = postProcess(sourceText, childParse, disableNoParagraph);
 
         // console.log(text);
 
@@ -516,15 +532,16 @@ module.exports = class NamumarkParser {
         // 남은 removeNoParagraph 제거
         text = text.replaceAll('<removeNoParagraph/>', '');
 
-        let html = `${this.includeData ? '' : '<div class="wiki-content">'}${
+        let html = `${(this.includeData || childParse) ? '' : '<div class="wiki-content">'}${
             text
                 .replaceAll(NewLineTag, '<br>')
                 // .replaceAll('<br><removebr/>', '')
                 // .replaceAll('<removebr/>', '')
-        }${this.includeData ? '' : '</div>'}`;
+        }${(this.includeData || childParse) ? '' : '</div>'}`;
 
-        if(debug||true) console.timeEnd(`parse "${this.document.title}"`);
+        if((debug||true) && !childParse) console.timeEnd(`parse "${this.document.title}"`);
 
+        this.childDepth--;
         return {
             html,
             links: this.links,

@@ -1,8 +1,11 @@
+const NoParagraphOpen = '<!noParagraph>';
+const NoParagraphClose = '<!/noParagraph>';
+
 module.exports = (sourceText, noTopParagraph = false) => {
     let text = '';
 
     const lines = sourceText
-        // .replaceAll(NoParagraphOpen, '<tempNewline/><newLine/>' + NoParagraphOpen)
+        // .replaceAll(NoParagraphOpen, NoParagraphOpen + '<tempNewline/><newLine/>')
         // .replaceAll(NoParagraphClose, NoParagraphClose + '<tempNewline/><newLine/>')
         .split('<newLine/>');
     const pendingLines = [];
@@ -16,29 +19,32 @@ module.exports = (sourceText, noTopParagraph = false) => {
         //     removeNoParagraph = true;
         // }
 
-        const noParagraphOpen = removeNoParagraph ? '' : '<noParagraph>';
-        const noParagraphClose = removeNoParagraph ? '' : '</noParagraph>';
+        const noParagraphOpen = removeNoParagraph ? '' : '<!noParagraph>';
+        const noParagraphClose = removeNoParagraph ? '' : '<!/noParagraph>';
 
         let spaceCount = 0;
         for(let i = 0; i < line.length; i++) {
             const char = line[i];
-            // if(char === '<') {
-            //     const closeStr = '>';
-            //     const closeIndex = line.slice(i).indexOf(closeStr);
-            //     if(closeIndex !== -1) {
-            //         i += closeIndex + closeStr.length - 1;
-            //         continue;
-            //     }
-            // }
+            if(char === '<') {
+                const closeStr = '>';
+                const closeIndex = line.slice(i).indexOf(closeStr);
+                if(closeIndex !== -1) {
+                    const tagStr = line.slice(i + 1, i + closeIndex);
+                    if(tagStr === 'noParagraph') {
+                        i += closeIndex + closeStr.length - 1;
+                        continue;
+                    }
+                }
+            }
             if(char !== ' ') break;
             spaceCount++;
         }
 
         line = line.trimStart();
-        console.log('spaceCount:', spaceCount, 'prevSpaceCount:', prevSpaceCount, 'removeNoParagraph',  removeNoParagraph, 'line:', line);
+        // console.log('spaceCount:', spaceCount, 'prevSpaceCount:', prevSpaceCount, 'removeNoParagraph',  removeNoParagraph, 'line:', line);
 
         if(spaceCount !== prevSpaceCount) {
-            console.log('different spaceCount! clear pendingLines');
+            // console.log('different spaceCount! clear pendingLines');
             // newLines.push(pendingLines.join('<newLine/>'));
             // if(removeNoParagraph) text += makeParagraph(pendingLines.join('<newLine/>'));
             // else text += pendingLines.join('<newLine/>');
@@ -74,6 +80,6 @@ module.exports = (sourceText, noTopParagraph = false) => {
 
     // return newLines.join('<newLine/>');
     return text
-    // .replaceAll('<tempNewline/><newLine/>', '')
-    // .replaceAll('<tempNewline/>', '');
+        .replaceAll('<tempNewline/><newLine/>', '')
+        .replaceAll('<tempNewline/>', '');
 }

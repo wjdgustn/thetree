@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+const { Priority } = require('../../types');
+
 const macros = {};
 const loadMacros = () => {
     const files = fs.readdirSync(__dirname);
@@ -22,6 +24,7 @@ const loadMacros = () => {
 loadMacros();
 
 module.exports = {
+    priority: Priority.Macro,
     openStr: `[`,
     closeStr: `]`,
     format: async (content, namumark) => {

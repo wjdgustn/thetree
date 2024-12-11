@@ -1,19 +1,18 @@
 const utils = require('../utils');
 const { Priority } = require('../types');
-const listParser = require('../postProcess/listParser');
 
 module.exports = {
     fullLine: true,
-    priority: Priority.Table,
+    priority: Priority.ChildParser,
     openStr: '||',
-    makeTable(content, namumark, fromLastLine = false, removeNewParagraph = false) {
+    async makeTable(content, namumark, fromLastLine = false, removeNewParagraph = false) {
         const rows = namumark.syntaxData.rows ??= [];
         if(!rows.length) return null;
 
         const spaceCount = namumark.syntaxData.spaceCount ??= 0;
         namumark.syntaxData.spaceCount = 0;
-        const listTypeStr = namumark.syntaxData.listTypeStr ??= '';
-        namumark.syntaxData.listTypeStr = '';
+        // const listTypeStr = namumark.syntaxData.listTypeStr ??= '';
+        // namumark.syntaxData.listTypeStr = '';
 
         let tableAlign;
         const colBgColors = [];
@@ -295,9 +294,9 @@ module.exports = {
                 tdDarkStyle = tdDarkStyle.slice(1);
 
                 htmlValues.push(`
-<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}></noParagraph>
-${value}
-<noParagraph></td>
+<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>
+${(await namumark.parse(value, true)).html}
+</td>
 `.trim());
 
                 for(let i = 0; i < colspan; i++) {
@@ -325,15 +324,15 @@ ${value}
         tableStyle = tableStyle.slice(1);
         tableDarkStyle = tableDarkStyle.slice(1);
 
-        const table = `<removeNextNewline/>${' '.repeat(spaceCount)}${listTypeStr}<noParagraph><div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div></noParagraph>`;
+        const table = `<removeNextNewline/>${' '.repeat(spaceCount)}<!noParagraph><div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div><!/noParagraph>`;
 
         return table + (fromLastLine ? '' : '<newLine/>' + content);
     },
-    format(content, namumark, lines, isLastLine, i, removeNewParagraph = false) {
+    async format(content, namumark, lines, isLastLine, i, removeNewParagraph = false) {
         const rows = namumark.syntaxData.rows ??= [];
         const rowText = namumark.syntaxData.rowText ??= '';
 
-        const makeTable = (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine, removeNewParagraph);
+        const makeTable = async (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine, removeNewParagraph);
 
         let spaceCount = 0;
         for(let char of content) {
@@ -348,10 +347,7 @@ ${value}
             nextSpaceCount++;
         }
 
-        const isList = listParser.lineIsList(content);
-        const listTypeStr = listParser.getListTypeStr(content);
-        let trimedContent = content.slice(spaceCount);
-        if(isList) trimedContent = trimedContent.slice(1);
+        const trimedContent = content.slice(spaceCount);
         if(!trimedContent.startsWith('||') && !rowText) {
             return makeTable();
         }
@@ -360,7 +356,7 @@ ${value}
 
         if(!rowText) {
             namumark.syntaxData.spaceCount = spaceCount;
-            if(isList) namumark.syntaxData.listTypeStr = listTypeStr;
+            // if(isList) namumark.syntaxData.listTypeStr = listTypeStr;
         }
 
         if(newRowText.length > 2 && newRowText.endsWith('||')) {
@@ -376,7 +372,7 @@ ${value}
 
         return '';
     },
-    parse(content, removeNewParagraph = false) {
+    async parse(content, removeNewParagraph = false) {
         const fakeNamumark = {
             syntaxData: {}
         }

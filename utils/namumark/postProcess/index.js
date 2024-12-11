@@ -1,8 +1,10 @@
-const listParser = require('./listParser');
-const postProcessNoList = require('./postProcessNoList');
+const makeIndent = require('./makeIndent');
+const makeParagraph = require('./makeParagraph');
 
-module.exports = (sourceText, noTopParagraph = false) => {
-    console.log('postProcess! noTopParagraph:', noTopParagraph, 'sourceText:', sourceText);
-    const listText = listParser.parse(sourceText);
-    return postProcessNoList(listText, noTopParagraph);
+module.exports = (sourceText, childParse = false, disableNoParagraph = false) => {
+    const indentText = makeIndent(sourceText);
+    // console.log('== 인덴트 완료 ==');
+    // console.log(indentText);
+    // require('fs').writeFileSync('indentText.txt', indentText);
+    return makeParagraph(indentText, childParse, disableNoParagraph);
 }

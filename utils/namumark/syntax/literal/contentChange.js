@@ -1,8 +1,8 @@
 const utils = require('../../utils');
 const CSSFilter = require('./cssFilter');
-const removeNoParagraph = require('../../removeNoParagraph');
+// const removeNoParagraph = require('../../removeNoParagraph');
 
-module.exports = (content, namumark) => {
+module.exports = async (content, namumark) => {
     const splittedContent = content.split(' ');
     const firstParam = splittedContent[0];
 
@@ -34,7 +34,7 @@ module.exports = (content, namumark) => {
 
         lines = lines.slice(1);
 
-        let { text } = removeNoParagraph(lines.join('<newLine/>'));
+        let text = lines.join('<newLine/>');
         if(text.endsWith('<newLine/>')) text = text.slice(0, -'<newLine/>'.length);
 
         // 리스트 미리 파싱
@@ -48,7 +48,7 @@ module.exports = (content, namumark) => {
 
         // text = text.replaceAll('\n', '<newLine/>');
 
-        return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}><*${text}*></div>`;
+        return `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}>${(await namumark.parse(text, true, true)).html}</div>`;
     }
 
     if(firstParam.startsWith('#!folding')) {
@@ -66,6 +66,6 @@ module.exports = (content, namumark) => {
         // 표 미리 파싱
         // text = tableSyntax.parse(text, true);
 
-        return `<dl class="wiki-folding"><dt>${foldingText}</dt><dd class="wiki-folding-close-anim">${text}</dd></dl>`;
+        return `<dl class="wiki-folding"><dt>${foldingText}</dt><dd class="wiki-folding-close-anim">${(await namumark.parse(text, true, true)).html}</dd></dl>`;
     }
 }

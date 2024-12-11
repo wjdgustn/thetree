@@ -3,12 +3,14 @@ module.exports = {
         Literal: 1,
         Comment: 2,
         ContentChange: 3,
-        Table: 4,
-        FullLine: 5,
-        LiteralFormat: 6,
-        Format: 7,
-        Footnote: 8,
-        Last: 9
+        Heading: 4,
+        Macro: 5,
+        Footnote: 6,
+        Div: 7,
+        ChildParser: 8,
+        LiteralFormat: 9,
+        Format: 10,
+        Last: 11
     },
     AllowedLanguages: [
         'basic',

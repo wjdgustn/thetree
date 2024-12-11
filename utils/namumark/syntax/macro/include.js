@@ -52,8 +52,8 @@ module.exports = async (params, namumark) => {
 
     // const removeNewParagraph = params.startsWith('<removeNewParagraph/>');
     // if(removeNewParagraph) params = params.slice('<removeNewParagraph/>'.length);
-    const removeNoParagraph = params.startsWith('<noParagraph>');
-    if(removeNoParagraph) params = params.slice('<noParagraph>'.length);
+    const removeNoParagraph = params.startsWith('<!noParagraph>');
+    if(removeNoParagraph) params = params.slice('<!noParagraph>'.length);
 
     params = params.split(/(?<!\\),/).map(a => a.replaceAll('\\,', ','));
 
@@ -80,5 +80,5 @@ module.exports = async (params, namumark) => {
     });
 
     const { html: contentHtml } = await parser.parse(document.content);
-    return `${removeNoParagraph ? '' : '<noParagraph>'}${contentHtml}${removeNoParagraph ? '' : '</noParagraph>'}`;
+    return `${removeNoParagraph ? '' : '<!noParagraph>'}${contentHtml}${removeNoParagraph ? '' : '<!/noParagraph>'}`;
 }

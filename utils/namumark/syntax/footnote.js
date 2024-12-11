@@ -5,7 +5,7 @@ module.exports = {
     priority: Priority.Footnote,
     openStr: '[*',
     closeStr: ']',
-    format: (content, namumark) => {
+    format: async (content, namumark) => {
         if(content.includes('<a class="wiki-fn-content"')) return;
 
         namumark.syntaxData.index ??= 0;
@@ -20,7 +20,7 @@ module.exports = {
         let name = splittedContent[0] || index.toString();
         const value = values[name] ?? splittedContent.slice(1).join(' ');
 
-        values[name] ??= value;
+        values[name] ??= (await namumark.parse(value, true, true)).html;
 
         footnoteList.push({
             name: name.toString(),

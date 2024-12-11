@@ -1,3 +1,5 @@
+const { Priority } = require('../types');
+
 const globalUtils = require('../../../utils/global');
 
 const getLevel = content => {
@@ -42,6 +44,7 @@ const getLowestLevel = lines => {
 }
 
 module.exports = {
+    priority: Priority.Heading,
     fullLine: true,
     format(content, namumark, lines) {
         const lowestLevel = namumark.syntaxData.lowestLevel ??= getLowestLevel(lines);
@@ -84,10 +87,10 @@ module.exports = {
         });
 
         return `
-<removeNewline/>
+<removeNewlineLater/>
 <removeNextNewline/>
-<cursorToEnd/>
-<noParagraph>
+<!cursorToEnd/>
+<!noParagraph>
 <h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#toc">${paragraphNumText}.</a>
  <span :id="$el.innerText">${text}
@@ -99,8 +102,8 @@ module.exports = {
 </span>
 </h${level}>
 <div class="wiki-heading-content${defaultClosed ? ' wiki-heading-content-folded' : ''}">
-<cursorPos/>
+<!cursorPos/>
 </div>
-`.replaceAll('\n', '') + '\n<goToCursor/></noParagraph><removeNewlineLater/><newLine/>';
+`.replaceAll('\n', '') + '\n<!goToCursor/><!/noParagraph><removeNewlineLater/><newLine/>';
     }
 }
