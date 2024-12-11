@@ -288,8 +288,6 @@ module.exports = {
                 if(!tdClassList.includes('wiki-table-keepall') && colKeepAll[visualRowIndex])
                     tdClassList.push('wiki-table-keepall');
 
-                if(value.endsWith('<newLine/>')) value = value.slice(0, -1);
-
                 tdStyle = tdStyle.slice(1);
                 tdDarkStyle = tdDarkStyle.slice(1);
 
@@ -335,7 +333,8 @@ ${(await namumark.parse(value, true)).html}
         const makeTable = async (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine, removeNewParagraph);
 
         let spaceCount = 0;
-        for(let char of content) {
+        if(rowText) spaceCount = namumark.syntaxData.spaceCount;
+        else for(let char of content) {
             if(char !== ' ') break;
             spaceCount++;
         }
