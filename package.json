@@ -31,6 +31,7 @@
     "express-useragent": "^1.0.15",
     "express-validator": "^7.2.0",
     "highlight.js": "^11.10.0",
+    "html-minifier-terser": "^7.2.0",
     "ip-address": "^10.0.1",
     "ip-location-api": "^2.3.2",
     "jsdiff": "^1.1.1",

@@ -11,6 +11,7 @@ const useragent = require('express-useragent');
 const { Address4 } = require('ip-address');
 const redis = require('redis');
 const RedisStore = require('connect-redis').default;
+const { minify: minifyHtml } = require('html-minifier-terser');
 
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
@@ -323,11 +324,19 @@ document.getElementById('initScript')?.remove();
             page,
             session,
             browserGlobalVarScript
-        }, (err, html) => {
+        }, async (err, html) => {
             if(err) {
                 console.error(err);
                 return res.status(500).send('스킨 렌더 오류');
             }
+
+            if(debug) console.time('minifyHtml');
+            try {
+                html = await minifyHtml(html, {
+                    collapseWhitespace: true
+                });
+            } catch(e) {}
+            if(debug) console.timeEnd('minifyHtml');
 
             if(sendOnlyContent) {
                 const $ = cheerio.load(html);
