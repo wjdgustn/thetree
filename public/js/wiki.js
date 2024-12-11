@@ -88,14 +88,14 @@ function setupFootnoteTooltip() {
     let cleanup;
     let hovering = 0;
     const mouseLeaveHandler = _ => {
-        requestAnimationFrame(() => {
+        requestAnimationFrame(() => requestAnimationFrame( () =>{
             hovering--;
 
             if(!hovering) {
                 tooltip.style.display = 'none';
                 if (cleanup) cleanup();
             }
-        });
+        }));
     }
     tooltip.addEventListener('mouseenter', _ => {
         hovering++;
