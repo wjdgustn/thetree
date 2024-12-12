@@ -17,7 +17,9 @@ const saveCache = obj => {
 }
 
 const JS_PATH = './public/js';
+const CSS_PATH = './public/css';
 const MIN_JS_PATH = './publicMin/js';
+const MIN_CSS_PATH = './publicMin/css';
 
 const uglifyOptions = {
     toplevel: true,
@@ -32,6 +34,7 @@ module.exports = {
         if(!fs.existsSync('./publicMin')) fs.mkdirSync('./publicMin');
 
         if(config.minify.js) this.minifyJS();
+        if(config.minify.css) this.minifyCSS();
     },
     minifyJS(force = false) {
         const cache = getCache();
@@ -66,6 +69,28 @@ module.exports = {
 
         if(fs.existsSync('./cache/skinjs')) fs.rmSync('./cache/skinjs', { recursive: true });
     },
+    minifyCSS(force = false) {
+        const cache = getCache();
+
+        if(!fs.existsSync(MIN_CSS_PATH)) fs.mkdirSync(MIN_CSS_PATH);
+
+        const cssFiles = fs.readdirSync(CSS_PATH).filter(a => a.endsWith('.css'));
+        const cssContents = cssFiles.map(a => fs.readFileSync(path.join(CSS_PATH, a)).toString());
+        const cssHashes = cssContents.map(a => crypto.createHash('sha256').update(a).digest('hex'));
+
+        if(!force && utils.compareArray(cssHashes, cache.cssHashes)) return;
+
+        for(let i = 0; i < cssFiles.length; i++) {
+            const name = cssFiles[i];
+            const code = cssContents[i];
+            const result = new CleanCSS().minify(code);
+
+            fs.writeFileSync(path.join(MIN_CSS_PATH, name), result.styles);
+        }
+
+        cache.cssHashes = cssHashes;
+        saveCache(cache);
+    },
     handleSkinJS(filename, req, res, next) {
         if(!fs.existsSync('./cache/skinjs')) fs.mkdirSync('./cache/skinjs');
 
@@ -85,6 +110,28 @@ module.exports = {
                 nameCache: cache.nameCache
             });
             minCode = result.code;
+
+            fs.writeFileSync(cachePath, minCode);
+        }
+
+        res.setHeader('Etag', hash);
+        res.end(minCode);
+    },
+    handleSkinCSS(filename, req, res, next) {
+        if(!fs.existsSync('./cache/skincss')) fs.mkdirSync('./cache/skincss');
+
+        const codePath = path.join('./skins', req.url);
+        if(!codePath.startsWith('skins/') || !fs.existsSync(codePath)) return next();
+
+        const code = fs.readFileSync(codePath).toString();
+        const hash = crypto.createHash('sha256').update(code).digest('hex');
+        const cachePath = path.join('./cache/skincss', hash + '.css');
+
+        let minCode;
+        if(fs.existsSync(cachePath)) minCode = fs.readFileSync(cachePath).toString();
+        else {
+            const result = new CleanCSS().minify(code);
+            minCode = result.styles;
 
             fs.writeFileSync(cachePath, minCode);
         }

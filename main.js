@@ -114,6 +114,7 @@ app.use('/skins', (req, res, next) => {
     if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) next();
 
     if(config.minify.js && filename.endsWith('.js')) return minifyManager.handleSkinJS(filename, req, res, next);
+    if(config.minify.css && filename.endsWith('.css')) return minifyManager.handleSkinCSS(filename, req, res, next);
 
     skinsStatic(req, res, next);
 });

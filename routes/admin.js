@@ -97,6 +97,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), async (
     }
 
     if(tool === 'minifycss') {
+        minifyManager.minifyCSS(true);
         return res.status(204).end();
     }
 
