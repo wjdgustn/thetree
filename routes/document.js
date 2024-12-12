@@ -106,8 +106,6 @@ app.get('/w/*', async (req, res) => {
         return res.status(500).send('카테고리 렌더 오류');
     }
 
-    console.log(utils.removeHtmlTags(contentHtml));
-
     res.renderSkin(undefined, {
         ...defaultData,
         contentHtml,
