@@ -134,7 +134,8 @@ app.get('/acl/*', async (req, res) => {
     const namespaceACL = acl.namespaceACL;
 
     const { result: editableACL } = await acl.check(ACLTypes.ACL, req.aclData);
-    const { result: editableNSACL } = await namespaceACL.check(ACLTypes.ACL, req.aclData);
+    // const { result: editableNSACL } = await namespaceACL.check(ACLTypes.ACL, req.aclData);
+    const editableNSACL = req.permissions.includes('nsacl');
 
     res.renderSkin(undefined, {
         viewName: 'acl',
