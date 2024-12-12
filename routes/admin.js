@@ -130,6 +130,13 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), async (
 app.post('/admin/config/configjson', middleware.permission('developer'), (req, res) => {
     const config = req.body.config;
     if(config.includes('/') || !config.endsWith('.json')) return res.status(400).send('Invalid config file');
+
+    try {
+        JSON.parse(req.body.content);
+    } catch (e) {
+        return res.status(400).send('Invalid JSON');
+    }
+
     fs.writeFileSync(config, req.body.content);
     updateConfig();
     return res.status(204).end();
