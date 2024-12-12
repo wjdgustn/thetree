@@ -5,7 +5,6 @@
   "namespaces": ["위키운영"],
 
   "minify": {
-    "html": true,
     "css": true,
     "js": true
   },
