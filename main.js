@@ -383,7 +383,7 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, _) => {
     console.error(err);
-    if(debug) res.status(500).send(err);
+    if(debug) res.status(500).send(err.toString());
     else res.status(500).send('서버 오류');
 });
 
