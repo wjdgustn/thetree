@@ -97,8 +97,13 @@ app.use(express.static(`./customStatic`));
 
 if(config.minify.js || config.minify.css) {
     minifyManager.check();
-    app.use(express.static(`./publicMin`));
 }
+app.use((req, res, next) => {
+    if(config.minify.js && req.url.endsWith('.js')
+        || config.minify.css && req.url.endsWith('.css'))
+        express.static(`./publicMin`)(req, res, next);
+    else next();
+});
 app.use(express.static(`./public`));
 
 const skinsStatic = express.static('./skins');
