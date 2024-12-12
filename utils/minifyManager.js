@@ -94,7 +94,7 @@ module.exports = {
     handleSkinJS(filename, req, res, next) {
         if(!fs.existsSync('./cache/skinjs')) fs.mkdirSync('./cache/skinjs');
 
-        const codePath = path.join('./skins', req.url);
+        const codePath = path.join('./skins', decodeURIComponent(req.url));
         if(!codePath.startsWith('skins/') || !fs.existsSync(codePath)) return next();
 
         const code = fs.readFileSync(codePath).toString();
@@ -120,7 +120,7 @@ module.exports = {
     handleSkinCSS(filename, req, res, next) {
         if(!fs.existsSync('./cache/skincss')) fs.mkdirSync('./cache/skincss');
 
-        const codePath = path.join('./skins', req.url);
+        const codePath = path.join('./skins', decodeURIComponent(req.url));
         if(!codePath.startsWith('skins/') || !fs.existsSync(codePath)) return next();
 
         const code = fs.readFileSync(codePath).toString();
