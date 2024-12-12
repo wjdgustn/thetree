@@ -278,7 +278,7 @@ async function replaceContent(html) {
         }
 
         document.title = page.data.document
-            ? `${doc_fulltitle(page.data.document)} - ${CONFIG.site_name}`
+            ? `${doc_fulltitle(page.data.document)} - ${CONFIG.site_name}${getTitleDescription(page)}`
             : `${page.title} - ${CONFIG.site_name}`;
     }
 

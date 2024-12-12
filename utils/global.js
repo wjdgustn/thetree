@@ -52,5 +52,27 @@ module.exports = {
         const dateStr = dateObj.format('YYYY-MM-DD HH:mm:ss');
 
         return `<time${type ? ` data-type="${type}"` : ''} datetime="${isoStr}">${dateStr}</time>`;
+    },
+    getTitleDescription(page) {
+        const text = {
+            edit_edit_request: '편집 요청',
+            edit_request: '편집 요청',
+            edit: '편집',
+            history: '역사',
+            backlinks: '역링크',
+            move: '이동',
+            delete: '삭제',
+            acl: 'ACL',
+            thread: '토론',
+            thread_list: '토론 목록',
+            thread_list_close: '닫힌 토론',
+            edit_request_close: '닫힌 편집 요청',
+            diff: '비교',
+            revert: `r${page.data.rev}로 되돌리기`,
+            raw: `r${page.viewName} RAW`,
+            blame: `r${page.viewName} Blame`,
+            wiki: page.data.rev ? `r${page.data.rev}` : '',
+        }[page.viewName];
+        return text ? ` (${text})` : '';
     }
 }
