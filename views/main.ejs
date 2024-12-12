@@ -2,7 +2,6 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title><%=config.SITE_NAME%></title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=no">
 
@@ -14,12 +13,17 @@
     <meta name="theme-color" content="<%=config.theme_color%>">
 
     <%if(page.data.document) {%>
-        <meta property="og:title" content="<%=doc_fulltitle(page.data.document)%>">
+        <%const title = doc_fulltitle(page.data.document);%>
+        <meta property="og:title" content="<%=title%>">
         <meta property="og:site_name" content="<%=config.site_name%>">
         <%if(config.embed_image) {%><meta property="og:image" content="<%=config.embed_image%>"><%}%>
-        <meta property="og:description" content="<%=contentText.slice(0, 64)%>">
+        <meta property="og:description" content="<%=contentText.slice(0, 200)%>">
         <meta property="og:url" content="<%=config.base_url%><%=req.path%>">
         <meta property="og:type" content="article">
+
+        <title><%=title%> - <%=config.site_name%></title>
+    <%} else {%>
+        <title><%=page.title%> - <%=config.site_name%></title>
     <%}%>
 
     <link rel="canonical" href="<%=config.base_url%><%=req.path%>">

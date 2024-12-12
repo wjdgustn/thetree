@@ -276,6 +276,10 @@ async function replaceContent(html) {
                 State.session = session;
             }
         }
+
+        document.title = page.data.document
+            ? `${doc_fulltitle(page.data.document)} - ${CONFIG.site_name}`
+            : `${page.title} - ${CONFIG.site_name}`;
     }
 
     return result;
