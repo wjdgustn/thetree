@@ -21,7 +21,7 @@
         <div class="nav-block-content">
             <ul class="nav-block-content-ul">
                 <%for(let [key, value] of Object.entries(ACLTypes).slice(1)) {%>
-                    <li><a class="nav-link" data-type="<%=key%>" href="#document.<%=utils.camelToSnakeCase(key)%>"><%=ACL.aclTypeToString(value)%></a></li>
+                    <li><a class="nav-link" data-type="<%=key%>" href="#document.<%=utils.camelToSnakeCase(key)%>"><%=value === ACLTypes.ACL ? 'ACL' : ACL.aclTypeToString(value)%></a></li>
                 <%}%>
             </ul>
         </div>
