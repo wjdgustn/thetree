@@ -90,6 +90,8 @@
     }
 
     table td, table th {
+        border-top: 1px solid #eceeef;
+        line-height: 1.5;
         padding: .5rem .7rem !important;
     }
 
@@ -110,10 +112,5 @@
 
     table tr:last-of-type td {
         border-bottom: 1px solid #eceeef;
-    }
-
-    .acl-delete-button {
-        display: inline !important;
-        margin-left: -10.5px;
     }
 }
