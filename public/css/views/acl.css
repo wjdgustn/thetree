@@ -34,6 +34,14 @@
         width: 100%;
     }
 
+    .nav-link:hover {
+        --navigation-item-underline-color: var(--brand-bright-color-2, #e3e3e3);
+    }
+
+    .theseed-dark-mode .nav-link:hover {
+        --navigation-item-underline-color: var(--brand-bright-color-2, #45474b);
+    }
+
     .nav-link:after {
         background-color: var(--navigation-item-underline-color, transparent);
         bottom: 0;
@@ -49,6 +57,10 @@
         --navigation-item-underline-color: var(--brand-bright-color-1, #d5d5d5);
         color: var(--brand-color-1, #bcbcbc) !important;
         font-weight: 600;
+    }
+
+    .theseed-dark-mode .nav-link-selected {
+        color: var(--dark-text-color, var(--text-color, #e0e0e0)) !important;
     }
 
     .title {
