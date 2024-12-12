@@ -13,16 +13,16 @@
 
     <meta name="theme-color" content="<%=config.THEME_COLOR%>">
 
-    <%if(true) {%>
-        <meta property="og:title" content="나무위키:대문">
-        <meta property="og:site_name" content="나무위키">
-        <meta property="og:image" content="//i.namu.wiki/i/DmbfItvY2Yl1dUWvBYqHzRtArXw1N3FmwWlhbB_ss_VdcgyavakDoWlfc5r42YAYo22A9wXMtz27GXPYRAHOcQ.svg">
-        <meta property="og:description" content="여러분이 가꾸어 나가는 지식의 나무 나무위키 에 오신 것을 환영합니다! 다크는 회색이 아니라 검정입니다! 나무위키">
-        <meta property="og:url" content="https://namu.wiki/w/%EB%82%98%EB%AC%B4%EC%9C%84%ED%82%A4:%EB%8C%80%EB%AC%B8">
+    <%if(page.data.document) {%>
+        <meta property="og:title" content="<%=doc_fulltitle(page.data.document)%>">
+        <meta property="og:site_name" content="<%=config.site_name%>">
+        <%if(config.embed_image) {%><meta property="og:image" content="<%=config.embed_image%>"><%}%>
+        <meta property="og:description" content="<%=contentText.slice(0, 64)%>">
+        <meta property="og:url" content="<%=config.base_url%><%=req.path%>">
         <meta property="og:type" content="article">
     <%}%>
 
-    <link rel="canonical" href="<%=env.HOST%><%=req.path%>">
+    <link rel="canonical" href="<%=config.base_url%><%=req.path%>">
 
     <style>
         @import "/css/ionicons.min.css";

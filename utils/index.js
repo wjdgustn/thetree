@@ -67,5 +67,7 @@ module.exports = {
             if(arr1[i] !== arr2[i]) return false;
 
         return true;
-    }
+    },
+    removeHtmlTags: text => text
+        .replaceAll(/<[^>]+>/g, '')
 }

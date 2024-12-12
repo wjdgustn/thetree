@@ -1,5 +1,5 @@
 const { Priority } = require('../types');
-const utils = require('../utils');
+const utils = require('../../../utils');
 
 module.exports = {
     priority: Priority.Footnote,

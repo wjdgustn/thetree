@@ -324,6 +324,8 @@ document.getElementById('initScript')?.remove();
 </script>
         `.trim();
 
+        if(data.contentHtml) data.contentText = utils.removeHtmlTags(data.contentHtml);
+
         if(data.contentHtml && req.query.from && req.path.startsWith('/w/')) {
             data.contentHtml = `
 <div class="thetree-alert thetree-alert-primary">
