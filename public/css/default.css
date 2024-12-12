@@ -103,8 +103,8 @@ button.thetree-blue-button {
 }
 
 button.thetree-blue-button:not([disabled]):hover {
-    background-color: #025aa5;
-    border-color: #01549b;
+    background-color: #025aa5 !important;
+    border-color: #01549b !important;
 }
 
 a.thetree-mint-button {
