@@ -165,6 +165,14 @@ module.exports = class ACL {
     async check(aclType = ACLTypes.None, data = {}) {
         if(aclType === ACLTypes.ACL && data?.permissions?.includes('nsacl')) return { result: true };
 
+        if([
+            ACLTypes.Move,
+            ACLTypes.Delete
+        ].includes(aclType)) {
+            const editCheck = await this.check(ACLTypes.Edit, data);
+            if(!editCheck.result) return editCheck;
+        }
+
         let rules = this.aclTypes[aclType];
         if(!rules.length && this.namespaceACL) rules = this.namespaceACL.aclTypes[aclType];
 
