@@ -6,11 +6,11 @@ module.exports = {
     },
     HistoryTypes: {
         Create: 0,
-        Edit: 1,
+        Modify: 1,
         Delete: 2,
         Move: 3,
         ACL: 4,
-        Rollback: 5
+        Revert: 5
     },
     ACLTypes: {
         None: -1,
