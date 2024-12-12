@@ -269,7 +269,7 @@ app.get('/action/acl/delete', async (req, res) => {
     });
     if(!dbACL) return res.status(400).send('ACL 찾을 수 없음');
 
-    if(dbACL.type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('이름공간 ACL 수정은 nsacl 권한이 필요합니다!');
+    if(dbACL.type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
 
     if(dbACL.document) {
         const dbDocument = await Document.findOne({
