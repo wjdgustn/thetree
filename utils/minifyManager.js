@@ -21,12 +21,16 @@ const CSS_PATH = './public/css';
 const MIN_JS_PATH = './publicMin/js';
 const MIN_CSS_PATH = './publicMin/css';
 
-const uglifyOptions = {
+const uglifyJSOptions = {
     toplevel: true,
     mangle: {
         toplevel: true,
         eval: true
     }
+}
+
+const cleanCSSOptions = {
+    level: 0
 }
 
 module.exports = {
@@ -56,7 +60,7 @@ module.exports = {
             const name = jsFiles[i];
             const code = jsContents[i];
             const result = UglifyJS.minify(code, {
-                ...uglifyOptions,
+                ...uglifyJSOptions,
                 nameCache
             });
 
@@ -83,7 +87,7 @@ module.exports = {
         for(let i = 0; i < cssFiles.length; i++) {
             const name = cssFiles[i];
             const code = cssContents[i];
-            const result = new CleanCSS().minify(code);
+            const result = new CleanCSS(cleanCSSOptions).minify(code);
 
             fs.writeFileSync(path.join(MIN_CSS_PATH, name), result.styles);
         }
@@ -106,7 +110,7 @@ module.exports = {
         else {
             const cache = getCache();
             const result = UglifyJS.minify(code, {
-                ...uglifyOptions,
+                ...uglifyJSOptions,
                 nameCache: cache.nameCache
             });
             minCode = result.code;
@@ -130,7 +134,7 @@ module.exports = {
         let minCode;
         if(fs.existsSync(cachePath)) minCode = fs.readFileSync(cachePath).toString();
         else {
-            const result = new CleanCSS().minify(code);
+            const result = new CleanCSS(cleanCSSOptions).minify(code);
             minCode = result.styles;
 
             fs.writeFileSync(cachePath, minCode);
