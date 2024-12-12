@@ -342,9 +342,7 @@ app.patch('/action/acl/reorder', async (req, res) => {
 app.get('/edit/*', async (req, res) => {
     const section = parseInt(req.query.section);
 
-    const invalidSection = () => res.renderSkin('오류', {
-        contentHtml: '섹션이 올바르지 않습니다.'
-    });
+    const invalidSection = () => res.error('섹션이 올바르지 않습니다.')
 
     if(req.query.section && (isNaN(section) || section < 0)) return invalidSection();
 
@@ -358,6 +356,10 @@ app.get('/edit/*', async (req, res) => {
     });
 
     const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(readAclMessage);
+
     const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
     const { result: editRequestable } = await acl.check(ACLTypes.EditRequest, req.aclData);
 
@@ -428,9 +430,7 @@ app.post('/edit/*', async (req, res) => {
 
     const section = parseInt(req.query.section);
 
-    const invalidSection = () => res.renderSkin('오류', {
-        contentHtml: '섹션이 올바르지 않습니다.'
-    });
+    const invalidSection = () => res.error('섹션이 올바르지 않습니다.');
 
     if(req.query.section && (isNaN(section) || section < 0)) return invalidSection();
 

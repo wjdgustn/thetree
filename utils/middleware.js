@@ -12,9 +12,7 @@ module.exports = {
         next();
     },
     permission: perm => (req, res, next) => {
-        if(!req.permissions.includes(perm)) return res.renderSkin('오류', {
-            contentHtml: '권한이 부족합니다.'
-        });
+        if(!req.permissions.includes(perm)) return res.error('권한이 부족합니다.');
         next();
     }
 }

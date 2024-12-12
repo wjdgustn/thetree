@@ -370,6 +370,10 @@ document.getElementById('initScript')?.remove();
         });
     }
 
+    res.error = contentHtml => res.renderSkin('오류', {
+        contentHtml
+    });
+
     next();
 });
 
