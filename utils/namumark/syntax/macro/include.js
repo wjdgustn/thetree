@@ -80,5 +80,5 @@ module.exports = async (params, namumark) => {
     });
 
     const { html: contentHtml } = await parser.parse(document.content);
-    return `${removeNoParagraph ? '' : '<!noParagraph>'}${contentHtml}${removeNoParagraph ? '' : '<!/noParagraph>'}`;
+    return `${contentHtml}`;
 }
