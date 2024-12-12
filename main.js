@@ -3,6 +3,7 @@ const passport = require('passport');
 const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const dayjs = require('dayjs');
 const nodemailer = require('nodemailer');
 const cheerio = require('cheerio');
@@ -18,6 +19,7 @@ const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
 const { UserTypes, permissionMenus } = types;
+const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
 const History = require('./schemas/history');
@@ -65,6 +67,9 @@ global.debug = process.env.NODE_ENV === 'development';
 
 require('./schemas')();
 
+if(!fs.existsSync('./cache')) fs.mkdirSync('./cache');
+if(!fs.existsSync('./customStatic')) fs.mkdirSync('./customStatic');
+
 const app = express();
 global.expressApp = app;
 
@@ -88,8 +93,12 @@ passport.deserializeUser(async (uuid, done) => {
 if(!debug) {
     app.use(compression());
 }
-if(!fs.existsSync('./customStatic')) fs.mkdirSync('./customStatic');
 app.use(express.static(`./customStatic`));
+
+if(config.minify.js || config.minify.css) {
+    minifyManager.check();
+    app.use(express.static(`./publicMin`));
+}
 app.use(express.static(`./public`));
 
 const skinsStatic = express.static('./skins');
@@ -98,6 +107,8 @@ app.use('/skins', (req, res, next) => {
 
     const blacklist = ['ejs', 'vue'];
     if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) next();
+
+    if(config.minify.js && filename.endsWith('.js')) return minifyManager.handleSkinJS(filename, req, res, next);
 
     skinsStatic(req, res, next);
 });
@@ -137,16 +148,20 @@ for(let f of fs.readdirSync('./login')) {
 app.use(useragent.express());
 
 app.get('/js/global.js', (req, res) => {
-    res.send(
-        'globalUtils = {\n'
-        + Object.keys(globalUtils)
-            .map(k => `${globalUtils[k].toString()}`)
-            .join(',\n')
-            .split('\n')
-            .map(a => a.trim())
-            .join('\n')
-        + '\n}'
-    );
+    if(!global.globalUtilsCache) {
+        global.globalUtilsCache = 'globalUtils = {\n'
+            + Object.keys(globalUtils)
+                .map(k => `${globalUtils[k].toString()}`)
+                .join(',\n')
+                .split('\n')
+                .map(a => a.trim())
+                .join('\n')
+            + '\n}';
+        global.globalUtilsEtag = crypto.createHash('sha256').update(global.globalUtilsCache).digest('hex');
+    }
+
+    res.setHeader('Etag', global.globalUtilsEtag);
+    res.end(global.globalUtilsCache);
 });
 
 app.use(async (req, res, next) => {
@@ -330,13 +345,15 @@ document.getElementById('initScript')?.remove();
                 return res.status(500).send('스킨 렌더 오류');
             }
 
-            if(debug) console.time('minifyHtml');
-            try {
-                html = await minifyHtml(html, {
-                    collapseWhitespace: true
-                });
-            } catch(e) {}
-            if(debug) console.timeEnd('minifyHtml');
+            if(config.minify.html) {
+                if(debug) console.time('minifyHtml');
+                try {
+                    html = await minifyHtml(html, {
+                        collapseWhitespace: true
+                    });
+                } catch (e) {}
+                if(debug) console.timeEnd('minifyHtml');
+            }
 
             if(sendOnlyContent) {
                 const $ = cheerio.load(html);

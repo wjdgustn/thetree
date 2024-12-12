@@ -4,6 +4,12 @@
 
   "namespaces": ["위키운영"],
 
+  "minify": {
+    "html": true,
+    "css": true,
+    "js": true
+  },
+
   "email_whitelist": ["example.com"],
   "use_email_verification": false,
   "smtp_sender": "TestWiki <test@example.com>",

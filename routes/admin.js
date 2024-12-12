@@ -1,14 +1,15 @@
 const express = require('express');
 const util = require('util');
 const fs = require('fs');
+const path = require('path');
 const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
 const multer = require('multer');
 
-const utils = require('../utils');
 const { GrantablePermissions, DevPermissions } = require('../utils/types');
 const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
+const minifyManager = require('../utils/minifyManager');
 
 const User = require('../schemas/user');
 
@@ -20,7 +21,7 @@ app.get('/admin/config', middleware.permission('developer'), (req, res) => {
     const readDir = path => {
         const files = fs.readdirSync(path);
         if(path !== customStaticRoot && !files.length) {
-            fs.rmdirSync(path, { recursive: true });
+            fs.rmSync(path, { recursive: true });
         }
         else for(let file of files) {
             const filePath = path + '/' + file;
@@ -75,7 +76,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), async (
         if(path.includes('..')) return res.status(400).send('invalid path');
         fs.unlinkSync('./customStatic' + path);
 
-        return res.redirect('/admin/config');
+        return res.status(204).end();
     }
 
     if(tool === 'fixstringconfig') {
@@ -87,7 +88,40 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), async (
         fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
-        return res.redirect('/admin/config');
+        return res.status(204).end();
+    }
+
+    if(tool === 'minifyjs') {
+        minifyManager.minifyJS(true);
+        return res.status(204).end();
+    }
+
+    if(tool === 'minifycss') {
+        return res.status(204).end();
+    }
+
+    if(tool === 'clearpublicmindir') {
+        const files = fs.readdirSync('./publicMin');
+        for(let file of files) {
+            const dirPath = path.join('./publicMin', file);
+            const stat = fs.statSync(dirPath);
+            if(!stat.isDirectory()) continue;
+
+            fs.rmSync(dirPath, { recursive: true });
+        }
+        return res.status(204).end();
+    }
+
+    if(tool === 'clearcachedir') {
+        const files = fs.readdirSync('./cache');
+        for(let file of files) {
+            const dirPath = path.join('./cache', file);
+            const stat = fs.statSync(dirPath);
+            if(!stat.isDirectory()) continue;
+
+            fs.rmSync(dirPath, { recursive: true });
+        }
+        return res.status(204).end();
     }
 
     return res.status(404).send('tool not found');
