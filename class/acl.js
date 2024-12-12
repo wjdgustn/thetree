@@ -165,7 +165,7 @@ module.exports = class ACL {
     async check(aclType = ACLTypes.None, data = {}) {
         if(aclType === ACLTypes.ACL && data?.permissions?.includes('nsacl')) return { result: true };
 
-        if(aclType !== ACLTypes.Read) {
+        if(aclType !== ACLTypes.Read && aclType !== ACLTypes.ACL) {
             const readCheck = await this.check(ACLTypes.Read, data);
             if(!readCheck.result) return readCheck;
         }
