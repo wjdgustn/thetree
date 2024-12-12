@@ -87,7 +87,7 @@ module.exports = class ACL {
             [ACLTypes.CreateThread]: '토론 생성',
             [ACLTypes.WriteThreadComment]: '토론 댓글',
             [ACLTypes.EditRequest]: '편집 요청',
-            [ACLTypes.ACL]: 'ACL'
+            [ACLTypes.ACL]: 'ACL 편집'
         }[aclType] ?? Object.entries(ACLTypes).find(([_, v]) => v === aclType)?.[0] ?? aclType;
     }
 
