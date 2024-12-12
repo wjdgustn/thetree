@@ -94,10 +94,12 @@ module.exports = class ACL {
     static permissionToString(permission, withPrefix = false) {
         let result = {
             any: '아무나',
+            ip: '아이피 사용자',
             member: '로그인된 사용자',
             admin: '관리자',
             member_signup_15days_ago: '가입한지 15일 지난 사용자',
-            document_contributor: '문서 기여자',
+            document_contributor: '해당 문서 기여자',
+            contributor: '위키 기여자',
             match_username_and_document_title: '문서 제목과 사용자 이름이 일치'
         }[permission] ?? permission;
 

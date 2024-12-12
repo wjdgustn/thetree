@@ -57,12 +57,13 @@ module.exports = {
     ],
     ACLPermissions: [
         'any',
+        'ip',
         'member',
         'admin',
         'member_signup_15days_ago',
         'document_contributor',
-        'match_username_and_document_title',
-        'ip'
+        'contributor',
+        'match_username_and_document_title'
     ],
     permissionMenus: {
         'grant': [{
