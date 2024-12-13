@@ -262,7 +262,9 @@ async function replaceContent(html) {
     }
 
     if(result) {
-        const allScripts = newContent.querySelectorAll('script');
+        const allScripts = [...newContent.querySelectorAll('script')];
+        if(fullReload) allScripts.push(doc.getElementById('initScript'));
+
         for(let script of allScripts) {
             if(script.src) {
                 const response = await fetch(script.src);
