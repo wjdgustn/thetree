@@ -1,13 +1,5 @@
 <!DOCTYPE html>
 <html lang="ko">
-<body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
-<div id="app"><%-include(`../skins/${skin}/layout.ejs`)%></div>
-<div id="tooltip" class="popper" style="display: none;">
-    <div id="tooltip-arrow" class="popper__arrow"></div>
-    <div id="tooltip-content" class="wiki-content popper__inner"></div>
-</div>
-</body>
-
 <head>
     <meta charset="UTF-8">
 
@@ -56,4 +48,12 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
+
+<body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
+<div id="app"><%-include(`../skins/${skin}/layout.ejs`)%></div>
+<div id="tooltip" class="popper" style="display: none;">
+    <div id="tooltip-arrow" class="popper__arrow"></div>
+    <div id="tooltip-content" class="wiki-content popper__inner"></div>
+</div>
+</body>
 </html>
