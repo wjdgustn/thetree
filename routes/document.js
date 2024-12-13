@@ -68,6 +68,7 @@ app.get('/w/*', async (req, res) => {
 
     if(req.query.uuid && !rev) return res.renderSkin(undefined, {
         ...defaultData,
+        date: null,
         contentHtml: '<h2>해당 리비전이 존재하지 않습니다.</h2>'
     });
 
