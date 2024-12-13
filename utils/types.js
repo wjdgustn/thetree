@@ -49,6 +49,10 @@ module.exports = {
         'update_thread_document',
         'update_thread_topic',
         'aclgroup',
+        'hide_document_history_log',
+        'hide_revision',
+        'mark_troll_revision',
+        'batch_revert',
         'api_access'
     ],
     DevPermissions: [
