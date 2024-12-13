@@ -95,6 +95,8 @@ function restoreForm() {
                 else
                     input.value = value;
             }
+
+            if(input.autofocus) input.focus();
         }
     }
 
@@ -107,17 +109,24 @@ const formBackup = {};
 const formHandler = async e => {
     const form = e.currentTarget;
 
-    if(form.method === 'get' || form.enctype === 'multipart/form-data') return;
+    if(form.enctype === 'multipart/form-data') return;
 
     e.preventDefault();
 
     const data = new FormData(form);
-    const response = await fetch(form.action, {
+
+    const url = new URL(form.action);
+    if(form.method === 'get')
+        url.search = new URLSearchParams(data).toString();
+
+    const response = await fetch(url, {
         method: form.method,
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams(data).toString()
+        ...(form.method === 'get' ? {} : {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(data).toString()
+        })
     });
 
     backupForm();
@@ -134,6 +143,7 @@ const formHandler = async e => {
     if(await replaceContent(html)) {
         setupDocument();
         restoreForm();
+        changeUrl(response.url);
     }
     else plainAlert(html);
 }
@@ -204,6 +214,21 @@ function setupDocument() {
     emit('thetree:pageLoad');
 }
 
+function changeUrl(url) {
+    const newUrl = new URL(url);
+    if(newUrl.pathname !== location.pathname
+        || newUrl.search !== location.search) {
+        const anchor = newUrl.searchParams.get('anchor');
+        if(anchor) {
+            const element = document.getElementById(anchor);
+            if(element) element.scrollIntoView();
+            newUrl.searchParams.delete('anchor');
+        }
+        history.pushState({}, null, newUrl.toString());
+        currentUrl = newUrl.toString();
+    }
+}
+
 let content;
 async function movePage(response, pushState = true) {
     if(typeof window.beforePageLoad === 'function') {
@@ -218,20 +243,7 @@ async function movePage(response, pushState = true) {
     if(response.status.toString().startsWith('4')) return plainAlert(html);
 
     if(await replaceContent(html)) {
-        if(pushState) {
-            const newUrl = new URL(response.url);
-            if(newUrl.pathname !== location.pathname
-                || newUrl.search !== location.search) {
-                const anchor = newUrl.searchParams.get('anchor');
-                if(anchor) {
-                    const element = document.getElementById(anchor);
-                    if(element) element.scrollIntoView();
-                    newUrl.searchParams.delete('anchor');
-                }
-                history.pushState({}, null, newUrl.toString());
-                currentUrl = newUrl.toString();
-            }
-        }
+        if(pushState) changeUrl(response.url);
 
         setupDocument();
         restoreForm();

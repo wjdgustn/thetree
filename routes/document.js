@@ -52,8 +52,8 @@ app.get('/w/*', async (req, res) => {
         document,
         edit_acl_message: null,
         editable: false,
-        rev: req.query.uuid === rev?.uuid ? rev.rev : null,
-        uuid: req.query.uuid === rev?.uuid ? rev.uuid : null,
+        rev: req.query.uuid && req.query.uuid === rev?.uuid ? rev.rev : null,
+        uuid: req.query.uuid && req.query.uuid === rev?.uuid ? rev.uuid : null,
         star_count: undefined,
         starred: null,
         user: null
@@ -488,13 +488,69 @@ app.post('/edit/*', async (req, res) => {
 
     await History.create({
         user: req.user.uuid,
-        type: isCreate ? HistoryTypes.Create : HistoryTypes.Edit,
+        type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
         document: dbDocument.uuid,
         content,
         log: req.body.log
     });
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
+});
+
+app.get('/history/*', async (req, res) => {
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(readAclMessage);
+
+    let revs;
+    let latestRev;
+    if(dbDocument) {
+        const query = {
+            document: dbDocument.uuid
+        };
+
+        if(!isNaN(req.query.until)) query.rev = { $gte: parseInt(req.query.until) };
+        else if(!isNaN(req.query.from)) query.rev = { $lte: parseInt(req.query.from) };
+
+        revs = await History.find(query)
+            .sort({ rev: query.rev?.$gte ? 1 : -1 })
+            .limit(30)
+            .lean();
+
+        if(query.rev?.$gte) revs.reverse();
+
+        latestRev = await History.findOne({
+            document: dbDocument.uuid
+        }).sort({ rev: -1 });
+    }
+
+    if(!dbDocument || !revs.length) return res.error('문서를 찾을 수 없습니다.');
+
+    for(let rev of revs) {
+        rev.user = await User.findOne({
+            uuid: rev.user
+        });
+    }
+
+    res.renderSkin(undefined, {
+        viewName: 'history',
+        document,
+        serverData: {
+            revs,
+            latestRev
+        },
+        contentName: 'history'
+    });
 });
 
 module.exports = app;

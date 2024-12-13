@@ -177,6 +177,8 @@ app.use(async (req, res, next) => {
         }
     });
 
+    req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
+
     if(!req.session.ipUser) {
         req.session.ipUser = await User.findOne({
             ip: req.ip
@@ -270,7 +272,7 @@ app.use(async (req, res, next) => {
         const viewName = data.viewName || null;
         if (viewName) delete data.viewName;
 
-        let sendOnlyContent = req.get('Sec-Fetch-Dest') === 'empty';
+        let sendOnlyContent = req.fromFetch;
         if(data.fullReload || req.session.fullReload) {
             sendOnlyContent = false;
 

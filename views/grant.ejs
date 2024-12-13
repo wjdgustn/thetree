@@ -24,7 +24,7 @@
 
 <%const targetUserExists = typeof targetUser !== undefined && !!targetUser;%>
 
-<form>
+<form id="grant-form">
     <p>
         Username
         <input name="username" value="<%=req.query.username%>" required<%=targetUserExists ? '' : ' autofocus'%>>
