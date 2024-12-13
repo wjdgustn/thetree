@@ -76,9 +76,16 @@ module.exports = {
     minifyCSS(force = false) {
         const cache = getCache();
 
+        const viewsCSSPath = path.join(MIN_CSS_PATH, 'views');
         if(!fs.existsSync(MIN_CSS_PATH)) fs.mkdirSync(MIN_CSS_PATH);
+        if(!fs.existsSync(viewsCSSPath)) fs.mkdirSync(viewsCSSPath);
 
-        const cssFiles = fs.readdirSync(CSS_PATH).filter(a => a.endsWith('.css'));
+        const cssFiles = [
+            ...fs.readdirSync(CSS_PATH).filter(a => a.endsWith('.css')),
+            ...fs.readdirSync(path.join(CSS_PATH, 'views'))
+                .filter(a => a.endsWith('.css'))
+                .map(a => path.join('views', a))
+        ];
         const cssContents = cssFiles.map(a => fs.readFileSync(path.join(CSS_PATH, a)).toString());
         const cssHashes = cssContents.map(a => crypto.createHash('sha256').update(a).digest('hex'));
 
