@@ -185,7 +185,10 @@ app.post('/acl/*', async (req, res) => {
 
     if(aclType === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
 
-    const duration = parseInt(req.body.duration);
+    let duration;
+    if(req.body.duration === 'raw') duration = req.body.rawDuration * req.body.rawMultiplier;
+    else duration = parseInt(req.body.duration);
+
     if(isNaN(duration)) return res.status(400).send('유효하지 않은 duration');
 
     let conditionContent = req.body.conditionContent;

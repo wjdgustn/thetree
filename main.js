@@ -261,7 +261,7 @@ app.use(async (req, res, next) => {
         ip: req.ip
     }
 
-    app.locals.isDev = req.permissions .includes('developer');
+    app.locals.isDev = req.permissions.includes('developer');
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;

@@ -89,67 +89,76 @@
             <input type="hidden" name="target">
             <input type="hidden" name="aclType">
 
-            <div class="form-inline">
-                <div class="form-group">
-                    <label class="form-control-label">Condition</label>
-                    <div>
-                        <select class="form-control" name="conditionType" x-model="conditionType" x-init="conditionType = $el.value">
-                            <%for(let [key, value] of Object.entries(ACLConditionTypes)) {%>
-                            <option value="<%=key%>"><%=ACL.conditionToString(value)%></option>
-                            <%}%>
-                        </select>
+            <div class="acl-form-group">
+                <label>Condition</label>
+                <div>
+                    <select name="conditionType" x-model="conditionType" x-init="conditionType = $el.value">
+                        <%for(let [key, value] of Object.entries(ACLConditionTypes)) {%>
+                        <option value="<%=key%>"><%=ACL.conditionToString(value)%></option>
+                        <%}%>
+                    </select>
 
-                        <%if(isDev) {%><input class="form-control" type="text" list="permissions" name="permission" value="<%=ACLPermissions[0]%>" x-show="conditionType === 'Perm'"><%}%>
-                        <<%-isDev ? 'datalist' : 'select class="form-control" name="permission"'%> id="permissions" x-show="conditionType === 'Perm'">
-                            <%for(let i in ACLPermissions) {%>
-                            <%const perm = ACLPermissions[i];%>
-                            <option value="<%=perm%>"><%=ACL.permissionToString(perm)%></option>
-                            <%}%>
-                        </<%=isDev ? 'datalist' : 'select'%>>
+                    <%if(isDev) {%><input type="text" list="permissions" name="permission" value="<%=ACLPermissions[0]%>" x-show="conditionType === 'Perm'"><%}%>
+                    <<%-isDev ? 'datalist' : 'select name="permission"'%> id="permissions" x-show="conditionType === 'Perm'">
+                        <%for(let i in ACLPermissions) {%>
+                        <%const perm = ACLPermissions[i];%>
+                        <option value="<%=perm%>"><%=ACL.permissionToString(perm)%></option>
+                        <%}%>
+                    </<%=isDev ? 'datalist' : 'select'%>>
 
-                        <input class="form-control" type="text" name="conditionContent" x-show="conditionType !== 'Perm'">
-                    </div>
+                    <input type="text" name="conditionContent" x-show="conditionType !== 'Perm'">
                 </div>
-
-                <div class="form-group">
-                    <label class="form-control-label">Action :</label>
-                    <div>
-                        <select class="form-control" name="actionType" x-model="actionType" x-init="actionType = $el.value">
-                            <%for(let [key, value] of Object.entries(ACLActionTypes).slice(1, isDev ? undefined : -1)) {%>
-                            <option value="<%=key%>"><%=ACL.actionToString(value)%></option>
-                            <%}%>
-                        </select>
-
-                        <input class="form-control" type="text" name="actionContent" x-show="actionType === 'GotoOtherNS'" placeholder="namespace">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-control-label">Duration :</label>
-                    <div>
-                        <select class="form-control" name="duration">
-                            <option value="0">영구</option>
-                            <option value="60">1분</option>
-                            <option value="300">5분</option>
-                            <option value="600">10분</option>
-                            <option value="1800">30분</option>
-                            <option value="3600">1시간</option>
-                            <option value="7200">2시간</option>
-                            <option value="86400">하루</option>
-                            <option value="259200">3일</option>
-                            <option value="432000">5일</option>
-                            <option value="604800">7일</option>
-                            <option value="1209600">2주</option>
-                            <option value="1814400">3주</option>
-                            <option value="2592000">1개월</option>
-                            <option value="15552000">6개월</option>
-                            <option value="29030400">1년</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button class="thetree-square-button thetree-blue-button">추가</button>
             </div>
+
+            <div class="acl-form-group">
+                <label>Action :</label>
+                <div>
+                    <select name="actionType" x-model="actionType" x-init="actionType = $el.value">
+                        <%for(let [key, value] of Object.entries(ACLActionTypes).slice(1, isDev ? undefined : -1)) {%>
+                        <option value="<%=key%>"><%=ACL.actionToString(value)%></option>
+                        <%}%>
+                    </select>
+
+                    <input type="text" name="actionContent" x-show="actionType === 'GotoOtherNS'" placeholder="namespace">
+                </div>
+            </div>
+
+            <div class="acl-form-group" x-data="{ duration: '0' }">
+                <label>Duration :</label>
+                <div>
+                    <select name="duration" x-model="duration" x-init="duration = $el.value">
+                        <option value="0">영구</option>
+                        <option value="300">5분</option>
+                        <option value="600">10분</option>
+                        <option value="1800">30분</option>
+                        <option value="3600">1시간</option>
+                        <option value="7200">2시간</option>
+                        <option value="86400">하루</option>
+                        <option value="259200">3일</option>
+                        <option value="432000">5일</option>
+                        <option value="604800">7일</option>
+                        <option value="1209600">2주</option>
+                        <option value="1814400">3주</option>
+                        <option value="2419200">4주</option>
+                        <option value="4838400">2개월</option>
+                        <option value="7257600">3개월</option>
+                        <option value="14515200">6개월</option>
+                        <option value="29030400">1년</option>
+                        <option value="raw">직접입력</option>
+                    </select>
+                    <input type="number" name="rawDuration" x-show="duration === 'raw'">
+                    <select name="rawMultiplier" x-show="duration === 'raw'">
+                        <option value="1">초</option>
+                        <option value="60">분</option>
+                        <option value="3600">시간</option>
+                        <option value="86400">일</option>
+                        <option value="604800">주</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="thetree-square-button thetree-blue-button">추가</button>
+            <%if(isDev) {%><button type="button" id="add-to-all" class="thetree-square-button thetree-blue-button">모든 작업에 추가</button><%}%>
         </form>
     </div>
 </div>

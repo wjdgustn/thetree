@@ -6,8 +6,11 @@ let createACLForm;
 let target;
 let aclType;
 
-function updateNavs() {
-    const splittedHref = location.hash.split('.');
+const aclTypes = [];
+
+function updateNavs(hash) {
+    if(!hash) hash = location.hash;
+    const splittedHref = hash.split('.');
 
     let showTarget;
     for(let other of navLinks) {
@@ -20,7 +23,7 @@ function updateNavs() {
             other.href = newOtherHref;
 
             const parent = other.parentNode;
-            if(location.hash.includes('.')
+            if(hash.includes('.')
                 ? splittedOther[1] === splittedHref[1]
                 : parent.parentNode.children[0] === parent) {
                 other.classList.add('nav-link-selected');
@@ -31,10 +34,12 @@ function updateNavs() {
                 aclType.value = other.dataset.type;
             }
             else other.classList.remove('nav-link-selected');
+
+            if(!aclTypes.includes(splittedOther[1])) aclTypes.push(splittedOther[1]);
         }
         else {
             const parent = other.parentNode;
-            if(location.hash.length > 1
+            if(hash.length > 1
                 ? otherHref === splittedHref[0]
                 : parent.parentNode.children[0] === parent) {
                 other.classList.add('nav-link-selected');
@@ -134,4 +139,16 @@ document.addEventListener('thetree:pageLoad', () => {
             if(text) alert(text);
         });
     }
+
+    const addToAll = document.getElementById('add-to-all');
+    if(addToAll) addToAll.addEventListener('click', () => {
+        const targetVal = target.value;
+
+        for(let aclType of aclTypes) {
+            updateNavs(`#${targetVal}.${aclType}`);
+            createACLForm.dispatchEvent(new Event('submit'));
+        }
+
+        updateNavs();
+    });
 }, { once: true });
