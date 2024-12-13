@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
+<body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
+<div id="app"><%-include(`../skins/${skin}/layout.ejs`)%></div>
+<div id="tooltip" class="popper" style="display: none;">
+    <div id="tooltip-arrow" class="popper__arrow"></div>
+    <div id="tooltip-content" class="wiki-content popper__inner"></div>
+</div>
+</body>
+
 <head>
     <meta charset="UTF-8">
 
@@ -12,19 +20,19 @@
 
     <meta name="theme-color" content="<%=config.theme_color%>">
 
+    <%let siteTitle = page.title;%>
     <%if(typeof document !== 'undefined') {%>
         <%const title = doc_fulltitle(document);%>
-        <meta property="og:title" content="<%=title%>">
-        <meta property="og:site_name" content="<%=config.site_name%>">
-        <%if(config.embed_image) {%><meta property="og:image" content="<%=config.embed_image%>"><%}%>
+        <%siteTitle = title + getTitleDescription(page);%>
         <%if(typeof contentText !== 'undefined') {%><meta property="og:description" content="<%=contentText.slice(0, 200)%>"><%}%>
-        <meta property="og:url" content="<%=config.base_url%><%=req.path%>">
         <meta property="og:type" content="article">
-
-        <title><%=title%><%=getTitleDescription(page)%> - <%=config.site_name%></title>
-    <%} else {%>
-        <title><%=page.title%> - <%=config.site_name%></title>
     <%}%>
+    <meta property="og:title" content="<%=siteTitle%>">
+    <meta property="og:site_name" content="<%=config.site_name%>">
+    <meta property="og:url" content="<%=config.base_url%><%=req.path%>">
+    <%if(config.embed_image) {%><meta property="og:image" content="<%=config.embed_image%>"><%}%>
+
+    <title><%=siteTitle%> - <%=config.site_name%></title>
 
     <link rel="canonical" href="<%=config.base_url%><%=req.path%>">
 
@@ -48,12 +56,4 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-
-<body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
-<div id="app"><%-include(`../skins/${skin}/layout.ejs`)%></div>
-<div id="tooltip" class="popper" style="display: none;">
-    <div id="tooltip-arrow" class="popper__arrow"></div>
-    <div id="tooltip-content" class="wiki-content popper__inner"></div>
-</div>
-</body>
 </html>
