@@ -52,7 +52,7 @@ app.get('/w/*', async (req, res) => {
         document,
         edit_acl_message: null,
         editable: false,
-        rev: req.query.rev ?? null,
+        rev: req.query.uuid === rev?.uuid ? rev.rev : null,
         star_count: undefined,
         starred: null,
         user: null,
@@ -64,6 +64,11 @@ app.get('/w/*', async (req, res) => {
         ...defaultData,
         date: null,
         contentHtml: `<h2>${read_acl_message}</h2>`
+    });
+
+    if(req.query.uuid && !rev) return res.renderSkin(undefined, {
+        ...defaultData,
+        contentHtml: '<h2>해당 리비전이 존재하지 않습니다.</h2>'
     });
 
     const { result: editable, aclMessage: edit_acl_message } = await acl.check(ACLTypes.Edit, req.aclData);
@@ -108,6 +113,9 @@ app.get('/w/*', async (req, res) => {
 
     res.renderSkin(undefined, {
         ...defaultData,
+        serverData: {
+            rev
+        },
         contentHtml,
         categoryHtml,
         date: rev.createdAt.getTime(),

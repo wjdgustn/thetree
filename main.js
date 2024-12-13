@@ -325,6 +325,10 @@ document.getElementById('initScript')?.remove();
 
         if(data.contentHtml) data.contentText = utils.removeHtmlTags(data.contentHtml);
 
+        if(data.categoryHtml) {
+            data.contentHtml = data.categoryHtml + data.contentHtml;
+        }
+
         if(data.contentHtml && req.query.from && req.path.startsWith('/w/')) {
             data.contentHtml = `
 <div class="thetree-alert thetree-alert-primary">
@@ -335,8 +339,14 @@ document.getElementById('initScript')?.remove();
         `.replaceAll('\n', '').trim() + data.contentHtml;
         }
 
-        if(data.categoryHtml) {
-            data.contentHtml = data.categoryHtml + data.contentHtml;
+        if(data.contentHtml && data.rev) {
+            data.contentHtml = `
+<div class="thetree-alert thetree-alert-danger">
+<div class="thetree-alert-content">
+<b>[주의!]</b> 문서의 이전 버전(${globalUtils.getFullDateTag(data.serverData.rev.createdAt)}에 수정)을 보고 있습니다. <a href="${globalUtils.doc_action_link(data.document, 'w')}">최신 버전으로 이동</a>
+</div>
+</div>
+        `.replaceAll('\n', '').trim() + data.contentHtml;
         }
 
         app.render('main', {
