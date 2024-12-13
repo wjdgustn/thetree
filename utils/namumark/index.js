@@ -172,7 +172,7 @@ module.exports = class NamumarkParser {
         }
         else this.childDepth++;
 
-        if(this.includeData) disableNoParagraph = true;
+        // if(this.includeData && !childParse) disableNoParagraph = true;
 
         let sourceText = childParse ? input : utils.escapeHtml(input);
 
@@ -367,7 +367,8 @@ module.exports = class NamumarkParser {
             // Last 직전
             if(!childParse
                 && syntax.priority === Priority.Last - 1
-                && syntax.priority !== nextSyntax.priority) {
+                && syntax.priority !== nextSyntax.priority
+                && this.footnoteList.length) {
                 sourceText += '<!noParagraph><!cursorToEnd/><[footnotePos]><!/noParagraph>';
             }
         }
@@ -509,7 +510,7 @@ module.exports = class NamumarkParser {
 
         // console.log(sourceText);
 
-        text = postProcess(sourceText, childParse, disableNoParagraph);
+        text = postProcess(sourceText, this, childParse, disableNoParagraph);
 
         // console.log(text);
 

@@ -7,7 +7,10 @@ const ParagraphOpen = '<div class="wiki-paragraph">';
 const TempParagraphClose = '<paragraphClose/>';
 const ParagraphClose = '</div>';
 
-module.exports = (sourceText, childParse = false, disableNoParagraph = false) => {
+module.exports = (sourceText, namumark, childParse = false, disableNoParagraph = false) => {
+    if(!childParse && namumark.includeData && !sourceText.includes(NoParagraphOpen))
+        disableNoParagraph = true;
+
     let text = '';
 
     let paragraphOpened = false;
