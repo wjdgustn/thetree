@@ -78,33 +78,33 @@ ${enableNext ? enabledButton({
 
                     if(req.permissions.includes('mark_troll_revision')) {
                         if(rev.troll) actions.push({
-                            action: 'unmark_troll',
+                            action: 'a/unmark_troll',
                             text: '[A]반달표시 해제'
                         });
                         else actions.push({
-                            action: 'mark_troll',
+                            action: 'a/mark_troll',
                             text: '[A]반달로 표시'
                         });
                     }
 
                     if(rev.log && req.permissions.includes('hide_document_history_log')) {
                         if(rev.hideLog) actions.push({
-                            action: 'unhide_log',
+                            action: 'a/unhide_log',
                             text: '[A]편집요약 숨기기 해제'
                         });
                         else actions.push({
-                            action: 'hide_log',
+                            action: 'a/hide_log',
                             text: '[A]편집요약 숨기기'
                         });
                     }
 
                     if(req.permissions.includes('hide_revision')) {
                         if(rev.hidden) actions.push({
-                            action: 'unhide',
+                            action: 'a/unhide',
                             text: '[A]리비전 숨기기 해제'
                         });
                         else actions.push({
-                            action: 'hide',
+                            action: 'a/hide',
                             text: '[A]리비전 숨기기'
                         });
                     }
