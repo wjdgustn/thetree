@@ -53,11 +53,11 @@ app.get('/w/*', async (req, res) => {
         edit_acl_message: null,
         editable: false,
         rev: req.query.uuid === rev?.uuid ? rev.rev : null,
+        uuid: req.query.uuid === rev?.uuid ? rev.uuid : null,
         star_count: undefined,
         starred: null,
-        user: null,
-        uuid: null
-    }
+        user: null
+    };
 
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.renderSkin(undefined, {
