@@ -323,7 +323,7 @@ window.defaultConfig = {
 
 document.getElementById('initScript')?.remove();
 </script>
-        `.trim();
+        `.trim().replaceAll('/', '\\/');
 
         if(data.contentHtml) data.contentText = utils.removeHtmlTags(data.contentHtml);
 
