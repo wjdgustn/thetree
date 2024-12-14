@@ -19,6 +19,7 @@ module.exports = {
         let text = splittedContent.slice(1).join('|') || link;
         let notExist = false;
 
+        let isImage = false;
         const image = await processImage(content, splittedContent, link, text);
         if(typeof image === 'string') {
             namumark.files.push(link);
@@ -28,6 +29,7 @@ module.exports = {
             if(image.link) link = image.link;
             if(image.text) text = image.text;
             notExist = true;
+            isImage = true;
         }
 
         let isCategory = false;
@@ -64,7 +66,7 @@ module.exports = {
         link = link.trim();
         text = text.trim();
 
-        if(splittedContent.length === 1 && link.slice(1).includes('#')) {
+        if(!isImage && splittedContent.length === 1 && link.slice(1).includes('#')) {
             const splittedText = link.split('#');
             splittedText.pop();
             text = splittedText.join('#');
@@ -172,6 +174,7 @@ module.exports = {
         }
 
         if(!parsedLink) namumark.links.push(title);
+        console.log(html);
         return html;
     }
 }
