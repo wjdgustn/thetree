@@ -201,10 +201,12 @@ app.post('/acl/*', async (req, res) => {
     if(isNaN(duration)) return res.status(400).send('유효하지 않은 duration');
 
     let conditionContent = req.body.conditionContent;
+    let rawConditionContent = req.body.conditionContent;
 
     if(conditionType === ACLConditionTypes.Perm) {
         if(!req.body.permission) return res.status(400).send('권한 값을 입력해주세요!');
         conditionContent = req.body.permission;
+        rawConditionContent = req.body.permission;
     }
     else if(conditionType === ACLConditionTypes.Member) {
         const member = await User.findOne({
@@ -270,6 +272,18 @@ app.post('/acl/*', async (req, res) => {
 
     await ACLModel.create(newACL);
 
+    if(dbDocument) await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.ACL,
+        document: dbDocument.uuid,
+        log: [
+            'insert',
+            utils.camelToSnakeCase(req.body.aclType),
+            req.body.actionType.toLowerCase(),
+            req.body.conditionType.toLowerCase() + ':' + rawConditionContent
+        ].join(',')
+    });
+
     res.redirect(req.originalUrl);
 });
 
@@ -284,8 +298,9 @@ app.get('/action/acl/delete', async (req, res) => {
 
     if(dbACL.type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
 
+    let dbDocument;
     if(dbACL.document) {
-        const dbDocument = await Document.findOne({
+        dbDocument = await Document.findOne({
             uuid: dbACL.document
         });
 
@@ -304,6 +319,35 @@ app.get('/action/acl/delete', async (req, res) => {
     await ACLModel.deleteOne({
         uuid: aclId
     });
+
+    if(dbDocument) {
+        const conditionType = dbACL.conditionType;
+        let conditionContent = dbACL.conditionContent;
+        if(conditionType === ACLConditionTypes.Member) {
+            const member = await User.findOne({
+                uuid: dbACL.conditionContent
+            });
+            if (member) conditionContent = member.name;
+        }
+        else if(conditionType === ACLConditionTypes.ACLGroup) {
+            const aclGroup = await ACLGroup.findOne({
+                uuid: dbACL.conditionContent
+            });
+            if(aclGroup) conditionContent = aclGroup.name;
+        }
+
+        await History.create({
+            user: req.user.uuid,
+            type: HistoryTypes.ACL,
+            document: dbDocument.uuid,
+            log: [
+                'delete',
+                utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, dbACL.type)),
+                utils.getKeyFromObject(ACLActionTypes, dbACL.actionType).toLowerCase(),
+                utils.getKeyFromObject(ACLConditionTypes, conditionType).toLowerCase() + ':' + conditionContent
+            ].join(',')
+        });
+    }
 
     res.redirect(req.get('Referer'));
 });

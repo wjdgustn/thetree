@@ -1,6 +1,7 @@
 const { Address4, Address6 } = require('ip-address');
 const { lookup: ipLookup } = require('ip-location-api');
 
+const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const { UserTypes, ACLTypes, ACLConditionTypes, ACLActionTypes } = require('../utils/types');
 
@@ -88,7 +89,7 @@ module.exports = class ACL {
             [ACLTypes.WriteThreadComment]: '토론 댓글',
             [ACLTypes.EditRequest]: '편집 요청',
             [ACLTypes.ACL]: 'ACL 편집'
-        }[aclType] ?? Object.entries(ACLTypes).find(([_, v]) => v === aclType)?.[0] ?? aclType;
+        }[aclType] ?? utils.getKeyFromObject(ACLTypes, aclType) ?? aclType;
     }
 
     static permissionToString(permission, withPrefix = false) {
@@ -113,7 +114,7 @@ module.exports = class ACL {
             [ACLConditionTypes.IP]: '아이피',
             [ACLConditionTypes.GeoIP]: 'GeoIP',
             [ACLConditionTypes.ACLGroup]: 'ACL그룹'
-        }[condition] ?? Object.entries(ACLConditionTypes).find(([_, v]) => v === condition)?.[0] ?? condition;
+        }[condition] ?? utils.getKeyFromObject(ACLConditionTypes, condition) ?? condition;
     }
 
     static ruleToRequiredString(rule) {

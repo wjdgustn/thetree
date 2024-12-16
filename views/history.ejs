@@ -119,6 +119,10 @@ ${enableNext ? enabledButton({
 
                 </span>
 
+                <%if(rev.type === HistoryTypes.ACL) {%>
+                    <i>(<%=rev.log%>으로 ACL 변경)</i>
+                <%}%>
+
                 <strong>
                     <a class="rev-text" href="#">r<%=rev.rev%></a>
 
@@ -131,7 +135,7 @@ ${enableNext ? enabledButton({
                         if(rev.diffLength > 0) diffClassList.push('diff-add');
                         else if(rev.diffLength < 0) diffClassList.push('diff-remove');
                     %>
-                    (<span class="<%=diffClassList.join(' ')%>"><%=rev.diffLength > 0 ? '+' : ''%><%=rev.diffLength%></span>)
+                    (<span class="<%=diffClassList.join(' ')%>"><%=rev.diffLength > 0 ? '+' : ''%><%=rev.diffLength ?? 0%></span>)
 
                 </span>
 
@@ -139,7 +143,7 @@ ${enableNext ? enabledButton({
                     <a class="<%=rev.user.type === UserTypes.Account ? 'user-text-link-member' : ''%>" href="/w/사용자:<%=rev.user.name%>"><%=rev.user.name%></a>
                 </div>
 
-                <%if(rev.log) {%>
+                <%if(rev.log && rev.type !== HistoryTypes.ACL) {%>
                     (<span class="history-log"><%=rev.log%></span>)
                 <%}%>
             </li>
