@@ -322,7 +322,7 @@ ${(await namumark.parse(value, true)).html}
         tableStyle = tableStyle.slice(1);
         tableDarkStyle = tableDarkStyle.slice(1);
 
-        const table = `<removeNextNewline/>${' '.repeat(spaceCount)}<!noParagraph><div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div><!/noParagraph>`;
+        const table = `<removeNewline/>${' '.repeat(spaceCount)}<!noParagraph><div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div><!/noParagraph>`;
 
         return table + (fromLastLine ? '' : '<newLine/>' + content);
     },
