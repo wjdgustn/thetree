@@ -121,6 +121,8 @@ ${enableNext ? enabledButton({
 
                 <%if(rev.type === HistoryTypes.ACL) {%>
                     <i>(<%=rev.log%>으로 ACL 변경)</i>
+                <%} else if(rev.type === HistoryTypes.Create) {%>
+                    <i>(새 문서)</i>
                 <%}%>
 
                 <strong>
