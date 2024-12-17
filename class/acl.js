@@ -9,6 +9,7 @@ const ACLModel = require('../schemas/acl');
 const User = require('../schemas/user');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
+const History = require('../schemas/history');
 
 const checkDefaultData = {
     permissions: [],
@@ -263,16 +264,30 @@ module.exports = class ACL {
         if(rule.conditionType === ACLConditionTypes.Perm) {
             if(rule.conditionContent === 'any') return { action };
 
-            if(!data.permissions) return ACLActionTypes.Skip;
+            if(data.user && rule.document && rule.conditionContent === 'document_contributor') {
+                const contribution = History.exists({
+                    document: rule.document,
+                    user: data.user.uuid
+                });
+                if(contribution) return { action };
+                else return { action: ACLActionTypes.Skip };
+            }
+            if(data.user && this.document && rule.conditionContent === 'match_username_and_document_title') {
+                const docName = this.document.title.split('/')[0];
+                if(data.user.name === docName) return { action };
+                else return { action: ACLActionTypes.Skip };
+            }
+
+            if(!data.permissions) return { action: ACLActionTypes.Skip };
             if(data.permissions.includes(rule.conditionContent)) return { action };
         }
         else if(rule.conditionType === ACLConditionTypes.Member) {
-            if(!rule.user) return ACLActionTypes.Skip;
+            if(!rule.user) return { action: ACLActionTypes.Skip };
 
             if(data.user?.uuid === rule.user.uuid) return { action };
         }
         else if(rule.conditionType === ACLConditionTypes.IP) {
-            if(!data.ip) return ACLActionTypes.Skip;
+            if(!data.ip) return { action: ACLActionTypes.Skip };
 
             const requestIsV4 = Address4.isValid(data.ip);
             const targetIsV4 = Address4.isValid(rule.conditionContent);
@@ -293,10 +308,10 @@ module.exports = class ACL {
             }
         }
         else if(rule.conditionType === ACLConditionTypes.GeoIP) {
-            if(!data.ip) return ACLActionTypes.Skip;
+            if(!data.ip) return { action: ACLActionTypes.Skip };
 
             const lookupResult = ipLookup(data.ip);
-            if(!lookupResult) return ACLActionTypes.Skip;
+            if(!lookupResult) return { action: ACLActionTypes.Skip };
 
             if(lookupResult.country === rule.conditionContent) return { action };
         }

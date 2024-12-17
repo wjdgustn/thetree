@@ -252,11 +252,6 @@ app.use(async (req, res, next) => {
         'member_signup_15days_ago'
     ].includes(a));
 
-    // TODO perms:
-    //  document_contributor(at document middleware)
-    //  contributor(using revision history)
-    //  match_username_and_document_title(at document middleware)
-
     req.aclData = {
         permissions: req.permissions,
         user: req.user,
