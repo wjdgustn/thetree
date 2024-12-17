@@ -77,8 +77,14 @@ function setupWikiHandlers() {
         });
     }
 
-    setupFootnoteTooltip();
+    let footnoteType = State.getLocalConfig('wiki.footnote_type');
+    if(!footnoteType) footnoteType = isMobile() ? 'modal' : 'tooltip';
+
+    if(footnoteType === 'tooltip') setupFootnoteTooltip();
+    else if(footnoteType === 'modal') setupFootnoteModal();
 }
+
+const footnotes = document.getElementsByClassName('wiki-fn-content');
 
 function setupFootnoteTooltip() {
     const tooltip = document.getElementById('tooltip');
@@ -102,7 +108,6 @@ function setupFootnoteTooltip() {
     });
     tooltip.addEventListener('mouseleave', mouseLeaveHandler);
 
-    const footnotes = document.getElementsByClassName('wiki-fn-content');
     for(let footnote of footnotes) {
         const targetId = footnote.getAttribute('href').slice(1);
         const contentElement = document.getElementById(targetId).parentElement;
@@ -135,6 +140,25 @@ function setupFootnoteTooltip() {
         });
 
         footnote.addEventListener('mouseleave', mouseLeaveHandler);
+    }
+}
+
+function setupFootnoteModal() {
+    for(let footnote of footnotes) {
+        const targetId = footnote.getAttribute('href').slice(1);
+        const contentElement = document.getElementById(targetId).parentElement;
+
+        footnote.title = '';
+
+        const modal = document.getElementById('footnote-modal');
+        const modalContent = document.getElementById('footnote-modal-content');
+
+        footnote.addEventListener('click', e => {
+            e.preventDefault();
+
+            modalContent.innerHTML = contentElement.innerHTML;
+            modal._thetree.modal.open();
+        });
     }
 }
 

@@ -43,6 +43,7 @@
     <script src="/js/global.js"></script>
     <script src="/js/common.js"></script>
     <script src="/js/wiki.js"></script>
+    <script src="/js/modal.js"></script>
     <%-browserGlobalVarScript%>
     <style>
         [x-cloak] { display: none !important; }
@@ -51,9 +52,22 @@
 
 <body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
 <div id="app"><%-include(`../skins/${skin}/layout.ejs`)%></div>
+
 <div id="tooltip" class="popper" style="display: none;">
     <div id="tooltip-arrow" class="popper__arrow"></div>
     <div id="tooltip-content" class="wiki-content popper__inner"></div>
+</div>
+
+<div id="footnote-modal" class="thetree-modal-block thetree-modal">
+    <div class="thetree-modal-block thetree-modal-bg"></div>
+    <div class="thetree-modal-block thetree-modal-container thetree-footnote-modal-container" aria-expanded="false" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="thetree-modal-content">
+            <div class="footnote-modal-contents">
+                <div id="footnote-modal-content" class="wiki-content"></div>
+                <button class="thetree-modal-close">닫기</button>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>

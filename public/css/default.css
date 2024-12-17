@@ -335,3 +335,68 @@ a.navigation-button {
 .navigation-page-button {
     column-gap: .4rem;
 }
+
+.thetree-modal-block {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.thetree-modal {
+    position: fixed;
+    z-index: 100000;
+    opacity: 0;
+    transition: opacity .2s;
+    display: none;
+}
+
+.thetree-modal-display {
+    display: block;
+}
+
+.thetree-modal-open {
+    opacity: 1;
+}
+
+.thetree-modal-bg {
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.thetree-modal-container {
+    overflow-y: scroll;
+    padding: 1rem .5rem;
+}
+
+.thetree-modal-content {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: .25rem;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    max-width: 600px;
+    position: relative;
+}
+
+.thetree-footnote-modal-container {
+    padding-top: 10rem;
+}
+
+.footnote-modal-contents #footnote-modal-content {
+    padding: 1rem;
+}
+
+.footnote-modal-contents button {
+    background-color: #fafafa;
+    border: 0;
+    border-top: 1px solid #eee;
+    color: inherit;
+    cursor: pointer;
+    font-size: 12px !important;
+    margin: 2px 0 0;
+    outline: none !important;
+    padding: 10px;
+    width: 100%;
+}
