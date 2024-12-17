@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const { Address4, Address6 } = require('ip-address');
 
+const utils = require('../utils');
+
 const { Schema } = mongoose;
 const newSchema = new Schema({
     uuid: {
@@ -68,10 +70,21 @@ newSchema.index({ aclGroup: 1, ip: 1 }, {
 
 newSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+let lastItem;
+const locks = [];
 newSchema.pre('save', async function() {
     if(this.id == null) {
-        const last = await model.findOne().sort({ id: -1 });
+        let last = lastItem;
+        lastItem = this;
+
+        if(last && last.id === null) await utils.waitUntil(new Promise(resolve => {
+            locks.push(resolve);
+        }), 5000);
+
+        if(!last) last = await model.findOne().sort({ id: -1 });
         this.id = last ? last.id + 1 : 1;
+
+        locks.forEach(r => r());
     }
 
     if(this.ip !== null) {

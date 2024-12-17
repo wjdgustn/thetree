@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
+const utils = require('../utils');
 const { HistoryTypes } = require('../utils/types');
 
 const { Schema } = mongoose;
@@ -70,8 +71,21 @@ const newSchema = new Schema({
 
 newSchema.index({ document: 1, rev: 1 }, { unique: true });
 
+const lastItem = {};
+const lockPromise = {};
 newSchema.pre('save', async function() {
-    const last = await model.findOne({ document: this.document }).sort({ rev: -1 });
+    const locks = lockPromise[this.document] ??= [];
+
+    let last = lastItem[this.document];
+    lastItem[this.document] = this;
+
+    if(last && last.rev == null) await utils.waitUntil(new Promise(resolve => {
+        locks.push(resolve);
+    }), 5000);
+
+    if(!last) last = await model.findOne({ document: this.document }).sort({ rev: -1 });
+
+    locks.forEach(r => r());
 
     if(this.rev == null) {
         this.rev = last ? last.rev + 1 : 1;
@@ -83,6 +97,10 @@ newSchema.pre('save', async function() {
     else if(this.diffLength == null) {
         this.diffLength = last ? this.content.length - last.content.length : this.content.length;
     }
+});
+
+newSchema.post('save', async function() {
+    delete lastItem[this.document];
 });
 
 const model = mongoose.model('History', newSchema);
