@@ -5,10 +5,15 @@ const passport = require('passport');
 
 const utils = require('../utils');
 const middleware = require('../utils/middleware');
+const {
+    HistoryTypes
+} = require('../utils/types');
 
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
 const LoginHistory = require('../schemas/loginHistory');
+const Document = require("../schemas/document");
+const History = require("../schemas/history");
 
 const app = express.Router();
 
@@ -183,6 +188,19 @@ app.post('/member/signup/:token',
 
     await SignupToken.deleteMany({
         email: token.email
+    });
+
+    const dbDocument = new Document({
+        namespace: '사용자',
+        title: newUser.name
+    });
+    await dbDocument.save();
+
+    await History.create({
+        user: newUser.uuid,
+        type: HistoryTypes.Create,
+        document: dbDocument.uuid,
+        content: ''
     });
 
     return req.login({

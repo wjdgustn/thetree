@@ -530,6 +530,8 @@ app.post('/edit/*', async (req, res) => {
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid))
         return res.status(400).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
 
+    if(namespace === '사용자' && isCreate) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+
     await History.create({
         user: req.user.uuid,
         type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
