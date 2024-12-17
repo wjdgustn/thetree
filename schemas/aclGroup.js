@@ -21,15 +21,8 @@ const newSchema = new Schema({
         required: true,
         default: false
     },
-    forLoginAllowedIP: {
-        type: Boolean,
-        required: true,
-        default: false
-    },
-    forVPN: {
-        type: Boolean,
-        required: true,
-        default: false
+    userCSS: {
+        type: String
     },
     hiddenFromPublic: {
         type: Boolean,
