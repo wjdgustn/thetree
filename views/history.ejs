@@ -142,7 +142,11 @@ ${enableNext ? enabledButton({
                 </span>
 
                 <div class="user-text">
-                    <a class="<%=rev.user.type === UserTypes.Account ? 'user-text-link-member' : ''%>" href="/w/사용자:<%=rev.user.name%>"><%=rev.user.name%></a>
+                    <%if(rev.user) {%>
+                        <a class="user-text-name <%=rev.user.type === UserTypes.Account ? 'user-text-member' : ''%>" href="/w/사용자:<%=rev.user.name%>"><%=rev.user.name%></a>
+                    <%} else {%>
+                        <span class="user-text-name user-text-deleted">(삭제된 사용자)</span>
+                    <%}%>
                 </div>
 
                 <%if(rev.log && rev.type !== HistoryTypes.ACL) {%>
