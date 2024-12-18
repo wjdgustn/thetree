@@ -90,6 +90,7 @@ app.get('/w/*', async (req, res) => {
 
         return res.renderSkin(undefined, {
             ...defaultData,
+            viewName: 'notfound',
             contentName: 'notfound',
             serverData: {
                 document,
