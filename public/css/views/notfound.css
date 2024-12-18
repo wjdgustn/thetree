@@ -1,0 +1,30 @@
+@scope (#content-style) {
+    .diff-text {
+        color: gray;
+    }
+
+    .diff-add {
+        color: green;
+    }
+
+    .diff-remove {
+        color: red;
+    }
+
+    span.user-text-name {
+        cursor: pointer;
+    }
+
+    .user-text-member {
+        font-weight: 700;
+    }
+
+    .user-text-deleted {
+        color: gray;
+        font-style: italic;
+    }
+
+    .history-log {
+        color: gray;
+    }
+}

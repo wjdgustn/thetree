@@ -77,13 +77,26 @@ app.get('/w/*', async (req, res) => {
     defaultData.editable = editable || editRequestable;
     defaultData.edit_acl_message = edit_acl_message;
 
-    if(!dbDocument || !rev || (rev.content == null && !req.query.uuid)) return res.renderSkin(undefined, {
-        ...defaultData,
-        contentHtml: `
-<p>해당 문서를 찾을 수 없습니다.</p>
-<p><a href="${globalUtils.doc_action_link(document, 'edit')}">[새 문서 만들기]</a></p>
-        `.trim()
-    });
+    if(!dbDocument || !rev || (rev.content == null && !req.query.uuid)) {
+        let revs = [];
+        if(dbDocument) revs = await History.find({
+            document: dbDocument.uuid
+        })
+            .sort({ rev: -1 })
+            .limit(3)
+            .lean();
+
+        revs = await utils.findUsers(revs);
+
+        return res.renderSkin(undefined, {
+            ...defaultData,
+            contentName: 'notfound',
+            serverData: {
+                document,
+                revs
+            }
+        });
+    }
 
     const parser = new NamumarkParser({
         document,
@@ -582,11 +595,7 @@ app.get('/history/*', async (req, res) => {
 
     if(!dbDocument || !revs.length) return res.error('문서를 찾을 수 없습니다.');
 
-    for(let rev of revs) {
-        rev.user = await User.findOne({
-            uuid: rev.user
-        });
-    }
+    revs = await utils.findUsers(revs);
 
     res.renderSkin(undefined, {
         viewName: 'history',

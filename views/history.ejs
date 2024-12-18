@@ -28,6 +28,7 @@ ${enableNext ? enabledButton({
 `.trim();
 %>
 
+<div class="history-style">
 <div class="navigation-group">
     <div class="navigation-div navigation-page navigation-page-top"><%-navigationPage%></div>
 
@@ -49,6 +50,8 @@ ${enableNext ? enabledButton({
 
     <ul>
         <%for(let rev of revs) {%>
+            <%rev = utils.addHistoryData(rev);%>
+
             <li>
                 <span><%-getFullDateTag(rev.createdAt)%></span>
                 <span class="history-action">
@@ -119,37 +122,18 @@ ${enableNext ? enabledButton({
 
                 </span>
 
-                <%if(rev.type === HistoryTypes.ACL) {%>
-                    <i>(<%=rev.log%>으로 ACL 변경)</i>
-                <%} else if(rev.type === HistoryTypes.Create) {%>
-                    <i>(새 문서)</i>
-                <%}%>
+                <%if(rev.infoText) {%><i>(<%-rev.infoText%>)</i><%}%>
 
                 <strong>
                     <a class="rev-text" href="#">r<%=rev.rev%></a>
 
                 </strong>
 
-                <span>
-                    <%
-                        const diffClassList = ['diff-text'];
+                <%-rev.diffHtml%>
 
-                        if(rev.diffLength > 0) diffClassList.push('diff-add');
-                        else if(rev.diffLength < 0) diffClassList.push('diff-remove');
-                    %>
-                    (<span class="<%=diffClassList.join(' ')%>"><%=rev.diffLength > 0 ? '+' : ''%><%=rev.diffLength ?? 0%></span>)
+                <%-rev.userHtml%>
 
-                </span>
-
-                <div class="user-text">
-                    <%if(rev.user) {%>
-                        <a class="user-text-name <%=rev.user.type === UserTypes.Account ? 'user-text-member' : ''%>" href="/w/사용자:<%=rev.user.name%>"><%=rev.user.name%></a>
-                    <%} else {%>
-                        <span class="user-text-name user-text-deleted">(삭제된 사용자)</span>
-                    <%}%>
-                </div>
-
-                <%if(rev.log && rev.type !== HistoryTypes.ACL) {%>
+                <%if(rev.log) {%>
                     (<span class="history-log"><%=rev.log%></span>)
                 <%}%>
             </li>
@@ -158,3 +142,4 @@ ${enableNext ? enabledButton({
 
     <div class="navigation-div navigation-page"><%-navigationPage%></div>
 </form>
+</div>

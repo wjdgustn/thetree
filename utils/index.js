@@ -1,5 +1,12 @@
 const crypto = require('crypto');
 
+const {
+    UserTypes,
+    HistoryTypes
+} = require('./types');
+
+const User = require('../schemas/user');
+
 module.exports = {
     getRandomInt(min, max) {
         min = Math.ceil(min);
@@ -99,5 +106,39 @@ module.exports = {
                 reject(error);
             });
         });
+    },
+    async findUsers(arr) {
+        for(let obj of arr) {
+            if(obj.user) obj.user = await User.findOne({
+                uuid: obj.user
+            });
+        }
+
+        return arr;
+    },
+    addHistoryData(rev) {
+        rev.infoText = null;
+
+        if(rev.type === HistoryTypes.ACL) {
+            rev.infoText = `${rev.log}으로 ACL 변경`
+            rev.log = null;
+        }
+        else if(rev.type === HistoryTypes.Create) {
+            rev.infoText = '새 문서';
+        }
+
+        rev.userHtml = '<span class="user-text">' + (rev.user
+            ? `<a class="user-text-name${rev.user.type === UserTypes.Account ? ' user-text-member' : ''}" href="/w/사용자:${rev.user.name}">${rev.user.name}</a>`
+            : `<span class="user-text-name user-text-deleted">(삭제된 사용자)</span>`)
+            + '</span>';
+
+        const diffClassList = ['diff-text'];
+
+        if(rev.diffLength > 0) diffClassList.push('diff-add');
+        else if(rev.diffLength < 0) diffClassList.push('diff-remove');
+
+        rev.diffHtml = `<span>(<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>)</span>`;
+
+        return rev;
     }
 }

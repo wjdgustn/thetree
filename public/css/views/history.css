@@ -1,4 +1,4 @@
-@scope (#content-style) {
+@scope (.history-style) {
     .navigation-group {
         align-items: center;
         display: flex;
@@ -60,10 +60,6 @@
 
     .diff-remove {
         color: red;
-    }
-
-    .user-text {
-        display: inline;
     }
 
     span.user-text-name {
