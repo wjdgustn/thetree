@@ -174,7 +174,7 @@ module.exports = class NamumarkParser {
 
         // if(this.includeData && !childParse) disableNoParagraph = true;
 
-        let sourceText = childParse ? input : utils.escapeHtml(input);
+        let sourceText = childParse ? input : utils.escapeHtml(input ?? '');
 
         if(sourceText.endsWith('\n')) sourceText = sourceText.slice(0, -1);
 

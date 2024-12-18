@@ -77,7 +77,7 @@ app.get('/w/*', async (req, res) => {
     defaultData.editable = editable || editRequestable;
     defaultData.edit_acl_message = edit_acl_message;
 
-    if(!dbDocument || !rev || rev.content == null) return res.renderSkin(undefined, {
+    if(!dbDocument || !rev || (rev.content == null && !req.query.uuid)) return res.renderSkin(undefined, {
         ...defaultData,
         contentHtml: `
 <p>해당 문서를 찾을 수 없습니다.</p>
@@ -91,7 +91,7 @@ app.get('/w/*', async (req, res) => {
         req
     });
 
-    if(!req.query.noredirect && rev.content.startsWith('#redirect ')) {
+    if(!req.query.noredirect && rev.content?.startsWith('#redirect ')) {
         const redirectName = rev.content.split('\n')[0].slice(10);
         const redirectDoc = utils.parseDocumentName(redirectName);
         const checkDoc = await Document.exists({
