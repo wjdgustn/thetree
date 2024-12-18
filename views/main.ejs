@@ -13,7 +13,7 @@
     <meta name="theme-color" content="<%=config.theme_color%>">
 
     <%let siteTitle = page.title;%>
-    <%if(typeof document !== 'undefined') {%>
+    <%if(typeof document !== 'undefined' && typeof date === 'number') {%>
         <%const title = doc_fulltitle(document);%>
         <%siteTitle = title + getTitleDescription(page);%>
         <%if(typeof contentText !== 'undefined') {%><meta property="og:description" content="<%=contentText.slice(0, 200)%>"><%}%>
