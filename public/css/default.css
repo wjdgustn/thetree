@@ -41,6 +41,11 @@
     fill: currentColor;
 }
 
+button[disabled] {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
 a.thetree-square-button, button.thetree-square-button {
     background-color: white;
     border: .0625rem solid #ccc;

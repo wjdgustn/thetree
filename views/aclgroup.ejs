@@ -4,4 +4,89 @@
 
 <script src="/js/aclgroup.js"></script>
 
-hi im aclgroup
+<%const aclgroupPerm = req.permissions.includes('aclgroup');%>
+<%let selectedGroup;%>
+
+<ul>
+    <%for(let i = 0; i < aclGroups.length; i++) {%>
+        <%const group = aclGroups[i];%>
+        <%const selected = req.query.group ? req.query.group === group.name : i === 0;%>
+        <%if(selected) selectedGroup = group;%>
+
+        <li>
+            <a href="/aclgroup?group=<%=group.name%>"<%-selected ? ' class="selected-group"' : ''%>>
+                <%=group.name%>
+                <%if(aclgroupPerm) {%><button>×</button><%}%>
+            </a>
+        </li>
+    <%}%>
+
+    <%if(aclgroupPerm) {%>
+        <li>
+            <button>+</button>
+        </li>
+    <%}%>
+</ul>
+
+<%if(selectedGroup) {%>
+<form id="add-aclgroup-item-form" method="post" action="/aclgroup">
+    <input type="hidden" name="group" value="<%=selectedGroup.uuid%>">
+
+    <div class="form-block" x-data="{ mode: '' }">
+        <select name="mode" x-model="mode" x-init="mode = $el.value">
+            <option value="ip">아이피</option>
+            <option value="username">사용자 이름</option>
+        </select>
+        <input type="text" name="ip" placeholder="CIDR" x-show="mode === 'ip'">
+        <input type="text" name="username" placeholder="사용자 이름" x-show="mode === 'username'">
+    </div>
+
+    <div class="form-block">
+        <label for="noteInput">메모 :</label>
+        <input type="text" id="noteInput" name="note" value="">
+    </div>
+
+    <div class="form-block">
+        <label>기간 :</label>
+        <span>
+            <select name="duration" x-model="duration" x-init="duration = $el.value">
+                <option value="0">영구</option>
+                <option value="300">5분</option>
+                <option value="600">10분</option>
+                <option value="1800">30분</option>
+                <option value="3600">1시간</option>
+                <option value="7200">2시간</option>
+                <option value="86400">하루</option>
+                <option value="259200">3일</option>
+                <option value="432000">5일</option>
+                <option value="604800">7일</option>
+                <option value="1209600">2주</option>
+                <option value="1814400">3주</option>
+                <option value="2419200">4주</option>
+                <option value="4838400">2개월</option>
+                <option value="7257600">3개월</option>
+                <option value="14515200">6개월</option>
+                <option value="29030400">1년</option>
+                <option value="raw">직접입력</option>
+            </select>
+            <input type="number" name="rawDuration" x-show="duration === 'raw'">
+            <select name="rawMultiplier" x-show="duration === 'raw'">
+                <option value="1">초</option>
+                <option value="60">분</option>
+                <option value="3600">시간</option>
+                <option value="86400">일</option>
+                <option value="604800">주</option>
+            </select>
+        </span>
+    </div>
+
+    <%if(req.permissions.includes('developer')) {%>
+        <div class="form-block">
+            <label for="hidelogInput">hidelog :</label>
+            <input type="checkbox" id="hidelogInput" name="hidelog" value="Y">
+        </div>
+    <%}%>
+
+    <button class="thetree-square-button thetree-blue-button"<%=aclgroupPerm ? '' : ' disabled'%>>추가</button>
+</form>
+<%}%>
