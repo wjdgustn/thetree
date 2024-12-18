@@ -13,11 +13,14 @@
     <meta name="theme-color" content="<%=config.theme_color%>">
 
     <%let siteTitle = page.title;%>
-    <%if(typeof document !== 'undefined' && typeof date === 'number') {%>
+    <%if(typeof document !== 'undefined') {%>
         <%const title = doc_fulltitle(document);%>
         <%siteTitle = title + getTitleDescription(page);%>
-        <%if(typeof contentText !== 'undefined') {%><meta property="og:description" content="<%=contentText.slice(0, 200)%>"><%}%>
-        <meta property="og:type" content="article">
+
+        <%if(typeof date === 'number') {%>
+            <%if(typeof contentText !== 'undefined') {%><meta property="og:description" content="<%=contentText.slice(0, 200)%>"><%}%>
+            <meta property="og:type" content="article">
+        <%}%>
     <%}%>
     <meta property="og:title" content="<%=siteTitle%>">
     <meta property="og:site_name" content="<%=config.site_name%>">
