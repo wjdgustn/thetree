@@ -36,11 +36,13 @@ function plainAlert(text) {
     const doc = new DOMParser().parseFromString(text, 'text/html');
     const message = doc.body.textContent;
 
-    const treeAlert = document.getElementById('thetree-alert');
-    const treeAlertContent = document.getElementById('thetree-alert-content');
-    if(treeAlert && treeAlertContent) {
-        treeAlert.hidden = false;
-        treeAlertContent.textContent = message;
+    const errorAlerts = document.getElementsByClassName('thetree-alert-danger');
+    if(errorAlerts.length) for(let alert of errorAlerts) {
+        const content = alert.getElementsByClassName('thetree-alert-content-text')[0];
+        if(!content) continue;
+
+        alert.hidden = false;
+        content.textContent = message;
     }
     else alert(message);
 }
