@@ -45,11 +45,10 @@ module.exports = {
     camelToSnakeCase(str) {
         return str.replace(/(.)([A-Z][a-z]+)/, '$1_$2').replace(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase();
     },
-    renderCategory: (categories = []) => new Promise((resolve, reject) => {
-        if(!categories.length) return resolve('');
-
+    renderCategory: (categories = [], fromWiki = false) => new Promise((resolve, reject) => {
         expressApp.render('category', {
-            categories
+            categories,
+            fromWiki
         }, (err, html) => {
             if(err) {
                 console.error(err);
