@@ -185,7 +185,7 @@ ${nextItem ? enabledButton({
         <div class="thetree-modal-content">
             <%-include('alert', { alert })%>
             <form method="post" action="/aclgroup/remove">
-                <input id="delete-aclgroup-modal-id" type="hidden" name="id">
+                <input id="delete-aclgroup-modal-id" type="hidden" name="uuid">
                 <input type="hidden" name="group" value="<%=selectedGroup.uuid%>">
 
                 <h4>ACL 요소 제거</h4>
