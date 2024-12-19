@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
-const utils = require('../utils');
+const globalUtils = require('../utils/global');
 const { HistoryTypes } = require('../utils/types');
 
 const { Schema } = mongoose;
@@ -79,7 +79,7 @@ newSchema.pre('save', async function() {
     let last = lastItem[this.document];
     lastItem[this.document] = this;
 
-    if(last && last.rev == null) await utils.waitUntil(new Promise(resolve => {
+    if(last && last.rev == null) await globalUtils.waitUntil(new Promise(resolve => {
         locks.push(resolve);
     }), 5000);
 

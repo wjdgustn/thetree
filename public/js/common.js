@@ -272,6 +272,41 @@ async function replaceContent(html) {
     const doc = parser.parseFromString(html, 'text/html');
     let newContent;
 
+    const injectedStyles = [...document.querySelectorAll('link[data-injected]')];
+    const styles = doc.body.querySelectorAll('link[rel="stylesheet"]');
+
+    let loadingStyles = styles.length;
+    let waitResolve;
+    const loadedStyles = [];
+    for(let style of styles) {
+        style.remove();
+        loadedStyles.push(style.href);
+
+        const dupStyle = injectedStyles.find(a => a.href === style.href);
+        if(dupStyle) {
+            loadingStyles--;
+            continue;
+        }
+
+        style.onload = () => {
+            loadingStyles--;
+            if(loadingStyles === 0) waitResolve?.();
+        }
+        style.dataset.injected = 'true';
+        document.head.appendChild(style);
+    }
+
+    if(loadingStyles > 0) {
+        await waitUntil(new Promise(resolve => {
+            waitResolve = resolve;
+        }), 5000);
+    }
+
+    for(let style of injectedStyles) {
+        if(loadedStyles.includes(style.href)) continue;
+        document.head.removeChild(style);
+    }
+
     const fullReload = html.includes('<!DOCTYPE html>');
     if(fullReload) {
         newContent = doc.getElementById('content');
@@ -282,7 +317,7 @@ async function replaceContent(html) {
     else {
         if(html.includes('<')) {
             newContent = doc;
-            content.innerHTML = html;
+            content.innerHTML = doc.body.innerHTML;
             result = true;
         }
     }
@@ -411,4 +446,14 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('recent', () => ({
         recent: [{"document":"냥냥냥","status":"normal","date":1730462638},{"document":"A","status":"normal","date":1730461011}]
     }));
+});
+
+window.addEventListener('load', () => {
+    const bodyStyles = document.body.querySelectorAll('link[rel="stylesheet"]');
+    for(let style of bodyStyles) {
+        style.remove();
+
+        style.dataset.injected = 'true';
+        document.head.appendChild(style);
+    }
 });

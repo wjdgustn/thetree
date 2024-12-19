@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const { Address4, Address6 } = require('ip-address');
 
-const utils = require('../utils');
+const globalUtils = require('../utils/global');
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
@@ -77,7 +77,7 @@ newSchema.pre('save', async function() {
         let last = lastItem;
         lastItem = this;
 
-        if(last && last.id === null) await utils.waitUntil(new Promise(resolve => {
+        if(last && last.id === null) await globalUtils.waitUntil(new Promise(resolve => {
             locks.push(resolve);
         }), 5000);
 
