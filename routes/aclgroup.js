@@ -42,7 +42,7 @@ app.get('/aclgroup', async (req, res) => {
         prevItem = await ACLGroupItem.findOne({
             ...query,
             id: {$gt: groupItems[0].id}
-        }).sort({ id: -1 });
+        }).sort({ id: 1 });
         nextItem = await ACLGroupItem.findOne({
             ...query,
             id: { $lt: groupItems[groupItems.length - 1].id }
