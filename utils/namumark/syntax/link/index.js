@@ -5,6 +5,7 @@ const utils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 
 const Document = require('../../../../schemas/document');
+const History = require('../../../../schemas/history');
 
 module.exports = {
     priority: Priority.ContentChange,
@@ -129,10 +130,15 @@ module.exports = {
             const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.exists;
             else {
-                const documentExists = await Document.exists({
+                const dbDocument = await Document.findOne({
                     namespace: document.namespace,
                     title: document.title
                 });
+                let latestRev;
+                if(dbDocument) latestRev = await History.findOne({
+                    document: dbDocument.uuid
+                }).sort({ rev: -1 });
+                const documentExists = latestRev?.content != null;
                 linkExistsCache.push({
                     ...document,
                     exists: documentExists
