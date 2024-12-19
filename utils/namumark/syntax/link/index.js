@@ -174,7 +174,6 @@ module.exports = {
         }
 
         if(!parsedLink) namumark.links.push(title);
-        console.log(html);
         return html;
     }
 }
