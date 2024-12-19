@@ -180,7 +180,7 @@ const formHandler = async e => {
                 }
             }
         } catch(e) {}
-        if(!json.fieldErrors) return plainAlert(html);
+        if(!json?.fieldErrors) return plainAlert(html);
 
         return;
     }
