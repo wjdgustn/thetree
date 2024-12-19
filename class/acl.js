@@ -213,17 +213,17 @@ module.exports = class ACL {
                 let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
                 if(aclGroupItem) {
                     if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
-                    aclMessage += `\n만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
-                    aclMessage += `\n사유 : ${aclGroupItem.note ?? '없음'}`;
+                    aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
+                    aclMessage += `<br>사유 : ${aclGroupItem.note ?? '없음'}`;
 
                     if(rule.aclGroup.isWarn) {
                         aclMessage = rule.aclGroup.aclMessage ?? '경고를 받았습니다.';
-                        aclMessage += `\n\n<a href="/self_unblock?id=${aclGroupItem.id}">[확인했습니다. #${aclGroupItem.id}]</a>`;
-                        aclMessage += `\n사유: ${aclGroupItem.note ?? '없음'}`;
+                        aclMessage += `<br><br><a href="/self_unblock?id=${aclGroupItem.id}">[확인했습니다. #${aclGroupItem.id}]</a>`;
+                        aclMessage += `<br>사유: ${aclGroupItem.note ?? '없음'}`;
                     }
                 }
 
-                if(this.document) aclMessage += this.aclTabMessage;
+                if(this.document && !aclGroupItem) aclMessage += this.aclTabMessage;
 
                 return {
                     result: false,
@@ -324,9 +324,16 @@ module.exports = class ACL {
             if(data.user?.type === UserTypes.Account) {
                 const userTest = await ACLGroupItem.findOne({
                     aclGroup: rule.aclGroup.uuid,
-                    expiresAt: {
-                        $gte: new Date()
-                    },
+                    $or: [
+                        {
+                            expiresAt: {
+                                $gte: new Date()
+                            }
+                        },
+                        {
+                            expiresAt: null
+                        }
+                    ],
                     user: data.user.uuid
                 });
                 if(userTest) return { action, aclGroupItem: userTest };
@@ -338,9 +345,16 @@ module.exports = class ACL {
 
             const ipTest = await ACLGroupItem.findOne({
                 aclGroup: rule.aclGroup.uuid,
-                expiresAt: {
-                    $gte: new Date()
-                },
+                $or: [
+                    {
+                        expiresAt: {
+                            $gte: new Date()
+                        }
+                    },
+                    {
+                        expiresAt: null
+                    }
+                ],
                 ipMin: {
                     $lte: ipArr
                 },
