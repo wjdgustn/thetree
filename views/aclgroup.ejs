@@ -1,33 +1,55 @@
 <link rel="stylesheet" href="/css/views/aclgroup.css">
-
 <script src="/js/aclgroup.js"></script>
 
+<%alert = typeof alert === 'undefined' ? '' : alert;%>
+<%-include('alert', { alert })%>
+
+<%
+const fieldErrorExists = typeof fieldErrors !== 'undefined' && fieldErrors.length > 0;
+
+let focusTarget = '';
+if(fieldErrorExists) focusTarget = fieldErrors[0].path;
+
+function fieldError(name) {
+    if(!fieldErrorExists) return '';
+
+    const error = fieldErrors.find(e => e.path === name);
+    if(!error) return '';
+
+    return `<p class="input-error">${error.msg}</p>`;
+}
+%>
+
+<script src="/js/form_focus.js"></script>
+
 <%const aclgroupPerm = req.permissions.includes('aclgroup');%>
-<%let selectedGroup;%>
+
+<form id="aclgroup-remove-form" method="post" action="aclgroup/group_remove">
+    <input id="aclgroup-remove-group" type="hidden" name="uuid">
+</form>
 
 <ul>
     <%for(let i = 0; i < aclGroups.length; i++) {%>
         <%const group = aclGroups[i];%>
         <%const selected = req.query.group ? req.query.group === group.name : i === 0;%>
-        <%if(selected) selectedGroup = group;%>
 
         <li>
             <a href="/aclgroup?group=<%=group.name%>"<%-selected ? ' class="selected-group"' : ''%>>
                 <%=group.name%>
-                <%if(aclgroupPerm) {%><button>×</button><%}%>
+                <%if(aclgroupPerm) {%><button class="delete-aclgroup" data-name="<%=group.name%>" data-uuid="<%=group.uuid%>">×</button><%}%>
             </a>
         </li>
     <%}%>
 
     <%if(aclgroupPerm) {%>
         <li>
-            <button>+</button>
+            <button id="create-aclgroup">+</button>
         </li>
     <%}%>
 </ul>
 
 <%if(selectedGroup) {%>
-<form id="add-aclgroup-item-form" method="post" action="/aclgroup">
+<form id="add-aclgroup-item-form" method="post" action="/aclgroup" data-focus="<%=focusTarget%>">
     <input type="hidden" name="group" value="<%=selectedGroup.uuid%>">
 
     <div class="form-block" x-data="{ mode: '' }">
@@ -37,14 +59,19 @@
         </select>
         <input type="text" name="ip" placeholder="CIDR" x-show="mode === 'ip'">
         <input type="text" name="username" placeholder="사용자 이름" x-show="mode === 'username'">
+
+        <%-fieldError('ip')%>
+        <%-fieldError('username')%>
     </div>
 
     <div class="form-block">
         <label for="noteInput">메모 :</label>
         <input type="text" id="noteInput" name="note" value="">
+
+        <%-fieldError('note')%>
     </div>
 
-    <div class="form-block">
+    <div class="form-block" x-data="{ duration: '' }">
         <label>기간 :</label>
         <span>
             <select name="duration" x-model="duration" x-init="duration = $el.value">
@@ -76,6 +103,10 @@
                 <option value="604800">주</option>
             </select>
         </span>
+
+        <%-fieldError('duration')%>
+        <%-fieldError('rawDuration')%>
+        <%-fieldError('rawMultiplier')%>
     </div>
 
     <%if(req.permissions.includes('developer')) {%>
@@ -87,4 +118,148 @@
 
     <button class="thetree-square-button thetree-blue-button"<%=aclgroupPerm ? '' : ' disabled'%>>추가</button>
 </form>
+
+<%
+const aclGroupLink = (query) => {
+    if(!query.group && selectedGroup) query.group = selectedGroup.name;
+
+    let str = '/aclgroup';
+    if(Object.keys(query).length > 0) {
+        str += '?';
+        str += Object.keys(query).filter(k => query[k]).map(k => `${k}=${encodeURIComponent(query[k])}`).join('&');
+    }
+    return str;
+}
+
+const enabledButton = (query, content) => `<a href="${aclGroupLink(query)}" role="button" class="navigation-button navigation-page-button">${content}</a>`;
+const disabledButton = content => `<span role="button" class="navigation-button navigation-button-disabled navigation-page-button">${content}</span>`;
+
+const prevButtonContent = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>
+<span>이전</span>
+`.trim();
+const nextButtonContent = `
+<span>다음</span>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>
+`;
+
+const navigationPage = `
+${prevItem ? enabledButton({
+    until: prevItem.id
+}, prevButtonContent) : disabledButton(prevButtonContent)}
+${nextItem ? enabledButton({
+    from: nextItem.id
+}, nextButtonContent) : disabledButton(nextButtonContent)}
+`.trim();
+%>
+
+<div class="navigation-div navigation-page"><%-navigationPage%></div>
+
+<form id="aclgroup-go-form" method="get">
+    <div class="form-block">
+        <input type="text" name="from" placeholder="ID">
+        <button class="thetree-square-button thetree-blue-button">Go</button>
+    </div>
+</form>
+
+<table>
+    <colgroup>
+        <col style="width:150px;">
+        <col style="width:150px;">
+        <col>
+        <col style="width:200px;">
+        <col style="width:160px;">
+        <col style="width:60px;">
+    </colgroup>
+
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>대상</th>
+        <th>메모</th>
+        <th>생성일</th>
+        <th>만료일</th>
+        <th>작업</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <%if(groupItems.length) for(let item of groupItems) {%>
+        <tr>
+            <td><%=item.id%></td>
+            <td><%=item.user?.name || item.ip%></td>
+            <td><%=item.memo%></td>
+            <td><%-getFullDateTag(item.createdAt)%></td>
+            <td><%-item.expiresAt ? getFullDateTag(item.expiresAt) : '영구'%></td>
+            <td>
+                <button class="thetree-square-button thetree-danger-button delete-aclgroupitem" data-id="<%=item.id%>" data-uuid="<%=item.uuid%>"<%=aclgroupPerm ? '' : ' disabled'%>>삭제</button>
+            </td>
+        </tr>
+    <%} else {%>
+        <tr>
+            <td colspan="6">ACL 그룹이 비어있습니다.</td>
+        </tr>
+    <%}%>
+    </tbody>
+</table>
+
+<div class="navigation-div navigation-page"><%-navigationPage%></div>
+
+<div id="create-aclgroup-modal" class="thetree-modal-block thetree-modal">
+    <div class="thetree-modal-block thetree-modal-bg"></div>
+    <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="thetree-modal-content">
+            <%-include('alert', { alert })%>
+            <form method="post" action="/aclgroup/group_add">
+                <h4>ACL그룹 생성</h4>
+                <div>
+                    <p>그룹 이름:</p>
+                    <input type="text" name="name">
+                </div>
+
+                <div class="aclgroup-modal-buttons">
+                    <button class="thetree-modal-button thetree-square-button thetree-blue-button thetree-confirm-button">생성</button>
+                    <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="delete-aclgroup-modal" class="thetree-modal-block thetree-modal">
+    <div class="thetree-modal-block thetree-modal-bg"></div>
+    <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="thetree-modal-content">
+            <%-include('alert', { alert })%>
+            <form method="post" action="/aclgroup/remove">
+                <input id="delete-aclgroup-modal-id" type="hidden" name="id">
+                <input type="hidden" name="group" value="<%=selectedGroup.uuid%>">
+
+                <h4>ACL 요소 제거</h4>
+
+                <div>
+                    <p>ID:</p>
+                    <span id="delete-aclgroup-modal-id-text">0</span>
+                </div>
+
+                <div>
+                    <p>메모:</p>
+                    <input type="text" name="note">
+                </div>
+
+                <%if(req.permissions.includes('developer')) {%>
+                    <div class="form-block">
+                        <p>hidelog:</p>
+                        <input type="checkbox" name="hidelog" value="Y">
+                    </div>
+                <%}%>
+
+                <div class="aclgroup-modal-buttons">
+                    <button class="thetree-modal-button thetree-square-button thetree-blue-button">삭제</button>
+                    <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <%}%>

@@ -83,10 +83,20 @@ module.exports = {
         return null;
     },
     async findUsers(arr) {
+        const cache = {};
+
         for(let obj of arr) {
-            if(obj.user) obj.user = await User.findOne({
-                uuid: obj.user
-            });
+            if(obj.user) {
+                if(cache[obj.user]) {
+                    obj.user = cache[obj.user];
+                    continue;
+                }
+
+                obj.user = await User.findOne({
+                    uuid: obj.user
+                });
+                if(obj.user) cache[obj.user.uuid] = obj.user;
+            }
         }
 
         return arr;

@@ -30,12 +30,17 @@ const newSchema = new Schema({
         type: String,
         index: true,
         validate: {
-            validator: v => Address4.isValid(v) || Address6.isValid(v),
+            validator: v => !v || Address4.isValid(v) || Address6.isValid(v),
             message: 'Invalid IP CIDR.'
         }
     },
     memo: {
         type: String
+    },
+    createdAt: {
+        type: Date,
+        required: true,
+        default: Date.now
     },
     expiresAt: {
         type: Date
@@ -87,7 +92,7 @@ newSchema.pre('save', async function() {
         locks.forEach(r => r());
     }
 
-    if(this.ip !== null) {
+    if(this.ip != null) {
         if(Address4.isValid(this.ip)) {
             this.ipVersion = 4;
 

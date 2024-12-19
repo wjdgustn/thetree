@@ -32,6 +32,10 @@
         font-size: .9rem;
     }
 
+    li>a:hover {
+        text-decoration: none !important;
+    }
+
     li>a.selected-group, li>button.selected-group {
         background-color: #fff;
         color: #55595c;
@@ -70,7 +74,7 @@
         color: #ddd;
     }
 
-    .form-block input[type=text] {
+    #add-aclgroup-item-form input[type=text] {
         width: 50%;
     }
 
@@ -80,5 +84,66 @@
         margin-bottom: 1rem;
         margin-top: 1em;
         padding-bottom: 1rem;
+    }
+
+    #aclgroup-go-form {
+        float: right;
+    }
+
+    table {
+        background-color: transparent;
+        border-collapse: collapse;
+        border-spacing: 0;
+        margin-bottom: 1rem;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    table th, table td {
+        border-top: 1px solid #eceeef;
+        line-height: 1.5;
+        padding: .5rem .7rem;
+    }
+
+    table th {
+        border-bottom: 2px solid #eceeef;
+        text-align: left;
+        vertical-align: bottom;
+    }
+
+    table tr:last-of-type td {
+        border-bottom: 1px solid #eceeef;
+    }
+
+    .thetree-modal form {
+        box-sizing: border-box;
+        flex: 1 0 auto;
+        font-size: 14px;
+        padding: 15px;
+        width: 100%;
+    }
+
+    .thetree-modal form h4 {
+        font-weight: 600;
+        margin: 0;
+        padding: 0;
+    }
+
+    .thetree-modal form div p {
+        margin-bottom: 0;
+    }
+
+    .thetree-modal form div.aclgroup-modal-buttons {
+        float: right;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+    }
+
+    .thetree-modal form input {
+        margin: 0;
+    }
+
+    .thetree-modal form input:not([type=checkbox]) {
+        width: 100%;
     }
 }

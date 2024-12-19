@@ -42,7 +42,7 @@
 }
 
 button[disabled] {
-    cursor: not-allowed;
+    cursor: not-allowed !important;
     opacity: .65;
 }
 
@@ -82,7 +82,7 @@ a.thetree-square-button, button.thetree-square-button {
     white-space: nowrap;
 }
 
-.thetree-button:hover {
+.thetree-button:hover:not([disabled]) {
     background-color: #f2f2f2;
 }
 
@@ -92,7 +92,7 @@ a.thetree-square-button, button.thetree-square-button {
     color: #fff !important;
 }
 
-.thetree-primary-button:hover {
+.thetree-primary-button:hover:not([disabled]) {
     background-color: #4078cd !important;
 }
 
@@ -118,7 +118,7 @@ a.thetree-mint-button {
     color: white !important;
 }
 
-a.thetree-mint-button:hover, button.thetree-mint-button:hover {
+a.thetree-mint-button:hover:not([disabled]), button.thetree-mint-button:hover:not([disabled]) {
     background-color: #31b0d5 !important;
     border-color: #2aabd2 !important;
 }
@@ -129,7 +129,7 @@ a.thetree-danger-button, button.thetree-danger-button {
     color: white !important;
 }
 
-a.thetree-danger-button:hover, button.thetree-danger-button:hover {
+a.thetree-danger-button:hover:not([disabled]), button.thetree-danger-button:hover:not([disabled]) {
     background-color: #c9302c !important;
     border-color: #c12e2a !important;
 }
@@ -404,4 +404,8 @@ a.navigation-button {
     outline: none !important;
     padding: 10px;
     width: 100%;
+}
+
+.thetree-modal-button {
+    padding: .75rem 1.25rem !important;
 }
