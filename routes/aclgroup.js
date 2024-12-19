@@ -18,13 +18,16 @@ app.get('/aclgroup', async (req, res) => {
     const aclGroups = await ACLGroup.find(aclGroupQuery);
     const selectedGroup = req.query.group ? aclGroups.find(a => a.name === req.query.group) : aclGroups[0];
 
-    const itemFilter = {
-        aclGroup: selectedGroup.uuid
-    };
-    let groupItems = await ACLGroupItem.find(itemFilter)
-        .sort({ id: -1 })
-        .limit(50)
-        .lean();
+    let groupItems;
+    if(selectedGroup) {
+        const itemFilter = {
+            aclGroup: selectedGroup.uuid
+        };
+        groupItems = await ACLGroupItem.find(itemFilter)
+            .sort({id: -1})
+            .limit(50)
+            .lean();
+    }
 
     let prevItem;
     let nextItem;
