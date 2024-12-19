@@ -152,7 +152,8 @@ const formHandler = async e => {
                     const error = json.fieldErrors[input.name];
 
                     let fieldError;
-                    if(input.parentElement?.tagName === 'DIV') {
+                    if(['DIV', 'SPAN'].includes(input.parentElement?.tagName)) {
+                        console.log('wow div');
                         fieldError = input.parentElement.querySelector(`.input-error[data-for="${input.name}"]`);
                         if(!fieldError && error) {
                             fieldError = document.createElement('p');
@@ -162,7 +163,7 @@ const formHandler = async e => {
                         }
                     }
                     else {
-                        if(input.nextSibling?.classList.contains('input-error')) {
+                        if(input.nextElementSibling?.classList?.contains('input-error')) {
                             fieldError = input.nextSibling;
                         }
                         else if(error) {
