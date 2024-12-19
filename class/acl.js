@@ -50,7 +50,7 @@ module.exports = class ACL {
             }
             else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
                 rule.aclGroup = await ACLGroup.findOne({
-                    name: rule.conditionContent
+                    uuid: rule.conditionContent
                 });
             }
 
@@ -151,6 +151,9 @@ module.exports = class ACL {
         }
         else if(rule.conditionType === ACLConditionTypes.Member) {
             return `user:${rule.user.name}`
+        }
+        else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
+            return `aclgroup:${rule.aclGroup.name}`
         }
         else {
             return `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${rule.conditionContent}`;
