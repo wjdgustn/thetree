@@ -59,6 +59,8 @@ app.get('/aclgroup', async (req, res) => {
 app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, res) => {
     const name = req.body.name;
 
+    if(!name) return res.status(400).send('그룹 이름을 입력해주세요.');
+
     const checkExists = await ACLGroup.exists({ name });
     if(checkExists) return res.status(409).send('이미 존재하는 그룹 이름입니다.');
 
