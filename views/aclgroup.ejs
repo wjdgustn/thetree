@@ -204,28 +204,6 @@ ${nextItem ? enabledButton({
 </table>
 
 <div class="navigation-div navigation-page"><%-navigationPage%></div>
-<%}%>
-
-<div id="create-aclgroup-modal" class="thetree-modal-block thetree-modal">
-    <div class="thetree-modal-block thetree-modal-bg"></div>
-    <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
-        <div class="thetree-modal-content">
-            <%-include('alert', { alert })%>
-            <form method="post" action="/aclgroup/group_add">
-                <h4>ACL그룹 생성</h4>
-                <div>
-                    <p>그룹 이름:</p>
-                    <input type="text" name="name">
-                </div>
-
-                <div class="aclgroup-modal-buttons">
-                    <button class="thetree-modal-button thetree-square-button thetree-blue-button thetree-confirm-button">생성</button>
-                    <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <div id="delete-aclgroup-modal" class="thetree-modal-block thetree-modal">
     <div class="thetree-modal-block thetree-modal-bg"></div>
@@ -257,6 +235,28 @@ ${nextItem ? enabledButton({
 
                 <div class="aclgroup-modal-buttons">
                     <button class="thetree-modal-button thetree-square-button thetree-blue-button">삭제</button>
+                    <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<%}%>
+
+<div id="create-aclgroup-modal" class="thetree-modal-block thetree-modal">
+    <div class="thetree-modal-block thetree-modal-bg"></div>
+    <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="thetree-modal-content">
+            <%-include('alert', { alert })%>
+            <form method="post" action="/aclgroup/group_add">
+                <h4>ACL그룹 생성</h4>
+                <div>
+                    <p>그룹 이름:</p>
+                    <input type="text" name="name">
+                </div>
+
+                <div class="aclgroup-modal-buttons">
+                    <button class="thetree-modal-button thetree-square-button thetree-blue-button thetree-confirm-button">생성</button>
                     <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
                 </div>
             </form>
