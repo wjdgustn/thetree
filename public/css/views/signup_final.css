@@ -38,10 +38,6 @@
         width: calc(100% - .7rem);
     }
 
-    .input-error {
-        color: red;
-    }
-
     button.thetree-button {
         float: right;
         margin-top: 2rem;

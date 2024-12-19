@@ -140,7 +140,49 @@ const formHandler = async e => {
     }
 
     const html = await response.text();
-    if(response.status.toString().startsWith('4')) return plainAlert(html);
+    if(response.status.toString().startsWith('4')) {
+        let json;
+        try {
+            json = JSON.parse(html);
+            if(json.fieldErrors) {
+                const inputs = form.querySelectorAll('input, select');
+                for(let input of inputs) {
+                    if(!input.name || input.type === 'hidden') continue;
+
+                    const error = json.fieldErrors[input.name];
+
+                    let fieldError;
+                    if(input.parentElement?.tagName === 'DIV') {
+                        fieldError = input.parentElement.querySelector(`.input-error[data-for="${input.name}"]`);
+                        if(!fieldError && error) {
+                            fieldError = document.createElement('p');
+                            fieldError.classList.add('input-error');
+                            fieldError.dataset.for = input.name;
+                            input.parentElement.appendChild(fieldError);
+                        }
+                    }
+                    else {
+                        if(input.nextSibling?.classList.contains('input-error')) {
+                            fieldError = input.nextSibling;
+                        }
+                        else if(error) {
+                            fieldError = document.createElement('p');
+                            fieldError.classList.add('input-error');
+                            input.after(fieldError);
+                        }
+                    }
+
+                    if(fieldError) {
+                        if(error) fieldError.textContent = error.msg;
+                        else fieldError.remove();
+                    }
+                }
+            }
+        } catch(e) {}
+        if(!json.fieldErrors) return plainAlert(html);
+
+        return;
+    }
 
     if(await replaceContent(html)) {
         setupDocument();

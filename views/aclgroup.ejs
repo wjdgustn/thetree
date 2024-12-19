@@ -4,24 +4,6 @@
 <%alert = typeof alert === 'undefined' ? '' : alert;%>
 <%-include('alert', { alert })%>
 
-<%
-const fieldErrorExists = typeof fieldErrors !== 'undefined' && fieldErrors.length > 0;
-
-let focusTarget = '';
-if(fieldErrorExists) focusTarget = fieldErrors[0].path;
-
-function fieldError(name) {
-    if(!fieldErrorExists) return '';
-
-    const error = fieldErrors.find(e => e.path === name);
-    if(!error) return '';
-
-    return `<p class="input-error">${error.msg}</p>`;
-}
-%>
-
-<script src="/js/form_focus.js"></script>
-
 <%const aclgroupPerm = req.permissions.includes('aclgroup');%>
 
 <form id="aclgroup-remove-form" method="post" action="aclgroup/group_remove">
@@ -49,7 +31,7 @@ function fieldError(name) {
 </ul>
 
 <%if(selectedGroup) {%>
-<form id="add-aclgroup-item-form" method="post" action="/aclgroup" data-focus="<%=focusTarget%>">
+<form id="add-aclgroup-item-form" method="post" action="/aclgroup">
     <input type="hidden" name="group" value="<%=selectedGroup.uuid%>">
 
     <div class="form-block" x-data="{ mode: '' }">
@@ -59,16 +41,11 @@ function fieldError(name) {
         </select>
         <input type="text" name="ip" placeholder="CIDR" x-show="mode === 'ip'">
         <input type="text" name="username" placeholder="사용자 이름" x-show="mode === 'username'">
-
-        <%-fieldError('ip')%>
-        <%-fieldError('username')%>
     </div>
 
     <div class="form-block">
         <label for="noteInput">메모 :</label>
         <input type="text" id="noteInput" name="note" value="">
-
-        <%-fieldError('note')%>
     </div>
 
     <div class="form-block" x-data="{ duration: '' }">
@@ -103,10 +80,6 @@ function fieldError(name) {
                 <option value="604800">주</option>
             </select>
         </span>
-
-        <%-fieldError('duration')%>
-        <%-fieldError('rawDuration')%>
-        <%-fieldError('rawMultiplier')%>
     </div>
 
     <%if(req.permissions.includes('developer')) {%>

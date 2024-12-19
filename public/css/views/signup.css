@@ -130,8 +130,4 @@
         list-style-type: inherit !important;
         margin: .4em 0;
     }
-
-    .input-error {
-        color: red;
-    }
 }

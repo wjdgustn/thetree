@@ -111,8 +111,8 @@ app.post('/aclgroup',
         .withMessage('note의 값은 필수입니다.'),
     async (req, res) => {
     const result = validationResult(req);
-    if(!result.isEmpty()) return renderSignup(res, {
-        fieldErrors: result.array()
+    if(!result.isEmpty()) return res.status(400).send({
+        fieldErrors: result.mapped()
     });
 
     const group = req.body.group;

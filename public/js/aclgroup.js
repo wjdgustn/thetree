@@ -13,7 +13,7 @@ document.addEventListener('thetree:pageLoad', () => {
     const aclGroupRemoveForm = document.getElementById('aclgroup-remove-form');
     const aclGroupRemoveGroup = document.getElementById('aclgroup-remove-group');
 
-    createACLGroupButton.addEventListener('click', () => createACLGroupModal._thetree.modal.open());
+    createACLGroupButton?.addEventListener('click', () => createACLGroupModal._thetree.modal.open());
 
     for(let button of deleteACLGroupButtons) {
         const name = button.dataset.name;
