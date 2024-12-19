@@ -162,7 +162,7 @@ ${nextItem ? enabledButton({
         <tr>
             <td><%=item.id%></td>
             <td><%=item.user?.name || item.ip%></td>
-            <td><%=item.memo%></td>
+            <td><%=item.note%></td>
             <td><%-getFullDateTag(item.createdAt)%></td>
             <td><%-item.expiresAt ? getFullDateTag(item.expiresAt) : '영구'%></td>
             <td>

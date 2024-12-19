@@ -34,7 +34,7 @@ const newSchema = new Schema({
             message: 'Invalid IP CIDR.'
         }
     },
-    memo: {
+    note: {
         type: String
     },
     createdAt: {
