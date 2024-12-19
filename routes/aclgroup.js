@@ -31,7 +31,7 @@ app.get('/aclgroup', async (req, res) => {
 
     let prevItem;
     let nextItem;
-    if(groupItems.length) {
+    if(groupItems?.length) {
         prevItem = await ACLGroupItem.findOne({
             ...itemFilter,
             id: {$gt: groupItems[0].id}
