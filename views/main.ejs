@@ -54,6 +54,7 @@
 </head>
 
 <body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
+<div id="progress-bar"></div>
 <div id="app"><%-include(`../skins/${skin}/layout.ejs`)%></div>
 
 <div id="tooltip" class="popper" style="display: none;">

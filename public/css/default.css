@@ -413,3 +413,20 @@ a.navigation-button {
 .input-error {
     color: red;
 }
+
+#progress-bar {
+    background-color: #fff;
+    height: 3px;
+    left: 0;
+    opacity: 1;
+    position: fixed;
+    right: 0;
+    top: 0;
+    transition: width .1s, opacity .4s;
+    width: 0;
+    z-index: 999999;
+}
+
+#progress-bar.done {
+    opacity: 0;
+}

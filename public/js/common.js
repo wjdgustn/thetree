@@ -6,9 +6,12 @@ Object.defineProperty(window, 'query', {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+function contentLoadedHandler() {
     content = document.getElementById('content');
-});
+    progressBar = document.getElementById('progress-bar');
+}
+
+document.addEventListener('DOMContentLoaded', contentLoadedHandler);
 
 document.addEventListener('alpine:initialized', () => {
     setupDocument();
@@ -36,7 +39,7 @@ function plainAlert(text) {
     const doc = new DOMParser().parseFromString(text, 'text/html');
     const message = doc.body.textContent;
 
-    const errorAlerts = document.getElementsByClassName('thetree-alert-danger');
+    const errorAlerts = document.getElementsByClassName('thetree-error-alert');
     if(errorAlerts.length) for(let alert of errorAlerts) {
         const content = alert.getElementsByClassName('thetree-alert-content-text')[0];
         if(!content) continue;
@@ -115,6 +118,8 @@ const formHandler = async e => {
 
     e.preventDefault();
 
+    increaseProgress(100);
+
     const data = new FormData(form);
 
     const url = new URL(form.action);
@@ -180,6 +185,9 @@ const formHandler = async e => {
                 }
             }
         } catch(e) {}
+
+        setProgress(100);
+
         if(!json?.fieldErrors) return plainAlert(html);
 
         return;
@@ -191,6 +199,8 @@ const formHandler = async e => {
         changeUrl(response.url);
     }
     else plainAlert(html);
+
+    setProgress(100);
 }
 
 function updateTimeTag() {
@@ -293,11 +303,16 @@ async function movePage(response, pushState = true) {
         if(!canMove) return;
     }
 
+    increaseProgress(100);
+
     if(typeof response === 'string') response = await fetch(response);
 
     const html = await response.text();
 
-    if(response.status.toString().startsWith('4')) return plainAlert(html);
+    if(response.status.toString().startsWith('4')) {
+        setProgress(100);
+        return plainAlert(html);
+    }
 
     if(await replaceContent(html)) {
         if(pushState) changeUrl(response.url);
@@ -306,8 +321,11 @@ async function movePage(response, pushState = true) {
         restoreForm();
     }
     else location.href = response.url;
+
+    setProgress(100);
 }
 
+const scriptCache = {};
 async function replaceContent(html) {
     let result = false;
 
@@ -354,7 +372,7 @@ async function replaceContent(html) {
     if(fullReload) {
         newContent = doc.getElementById('content');
         document.body.innerHTML = doc.body.innerHTML;
-        content = document.getElementById('content');
+        contentLoadedHandler();
         result = true;
     }
     else {
@@ -371,9 +389,13 @@ async function replaceContent(html) {
 
         for(let script of allScripts) {
             if(script.src) {
-                const response = await fetch(script.src);
-                if(!response.ok) continue;
-                const scriptText = await response.text();
+                let scriptText = scriptCache[script.src];
+                if(!scriptText) {
+                    const response = await fetch(script.src);
+                    if (!response.ok) continue;
+                    scriptText = await response.text();
+                    scriptCache[script.src] = scriptText;
+                }
                 eval(scriptText);
             }
             else eval(script.textContent);
@@ -403,6 +425,42 @@ async function replaceContent(html) {
 function emit(name) {
     const event = new CustomEvent(name);
     document.dispatchEvent(event);
+}
+
+let progressBar;
+let progressInterval;
+function setProgress(progress = 0) {
+    if(progressInterval) clearInterval(progressInterval);
+
+    progressBar.style.width = progress + '%';
+
+    if(progress === 100) resetProgress();
+}
+
+function increaseProgress(progress = 0, during = 3000, interval = 100) {
+    if(progressInterval) clearInterval(progressInterval);
+
+    let currentProgress = parseFloat(progressBar.style.width) || 0;
+    let increase = progress / (during / interval);
+    progressInterval = setInterval(() => {
+        currentProgress += increase;
+        progressBar.style.width = currentProgress + '%';
+
+        if(currentProgress >= progress) clearInterval(progressInterval);
+    }, interval);
+}
+
+function progressTransitionEnd(e) {
+    if(e.propertyName !== 'opacity') return;
+
+    progressBar.classList.remove('done');
+    progressBar.style.width = '0';
+    progressBar.removeEventListener('transitionend', progressTransitionEnd);
+}
+
+function resetProgress() {
+    progressBar.classList.add('done');
+    progressBar.addEventListener('transitionend', progressTransitionEnd);
 }
 
 window.addEventListener('beforeunload', e => {
