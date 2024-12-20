@@ -430,6 +430,7 @@ function emit(name) {
 let progressBar;
 let progressInterval;
 function setProgress(progress = 0) {
+    console.log('setProgress', progress);
     if(progressInterval) clearInterval(progressInterval);
 
     progressBar.style.width = progress + '%';
@@ -438,6 +439,7 @@ function setProgress(progress = 0) {
 }
 
 function increaseProgress(progress = 0, during = 3000, interval = 100) {
+    console.log('increaseProgress, progress:', progress, 'during:', during, 'interval:', interval);
     if(progressInterval) clearInterval(progressInterval);
 
     let currentProgress = parseFloat(progressBar.style.width) || 0;
@@ -451,7 +453,10 @@ function increaseProgress(progress = 0, during = 3000, interval = 100) {
 }
 
 function progressTransitionEnd(e) {
+    console.log('progressTransitionEnd');
     if(e.propertyName !== 'opacity') return;
+
+    console.log('progressTransitionEnd2');
 
     progressBar.classList.remove('done');
     progressBar.style.width = '0';
@@ -459,6 +464,7 @@ function progressTransitionEnd(e) {
 }
 
 function resetProgress() {
+    console.log('resetProgress');
     progressBar.classList.add('done');
     progressBar.addEventListener('transitionend', progressTransitionEnd);
 }
