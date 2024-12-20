@@ -365,7 +365,7 @@ async function replaceContent(html) {
 
     for(let style of injectedStyles) {
         if(loadedStyles.includes(style.href)) continue;
-        document.head.removeChild(style);
+        style.remove();
     }
 
     const fullReload = html.includes('<!DOCTYPE html>');
