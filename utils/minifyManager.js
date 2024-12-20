@@ -106,7 +106,7 @@ module.exports = {
         if(!fs.existsSync('./cache/skinjs')) fs.mkdirSync('./cache/skinjs');
 
         const codePath = path.join('./skins', decodeURIComponent(req.url));
-        if(!codePath.startsWith('skins/') || !fs.existsSync(codePath)) return next();
+        if(!codePath.startsWith(`skins${path.sep}`) || !fs.existsSync(codePath)) return next();
 
         const code = fs.readFileSync(codePath).toString();
         const hash = crypto.createHash('sha256').update(code).digest('hex');
@@ -132,7 +132,7 @@ module.exports = {
         if(!fs.existsSync('./cache/skincss')) fs.mkdirSync('./cache/skincss');
 
         const codePath = path.join('./skins', decodeURIComponent(req.url));
-        if(!codePath.startsWith('skins/') || !fs.existsSync(codePath)) return next();
+        if(!codePath.startsWith(`skins${path.sep}`) || !fs.existsSync(codePath)) return next();
 
         const code = fs.readFileSync(codePath).toString();
         const hash = crypto.createHash('sha256').update(code).digest('hex');
