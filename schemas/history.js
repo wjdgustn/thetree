@@ -49,6 +49,10 @@ const newSchema = new Schema({
         type: String,
         maxLength: 255
     },
+    revertRev: {
+        type: Number,
+        min: 1
+    },
     editRequest: {
         type: String
     },

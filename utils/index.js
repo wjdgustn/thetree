@@ -153,6 +153,9 @@ module.exports = {
         else if(rev.type === HistoryTypes.Create) {
             rev.infoText = '새 문서';
         }
+        else if(rev.type === HistoryTypes.Revert) {
+            rev.infoText = `r${rev.revertRev}으로 되돌림`
+        }
 
         rev.userHtml = this.userHtml(rev.user);
 

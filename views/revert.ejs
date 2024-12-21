@@ -1,0 +1,20 @@
+<link rel="stylesheet" href="/css/views/revert.css">
+<form method="post">
+    <input type="hidden" name="uuid" value="<%=uuid%>">
+    <textarea readonly><%=content%></textarea>
+
+    <div class="log-block">
+        <label for="logInput" x-ref="logLabel">요약</label>
+        <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">
+    </div>
+
+    <%if(session.account.type !== UserTypes.Account) {%>
+    <div>
+        <p class="ip-warn">비로그인 상태로 편집합니다. 로그인하지 않은 상태로 문서 편집을 저장하면, 편집 역사에 본인이 사용하는 IP(<%=req.ip%>) 주소 전체가 영구히 기록됩니다.</p>
+    </div>
+    <%}%>
+
+    <div class="button-block">
+        <button class="thetree-square-button thetree-blue-button">되돌리기</button>
+    </div>
+</form>

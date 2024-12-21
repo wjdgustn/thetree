@@ -669,8 +669,9 @@ app.get('/raw/*', async (req, res) => {
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(read_acl_message);
 
-    let rev;
-    if(dbDocument) rev = await History.findOne({
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+
+    const rev = await History.findOne({
         document: dbDocument.uuid,
         ...(req.query.uuid ? { uuid: req.query.uuid } : {})
     }).sort({ rev: -1 });
@@ -687,6 +688,98 @@ app.get('/raw/*', async (req, res) => {
             content: rev?.content ?? ''
         }
     });
+});
+
+app.get('/revert/*', async (req, res) => {
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+    if(!result) return res.error(aclMessage);
+
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid,
+        uuid: req.query.uuid
+    });
+
+    if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.');
+
+    if(![
+        HistoryTypes.Create,
+        HistoryTypes.Modify,
+        HistoryTypes.Revert
+    ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
+
+    res.renderSkin(undefined, {
+        contentName: 'revert',
+        viewName: 'revert',
+        document,
+        rev: rev.rev,
+        uuid: rev.uuid,
+        serverData: {
+            content: rev?.content ?? ''
+        }
+    });
+});
+
+app.post('/revert/*', async (req, res) => {
+    if(req.body.log.length > 255) return res.error('요약의 값은 255글자 이하여야 합니다.');
+
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+    if(!result) return res.error(aclMessage);
+
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid,
+        uuid: req.body.uuid
+    });
+
+    if(!req.body.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.');
+
+    if(![
+        HistoryTypes.Create,
+        HistoryTypes.Modify,
+        HistoryTypes.Revert
+    ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
+
+    const currentRev = await History.findOne({
+        document: dbDocument.uuid
+    }).sort({ rev: -1 });
+
+    if(rev.content === currentRev.content) return res.error('문서 내용이 같습니다.');
+
+    await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.Revert,
+        document: dbDocument.uuid,
+        revertRev: rev.rev,
+        content: rev.content,
+        log: req.body.log
+    });
+
+    res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
 module.exports = app;
