@@ -69,8 +69,8 @@ module.exports = {
             edit_request_close: '닫힌 편집 요청',
             diff: '비교',
             revert: `r${page.data.rev}로 되돌리기`,
-            raw: `r${page.viewName} RAW`,
-            blame: `r${page.viewName} Blame`,
+            raw: `r${page.data.rev} RAW`,
+            blame: `r${page.data.rev} Blame`,
             wiki: page.data.rev ? `r${page.data.rev}` : '',
         }[page.viewName];
         return text ? ` (${text})` : '';
