@@ -4,7 +4,9 @@
 <%alert = typeof alert === 'undefined' ? '' : alert;%>
 <%-include('alert', { alert })%>
 
+<%const adminPerm = req.permissions.includes('admin');%>
 <%const aclgroupPerm = req.permissions.includes('aclgroup');%>
+<%const devPerm = req.permissions.includes('developer');%>
 
 <form id="aclgroup-remove-form" method="post" action="aclgroup/group_remove">
     <input id="aclgroup-remove-group" type="hidden" name="uuid">
@@ -30,7 +32,7 @@
 </ul>
 
 <%if(selectedGroup) {%>
-<%if(req.permissions.includes('developer')) {%>
+<%if(devPerm) {%>
 <div class="wiki-content">
     <h4 class="wiki-heading wiki-heading-folded">그룹 설정</h4>
     <div class="wiki-heading-content wiki-heading-content-folded">
@@ -131,14 +133,14 @@
         </span>
     </div>
 
-    <%if(req.permissions.includes('developer')) {%>
+    <%if(devPerm) {%>
         <div class="form-block">
             <label for="hidelogInput">hidelog :</label>
             <input type="checkbox" id="hidelogInput" name="hidelog" value="Y">
         </div>
     <%}%>
 
-    <button class="thetree-square-button thetree-blue-button"<%=aclgroupPerm ? '' : ' disabled'%>>추가</button>
+    <button class="thetree-square-button thetree-blue-button"<%=adminPerm ? '' : ' disabled'%>>추가</button>
 </form>
 
 <%
@@ -215,7 +217,7 @@ ${nextItem ? enabledButton({
             <td><%-getFullDateTag(item.createdAt)%></td>
             <td><%-item.expiresAt ? getFullDateTag(item.expiresAt) : '영구'%></td>
             <td>
-                <button class="thetree-square-button thetree-danger-button delete-aclgroupitem" data-id="<%=item.id%>" data-uuid="<%=item.uuid%>"<%=aclgroupPerm ? '' : ' disabled'%>>삭제</button>
+                <button class="thetree-square-button thetree-danger-button delete-aclgroupitem" data-id="<%=item.id%>" data-uuid="<%=item.uuid%>"<%=adminPerm ? '' : ' disabled'%>>삭제</button>
             </td>
         </tr>
     <%} else {%>
@@ -249,7 +251,7 @@ ${nextItem ? enabledButton({
                     <input type="text" name="note">
                 </div>
 
-                <%if(req.permissions.includes('developer')) {%>
+                <%if(devPerm) {%>
                     <div class="form-block">
                         <p>hidelog:</p>
                         <input type="checkbox" name="hidelog" value="Y">
