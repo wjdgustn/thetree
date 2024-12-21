@@ -19,7 +19,6 @@ document.addEventListener('alpine:initialized', () => {
 
 let currentUrl = location.href;
 window.addEventListener('popstate', async e => {
-    console.log(e);
     const prevUrl = currentUrl;
     currentUrl = location.href;
 
@@ -159,7 +158,6 @@ const formHandler = async e => {
 
                     let fieldError;
                     if(['DIV', 'SPAN'].includes(input.parentElement?.tagName)) {
-                        console.log('wow div');
                         fieldError = input.parentElement.querySelector(`.input-error[data-for="${input.name}"]`);
                         if(!fieldError && error) {
                             fieldError = document.createElement('p');
@@ -299,7 +297,6 @@ function changeUrl(url) {
 
 let content;
 async function movePage(response, pushState = true, prevUrl = null) {
-    console.trace();
     if(typeof window.beforePageLoad === 'function') {
         const canMove = await window.beforePageLoad();
         if(!canMove) {
