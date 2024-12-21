@@ -217,7 +217,7 @@ module.exports = class ACL {
                     aclMessage += `<br>사유 : ${aclGroupItem.note ?? '없음'}`;
 
                     if(rule.aclGroup.isWarn) {
-                        aclMessage = rule.aclGroup.aclMessage ?? '경고를 받았습니다.';
+                        aclMessage = rule.aclGroup.aclMessage || '경고를 받았습니다.';
                         aclMessage += `<br><br><a href="/self_unblock?id=${aclGroupItem.id}">[확인했습니다. #${aclGroupItem.id}]</a>`;
                         aclMessage += `<br>사유: ${aclGroupItem.note ?? '없음'}`;
                     }
