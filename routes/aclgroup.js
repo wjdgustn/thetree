@@ -238,4 +238,16 @@ app.post('/aclgroup/group_edit', middleware.permission('developer'),
     res.redirect(`/aclgroup?group=${encodeURIComponent(req.body.name)}`);
 });
 
+app.get('/self_unblock', async (req, res) => {
+    const item = await ACLGroupItem.findOne({
+        id: req.query.id
+    });
+    if(!item || !req.query.id || item.user !== req.user.uuid) return res.error('aclgroup_not_found');
+
+    await ACLGroupItem.deleteOne({
+        uuid: item.uuid
+    });
+    res.redirect(req.get('referer'));
+});
+
 module.exports = app;
