@@ -13,12 +13,11 @@
 <ul>
     <%for(let i = 0; i < aclGroups.length; i++) {%>
         <%const group = aclGroups[i];%>
-        <%const selected = req.query.group ? req.query.group === group.name : i === 0;%>
 
         <li>
-            <a href="/aclgroup?group=<%=group.name%>"<%-selected ? ' class="selected-group"' : ''%>>
+            <a href="/aclgroup?group=<%=group.name%>"<%-selectedGroup.uuid === group.uuid ? ' class="selected-group"' : ''%>>
                 <%=group.name%>
-                <%if(aclgroupPerm) {%><button class="delete-aclgroup" data-name="<%=group.name%>" data-uuid="<%=group.uuid%>">×</button><%}%>
+                <%if(aclgroupPerm && !group.preventDelete) {%><button class="delete-aclgroup" data-name="<%=group.name%>" data-uuid="<%=group.uuid%>">×</button><%}%>
             </a>
         </li>
     <%}%>
@@ -31,6 +30,56 @@
 </ul>
 
 <%if(selectedGroup) {%>
+<%if(req.permissions.includes('developer')) {%>
+<div class="wiki-content">
+    <h4 class="wiki-heading wiki-heading-folded">그룹 설정</h4>
+    <div class="wiki-heading-content wiki-heading-content-folded">
+        <form method="post" action="/aclgroup/group_edit">
+            <input type="hidden" name="uuid" value="<%=selectedGroup.uuid%>">
+
+            <div>
+                <label for="nameInput">그룹 이름:</label>
+                <input id="nameInput" name="name" value="<%=selectedGroup.name%>">
+            </div>
+
+            <div>
+                <label for="cssInput">이름 CSS:</label>
+                <input id="cssInput" name="userCSS" value="<%=selectedGroup.userCSS%>">
+            </div>
+
+            <div>
+                <label for="aclMessageInput">ACL 메시지:</label>
+                <textarea id="aclMessageInput" name="aclMessage" rows="5"><%=selectedGroup.aclMessage%></textarea>
+            </div>
+
+            <div>
+                <input id="forBlockInput" name="forBlock" type="checkbox" value="Y"<%=selectedGroup.forBlock ? ' checked' : ''%>>
+                <label for="forBlockInput">사용자 문서에 차단 틀 표시</label>
+            </div>
+
+            <div>
+                <input id="isWarnInput" name="isWarn" type="checkbox" value="Y"<%=selectedGroup.isWarn ? ' checked' : ''%>>
+                <label for="isWarnInput">직접 해제 가능</label>
+            </div>
+
+            <div>
+                <input id="hiddenFromPublicInput" name="hiddenFromPublic" type="checkbox" value="Y"<%=selectedGroup.hiddenFromPublic ? ' checked' : ''%>>
+                <label for="hiddenFromPublicInput">관리자 권한이 없는 경우 숨기기</label>
+            </div>
+
+            <div>
+                <input id="preventDeleteInput" name="preventDelete" type="checkbox" value="Y"<%=selectedGroup.preventDelete ? ' checked' : ''%>>
+                <label for="preventDeleteInput">그룹 삭제 방지</label>
+            </div>
+
+            <button class="thetree-square-button thetree-blue-button">적용</button>
+
+            <hr>
+        </form>
+    </div>
+</div>
+<%}%>
+
 <form id="add-aclgroup-item-form" method="post" action="/aclgroup">
     <input type="hidden" name="group" value="<%=selectedGroup.uuid%>">
 

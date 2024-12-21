@@ -80,8 +80,12 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
 
 app.post('/aclgroup/group_remove', middleware.permission('aclgroup'), async (req, res) => {
     const uuid = req.body.uuid;
-    const deleted = await ACLGroup.findOneAndDelete({ uuid });
-    if(!deleted) return res.status(404).send('존재하지 않는 그룹입니다.');
+    const target = await ACLGroup.findOne({ uuid });
+
+    if(!target) return res.status(404).send('존재하지 않는 그룹입니다.');
+    if(target.preventDelete) return res.status(403).send('삭제할 수 없는 그룹입니다.');
+
+    await ACLGroup.deleteOne({ uuid });
 
     res.redirect('/aclgroup');
 });
@@ -206,6 +210,32 @@ app.post('/aclgroup/remove', middleware.permission('admin'),
     if(!deleted) return res.status(404).send('ACL 요소가 존재하지 않습니다.');
 
     res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+});
+
+app.post('/aclgroup/group_edit', middleware.permission('developer'),
+    body('name')
+        .notEmpty()
+        .withMessage('그룹 이름은 필수입니다.'),
+    async (req, res) => {
+    const result = validationResult(req);
+    if(!result.isEmpty()) return res.status(400).send({
+        fieldErrors: result.mapped()
+    });
+
+    const updated = await ACLGroup.findOneAndUpdate({
+        uuid: req.body.uuid
+    }, {
+        name: req.body.name,
+        userCSS: req.body.userCSS,
+        aclMessage: req.body.aclMessage,
+        forBlock: req.body.forBlock === 'Y',
+        isWarn: req.body.isWarn === 'Y',
+        hiddenFromPublic: req.body.hiddenFromPublic === 'Y',
+        preventDelete: req.body.preventDelete === 'Y'
+    });
+    if(!updated) return res.status(404).send('존재하지 않는 그룹입니다.');
+
+    res.redirect(`/aclgroup?group=${encodeURIComponent(req.body.name)}`);
 });
 
 module.exports = app;
