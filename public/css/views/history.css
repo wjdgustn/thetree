@@ -23,12 +23,21 @@
         appearance: textfield;
     }
 
+    .theseed-dark-mode .navigation-rev-input {
+        background-color: #282829;
+        border-color: #484848;
+    }
+
     .navigation-rev-placeholder {
         color: #888;
         left: .75rem;
         position: absolute;
         top: .3rem;
         z-index: 201;
+    }
+
+    .theseed-dark-mode .navigation-rev-placeholder {
+        color: var(--text-color, hsla(0, 0%, 88%, .749));
     }
 
     ul {

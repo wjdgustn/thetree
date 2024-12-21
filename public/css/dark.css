@@ -1,3 +1,8 @@
+.theseed-dark-mode .thetree-alert {
+    background-color: #2a2a2a;
+    border-color: #484848;
+}
+
 .theseed-dark-mode .thetree-alert-primary {
     background-color: #05234f;
     border-color: #052e6d;
@@ -44,4 +49,16 @@
 
 .theseed-dark-mode .category-list-more {
     background: linear-gradient(90deg, transparent, var(--dark-article-background-color, var(--article-background-color, #1c1d1f)), var(--dark-article-background-color, var(--article-background-color, #1c1d1f)));
+}
+
+.theseed-dark-mode .navigation-button {
+    background-color: #282829;
+    border-color: #484848;
+    color: var(--dark-text-color, var(--text-color, #e0e0e0));
+}
+
+.theseed-dark-mode .navigation-button-disabled {
+    background-color: #373737;
+    border-color: #424242;
+    color: #777;
 }
