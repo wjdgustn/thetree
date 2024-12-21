@@ -132,7 +132,7 @@ app.get('/w/*', async (req, res) => {
     let { html: contentHtml, categories } = await parser.parse(rev.content);
     let categoryHtml;
     try {
-        categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && rev.content?.startsWith('#redirect '));
+        categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !rev.content?.startsWith('#redirect '));
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
     }
