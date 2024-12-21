@@ -99,12 +99,6 @@ app.get('/w/*', async (req, res) => {
         });
     }
 
-    const parser = new NamumarkParser({
-        document,
-        aclData: req.aclData,
-        req
-    });
-
     if(!req.query.noredirect && rev.content?.startsWith('#redirect ')) {
         const redirectName = rev.content.split('\n')[0].slice(10);
         const redirectDoc = utils.parseDocumentName(redirectName);
@@ -117,6 +111,22 @@ app.get('/w/*', async (req, res) => {
             anchor: redirectDoc.anchor
         }));
     }
+
+    let user;
+    if(namespace === '사용자') {
+        user = await User.findOne({
+            name: title
+        });
+        if(user) defaultData.user = {
+            uuid: user.uuid
+        }
+    }
+
+    const parser = new NamumarkParser({
+        document,
+        aclData: req.aclData,
+        req
+    });
 
     const { html: contentHtml, categories } = await parser.parse(rev.content);
     let categoryHtml;
@@ -135,11 +145,7 @@ app.get('/w/*', async (req, res) => {
         categoryHtml,
         date: rev.createdAt.getTime(),
         star_count: 0,
-        starred: false,
-        user: null
-        // user: {
-        //     uuid: 'asdf'
-        // }
+        starred: false
     });
 });
 
