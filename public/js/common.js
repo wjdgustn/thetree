@@ -19,6 +19,7 @@ document.addEventListener('alpine:initialized', () => {
 
 let currentUrl = location.href;
 window.addEventListener('popstate', async e => {
+    console.log(e);
     const prevUrl = currentUrl;
     currentUrl = location.href;
 
@@ -26,11 +27,11 @@ window.addEventListener('popstate', async e => {
 
     if(typeof window.beforePopstate === 'function') {
         const canMove = await window.beforePopstate(isHashChange);
-        if(!canMove) return;
+        if(!canMove) return history.pushState({}, null, prevUrl);
     }
 
     if(isHashChange) focusAnchor();
-    else await movePage(location.href, false);
+    else await movePage(location.href, false, prevUrl);
 });
 
 function plainAlert(text) {
@@ -297,10 +298,14 @@ function changeUrl(url) {
 }
 
 let content;
-async function movePage(response, pushState = true) {
+async function movePage(response, pushState = true, prevUrl = null) {
+    console.trace();
     if(typeof window.beforePageLoad === 'function') {
         const canMove = await window.beforePageLoad();
-        if(!canMove) return;
+        if(!canMove) {
+            if(prevUrl) history.pushState({}, null, prevUrl);
+            return;
+        }
     }
 
     increaseProgress(100);
