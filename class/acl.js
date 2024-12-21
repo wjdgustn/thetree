@@ -132,7 +132,7 @@ module.exports = class ACL {
             return `geoip:${rule.conditionContent}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `ACL그룹 ${rule.aclGroup.name}에 속해 있는 사용자`
+            return `ACL그룹 ${rule.aclGroup?.name ?? rule.conditionContent}에 속해 있는 사용자`
         }
     }
 
@@ -153,7 +153,7 @@ module.exports = class ACL {
             return `user:${rule.user.name}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `aclgroup:${rule.aclGroup.name}`
+            return `aclgroup:${rule.aclGroup?.name ?? rule.conditionContent}`
         }
         else {
             return `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${rule.conditionContent}`;
