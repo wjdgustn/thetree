@@ -654,4 +654,39 @@ app.get('/history/*', async (req, res) => {
     });
 });
 
+app.get('/raw/*', async (req, res) => {
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(read_acl_message);
+
+    let rev;
+    if(dbDocument) rev = await History.findOne({
+        document: dbDocument.uuid,
+        ...(req.query.uuid ? { uuid: req.query.uuid } : {})
+    }).sort({ rev: -1 });
+
+    if(req.query.uuid && !rev) return res.error('해당 리비전이 존재하지 않습니다.');
+
+    res.renderSkin(undefined, {
+        contentName: 'raw',
+        viewName: 'raw',
+        document,
+        rev: rev.rev,
+        uuid: rev.uuid,
+        serverData: {
+            content: rev?.content ?? ''
+        }
+    });
+});
+
 module.exports = app;

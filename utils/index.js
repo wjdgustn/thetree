@@ -135,8 +135,8 @@ module.exports = {
         return arr;
     },
     userHtml(user) {
-        const name = user.name ?? user.ip;
-        const link = user.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user.uuid}/document`;
+        const name = user?.name ?? user?.ip;
+        const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
 
         return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
                 ? `<a class="user-text-name${user.type === UserTypes.Account ? ' user-text-member' : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}>${name}</a>`
