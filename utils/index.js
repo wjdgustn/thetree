@@ -6,6 +6,8 @@ const {
 } = require('./types');
 
 const User = require('../schemas/user');
+const ACLGroup = require('../schemas/aclGroup');
+const ACLGroupItem = require('../schemas/aclGroupItem');
 
 module.exports = {
     getRandomInt(min, max) {
@@ -82,6 +84,34 @@ module.exports = {
         }
         return null;
     },
+    async getUserCSS(user) {
+        const aclGroups = await ACLGroup.find({
+            userCSS: {
+                $exists: true,
+                $ne: ''
+            }
+        }).lean();
+        const aclGroupItem = await ACLGroupItem.findOne({
+            aclGroup: {
+                $in: aclGroups.map(group => group.uuid)
+            },
+            $or: [
+                {
+                    expiresAt: {
+                        $gte: new Date()
+                    }
+                },
+                {
+                    expiresAt: null
+                }
+            ],
+            user: user.uuid
+        }).lean();
+        if(!aclGroupItem) return '';
+
+        const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
+        return aclGroup.userCSS;
+    },
     async findUsers(arr) {
         const cache = {};
 
@@ -94,12 +124,24 @@ module.exports = {
 
                 obj.user = await User.findOne({
                     uuid: obj.user
-                });
-                if(obj.user) cache[obj.user.uuid] = obj.user;
+                }).lean();
+                if(obj.user) {
+                    obj.user.userCSS = await this.getUserCSS(obj.user);
+                    cache[obj.user.uuid] = obj.user;
+                }
             }
         }
 
         return arr;
+    },
+    userHtml(user) {
+        const name = user.name ?? user.ip;
+        const link = user.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user.uuid}/document`;
+
+        return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
+                ? `<a class="user-text-name${user.type === UserTypes.Account ? ' user-text-member' : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}>${name}</a>`
+                : `<span class="user-text-name user-text-deleted">(삭제된 사용자)</span>`)
+            + '</span>';
     },
     addHistoryData(rev) {
         rev.infoText = null;
@@ -112,10 +154,7 @@ module.exports = {
             rev.infoText = '새 문서';
         }
 
-        rev.userHtml = '<span class="user-text">' + (rev.user
-            ? `<a class="user-text-name${rev.user.type === UserTypes.Account ? ' user-text-member' : ''}" href="/w/사용자:${rev.user.name}">${rev.user.name}</a>`
-            : `<span class="user-text-name user-text-deleted">(삭제된 사용자)</span>`)
-            + '</span>';
+        rev.userHtml = this.userHtml(rev.user);
 
         const diffClassList = ['diff-text'];
 
