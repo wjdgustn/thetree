@@ -71,9 +71,20 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
     const checkExists = await ACLGroup.exists({ name });
     if(checkExists) return res.status(409).send('이미 존재하는 그룹 이름입니다.');
 
-    await ACLGroup.create({
+    const newGroup = {
         name
-    });
+    };
+
+    if(name === '차단된 사용자') {
+        newGroup.forBlock = true;
+        newGroup.hiddenFromPublic = true;
+        newGroup.preventDelete = true;
+    }
+    else if(name.startsWith('경고-')) {
+        newGroup.isWarn = true;
+    }
+
+    await ACLGroup.create(newGroup);
 
     res.redirect(`/aclgroup?group=${encodeURIComponent(name)}`);
 });
