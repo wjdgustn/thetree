@@ -822,7 +822,7 @@ app.get('/diff/*', async (req, res) => {
 
     const lineDiff = Diff.diffLines(namumarkUtils.escapeHtml(oldRev.content), namumarkUtils.escapeHtml(rev.content)).map(a => ({
         ...a,
-        value: a.value.trimEnd()
+        value: a.value.endsWith('\n') ? a.value.slice(0, -1) : a.value
     }));
     let diffLines = [];
 
