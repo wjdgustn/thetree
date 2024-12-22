@@ -977,6 +977,8 @@ app.get('/diff/*', async (req, res) => {
         document,
         oldRev: oldRev.rev,
         rev: rev.rev,
+        olduuid: oldRev.uuid,
+        uuid: rev.uuid,
         serverData: {
             lineDiff,
             diffLines
