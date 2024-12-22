@@ -836,7 +836,7 @@ app.get('/diff/*', async (req, res) => {
             diffLines.push({
                 class: 'equal',
                 line: line + i,
-                content: `<span class="equal">${content}</span>`
+                content
             });
         }
     }
@@ -863,7 +863,7 @@ app.get('/diff/*', async (req, res) => {
                     diffLines.push({
                         class: 'equal',
                         line: line + j,
-                        content: `<span class="equal">${content}</span>`
+                        content
                     });
                 }
 
@@ -878,7 +878,7 @@ app.get('/diff/*', async (req, res) => {
                     diffLines.push({
                         class: 'equal',
                         line: line + linesLen - CHANGE_AROUND_LINES + j + (lines.length < CHANGE_AROUND_LINES ? CHANGE_AROUND_LINES - lines.length : 0),
-                        content: `<span class="equal">${content}</span>`
+                        content
                     });
                 }
             }
@@ -887,9 +887,12 @@ app.get('/diff/*', async (req, res) => {
             if(next.added) {
                 const nextLines = next.value.split('\n');
 
+                console.log(lines, nextLines);
+
                 const currArr = [];
                 const nextArr = [];
 
+                let lineCompared = false;
                 for(let j = 0; j < Math.max(lines.length, nextLines.length); j++) {
                     const content = lines[j];
                     const nextContent = nextLines[j];
@@ -899,17 +902,19 @@ app.get('/diff/*', async (req, res) => {
                             diffLines.push({
                                 class: 'equal',
                                 line: line + j,
-                                content: `<span class="equal">${content}</span>`
+                                content
                             });
                             continue;
                         }
+
+                        lineCompared = true;
 
                         const diff = Diff.diffChars(content, nextContent);
                         let c = '';
                         let n = '';
                         for(let d of diff) {
                             if(!d.added && !d.removed) {
-                                const val = `<span class="equal">${d.value}</span>`;
+                                const val = d.value;
                                 c += val;
                                 n += val;
                             }
@@ -931,14 +936,14 @@ app.get('/diff/*', async (req, res) => {
                     else if(content != null) currArr.push({
                         class: 'delete',
                         line: line + j,
-                        content: `<del class="diff">${content}</del>`,
-                        nextOffset: 1
+                        content: lineCompared ? `<del class="diff">${content}</del>` : content,
+                        nextOffset: Number(lineCompared)
                     });
                     else if(nextContent != null) nextArr.push({
                         class: 'insert',
                         line: line + j,
-                        content: `<ins class="diff">${nextContent}</ins>`,
-                        nextOffset: 1
+                        content: lineCompared ? `<ins class="diff">${nextContent}</ins>` : nextContent,
+                        nextOffset: Number(lineCompared)
                     });
                 }
 
@@ -953,7 +958,7 @@ app.get('/diff/*', async (req, res) => {
                 diffLines.push({
                     class: 'delete',
                     line: line + j,
-                    content: `<span class="equal">${content}</span>`
+                    content
                 });
             }
         }
@@ -963,7 +968,7 @@ app.get('/diff/*', async (req, res) => {
             diffLines.push({
                 class: 'insert',
                 line: line + j,
-                content: `<span class="equal">${content}</span>`
+                content
             });
         }
     }
