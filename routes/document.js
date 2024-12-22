@@ -894,7 +894,16 @@ app.get('/diff/*', async (req, res) => {
                     const content = lines[j];
                     const nextContent = nextLines[j];
 
-                    if(content && nextContent) {
+                    if(content != null && nextContent != null) {
+                        if(content === nextContent) {
+                            diffLines.push({
+                                class: 'equal',
+                                line: line + j,
+                                content: `<span class="equal">${content}</span>`
+                            });
+                            continue;
+                        }
+
                         const diff = Diff.diffChars(content, nextContent);
                         let c = '';
                         let n = '';
@@ -919,13 +928,13 @@ app.get('/diff/*', async (req, res) => {
                             content: n
                         });
                     }
-                    else if(content) currArr.push({
+                    else if(content != null) currArr.push({
                         class: 'delete',
                         line: line + j,
                         content: `<del class="diff">${content}</del>`,
                         nextOffset: 1
                     });
-                    else if(nextContent) nextArr.push({
+                    else if(nextContent != null) nextArr.push({
                         class: 'insert',
                         line: line + j,
                         content: `<ins class="diff">${nextContent}</ins>`,

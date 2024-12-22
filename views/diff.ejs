@@ -45,9 +45,12 @@
         lastLine = diff.line;
         if(diff.nextOffset) {
             if(diff.class === 'delete') deleteOffset += diff.nextOffset;
-            if(diff.class === 'insert') insertOffset += diff.nextOffset;
+            if(diff.class === 'insert') deleteOffset -= diff.nextOffset;
         }
         %>
     <%}%>
     </tbody>
 </table>
+
+<pre><%=JSON.stringify(diffLines, null, 2)%></pre>
+<pre><%=JSON.stringify(lineDiff, null, 2)%></pre>
