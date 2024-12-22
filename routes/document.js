@@ -887,8 +887,6 @@ app.get('/diff/*', async (req, res) => {
             if(next.added) {
                 const nextLines = next.value.split('\n');
 
-                console.log(lines, nextLines);
-
                 const currArr = [];
                 const nextArr = [];
 
