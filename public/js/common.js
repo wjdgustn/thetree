@@ -489,7 +489,7 @@ document.addEventListener('alpine:init', () => {
             this.localConfig[key] = value;
             localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig));
 
-            setStyles();
+            emit('thetree:configChange');
         },
         get currentTheme() {
             let theme = this.getLocalConfig('wiki.theme');
