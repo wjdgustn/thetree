@@ -19,14 +19,18 @@
 </tr>
     `.trim();%>
 
-    <%let lastLine = 0;%>
-    <%let lastInsertLine = 0;%>
-    <%let lastDeleteLine = 0;%>
-    <%let deleteOffset = 0;%>
-    <%let insertOffset = 0;%>
+    <%
+    let lastLine = 0;
+    let lastInsertLine = 0;
+    let lastDeleteLine = 0;
+    let deleteOffset = 0;
+    let insertOffset = 0;
+    %>
     <%for(let i = 0; i < diffLines.length; i++) {%>
-        <%const diff = diffLines[i];%>
-        <%const isLast = i === diffLines.length - 1;%>
+        <%
+        const diff = diffLines[i];
+        const isLast = i === diffLines.length - 1;
+        %>
         <%if(lastLine + 1 < diff.line) {%><%-skipRow%><%}%>
 
         <tr>
@@ -35,7 +39,7 @@
             <td class="<%=diff.class%>"><div><%-diff.content%></div></td>
         </tr>
 
-        <%if(isLast && diff.class === 'equal') {%><%-skipRow%><%}%>
+        <%if(isLast && diff.class === 'equal' && lineDiff.length > 1) {%><%-skipRow%><%}%>
 
         <%
         lastLine = diff.line;

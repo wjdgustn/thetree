@@ -827,7 +827,20 @@ app.get('/diff/*', async (req, res) => {
     let diffLines = [];
 
     let line = 1;
-    for(let i = 0; i < lineDiff.length; i++) {
+    if(lineDiff.length === 1 && !lineDiff[0].added && !lineDiff[0].removed) {
+        const diff = lineDiff[0];
+        const lines = diff.value.split('\n');
+        for(let i in lines) {
+            i = parseInt(i);
+            const content = lines[i];
+            diffLines.push({
+                class: 'equal',
+                line: line + i,
+                content: `<span class="equal">${content}</span>`
+            });
+        }
+    }
+    else for(let i = 0; i < lineDiff.length; i++) {
         const prev = lineDiff[i - 1];
         const curr = lineDiff[i];
         const next = lineDiff[i + 1];
