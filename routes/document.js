@@ -1,11 +1,12 @@
 const express = require('express');
 const { Address4, Address6 } = require('ip-address');
-// const { body, validationResult } = require('express-validator');
+const Diff = require('diff');
 
 const NamumarkParser = require('../utils/namumark');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
+const namumarkUtils = require('../utils/namumark/utils');
 const {
     ACLTypes,
     ACLConditionTypes,
@@ -780,6 +781,182 @@ app.post('/revert/*', async (req, res) => {
     });
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
+});
+
+const CHANGE_AROUND_LINES = 3;
+app.get('/diff/*', async (req, res) => {
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(read_acl_message);
+
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+
+    const noRev = () => res.error('해당 리비전이 존재하지 않습니다.');
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid,
+        uuid: req.query.uuid
+    });
+
+    if(!req.query.uuid || !rev) return noRev();
+
+    const oldRev = await History.findOne({
+        document: dbDocument.uuid,
+        ...(req.query.olduuid
+            ? { uuid: req.query.olduuid }
+            : { rev: rev?.rev - 1 }
+        )
+    });
+
+    if(!oldRev) return noRev();
+
+    const lineDiff = Diff.diffLines(namumarkUtils.escapeHtml(oldRev.content), namumarkUtils.escapeHtml(rev.content)).map(a => ({
+        ...a,
+        value: a.value.trimEnd()
+    }));
+    let diffLines = [];
+
+    let line = 1;
+    for(let i = 0; i < lineDiff.length; i++) {
+        const prev = lineDiff[i - 1];
+        const curr = lineDiff[i];
+        const next = lineDiff[i + 1];
+
+        if(prev) line += prev.count;
+
+        let lines = curr.value.split('\n');
+        if(!curr.added && !curr.removed) {
+            const linesLen = lines.length;
+
+            if(i !== 0) {
+                const firstLines = lines.slice(0, CHANGE_AROUND_LINES);
+                for(let j in firstLines) {
+                    j = parseInt(j);
+                    content = firstLines[j];
+
+                    const lastDiffLine = diffLines[diffLines.length - 1];
+                    if(lastDiffLine.line >= line + j) continue;
+
+                    diffLines.push({
+                        class: 'equal',
+                        line: line + j,
+                        content: `<span class="equal">${content}</span>`
+                    });
+                }
+
+                lines = lines.slice(CHANGE_AROUND_LINES);
+            }
+
+            if(i !== lineDiff.length - 1) {
+                const lastLines = lines.slice(-CHANGE_AROUND_LINES);
+                for(let j in lastLines) {
+                    j = parseInt(j);
+                    content = lastLines[j];
+                    diffLines.push({
+                        class: 'equal',
+                        line: line + linesLen - CHANGE_AROUND_LINES + j + (lines.length < CHANGE_AROUND_LINES ? CHANGE_AROUND_LINES - lines.length : 0),
+                        content: `<span class="equal">${content}</span>`
+                    });
+                }
+            }
+        }
+        else if(curr.removed) {
+            if(next.added) {
+                const nextLines = next.value.split('\n');
+
+                const currArr = [];
+                const nextArr = [];
+
+                for(let j = 0; j < Math.max(lines.length, nextLines.length); j++) {
+                    const content = lines[j];
+                    const nextContent = nextLines[j];
+
+                    if(content && nextContent) {
+                        const diff = Diff.diffChars(content, nextContent);
+                        let c = '';
+                        let n = '';
+                        for(let d of diff) {
+                            if(!d.added && !d.removed) {
+                                const val = `<span class="equal">${d.value}</span>`;
+                                c += val;
+                                n += val;
+                            }
+                            else if(d.added) n += `<ins class="diff">${d.value}</ins>`;
+                            else if(d.removed) c += `<del class="diff">${d.value}</del>`;
+                        }
+
+                        currArr.push({
+                            class: 'delete',
+                            line: line + j,
+                            content: c
+                        });
+                        nextArr.push({
+                            class: 'insert',
+                            line: line + j,
+                            content: n
+                        });
+                    }
+                    else if(content) currArr.push({
+                        class: 'delete',
+                        line: line + j,
+                        content: `<del class="diff">${content}</del>`,
+                        nextOffset: 1
+                    });
+                    else if(nextContent) nextArr.push({
+                        class: 'insert',
+                        line: line + j,
+                        content: `<ins class="diff">${nextContent}</ins>`,
+                        nextOffset: 1
+                    });
+                }
+
+                diffLines.push(...currArr);
+                diffLines.push(...nextArr);
+
+                i++;
+            }
+            else for(let j in lines) {
+                j = parseInt(j);
+                content = lines[j];
+                diffLines.push({
+                    class: 'delete',
+                    line: line + j,
+                    content: `<span class="equal">${content}</span>`
+                });
+            }
+        }
+        else if(curr.added) for(let j in lines) {
+            j = parseInt(j);
+            content = lines[j];
+            diffLines.push({
+                class: 'insert',
+                line: line + j,
+                content: `<span class="equal">${content}</span>`
+            });
+        }
+    }
+
+    res.renderSkin(undefined, {
+        contentName: 'diff',
+        viewName: 'diff',
+        document,
+        oldRev: oldRev.rev,
+        rev: rev.rev,
+        serverData: {
+            lineDiff,
+            diffLines
+        }
+    });
 });
 
 module.exports = app;
