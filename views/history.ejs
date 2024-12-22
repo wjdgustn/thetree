@@ -71,10 +71,10 @@ ${enableNext ? enabledButton({
                             action: 'revert',
                             text: '이 리비전으로 되돌리기'
                         }]),
-                        {
+                        ...(rev.rev > 1 ? [{
                             action: 'diff',
                             text: '비교'
-                        }
+                        }] : [])
                     ];
 
                     if(req.permissions.includes('mark_troll_revision')) {
