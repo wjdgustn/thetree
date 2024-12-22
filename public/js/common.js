@@ -92,6 +92,8 @@ function restoreForm() {
             const input = form.querySelector(`input[name="${key}"], select[name="${key}"]`);
             if(!input) continue;
 
+            if(input.type === 'hidden') continue;
+
             if(input.type === 'checkbox' || input.type === 'radio')
                 input.checked = !!value;
             else {
