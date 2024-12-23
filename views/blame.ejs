@@ -22,7 +22,7 @@
                 <%const diff = blameCopy.shift();%>
                 <%remainingCount = diff.count;%>
 
-                <%let infoHtml = diff.infoText ? `<i>(${diff.infoText})</i>` : '';%>
+                <%let infoHtml = diff.history.infoText ? `<i>(${diff.history.infoText})</i>` : '';%>
                 <%if(diff.history.type === HistoryTypes.Revert) infoHtml = `<a href="${doc_action_link(document, 'blame', {
                     uuid: diff.history.revertUuid
                 })}">${infoHtml}</a>`;%>
