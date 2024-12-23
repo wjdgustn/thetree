@@ -55,6 +55,8 @@ const aClickHandler = async e => {
 
     const aElement = e.currentTarget;
 
+    if(aElement._thetree.preHandler?.(e) === false) return;
+
     if(aElement.target === '_blank') return;
 
     let href = aElement.getAttribute('href');
@@ -275,7 +277,8 @@ function setupDocument() {
         if(element.thetree) continue;
 
         element._thetree = {
-            modal: {}
+            modal: {},
+            preHandler: null
         };
     }
 

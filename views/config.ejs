@@ -19,6 +19,7 @@ document.addEventListener('thetree:pageLoad', () => {
     const evalOutput = document.getElementById('evalOutput');
     const evalContent = document.getElementById('evalContent');
     const evalRun = document.getElementById('evalRun');
+    const dangerButtons = document.getElementsByClassName('thetree-danger-button');
 
     evalRun.addEventListener('click', async () => {
         if(!evalContent.value) return;
@@ -41,6 +42,13 @@ document.addEventListener('thetree:pageLoad', () => {
             evalRun.click();
         }
     });
+
+    for(let button of dangerButtons) button._thetree.preHandler = e => {
+        if(!confirm('go?')) {
+            e.preventDefault();
+            return false;
+        }
+    }
 }, { once: true });
 </script>
 
