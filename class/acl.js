@@ -136,9 +136,9 @@ module.exports = class ACL {
         }
     }
 
-    static ruleToDenyString(rule, aclGroupId = 0) {
+    static ruleToDenyString(rule, aclGroupId = 0, isIp = false) {
         if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `ACL그룹 ${rule.aclGroup.name} #${aclGroupId}에 있기`
+            return `${isIp ? '현재 사용중인 아이피가 ' : ''}ACL그룹 ${rule.aclGroup.name} #${aclGroupId}에 있기`
         }
         else {
             return `${ACL.ruleToConditionString(rule)}이기`
@@ -210,7 +210,7 @@ module.exports = class ACL {
 
             if(action === ACLActionTypes.Allow) return { result: true };
             else if(action === ACLActionTypes.Deny) {
-                let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
+                let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id, aclGroupItem?.ip != null)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
                 if(aclGroupItem) {
                     if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
                     aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
