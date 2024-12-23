@@ -14,7 +14,7 @@
     let remainingCount = 0;
     const blameCopy = blame.slice();
     %>
-    <%for(let i in lines) {%>
+    <%if(blameCopy.length) for(let i in lines) {%>
         <%i = parseInt(i);%>
         <tr>
             <%if(!remainingCount) {%>
@@ -35,6 +35,8 @@
             <th><%=i + 1%></th>
             <td><%=lines[i]%></td>
         </tr>
+    <%} else {%>
+        blame 데이터를 찾을 수 없습니다.
     <%}%>
     </tbody>
 </table>
