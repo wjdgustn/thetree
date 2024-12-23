@@ -124,12 +124,17 @@ module.exports = {
                     continue;
                 }
 
+                const uuid = obj.user;
                 obj.user = await User.findOne({
-                    uuid: obj.user
+                    uuid
                 }).lean();
                 if(obj.user) {
                     obj.user.userCSS = await this.getUserCSS(obj.user);
                     cache[obj.user.uuid] = obj.user;
+                }
+                else obj.user = {
+                    type: UserTypes.Deleted,
+                    uuid
                 }
             }
         }
