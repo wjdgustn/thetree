@@ -361,6 +361,30 @@ app.get('/member/mypage', middleware.isLogin, (req, res) => {
     });
 });
 
+app.post('/member/mypage', middleware.isLogin,
+    body('skin')
+        .isIn([
+            'default',
+            ...global.skins
+        ])
+        .withMessage('invalid_skin'),
+    async (req, res) => {
+    const result = validationResult(req);
+    if(!result.isEmpty()) return res.status(400).send({
+        fieldErrors: result.mapped()
+    });
+
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        skin: req.body.skin
+    });
+
+    if(req.user.skin !== req.body.skin) req.session.fullReload = true;
+
+    res.redirect('/member/mypage');
+});
+
 const renderChangePassword = (res, data = {}) => res.renderSkin('비밀번호 변경', {
     ...data,
     contentName: 'change_password'

@@ -28,9 +28,9 @@
     <div class="menu-block">
         <label for="skinInput">스킨</label>
         <select id="skinInput" name="skin">
-            <option value="default">기본 스킨</option>
+            <option value="default"<%=user.skin === 'default' ? ' selected' : ''%>>기본 스킨</option>
             <%for(let skin of skins) {%>
-                <option value="<%=skin%>"><%=skin%></option>
+                <option<%=user.skin === skin ? ' selected' : ''%>><%=skin%></option>
             <%}%>
         </select>
     </div>
