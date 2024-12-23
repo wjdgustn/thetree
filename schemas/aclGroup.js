@@ -41,6 +41,11 @@ const newSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    noSignup: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 

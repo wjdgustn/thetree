@@ -79,7 +79,11 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
         newGroup.forBlock = true;
         newGroup.hiddenFromPublic = true;
         newGroup.preventDelete = true;
+        newGroup.noSignup = true;
         newGroup.userCSS = 'color: gray !important; text-decoration: line-through !important;';
+    }
+    else if(name === '로그인 허용 차단' || name.includes('통신사') || name.toLowerCase().includes('vpn')) {
+        newGroup.noSignup = true;
     }
     else if(name.startsWith('경고-')) {
         newGroup.isWarn = true;
@@ -243,7 +247,8 @@ app.post('/aclgroup/group_edit', middleware.permission('developer'),
         forBlock: req.body.forBlock === 'Y',
         isWarn: req.body.isWarn === 'Y',
         hiddenFromPublic: req.body.hiddenFromPublic === 'Y',
-        preventDelete: req.body.preventDelete === 'Y'
+        preventDelete: req.body.preventDelete === 'Y',
+        noSignup: req.body.noSignup === 'Y'
     });
     if(!updated) return res.status(404).send('존재하지 않는 그룹입니다.');
 

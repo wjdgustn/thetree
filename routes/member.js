@@ -12,8 +12,11 @@ const {
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
 const LoginHistory = require('../schemas/loginHistory');
-const Document = require("../schemas/document");
-const History = require("../schemas/history");
+const Document = require('../schemas/document');
+const History = require('../schemas/history');
+const ACLGroup = require('../schemas/aclGroup');
+const ACLGroupItem = require('../schemas/aclGroupItem');
+const {Address4, Address6} = require('ip-address');
 
 const app = express.Router();
 
@@ -43,6 +46,41 @@ app.post('/member/signup',
         return renderSignup(res, {
             alert: '이메일 허용 목록에 있는 이메일이 아닙니다.'
         });
+
+    let ipArr;
+    if(Address4.isValid(req.ip)) ipArr = new Address4(req.ip).toArray();
+    else ipArr = new Address6(req.ip).toByteArray();
+
+    const aclGroups = await ACLGroup.find({
+        noSignup: true
+    });
+    const aclGroupItem = await ACLGroupItem.findOne({
+        aclGroup: {
+            $in: aclGroups.map(group => group.uuid)
+        },
+        $or: [
+            {
+                expiresAt: {
+                    $gte: new Date()
+                }
+            },
+            {
+                expiresAt: null
+            }
+        ],
+        ipMin: {
+            $lte: ipArr
+        },
+        ipMax: {
+            $gte: ipArr
+        }
+    }).lean();
+    if(aclGroupItem) {
+        const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
+        return renderSignup(res, {
+            alert: `현재 사용중인 아이피가 ACL그룹 ${aclGroup.name} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${aclGroupItem.note ?? '없음'}`
+        });
+    }
 
     const email = req.body.email;
 
