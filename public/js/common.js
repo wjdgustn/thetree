@@ -55,7 +55,7 @@ const aClickHandler = async e => {
 
     const aElement = e.currentTarget;
 
-    if(aElement._thetree.preHandler?.(e) === false) return;
+    if(aElement._thetree?.preHandler?.(e) === false) return;
 
     if(aElement.target === '_blank') return;
 
@@ -320,6 +320,8 @@ async function movePage(response, pushState = true, prevUrl = null) {
         setProgress(100);
         return plainAlert(html);
     }
+
+    if(response.status === 204) return setProgress(100);
 
     if(await replaceContent(html)) {
         if(pushState) changeUrl(response.url);
