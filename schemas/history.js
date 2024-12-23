@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const Diff = require('diff');
 
+const blameUtils = require('../utils/blame');
 const globalUtils = require('../utils/global');
 const { HistoryTypes } = require('../utils/types');
 
@@ -70,6 +72,9 @@ const newSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    blame: {
+        type: Array
     }
 });
 
@@ -95,12 +100,22 @@ newSchema.pre('save', async function() {
         this.rev = last ? last.rev + 1 : 1;
     }
 
-    if(this.content == null) {
+    if(this.content == null && this.type !== HistoryTypes.Delete) {
         this.content = last ? last.content : null;
     }
     else if(this.diffLength == null) {
         this.diffLength = last ? this.content.length - last.content.length : this.content.length;
     }
+
+    if([
+        HistoryTypes.Create,
+        HistoryTypes.Modify,
+        HistoryTypes.Revert,
+        HistoryTypes.Delete
+    ].includes(this.type)) {
+        this.blame = blameUtils.generateBlame(last, this);
+    }
+    else this.blame = last ? last.blame : [];
 });
 
 newSchema.post('save', async function() {

@@ -12,6 +12,7 @@ const useragent = require('express-useragent');
 const { Address4 } = require('ip-address');
 const redis = require('redis');
 const RedisStore = require('connect-redis').default;
+const { colorFromUuid } = require('uuid-color');
 
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
@@ -201,6 +202,7 @@ app.use(async (req, res, next) => {
     app.locals.fs = fs;
     app.locals.path = path;
     app.locals.dayjs = dayjs;
+    app.locals.colorFromUuid = colorFromUuid;
 
     for(let t in types) {
         app.locals[t] = types[t];

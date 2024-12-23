@@ -11,19 +11,6 @@
         color: red;
     }
 
-    span.user-text-name {
-        cursor: pointer;
-    }
-
-    .user-text-member {
-        font-weight: 700;
-    }
-
-    .user-text-deleted {
-        color: gray;
-        font-style: italic;
-    }
-
     .history-log {
         color: gray;
     }

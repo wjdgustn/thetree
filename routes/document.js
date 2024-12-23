@@ -986,4 +986,44 @@ app.get('/diff/*', async (req, res) => {
     });
 });
 
+app.get('/blame/*', async (req, res) => {
+    const document = utils.parseDocumentName(req.params[0]);
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(read_acl_message);
+
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid,
+        uuid: req.query.uuid
+    });
+
+    if(!req.query.uuid || !rev) res.error('해당 리비전이 존재하지 않습니다.');
+
+    let blame = await utils.findHistories(rev.blame);
+    blame = await utils.findUsers(blame);
+
+    res.renderSkin(undefined, {
+        contentName: 'blame',
+        viewName: 'blame',
+        document,
+        rev: rev.rev,
+        uuid: rev.uuid,
+        serverData: {
+            blame,
+            lines: rev.content.split('\n')
+        }
+    });
+});
+
 module.exports = app;

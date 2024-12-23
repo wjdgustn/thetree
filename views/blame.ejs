@@ -1,0 +1,43 @@
+<link rel="stylesheet" href="/css/views/diff.css">
+
+<table>
+    <thead>
+    <tr>
+        <th></th>
+        <th></th>
+        <th class="texttitle">r<%=rev%></th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <%
+    let remainingCount = 0;
+    const blameCopy = blame.slice();
+    %>
+    <%for(let i in lines) {%>
+        <%i = parseInt(i);%>
+        <tr>
+            <%if(!remainingCount) {%>
+                <%const diff = blameCopy.shift();%>
+                <%remainingCount = diff.count;%>
+                <th rowspan="<%=remainingCount%>" style="background-color: <%=utils.increaseBrightness(colorFromUuid(diff.user.uuid), 50)%>"><a href="<%=doc_action_link(document, 'diff', {
+                        uuid: diff.uuid
+                    })%>">r<%=diff.history.rev%></a><br><%-utils.userHtml(diff.user);%></th>
+            <%}%>
+            <%remainingCount--;%>
+
+            <th><%=i + 1%></th>
+            <td><%=lines[i]%></td>
+        </tr>
+    <%}%>
+    </tbody>
+</table>
+
+<%if(req.permissions.includes('developer')) {%>
+<div class="wiki-content">
+    <h4 class="wiki-heading wiki-heading-folded">디버그 정보</h4>
+    <div class="wiki-heading-content wiki-heading-content-folded">
+        <pre><%=JSON.stringify(blame, null, 2)%></pre>
+    </div>
+</div>
+<%}%>

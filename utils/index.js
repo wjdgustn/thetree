@@ -8,6 +8,7 @@ const {
 const User = require('../schemas/user');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
+const History = require('../schemas/history');
 
 module.exports = {
     getRandomInt(min, max) {
@@ -116,7 +117,7 @@ module.exports = {
         const cache = {};
 
         for(let obj of arr) {
-            if(obj.user) {
+            if(obj?.user) {
                 if(cache[obj.user]) {
                     obj.user = cache[obj.user];
                     continue;
@@ -167,5 +168,44 @@ module.exports = {
         rev.diffHtml = `<span>(<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>)</span>`;
 
         return rev;
+    },
+    async findHistories(arr) {
+        const cache = {};
+
+        for(let obj of arr) {
+            if(obj?.uuid) {
+                if(cache[obj.uuid]) {
+                    obj.history = cache[obj.uuid];
+                    obj.user = obj.history.user;
+                    continue;
+                }
+
+                obj.history = await History.findOne({
+                    uuid: obj.uuid
+                }).lean();
+                if(obj.history) {
+                    cache[obj.uuid] = obj.history;
+                    obj.user = obj.history.user;
+                }
+            }
+        }
+
+        return arr;
+    },
+    increaseBrightness(hex, percent) {
+        hex = hex.replace(/^\s*#|\s*$/g, '');
+
+        if(hex.length == 3) {
+            hex = hex.replace(/(.)/g, '$1$1');
+        }
+
+        const r = parseInt(hex.substr(0, 2), 16),
+            g = parseInt(hex.substr(2, 2), 16),
+            b = parseInt(hex.substr(4, 2), 16);
+
+        return '#' +
+            ((0|(1<<8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+            ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+            ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
     }
 }

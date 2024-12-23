@@ -46,6 +46,7 @@
     "redis": "^4.7.0",
     "sanitize-html": "^2.13.1",
     "uglify-js": "^3.19.3",
+    "uuid-color": "^0.1.1",
     "validate-color": "^2.2.4"
   },
   "devDependencies": {
