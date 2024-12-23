@@ -10,8 +10,10 @@ const { GrantablePermissions, DevPermissions } = require('../utils/types');
 const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
+const blameUtils = require('../utils/blame');
 
 const User = require('../schemas/user');
+const History = require('../schemas/history');
 
 const app = express.Router();
 
@@ -77,7 +79,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         return res.status(204).end();
     }
 
-    if(tool === 'deletestaticfile') {
+    else if(tool === 'deletestaticfile') {
         const path = req.query.path;
         if(!path) return res.status(400).send('path not provided');
         if(path.includes('..')) return res.status(400).send('invalid path');
@@ -86,7 +88,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         return res.status(204).end();
     }
 
-    if(tool === 'fixstringconfig') {
+    else if(tool === 'fixstringconfig') {
         const newStringConfig = {};
         const exampleStringConfig = JSON.parse(fs.readFileSync('./stringConfig.example.json').toString());
         for(let [key, defaultValue] of Object.entries(exampleStringConfig)) {
@@ -98,17 +100,17 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         return res.status(204).end();
     }
 
-    if(tool === 'minifyjs') {
+    else if(tool === 'minifyjs') {
         minifyManager.minifyJS(true);
         return res.status(204).end();
     }
 
-    if(tool === 'minifycss') {
+    else if(tool === 'minifycss') {
         minifyManager.minifyCSS(true);
         return res.status(204).end();
     }
 
-    if(tool === 'clearpublicmindir') {
+    else if(tool === 'clearpublicmindir') {
         const files = fs.readdirSync('./publicMin');
         for(let file of files) {
             const dirPath = path.join('./publicMin', file);
@@ -120,7 +122,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         return res.status(204).end();
     }
 
-    if(tool === 'clearcachedir') {
+    else if(tool === 'clearcachedir') {
         const files = fs.readdirSync('./cache');
         for(let file of files) {
             const dirPath = path.join('./cache', file);
@@ -129,6 +131,38 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
 
             fs.rmSync(dirPath, { recursive: true });
         }
+        return res.status(204).end();
+    }
+
+    else if(tool === 'generateblame') {
+        const noBlameRevs = await History.find({
+            blame: {
+                $exists: false
+            }
+        }).sort({ rev: 1 }).lean();
+
+        const total = noBlameRevs.length;
+        console.log(`creating blame... total: ${total}`);
+
+        while(true) {
+            const rev = noBlameRevs.shift();
+            if(!rev) break;
+
+            const prevRev = await History.findOne({
+                document: rev.document,
+                rev: rev.rev - 1
+            });
+
+            const newBlame = blameUtils.generateBlame(prevRev, rev);
+            await History.updateOne({
+                uuid: rev.uuid
+            }, {
+                blame: newBlame
+            });
+
+            console.log(`created blame for ${rev.uuid}, ${total - noBlameRevs.length}/${total}`);
+        }
+
         return res.status(204).end();
     }
 
