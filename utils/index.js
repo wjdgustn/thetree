@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 
+const globalUtils = require('./global');
 const {
     UserTypes,
     HistoryTypes
@@ -184,6 +185,7 @@ module.exports = {
                     uuid: obj.uuid
                 }).lean();
                 if(obj.history) {
+                    obj.history = this.addHistoryData(obj.history);
                     cache[obj.uuid] = obj.history;
                     obj.user = obj.history.user;
                 }

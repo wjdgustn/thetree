@@ -55,6 +55,9 @@ const newSchema = new Schema({
         type: Number,
         min: 1
     },
+    revertUuid: {
+        type: String
+    },
     editRequest: {
         type: String
     },

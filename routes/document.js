@@ -777,6 +777,7 @@ app.post('/revert/*', async (req, res) => {
         type: HistoryTypes.Revert,
         document: dbDocument.uuid,
         revertRev: rev.rev,
+        revertUuid: rev.uuid,
         content: rev.content,
         log: req.body.log
     });

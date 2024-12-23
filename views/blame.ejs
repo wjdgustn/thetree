@@ -20,9 +20,15 @@
             <%if(!remainingCount) {%>
                 <%const diff = blameCopy.shift();%>
                 <%remainingCount = diff.count;%>
+
+                <%let infoHtml = diff.infoText ? `<i>(${diff.infoText})</i>` : '';%>
+                <%if(diff.history.type === HistoryTypes.Revert) infoHtml = `<a href="${doc_action_link(document, 'blame', {
+                    uuid: diff.history.revertUuid
+                })}">${infoHtml}</a>`;%>
+
                 <th rowspan="<%=remainingCount%>" style="background-color: <%=utils.increaseBrightness(colorFromUuid(diff.user.uuid), 50)%>"><a href="<%=doc_action_link(document, 'diff', {
                         uuid: diff.uuid
-                    })%>">r<%=diff.history.rev%></a><br><%-utils.userHtml(diff.user);%></th>
+                    })%>">r<%=diff.history.rev%></a><br><%-utils.userHtml(diff.user);%><%-infoHtml ? `<br>${infoHtml}` : ''%></th>
             <%}%>
             <%remainingCount--;%>
 
