@@ -25,13 +25,9 @@ module.exports = {
         return result;
     },
     generateBlame(last, curr) {
-        console.log('generate blame!');
         const lineDiff = Diff.diffLines(last?.content || '', curr.content || '');
         const newLineArr = [];
         const lineArr = this.blameToLineArr(last?.blame || []);
-
-        console.log(lineDiff);
-        console.log(lineArr);
 
         let offset = 0;
         for(let diff of lineDiff) {
