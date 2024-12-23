@@ -70,19 +70,23 @@ module.exports = {
         'match_username_and_document_title'
     ],
     permissionMenus: {
-        'grant': [{
+        grant: [{
             l: '/admin/grant',
             t: '권한'
         }],
-        'login_history': [{
+        login_history: [{
             l: '/admin/login_history',
             t: '로그인 기록 조회'
         }],
-        'admin': [{
+        admin: [{
             l: '/aclgroup',
             t: 'ACL Group'
         }],
-        'developer': [{
+        batch_revert: [{
+            l: '/admin/batch_revert',
+            t: '일괄 되돌리기'
+        }],
+        developer: [{
             l: '/admin/config',
             t: '개발자 설정'
         }]
