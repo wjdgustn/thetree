@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="/css/views/diff.css">
 
+<%if(blame.length) {%>
 <table>
     <thead>
     <tr>
@@ -14,7 +15,7 @@
     let remainingCount = 0;
     const blameCopy = blame.slice();
     %>
-    <%if(blameCopy.length) for(let i in lines) {%>
+    <%for(let i in lines) {%>
         <%i = parseInt(i);%>
         <tr>
             <%if(!remainingCount) {%>
@@ -35,11 +36,12 @@
             <th><%=i + 1%></th>
             <td><%=lines[i]%></td>
         </tr>
-    <%} else {%>
-        blame 데이터를 찾을 수 없습니다.
     <%}%>
     </tbody>
 </table>
+<%} else {%>
+    blame 데이터를 찾을 수 없습니다.
+<%}%>
 
 <%if(req.permissions.includes('developer')) {%>
 <div class="wiki-content">
