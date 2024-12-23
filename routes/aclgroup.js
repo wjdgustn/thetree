@@ -79,6 +79,7 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
         newGroup.forBlock = true;
         newGroup.hiddenFromPublic = true;
         newGroup.preventDelete = true;
+        newGroup.userCSS = 'color: gray !important; text-decoration: line-through !important;';
     }
     else if(name.startsWith('경고-')) {
         newGroup.isWarn = true;
