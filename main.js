@@ -266,6 +266,9 @@ app.use(async (req, res, next) => {
     if(!skin || skin === 'default') skin = config.default_skin;
 
     res.renderSkin = (title, data = {}) => {
+        const status = data.status || 200;
+        delete data.status;
+
         const viewName = data.viewName || null;
         if (viewName) delete data.viewName;
 
@@ -374,12 +377,13 @@ document.getElementById('initScript')?.remove();
                 const $ = cheerio.load(html);
                 res.send(browserGlobalVarScript + $('#content').html());
             }
-            else res.send(html);
+            else res.status(status).send(html);
         });
     }
 
-    res.error = contentHtml => res.renderSkin('오류', {
-        contentHtml
+    res.error = (contentHtml, status = 400) => res.renderSkin('오류', {
+        contentHtml,
+        status
     });
 
     next();

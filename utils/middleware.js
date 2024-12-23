@@ -12,7 +12,19 @@ module.exports = {
         next();
     },
     permission: perm => (req, res, next) => {
-        if(!req.permissions.includes(perm)) return res.error('권한이 부족합니다.');
+        if(!req.permissions.includes(perm)) return res.error('권한이 부족합니다.', 403);
+        next();
+    },
+    referer: pathname => (req, res, next) => {
+        const error = () => res.error('잘못된 요청입니다.');
+
+        try {
+            const referer = new URL(req.get('Referer'));
+            if(referer.pathname !== pathname) return error();
+        } catch(e) {
+            return error();
+        }
+
         next();
     }
 }

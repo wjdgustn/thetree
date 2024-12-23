@@ -94,6 +94,7 @@ app.get('/w/*', async (req, res) => {
             ...defaultData,
             viewName: 'notfound',
             contentName: 'notfound',
+            status: 404,
             serverData: {
                 document,
                 revs
@@ -475,7 +476,7 @@ app.get('/edit/*', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
 
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
-    if(!readable) return res.error(readAclMessage);
+    if(!readable) return res.error(readAclMessage, 403);
 
     const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
     const { result: editRequestable } = await acl.check(ACLTypes.EditRequest, req.aclData);
@@ -616,7 +617,7 @@ app.get('/history/*', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
 
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
-    if(!readable) return res.error(readAclMessage);
+    if(!readable) return res.error(readAclMessage, 403);
 
     let revs;
     let latestRev;
@@ -668,16 +669,16 @@ app.get('/raw/*', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
 
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
-    if(!readable) return res.error(read_acl_message);
+    if(!readable) return res.error(read_acl_message, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         ...(req.query.uuid ? { uuid: req.query.uuid } : {})
     }).sort({ rev: -1 });
 
-    if(req.query.uuid && !rev) return res.error('해당 리비전이 존재하지 않습니다.');
+    if(req.query.uuid && !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
     res.renderSkin(undefined, {
         contentName: 'raw',
@@ -704,16 +705,16 @@ app.get('/revert/*', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
 
     const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
-    if(!result) return res.error(aclMessage);
+    if(!result) return res.error(aclMessage, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         uuid: req.query.uuid
     });
 
-    if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.');
+    if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
     if(![
         HistoryTypes.Create,
@@ -748,16 +749,16 @@ app.post('/revert/*', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
 
     const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
-    if(!result) return res.error(aclMessage);
+    if(!result) return res.error(aclMessage, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         uuid: req.body.uuid
     });
 
-    if(!req.body.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.');
+    if(!req.body.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
     if(![
         HistoryTypes.Create,
@@ -797,11 +798,11 @@ app.get('/diff/*', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
 
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
-    if(!readable) return res.error(read_acl_message);
+    if(!readable) return res.error(read_acl_message, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
 
-    const noRev = () => res.error('해당 리비전이 존재하지 않습니다.');
+    const noRev = () => res.error('해당 리비전이 존재하지 않습니다.', 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
@@ -999,16 +1000,16 @@ app.get('/blame/*', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
 
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
-    if(!readable) return res.error(read_acl_message);
+    if(!readable) return res.error(read_acl_message, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.');
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         uuid: req.query.uuid
     });
 
-    if(!req.query.uuid || !rev) res.error('해당 리비전이 존재하지 않습니다.');
+    if(!req.query.uuid || !rev) res.error('해당 리비전이 존재하지 않습니다.', 404);
 
     let blame = await utils.findHistories(rev.blame);
     blame = await utils.findUsers(blame);
