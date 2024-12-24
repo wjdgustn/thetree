@@ -180,7 +180,7 @@ module.exports = {
             return '<removeNewline/>';
         }
 
-        if(!parsedLink) namumark.links.push(title);
+        if(!parsedLink && title !== docTitle) namumark.links.push(title);
         return html;
     }
 }
