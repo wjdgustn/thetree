@@ -180,7 +180,10 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
             const rev = await History.findOne({
                 document: document.uuid
             }).sort({ rev: -1 });
-            if(!rev?.content) continue;
+            if(!rev?.content) {
+                console.log(`skipping ${document.uuid} because no content`);
+                continue;
+            }
 
             const backlinks = await docUtils.generateBacklink(document, rev);
             await Document.updateOne({
