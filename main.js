@@ -16,6 +16,9 @@ const { colorFromUuid } = require('uuid-color');
 
 global.debug = process.env.NODE_ENV === 'development';
 
+const NamumarkParser = require('./utils/namumark');
+global.NamumarkParser = NamumarkParser;
+
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');

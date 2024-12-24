@@ -1,7 +1,5 @@
 const Diff = require('diff');
 
-const NamumarkParser = require('./namumark');
-
 const { BacklinkFlags } = require('./types');
 
 module.exports = {
@@ -61,7 +59,7 @@ module.exports = {
 
         if(!rev?.content) return [];
 
-        const parser = new NamumarkParser({
+        const parser = new global.NamumarkParser({
             document: {
                 namespace: document.namespace,
                 title: document.title
