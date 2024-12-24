@@ -1113,6 +1113,7 @@ app.get('/backlink/*', async (req, res) => {
             })
                 .sort({ upperTitle: 1 })
                 .lean();
+        }
     }
 
     for(let document of backlinks) {
