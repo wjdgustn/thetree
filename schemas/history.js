@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
-const NamumarkParser = require('../utils/namumark');
-
 const docUtils = require('../utils/docUtils');
 const globalUtils = require('../utils/global');
 const { HistoryTypes } = require('../utils/types');
@@ -131,8 +129,6 @@ newSchema.post('save', async function() {
     if(!document) return;
 
     const backlinks = await docUtils.generateBacklink(document, this);
-
-    console.log('backlinks', backlinks);
 
     await mongoose.models.Document.updateOne({
         uuid: this.document
