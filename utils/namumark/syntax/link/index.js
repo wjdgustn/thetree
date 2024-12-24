@@ -1,15 +1,11 @@
-const mongoose = require('mongoose');
-
 const { Priority } = require('../../types');
 const processImage = require('./image');
 
 const utils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 
-const {
-    Document,
-    History
-} = mongoose.models;
+const Document = require('../../../../schemas/document');
+const History = require('../../../../schemas/history');
 
 module.exports = {
     priority: Priority.ContentChange,
