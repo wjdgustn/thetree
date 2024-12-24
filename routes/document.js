@@ -1095,23 +1095,24 @@ app.get('/backlink/*', async (req, res) => {
 
         if(query.upperTitle?.$lte) backlinks.reverse();
 
-        prevItem = await Document.findOne({
-            ...query,
-            upperTitle: {
-                $lt: backlinks[0].upperTitle
-            }
-        })
-            .sort({ upperTitle: -1 })
-            .lean();
+        if(backlinks.length) {
+            prevItem = await Document.findOne({
+                ...query,
+                upperTitle: {
+                    $lt: backlinks[0].upperTitle
+                }
+            })
+                .sort({ upperTitle: -1 })
+                .lean();
 
-        nextItem = await Document.findOne({
-            ...query,
-            upperTitle: {
-                $gt: backlinks[backlinks.length - 1].upperTitle
-            }
-        })
-            .sort({ upperTitle: 1 })
-            .lean();
+            nextItem = await Document.findOne({
+                ...query,
+                upperTitle: {
+                    $gt: backlinks[backlinks.length - 1].upperTitle
+                }
+            })
+                .sort({ upperTitle: 1 })
+                .lean();
     }
 
     for(let document of backlinks) {
