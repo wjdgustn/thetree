@@ -76,8 +76,6 @@ module.exports = {
             redirect
         } = await parser.parse(rev.content);
 
-        console.log(links, files, includes, redirect);
-
         let backlinks = [];
 
         const addBacklinks = (flag, array) => {
