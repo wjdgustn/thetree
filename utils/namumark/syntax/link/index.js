@@ -182,7 +182,7 @@ module.exports = {
 
         if(!parsedLink
             && title !== docTitle
-            && namumark.redirect !== title) namumark.links.push(title);
+            && !namumark.redirect) namumark.links.push(title);
         return html;
     }
 }
