@@ -14,6 +14,8 @@ const redis = require('redis');
 const RedisStore = require('connect-redis').default;
 const { colorFromUuid } = require('uuid-color');
 
+global.debug = process.env.NODE_ENV === 'development';
+
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
@@ -62,8 +64,6 @@ global.updateConfig = () => {
 updateConfig();
 
 require('dotenv').config();
-
-global.debug = process.env.NODE_ENV === 'development';
 
 require('./schemas')();
 

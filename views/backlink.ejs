@@ -1,0 +1,70 @@
+<link rel="stylesheet" href="/css/views/backlink.css">
+
+<%
+const enabledButton = (query, content) => `<a href="${doc_action_link(document, 'backlink', query)}" role="button" class="navigation-button navigation-page-button">${content}</a>`;
+const disabledButton = content => `<span role="button" class="navigation-button navigation-button-disabled navigation-page-button">${content}</span>`;
+
+const prevButtonContent = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>
+<span>이전</span>
+`.trim();
+const nextButtonContent = `
+<span>다음</span>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>
+`;
+
+const navigationPage = `
+${prevItem ? enabledButton({
+    until: prevItem.title
+}, prevButtonContent) : disabledButton(prevButtonContent)}
+${nextItem ? enabledButton({
+    from: nextItem.title
+}, nextButtonContent) : disabledButton(nextButtonContent)}
+`.trim();
+%>
+
+<form class="filter-form" method="get">
+    <label for="namespaceSelect">이름공간:</label>
+    <select class="filter-select" id="namespaceSelect" name="namespace">
+        <%for(let ns of namespaceCounts) {%>
+            <option value="<%=ns.namespace%>"<%=selectedNamespace === ns.namespace ? ' selected' : ''%>><%=ns.namespace%> (<%=ns.count%>)</option>
+        <%}%>
+    </select>
+    <select class="filter-select" name="flag">
+        <option value="0">(전체)</option>
+        <%for(let [name, flag] of Object.entries(BacklinkFlags)) {%>
+            <option value="<%=flag%>"<%=req.query.flag === flag.toString() ? ' selected' : ''%>><%=name.toLowerCase()%></option>
+        <%}%>
+    </select>
+
+    <button class="thetree-button thetree-primary-button">제출</button>
+</form>
+
+<div class="navigation-div navigation-page"><%-navigationPage%></div>
+
+<%if(backlinks.length) {%>
+    <div class="backlink-block">
+        <%for(let [char, documents] of Object.entries(backlinksPerChar)) {%>
+            <div>
+                <h3><%=char%></h3>
+                <ul>
+                    <%for(let document of documents) {%>
+                        <li>
+                            <a href="<%=doc_action_link(document.parsedName, 'w')%>"><%=doc_fulltitle(document.parsedName)%></a>
+                            (<%=document.flags.map(a => utils.getKeyFromObject(BacklinkFlags, a).toLowerCase()).join(',')%>)
+                        </li>
+                    <%}%>
+                </ul>
+            </div>
+        <%}%>
+    </div>
+<%} else {%>
+    <div>해당 문서의 역링크가 존재하지 않습니다.</div>
+<%}%>
+
+<div class="navigation-div navigation-page"><%-navigationPage%></div>
+
+prevItem: <%=prevItem?.title%>
+nextItem: <%=nextItem?.title%>
+
+<pre><%=JSON.stringify(backlinks, null, 2)%></pre>

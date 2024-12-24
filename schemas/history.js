@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const Diff = require('diff');
 
-const blameUtils = require('../utils/blame');
+const NamumarkParser = require('../utils/namumark');
+
+const docUtils = require('../utils/docUtils');
 const globalUtils = require('../utils/global');
 const { HistoryTypes } = require('../utils/types');
 
@@ -116,13 +117,28 @@ newSchema.pre('save', async function() {
         HistoryTypes.Revert,
         HistoryTypes.Delete
     ].includes(this.type)) {
-        this.blame = blameUtils.generateBlame(last, this);
+        this.blame = docUtils.generateBlame(last, this);
     }
     else this.blame = last ? last.blame : [];
 });
 
 newSchema.post('save', async function() {
     delete lastItem[this.document];
+
+    const document = await mongoose.models.Document.findOne({
+        uuid: this.document
+    });
+    if(!document) return;
+
+    const backlinks = await docUtils.generateBacklink(document, this);
+
+    console.log('backlinks', backlinks);
+
+    await mongoose.models.Document.updateOne({
+        uuid: this.document
+    }, {
+        backlinks
+    });
 });
 
 const model = mongoose.model('History', newSchema);

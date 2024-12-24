@@ -20,9 +20,29 @@ const newSchema = new Schema({
         type: String,
         required: true,
         index: true
-    }
+    },
+    upperTitle: {
+        type: String,
+        index: true
+    },
+
+    backlinks: [{
+        docName: {
+            type: String,
+            required: true
+        },
+        flags: {
+            type: Array,
+            required: true,
+            default: []
+        }
+    }]
 });
 
 newSchema.index({ namespace: 1, title: 1 }, { unique: true });
+
+newSchema.pre('save', function() {
+    this.upperTitle = this.title.toUpperCase();
+});
 
 module.exports = mongoose.model('Document', newSchema);

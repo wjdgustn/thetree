@@ -29,6 +29,7 @@ module.exports = {
         else if(typeof image === 'object') {
             if(image.link) link = image.link;
             if(image.text) text = image.text;
+            namumark.files.push(link);
             notExist = true;
             isImage = true;
         }

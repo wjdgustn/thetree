@@ -163,6 +163,7 @@ module.exports = class NamumarkParser {
             this.links = [];
             this.files = [];
             this.includes = [];
+            this.redirect = null;
 
             this.categories = [];
 
@@ -544,12 +545,17 @@ module.exports = class NamumarkParser {
 
         if((debug||true) && !childParse) console.timeEnd(`parse "${this.document.title}"`);
 
+        this.links = [...new Set(this.links)];
+        this.files = [...new Set(this.files)];
+        this.includes = [...new Set(this.includes)];
+
         this.childDepth--;
         return {
             html,
             links: this.links,
             files: this.files,
             includes: this.includes,
+            redirect: this.redirect,
             categories: this.categories
         }
     }

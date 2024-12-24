@@ -37,6 +37,12 @@ module.exports = {
         GotoNS: 2,
         GotoOtherNS: 3
     },
+    BacklinkFlags: {
+        Link: 1,
+        File: 2,
+        Include: 4,
+        Redirect: 8
+    },
     GrantablePermissions: [
         'delete_thread',
         'admin',

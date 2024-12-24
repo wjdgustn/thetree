@@ -80,5 +80,6 @@ module.exports = async (params, namumark) => {
     });
 
     const { html: contentHtml } = await parser.parse(document.content);
+    namumark.includes.push(docName);
     return `${contentHtml}`;
 }

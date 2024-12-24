@@ -170,6 +170,8 @@ module.exports = class ACL {
     }
 
     async check(aclType = ACLTypes.None, data = {}) {
+        if(data.alwaysAllow) return { result: true };
+
         if(aclType === ACLTypes.ACL && data?.permissions?.includes('nsacl')) return { result: true };
 
         if(aclType !== ACLTypes.Read && aclType !== ACLTypes.ACL) {

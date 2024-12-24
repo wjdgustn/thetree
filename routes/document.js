@@ -1,6 +1,7 @@
 const express = require('express');
 const { Address4, Address6 } = require('ip-address');
 const Diff = require('diff');
+const { getChoseong } = require('es-hangul');
 
 const NamumarkParser = require('../utils/namumark');
 
@@ -11,7 +12,8 @@ const {
     ACLTypes,
     ACLConditionTypes,
     ACLActionTypes,
-    HistoryTypes
+    HistoryTypes,
+    BacklinkFlags
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -1024,6 +1026,117 @@ app.get('/blame/*', async (req, res) => {
         serverData: {
             blame,
             lines: rev.content.split('\n')
+        }
+    });
+});
+
+app.get('/backlink/*', async (req, res) => {
+    const document = utils.parseDocumentName(req.params[0]);
+    const docName = globalUtils.doc_fulltitle(document);
+
+    const baseQuery = {
+        backlinks: {
+            $elemMatch: {
+                docName
+            }
+        }
+    }
+
+    const namespaceCounts = [];
+    for(let namespace of config.namespaces) {
+        const count = await Document.countDocuments({
+            namespace,
+            ...baseQuery
+        });
+        if(count) namespaceCounts.push({
+            namespace,
+            count
+        });
+    }
+
+    const selectedNamespace = namespaceCounts.some(a => a.namespace === req.query.namespace)
+        ? req.query.namespace
+        : namespaceCounts[0]?.namespace;
+
+    let backlinks = [];
+    const backlinksPerChar = {};
+    let prevItem;
+    let nextItem;
+
+    if(selectedNamespace) {
+        const numFlag = Number(req.query.flag);
+        if(Object.values(BacklinkFlags).includes(numFlag))
+            baseQuery.backlinks.$elemMatch.flags = numFlag;
+
+        const query = {
+            namespace: selectedNamespace,
+            ...baseQuery
+        }
+
+        const pageQuery = req.query.until || req.query.from;
+        if(pageQuery) {
+            const checkExists = await Document.findOne({
+                title: pageQuery
+            });
+            if(checkExists) {
+                if(req.query.until) query.upperTitle = {
+                    $lte: checkExists.upperTitle
+                }
+                else query.upperTitle = {
+                    $gte: checkExists.upperTitle
+                }
+            }
+        }
+
+        backlinks = await Document.find(query)
+            .sort({ upperTitle: query.upperTitle?.$lte ? -1 : 1 })
+            .limit(50)
+            .lean();
+
+        if(query.upperTitle?.$lte) backlinks.reverse();
+
+        prevItem = await Document.findOne({
+            ...query,
+            upperTitle: {
+                $lt: backlinks[0].upperTitle
+            }
+        })
+            .sort({ upperTitle: -1 })
+            .lean();
+
+        nextItem = await Document.findOne({
+            ...query,
+            upperTitle: {
+                $gt: backlinks[backlinks.length - 1].upperTitle
+            }
+        })
+            .sort({ upperTitle: 1 })
+            .lean();
+    }
+
+    for(let document of backlinks) {
+        let char = document.upperTitle[0];
+        const choseong = getChoseong(char);
+        if(choseong) char = choseong;
+
+        document.parsedName = utils.parseDocumentName(`${document.namespace}:${document.title}`);
+        document.flags = document.backlinks.find(a => a.docName === docName).flags;
+
+        const arr = backlinksPerChar[char] ??= [];
+        arr.push(document);
+    }
+
+    res.renderSkin(undefined, {
+        contentName: 'backlink',
+        viewName: 'baclink',
+        document,
+        serverData: {
+            selectedNamespace,
+            namespaceCounts,
+            backlinks,
+            backlinksPerChar,
+            prevItem,
+            nextItem
         }
     });
 });

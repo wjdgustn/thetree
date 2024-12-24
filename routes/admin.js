@@ -10,9 +10,10 @@ const { GrantablePermissions, DevPermissions } = require('../utils/types');
 const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
-const blameUtils = require('../utils/blame');
+const docUtils = require('../utils/docUtils');
 
 const User = require('../schemas/user');
+const Document = require('../schemas/document');
 const History = require('../schemas/history');
 
 const app = express.Router();
@@ -153,7 +154,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                 rev: rev.rev - 1
             });
 
-            const newBlame = blameUtils.generateBlame(prevRev, rev);
+            const newBlame = docUtils.generateBlame(prevRev, rev);
             await History.updateOne({
                 uuid: rev.uuid
             }, {
@@ -161,6 +162,34 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
             });
 
             console.log(`created blame for ${rev.uuid}, ${total - noBlameRevs.length}/${total}`);
+        }
+
+        return res.status(204).end();
+    }
+
+    else if(tool === 'generatebacklink') {
+        const documents = await Document.find().lean();
+
+        const total = documents.length;
+        console.log(`generating backlink info... total: ${total}`);
+
+        while(true) {
+            const document = documents.shift();
+            if(!document) break;
+
+            const rev = await History.findOne({
+                document: document.uuid
+            }).sort({ rev: -1 });
+            if(!rev?.content) continue;
+
+            const backlinks = await docUtils.generateBacklink(document, rev);
+            await Document.updateOne({
+                uuid: document.uuid
+            }, {
+                backlinks
+            });
+
+            console.log(`generated backlink info for ${document.uuid}, ${total - documents.length}/${total}`);
         }
 
         return res.status(204).end();

@@ -8,6 +8,8 @@ module.exports = {
 
         if(!content.startsWith('#redirect ')) return;
 
-        return `#redirect [[${content.slice('#redirect '.length)}]]`;
+        const docName = content.slice('#redirect '.length);
+        this.redirect = docName;
+        return `#redirect [[${docName}]]`;
     }
 }
