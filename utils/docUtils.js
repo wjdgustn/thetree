@@ -60,10 +60,7 @@ module.exports = {
         if(!rev?.content) return [];
 
         const parser = new global.NamumarkParser({
-            document: {
-                namespace: document.namespace,
-                title: document.title
-            },
+            document,
             aclData: {
                 alwaysAllow: true
             }

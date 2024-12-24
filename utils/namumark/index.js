@@ -1,5 +1,6 @@
 const fs = require('fs');
 
+const mainUtils = require('../../utils');
 const utils = require('./utils');
 const { Priority } = require('./types');
 // const listParser = require('./postProcess/listParser');
@@ -117,7 +118,12 @@ module.exports = class NamumarkParser {
     constructor(data = {}) {
         if(debug) syntaxLoader();
 
-        if(data.document) this.document = data.document;
+        if(data.document) {
+            if(data.document._id)
+                this.document = mainUtils.parseDocumentName(`${data.document.namespace}:${data.document.title}`);
+            else
+                this.document = data.document;
+        }
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
         if(data.includeData) this.includeData = data.includeData;
