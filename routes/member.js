@@ -1,7 +1,8 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
+const { Address4, Address6 } = require('ip-address');
 
 const utils = require('../utils');
 const middleware = require('../utils/middleware');
@@ -16,7 +17,6 @@ const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
-const {Address4, Address6} = require('ip-address');
 
 const app = express.Router();
 
@@ -461,6 +461,72 @@ app.post('/member/change_password',
     });
 
     return res.redirect('/member/mypage');
+});
+
+app.get('/contribution/:uuid/document',
+    param('uuid')
+        .isUUID(),
+    async (req, res, next) => {
+    if(!validationResult(req).isEmpty()) return next();
+
+    const user = await User.findOne({
+        uuid: req.params.uuid
+    });
+    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+
+    const baseQuery = {
+        user: req.params.uuid
+    }
+    const query = { ...baseQuery };
+
+    const pageQuery = req.query.until || req.query.from;
+    if(pageQuery) {
+        const history = await History.findOne({
+            uuid: pageQuery
+        });
+        if(history) {
+            if(req.query.until) query._id = { $gte: history._id };
+            else query._id = { $lte: history._id };
+        }
+    }
+
+    let revs = await History.find(query)
+        .sort({ _id: query._id?.$gte ? 1 : -1 })
+        .limit(100)
+        .lean();
+
+    if(query._id?.$gte) revs.reverse();
+
+    let prevItem;
+    let nextItem;
+    if(revs?.length) {
+        prevItem = await History.findOne({
+            ...query,
+            _id: { $gt: revs[0]._id }
+        }).sort({ _id: 1 });
+        nextItem = await History.findOne({
+            ...query,
+            _id: { $lt: revs[revs.length - 1]._id }
+        }).sort({ _id: -1 });
+
+        revs = await utils.findDocuments(revs);
+    }
+
+    res.renderSkin(`"${user.name}" 기여 목록`, {
+        viewName: 'contribution',
+        contentName: 'documentContribution',
+        account: {
+            uuid: user.uuid,
+            name: user.name,
+            type: user.type
+        },
+        serverData: {
+            user,
+            revs,
+            prevItem,
+            nextItem
+        }
+    });
 });
 
 module.exports = app;

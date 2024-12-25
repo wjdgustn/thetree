@@ -10,6 +10,10 @@
         grid-template-columns: 1fr 10rem 11rem 13rem;
     }
 
+    .changes-block.nouser > .changes-line {
+        grid-template-columns: 1fr 10rem 13rem;
+    }
+
     .theseed-dark-mode .changes-line {
         border-bottom-color: #575757;
     }
@@ -17,6 +21,10 @@
     @media screen and (max-width: 1399.98px) {
         .changes-line {
             grid-template-columns: 1fr 10rem 9rem 12rem;
+        }
+
+        .changes-block.nouser > .changes-line {
+            grid-template-columns: 1fr 10rem 12rem;
         }
     }
 

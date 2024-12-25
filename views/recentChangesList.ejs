@@ -1,0 +1,55 @@
+<%hideUser = typeof hideUser !== 'undefined' && hideUser;%>
+
+<div class="changes-block<%=hideUser ? ' nouser' : ''%>">
+    <div class="changes-line changes-heading">
+        <div class="changes-value">문서</div>
+        <div class="changes-value">기능</div>
+        <%if(!hideUser) {%><div class="changes-value">수정자</div><%}%>
+        <div class="changes-value">수정 시간</div>
+    </div>
+
+    <%for(let rev of revs) {%>
+    <%rev = utils.addHistoryData(rev);%>
+    <div class="changes-line">
+        <div class="changes-value">
+            <a href="<%=doc_action_link(rev.document.parsedName, 'w')%>"><%=doc_fulltitle(rev.document.parsedName)%></a><%-rev.pureDiffHtml%>
+        </div>
+
+        <div class="changes-value changes-value-center">
+            <div class="changes-buttons">
+                <a role="button" class="thetree-button thetree-changes-button" href="<%=doc_action_link(rev.document.parsedName, 'history')%>">역사</a>
+                <%if(rev.type === HistoryTypes.Create) {%>
+                    <span role="button" class="thetree-button thetree-changes-button thetree-button-disabled">비교</span>
+
+                <%} else {%>
+                <a role="button" class="thetree-button thetree-changes-button" href="<%=doc_action_link(rev.document.parsedName, 'diff', {
+                    uuid: rev.uuid
+                })%>">비교</a>
+                <%}%>
+                <a role="button" class="thetree-button thetree-changes-button" href="<%=doc_action_link(rev.document.parsedName, 'discuss')%>">토론</a>
+            </div>
+        </div>
+
+        <%if(!hideUser) {%>
+            <div class="changes-value">
+                <%-utils.userHtml(rev.user)%>
+            </div>
+        <%}%>
+
+        <div class="changes-value">
+            <%-getFullDateTag(rev.createdAt, 'relative')%>
+        </div>
+
+        <%if(rev.log || rev.infoText) {%>
+        <div class="changes-value changes-value-log">
+            <%if(rev.log) {%>
+            <span><%=rev.log%></span>
+            <%}%>
+            <%if(rev.infoText) {%>
+            <i>(<%=rev.infoText%>)</i>
+            <%}%>
+        </div>
+        <%}%>
+    </div>
+    <%}%>
+</div>
