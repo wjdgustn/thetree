@@ -70,7 +70,8 @@ module.exports = {
             links,
             files,
             includes,
-            redirect
+            redirect,
+            categories
         } = await parser.parse(rev.content);
 
         let backlinks = [];
@@ -97,6 +98,9 @@ module.exports = {
         addBacklinks(BacklinkFlags.Redirect, redirect);
 
         // return backlinks.sort((a, b) => Intl.Collator('en').compare(a.docName, b.docName));
-        return backlinks;
+        return {
+            backlinks,
+            categories: categories.map(a => a.document.slice('분류:'.length))
+        }
     }
 }

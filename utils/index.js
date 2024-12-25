@@ -68,6 +68,18 @@ module.exports = {
             resolve(html.replaceAll('\n', '').trim());
         });
     }),
+    renderCategoryDocument: data => new Promise((resolve, reject) => {
+        expressApp.render('categoryDocument', {
+            ...data
+        }, (err, html) => {
+            if(err) {
+                console.error(err);
+                reject(err);
+            }
+
+            resolve(html.replaceAll('\n', '').trim());
+        });
+    }),
     compareArray: (arr1, arr2) => {
         if(!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
         if(arr1.length !== arr2.length) return false;

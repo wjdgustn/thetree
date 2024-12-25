@@ -36,7 +36,11 @@ const newSchema = new Schema({
             required: true,
             default: []
         }
-    }]
+    }],
+    categories: {
+        type: Array,
+        default: []
+    }
 });
 
 newSchema.index({ namespace: 1, title: 1 }, { unique: true });

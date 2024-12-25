@@ -1,0 +1,56 @@
+<%for(let [namespace, data] of Object.entries(categoryInfos)) {%>
+<%
+    const enabledButton = (query, content) => `<a href="${doc_action_link(document, 'w', {
+        namespace: namespace,
+        ...query
+    })}" role="button" class="navigation-button navigation-page-button">${content}</a>`;
+    const disabledButton = content => `<span role="button" class="navigation-button navigation-button-disabled navigation-page-button">${content}</span>`;
+
+    const prevButtonContent = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>
+<span>이전</span>
+`.trim();
+    const nextButtonContent = `
+<span>다음</span>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>
+`.trim();
+
+    const navigationPage = `
+${data.prevItem ? enabledButton({
+    cuntil: data.prevItem.title
+}, prevButtonContent) : disabledButton(prevButtonContent)}
+${data.nextItem ? enabledButton({
+    cfrom: data.nextItem.title
+}, nextButtonContent) : disabledButton(nextButtonContent)}
+`.trim();
+%>
+
+    <div class="category-document-block">
+        <h2><%=namespace === '분류' ? '하위 분류' : `"${document.title}" 분류에 속하는 ${namespace}`%></h2>
+        <%if(data.prevItem || data.nextItem) {%>
+            <div class="navigation-div navigation-page"><%-navigationPage%></div>
+        <%}%>
+
+        <div>
+            <div>전체 <%=data.count%>개 문서</div>
+            <div class="<%=Object.keys(data.categoriesPerChar).length >= 3 ? 'category-document-many-content' : ''%>">
+                <%for(let [char, documents] of Object.entries(data.categoriesPerChar)) {%>
+                    <div>
+                        <h3><%=char%></h3>
+                        <ul>
+                            <%for(let document of documents) {%>
+                                <li>
+                                    <a href="<%=doc_action_link(document.parsedName, 'w')%>"><%=doc_fulltitle(document.parsedName)%></a>
+                                </li>
+                            <%}%>
+                        </ul>
+                    </div>
+                <%}%>
+            </div>
+        </div>
+
+        <%if(data.prevItem || data.nextItem) {%>
+            <div class="navigation-div navigation-page"><%-navigationPage%></div>
+        <%}%>
+    </div>
+<%}%>

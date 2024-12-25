@@ -185,11 +185,12 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                 continue;
             }
 
-            const backlinks = await docUtils.generateBacklink(document, rev);
+            const { backlinks, categories } = await docUtils.generateBacklink(document, rev);
             await Document.updateOne({
                 uuid: document.uuid
             }, {
-                backlinks
+                backlinks,
+                categories
             });
 
             console.log(`generated backlink info for ${document.uuid}, ${total - documents.length}/${total}`);

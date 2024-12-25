@@ -179,6 +179,91 @@ app.get('/w/*', async (req, res) => {
         `.replaceAll('\n', '').trim() + contentHtml;
     }
 
+    if(namespace === '분류') {
+        const allNamespaces = [
+            '분류',
+            ...config.namespaces.filter(a => a !== '분류')
+        ];
+
+        const categoryInfos = {};
+        for(let namespace of allNamespaces) {
+            const baseQuery = {
+                namespace,
+                categories: title
+            }
+            const query = { ...baseQuery };
+
+            const selectedNamespace = req.query.namespace === namespace;
+            const pageQuery = req.query.cuntil || req.query.cfrom;
+            if(selectedNamespace && pageQuery) {
+                const checkExists = await Document.findOne({
+                    title: pageQuery
+                });
+                if(checkExists) {
+                    if(req.query.cuntil) query.upperTitle = {
+                        $lte: checkExists.upperTitle
+                    }
+                    else query.upperTitle = {
+                        $gte: checkExists.upperTitle
+                    }
+                }
+            }
+
+            const categories = await Document.find(query)
+                .sort({ upperTitle: query.upperTitle?.$lte ? -1 : 1 })
+                .limit(100)
+                .lean();
+            if(!categories.length) continue;
+
+            if(query.upperTitle?.$lte) categories.reverse();
+
+            const count = await Document.countDocuments(baseQuery);
+
+            const prevItem = await Document.findOne({
+                ...baseQuery,
+                upperTitle: {
+                    $lt: categories[0].upperTitle
+                }
+            })
+                .sort({ upperTitle: -1 })
+                .lean();
+
+            const nextItem = await Document.findOne({
+                ...baseQuery,
+                upperTitle: {
+                    $gt: categories[categories.length - 1].upperTitle
+                }
+            })
+                .sort({ upperTitle: 1 })
+                .lean();
+
+            let categoriesPerChar = {};
+            for(let document of categories) {
+                let char = document.upperTitle[0];
+                const choseong = getChoseong(char);
+                if(choseong) char = choseong;
+
+                document.parsedName = utils.parseDocumentName(`${document.namespace}:${document.title}`);
+
+                const arr = categoriesPerChar[char] ??= [];
+                arr.push(document);
+            }
+
+            categoryInfos[namespace] = {
+                categories,
+                categoriesPerChar,
+                count,
+                prevItem,
+                nextItem
+            };
+        }
+
+        contentHtml += await utils.renderCategoryDocument({
+            document,
+            categoryInfos
+        });
+    }
+
     res.renderSkin(undefined, {
         ...defaultData,
         serverData: {

@@ -106,7 +106,7 @@ newSchema.pre('save', async function() {
         this.content = last ? last.content : null;
     }
     else if(this.diffLength == null) {
-        this.diffLength = last ? this.content.length - last.content.length : this.content.length;
+        this.diffLength = last ? this.content.length - last.content?.length : this.content.length;
     }
 
     if([
@@ -128,12 +128,13 @@ newSchema.post('save', async function() {
     });
     if(!document) return;
 
-    const backlinks = await docUtils.generateBacklink(document, this);
+    const { backlinks, categories } = await docUtils.generateBacklink(document, this);
 
     await mongoose.models.Document.updateOne({
         uuid: this.document
     }, {
-        backlinks
+        backlinks,
+        categories
     });
 });
 
