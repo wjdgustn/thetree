@@ -512,7 +512,7 @@ app.get('/contribution/:uuid/document',
         revs = await utils.findDocuments(revs);
     }
 
-    res.renderSkin(`"${user.name}" 기여 목록`, {
+    res.renderSkin(`"${user.name || user.ip}" 기여 목록`, {
         viewName: 'contribution',
         contentName: 'documentContribution',
         account: {
