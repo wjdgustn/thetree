@@ -4,11 +4,11 @@
 <script src="/js/acl.js"></script>
 
 <div class="nav-block">
-    <div class="nav-block-line">
+    <div class="nav-block-child nav-block-line">
         <div class="nav-block-content">
-            <ul class="nav-block-content-ul">
-                <li><a class="nav-link" href="#document"<%=editableACL ? ' data-editable' : ''%>>문서 ACL</a></li>
-                <li><a class="nav-link" href="#namespace"<%=editableNSACL ? ' data-editable' : ''%>>이름공간 ACL</a></li>
+            <ul class="nav-block-content-ul nav-no-border">
+                <li><a class="nav-content" href="#document"<%=editableACL ? ' data-editable' : ''%>>문서 ACL</a></li>
+                <li><a class="nav-content" href="#namespace"<%=editableNSACL ? ' data-editable' : ''%>>이름공간 ACL</a></li>
             </ul>
         </div>
     </div>
@@ -16,11 +16,11 @@
 </div>
 
 <div class="nav-block" style="margin-top: 0.5rem;">
-    <div class="nav-block-line">
+    <div class="nav-block-child nav-block-line">
         <div class="nav-block-content">
-            <ul class="nav-block-content-ul">
+            <ul class="nav-block-content-ul nav-no-border">
                 <%for(let [key, value] of Object.entries(ACLTypes).slice(1)) {%>
-                    <li><a class="nav-link" data-type="<%=key%>" href="#document.<%=utils.camelToSnakeCase(key)%>"><%=value === ACLTypes.ACL ? 'ACL' : ACL.aclTypeToString(value)%></a></li>
+                    <li><a class="nav-content" data-type="<%=key%>" href="#document.<%=utils.camelToSnakeCase(key)%>"><%=value === ACLTypes.ACL ? 'ACL' : ACL.aclTypeToString(value)%></a></li>
                 <%}%>
             </ul>
         </div>
@@ -73,7 +73,7 @@
                     <%} else {%>
                         <tr>
                             <%if(i === '0') {%>
-                                <td colspan="5">(규칙이 존재하지 않습니다. <a href="#namespace.<%=utils.camelToSnakeCase(key)%>" class="content-nav-link">이름공간 ACL</a>이 적용됩니다.)</td>
+                                <td colspan="5">(규칙이 존재하지 않습니다. <a href="#namespace.<%=utils.camelToSnakeCase(key)%>" class="content-nav-content">이름공간 ACL</a>이 적용됩니다.)</td>
                             <%} else {%>
                                 <td colspan="5">(규칙이 존재하지 않습니다. 모두 거부됩니다.)</td>
                             <%}%>

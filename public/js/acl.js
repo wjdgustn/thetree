@@ -26,14 +26,14 @@ function updateNavs(hash) {
             if(hash.includes('.')
                 ? splittedOther[1] === splittedHref[1]
                 : parent.parentNode.children[0] === parent) {
-                other.classList.add('nav-link-selected');
+                other.classList.add('nav-content-selected');
                 showTarget = newOtherHref;
                 title.innerText = other.innerText;
 
                 target.value = splittedOther[0].slice(1);
                 aclType.value = other.dataset.type;
             }
-            else other.classList.remove('nav-link-selected');
+            else other.classList.remove('nav-content-selected');
 
             if(!aclTypes.includes(splittedOther[1])) aclTypes.push(splittedOther[1]);
         }
@@ -42,10 +42,10 @@ function updateNavs(hash) {
             if(hash.length > 1
                 ? otherHref === splittedHref[0]
                 : parent.parentNode.children[0] === parent) {
-                other.classList.add('nav-link-selected');
+                other.classList.add('nav-content-selected');
                 createACLForm.hidden = other.dataset.editable === undefined;
             }
-            else other.classList.remove('nav-link-selected');
+            else other.classList.remove('nav-content-selected');
         }
     }
 
@@ -64,8 +64,8 @@ document.addEventListener('thetree:pageLoad', () => {
     }
 
     title = document.getElementById('acl-title');
-    navLinks = document.querySelectorAll('.nav-block-content-ul > li > .nav-link');
-    const contentNavLinks = document.getElementsByClassName('content-nav-link');
+    navLinks = document.querySelectorAll('.nav-block-content-ul > li > .nav-content');
+    const contentNavLinks = document.getElementsByClassName('content-nav-content');
     navTableBodies = document.getElementsByClassName('nav-tbody');
 
     createACLForm = document.getElementById('create-acl-form');

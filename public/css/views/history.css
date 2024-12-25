@@ -58,20 +58,4 @@
     .rev-text {
         color: inherit !important;
     }
-
-    .diff-text {
-        color: gray;
-    }
-
-    .diff-add {
-        color: green;
-    }
-
-    .diff-remove {
-        color: red;
-    }
-
-    .history-log {
-        color: gray;
-    }
 }

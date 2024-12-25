@@ -8,6 +8,7 @@ const {
 const User = require('../schemas/user');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
+const Document = require('../schemas/document');
 const History = require('../schemas/history');
 
 module.exports = {
@@ -182,7 +183,8 @@ module.exports = {
         if(rev.diffLength > 0) diffClassList.push('diff-add');
         else if(rev.diffLength < 0) diffClassList.push('diff-remove');
 
-        rev.diffHtml = `<span>(<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>)</span>`;
+        rev.pureDiffHtml = `<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>`;
+        rev.diffHtml = `<span>(${rev.pureDiffHtml})</span>`;
 
         return rev;
     },
@@ -225,5 +227,27 @@ module.exports = {
             ((0|(1<<8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
             ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
             ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
-    }
+    },
+    async findDocuments(arr) {
+        const cache = {};
+
+        for(let obj of arr) {
+            if(obj?.document) {
+                if(cache[obj.document]) {
+                    obj.document = cache[obj.uuid];
+                    continue;
+                }
+
+                obj.document = await Document.findOne({
+                    uuid: obj.document
+                }).lean();
+                if(obj.document) {
+                    obj.document.parsedName = this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`);
+                    cache[obj.uuid] = obj.document;
+                }
+            }
+        }
+
+        return arr;
+    },
 }

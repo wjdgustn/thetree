@@ -37,6 +37,10 @@
     color: var(--dark-text-color, var(--text-color, #e0e0e0));
 }
 
+.theseed-dark-mode .thetree-button:hover:not([disabled]):not(.thetree-button-disabled) {
+    background-color: #555;
+}
+
 .theseed-dark-mode .thetree-primary-button {
     background-color: #1555b5;
     border-color: #052e6d;
@@ -57,8 +61,8 @@
     color: var(--dark-text-color, var(--text-color, #e0e0e0));
 }
 
-.theseed-dark-mode .navigation-button-disabled {
+.theseed-dark-mode .thetree-button-disabled {
     background-color: #373737;
     border-color: #424242;
-    color: #777;
+    color: #777 !important;
 }

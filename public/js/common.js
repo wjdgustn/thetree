@@ -214,6 +214,23 @@ function updateTimeTag() {
 
         if(type === 'keep') continue;
 
+        let isRelative = false;
+        if(type === 'relative' && !State.getLocalConfig('wiki.no_relative_date')) {
+            const diff = Date.now() - date.getTime();
+            const relative = new Intl.RelativeTimeFormat();
+
+            isRelative = true;
+
+            if(diff < 1000 * 10) time.textContent = '방금 전';
+            else if(diff < 1000 * 60) time.textContent = relative.format(-Math.floor(diff / 1000), 'second');
+            else if(diff < 1000 * 60 * 60) time.textContent = relative.format(-Math.floor(diff / 1000 / 60), 'minute');
+            else if(diff < 1000 * 60 * 60 * 24) time.textContent = relative.format(-Math.floor(diff / 1000 / 60 / 60), 'hour');
+            else if(diff < 1000 * 60 * 60 * 24 * 30) time.textContent = relative.format(-Math.floor(diff / 1000 / 60 / 60 / 24), 'day');
+            else isRelative = false;
+
+            if(isRelative) continue;
+        }
+
         const dateStr = [
             date.getFullYear(),
             date.getMonth() + 1,
