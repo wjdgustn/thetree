@@ -341,6 +341,12 @@ a.navigation-button {
     column-gap: .4rem;
 }
 
+@media screen and (max-width: 727.98px) {
+    .navigation-page-button {
+        flex: 1;
+    }
+}
+
 .thetree-modal-block {
     position: absolute;
     top: 0;

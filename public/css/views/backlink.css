@@ -8,6 +8,22 @@
         padding: .75rem 1rem;
     }
 
+    @media screen and (max-width: 1023.98px) {
+        .filter-form {
+            width: 100%;
+        }
+    }
+
+    @media screen and (max-width: 727.98px) {
+        .filter-form {
+            flex-direction: column;
+        }
+
+        .filter-form>* {
+            width: 100%;
+        }
+    }
+
     .filter-select {
         appearance: none;
         background-color: var(--light-article-background-color, var(--article-background-color, #fff));
