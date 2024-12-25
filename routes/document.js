@@ -822,7 +822,7 @@ app.get('/diff/*', async (req, res) => {
         )
     });
 
-    if(!oldRev) return noRev();
+    if(!oldRev || oldRev.rev >= rev.rev) return noRev();
 
     const lineDiff = Diff.diffLines(namumarkUtils.escapeHtml(oldRev.content), namumarkUtils.escapeHtml(rev.content)).map(a => ({
         ...a,
