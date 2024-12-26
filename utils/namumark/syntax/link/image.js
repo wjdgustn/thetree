@@ -1,17 +1,44 @@
 const querystring = require('querystring');
 
 const utils = require('../../utils');
+const mainUtils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 
-module.exports = async (content, splittedContent, link) => {
+const Document = require('../../../../schemas/document');
+const History = require('../../../../schemas/history');
+const ACL = require('../../../../class/acl');
+const {ACLTypes} = require('../../../types');
+
+module.exports = async (content, splittedContent, link, namumark) => {
     if(!link.startsWith('파일:')) return;
 
     const options = splittedContent.length === 1 ? {} : querystring.parse(utils.unescapeHtml(splittedContent[1]));
-    // TODO: load image from db
-    if(false) return {
+
+    const fallback = {
         link,
         text: link
     }
+
+    const document = mainUtils.parseDocumentName(link);
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+    if(!dbDocument) return fallback;
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result: readable } = await acl.check(ACLTypes.Read, namumark.aclData);
+    if(!readable) return fallback;
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid
+    }).sort({ rev: -1 });
+    if(!rev?.fileKey) return fallback;
+
+    const imgUrl = new URL(rev.fileKey, process.env.S3_PUBLIC_HOST);
 
     options.borderRadius = options['border-radius'];
     delete options['border-radius'];
@@ -90,13 +117,18 @@ module.exports = async (content, splittedContent, link) => {
 
     if(options.theme) imgSpanClassList.push(`wiki-theme-${options.theme}`);
 
-    // TODO: implement data-filesize(for over 1MB remove option), alt, data-doc, loading lazy config, put image size to svg
+    const fullTitle = utils.escapeHtml(globalUtils.doc_fulltitle(document));
+
+    // TODO: over 1MB remove option, loading lazy config
     return `
 <span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
-<img width="100%" height="100%" style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
-<img class="wiki-image" width="100%" height="100%" style="${imgStyle}" src="/test.png" data-filesize="100" data-src="/test.png" data-doc="파일:테스트" loading="lazy">
-<a class="wiki-image-info" href="${globalUtils.doc_action_link('파일:테스트', 'w')}" rel="nofollow noopener"></a>
+<img width="100%" height="100%" style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
+<img class="wiki-image" width="100%" height="100%" style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
+${namumark.document.namespace === namespace && namumark.document.title === title 
+    ? '' 
+    : `<a class="wiki-image-info" href="${globalUtils.doc_action_link(document, 'w')}" rel="nofollow noopener"></a>`
+}
 </span>
 </span>`;
 }

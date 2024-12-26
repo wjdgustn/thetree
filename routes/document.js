@@ -133,7 +133,10 @@ app.get('/w/*', async (req, res) => {
         req
     });
 
-    let { html: contentHtml, categories } = await parser.parse(rev.content);
+    let content = rev.content;
+    if(rev.fileKey) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
+
+    let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml;
     try {
         categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !rev.content?.startsWith('#redirect '));
@@ -678,6 +681,7 @@ app.post('/edit/*', async (req, res) => {
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid))
         return res.status(400).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
 
+    if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
     if(namespace === '사용자' && isCreate) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
 
     await History.create({

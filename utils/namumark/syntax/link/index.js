@@ -21,7 +21,7 @@ module.exports = {
         let notExist = false;
 
         let isImage = false;
-        const image = await processImage(content, splittedContent, link, text);
+        const image = await processImage(content, splittedContent, link, namumark);
         if(typeof image === 'string') {
             namumark.files.push(link);
             return image;
@@ -130,6 +130,7 @@ module.exports = {
             const document = utils.parseDocumentName(title);
             const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.exists;
+            else if(isImage) notExist = true;
             else {
                 const dbDocument = await Document.findOne({
                     namespace: document.namespace,

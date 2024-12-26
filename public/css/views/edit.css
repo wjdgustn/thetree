@@ -141,33 +141,6 @@
         width: 100%;
     }
 
-    @keyframes blinkWhite {
-        0% {
-            color: #000
-        }
-
-        to {
-            color: red
-        }
-    }
-
-    @keyframes blinkDark {
-        0% {
-            color: #fff
-        }
-
-        to {
-            color: red
-        }
-    }
-
-    .ip-warn {
-        animation: blinkWhite 1s infinite alternate;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        margin-top: 0;
-    }
-
     form > button {
         float: right;
         margin-bottom: 2rem;

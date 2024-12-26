@@ -25,6 +25,11 @@ const newSchema = new Schema({
         type: String,
         index: true
     },
+    contentExists: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
 
     backlinks: [{
         docName: {
@@ -40,13 +45,44 @@ const newSchema = new Schema({
     categories: {
         type: Array,
         default: []
+    },
+
+    isFileLicense: {
+        type: Boolean
+    },
+    isFileCategory: {
+        type: Boolean
     }
 });
 
 newSchema.index({ namespace: 1, title: 1 }, { unique: true });
 
+const validate = (doc, oldDoc) => {
+    if(doc.upperTitle) doc.upperTitle = doc.title.toUpperCase();
+
+    if(doc.title) {
+        const namespace = doc.namespace || oldDoc?.namespace;
+        if(namespace === '틀'
+            && doc.title.startsWith('이미지 라이선스/')
+            && doc.title.length > '이미지 라이선스/'.length) {
+            doc.isFileLicense = true;
+        } else if(doc.isFileLicense || oldDoc?.isFileLicense) doc.isFileLicense = false;
+
+        if(namespace === '분류'
+            && doc.title.startsWith('파일/')
+            && doc.title.length > '파일/'.length) {
+            doc.isFileCategory = true;
+        } else if(doc.isFileCategory || oldDoc?.isFileCategory) doc.isFileCategory = false;
+    }
+}
+
 newSchema.pre('save', function() {
-    this.upperTitle = this.title.toUpperCase();
+    validate(this);
+});
+
+newSchema.pre('updateOne', async function() {
+    const oldDoc = await this.model.findOne(this.getQuery());
+    validate(this._update, oldDoc);
 });
 
 module.exports = mongoose.model('Document', newSchema);

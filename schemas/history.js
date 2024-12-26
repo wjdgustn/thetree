@@ -43,6 +43,18 @@ const newSchema = new Schema({
     content: {
         type: String
     },
+    fileKey: {
+        type: String
+    },
+    fileSize: {
+        type: Number
+    },
+    fileWidth: {
+        type: Number
+    },
+    fileHeight: {
+        type: Number
+    },
     diffLength: {
         type: Number
     },
@@ -109,6 +121,13 @@ newSchema.pre('save', async function() {
         this.diffLength = last ? this.content.length - last.content?.length : this.content.length;
     }
 
+    if(this.fileKey == null && last.fileKey) {
+        this.fileKey = last.fileKey;
+        this.fileSize = last.fileSize;
+        this.fileWidth = last.fileWidth;
+        this.fileHeight = last.fileHeight;
+    }
+
     if([
         HistoryTypes.Create,
         HistoryTypes.Modify,
@@ -134,7 +153,8 @@ newSchema.post('save', async function() {
         uuid: this.document
     }, {
         backlinks,
-        categories
+        categories,
+        contentExists: this.content != null
     });
 });
 

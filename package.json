@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/wjdgustn/thetree#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.717.0",
     "bcrypt": "^5.1.1",
     "cheerio": "^1.0.0",
     "clean-css": "^5.3.3",
@@ -33,6 +34,7 @@
     "express-session": "^1.18.1",
     "express-useragent": "^1.0.15",
     "express-validator": "^7.2.0",
+    "file-type": "^16.5.4",
     "helmet": "^8.0.0",
     "highlight.js": "^11.10.0",
     "html-minifier-terser": "^7.2.0",
@@ -47,6 +49,7 @@
     "readable-url": "^1.1.0",
     "redis": "^4.7.0",
     "sanitize-html": "^2.13.1",
+    "sharp": "^0.33.5",
     "uglify-js": "^3.19.3",
     "uuid-color": "^0.1.1",
     "validate-color": "^2.2.4"

@@ -45,7 +45,7 @@ function plainAlert(text) {
         if(!content) continue;
 
         alert.hidden = false;
-        content.textContent = message;
+        content.innerHTML = doc.body.innerHTML;
     }
     else alert(message);
 }
@@ -118,7 +118,7 @@ const formBackup = {};
 const formHandler = async e => {
     const form = e.currentTarget;
 
-    if(form.enctype === 'multipart/form-data') return;
+    if(form.dataset.noFormHandler) return;
 
     e.preventDefault();
 
@@ -130,13 +130,19 @@ const formHandler = async e => {
     if(form.method === 'get')
         url.search = new URLSearchParams(data).toString();
 
+    const isMultipartForm = form.enctype === 'multipart/form-data';
+
     const response = await fetch(url, {
         method: form.method,
         ...(form.method === 'get' ? {} : {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams(data).toString()
+            ...(isMultipartForm ? {} : {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }),
+            body: isMultipartForm
+                ? data
+                : new URLSearchParams(data).toString()
         })
     });
 
@@ -156,7 +162,7 @@ const formHandler = async e => {
             if(json.fieldErrors) {
                 const inputs = form.querySelectorAll('input, select');
                 for(let input of inputs) {
-                    if(!input.name || input.type === 'hidden') continue;
+                    if(!input.name) continue;
 
                     const error = json.fieldErrors[input.name];
 
@@ -295,6 +301,7 @@ function setupDocument() {
 
         element._thetree = {
             modal: {},
+            dropdown: {},
             preHandler: null
         };
     }

@@ -14,6 +14,7 @@ const { Address4 } = require('ip-address');
 const redis = require('redis');
 const RedisStore = require('connect-redis').default;
 const { colorFromUuid } = require('uuid-color');
+const aws = require('@aws-sdk/client-s3');
 
 global.debug = process.env.NODE_ENV === 'development';
 
@@ -56,6 +57,8 @@ Object.defineProperty(global, 'config', {
     }
 });
 
+require('dotenv').config();
+
 global.updateConfig = () => {
     global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
     global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
@@ -64,10 +67,17 @@ global.updateConfig = () => {
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 
     global.skins = fs.readdirSync('./skins');
+
+    global.S3 = new aws.S3Client({
+        region: 'auto',
+        endpoint: process.env.S3_ENDPOINT,
+        credentials: {
+            accessKeyId: process.env.S3_ACCESS_KEY_ID,
+            secretAccessKey: process.env.S3_SECRET_ACCESS_KEY
+        }
+    });
 }
 updateConfig();
-
-require('dotenv').config();
 
 require('./schemas')();
 
@@ -103,7 +113,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'"],
-            imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.')],
+            imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
             styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
             fontSrc: ["'self'", 'fonts.gstatic.com'],
             ...(debug ? {
