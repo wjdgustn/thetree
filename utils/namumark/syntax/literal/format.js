@@ -46,10 +46,6 @@ module.exports = (content, namumark) => {
         return `${safeHtml}`;
     }
 
-    if(firstParam.startsWith('#!unsafehtml')) {
-        return utils.unescapeHtml(content.slice('#!unsafehtml'.length).trim());
-    }
-
     if(firstParam.startsWith('+')) {
         const size = parseInt(firstParam.slice(1));
         if(!isNaN(size) && size >= 1 && size <= 5)
