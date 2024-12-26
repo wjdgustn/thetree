@@ -121,7 +121,7 @@ newSchema.pre('save', async function() {
         this.diffLength = last ? this.content.length - last.content?.length : this.content.length;
     }
 
-    if(this.fileKey == null && last.fileKey) {
+    if(this.fileKey == null && last.fileKey != null) {
         this.fileKey = last.fileKey;
         this.fileSize = last.fileSize;
         this.fileWidth = last.fileWidth;
