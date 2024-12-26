@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const passport = require('passport');
 const session = require('express-session');
 const fs = require('fs');
@@ -93,6 +94,27 @@ passport.deserializeUser(async (uuid, done) => {
     });
 });
 
+app.use((req, res, next) => {
+    res.locals.cspNonce = crypto.randomBytes(32).toString('hex');
+    next();
+});
+
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'"],
+            imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.')],
+            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
+            fontSrc: ["'self'", 'fonts.gstatic.com'],
+            ...(debug ? {
+                upgradeInsecureRequests: null
+            } : {})
+        }
+    },
+    referrerPolicy: false,
+    strictTransportSecurity: !debug
+}));
+
 if(!debug) {
     app.use(compression());
 }
@@ -169,6 +191,7 @@ app.get('/js/global.js', (req, res) => {
         global.globalUtilsEtag = crypto.createHash('sha256').update(global.globalUtilsCache).digest('hex');
     }
 
+    res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Etag', global.globalUtilsEtag);
     res.end(global.globalUtilsCache);
 });
@@ -315,7 +338,7 @@ app.use(async (req, res, next) => {
         }
 
         const browserGlobalVarScript = `
-<script id="initScript">
+<script id="initScript" nonce="${res.locals.cspNonce}">
 window.CONFIG = ${JSON.stringify(publicConfig)}
 window.page = ${JSON.stringify(page)}
 window.session = ${JSON.stringify(session)}
@@ -359,7 +382,8 @@ document.getElementById('initScript')?.remove();
             skin,
             page,
             session,
-            browserGlobalVarScript
+            browserGlobalVarScript,
+            cspNonce: res.locals.cspNonce
         }, async (err, html) => {
             if(err) {
                 console.error(err);

@@ -196,7 +196,7 @@ const formHandler = async e => {
         return;
     }
 
-    if(await replaceContent(html)) {
+    if(await replaceContent(html, response.headers)) {
         setupDocument();
         restoreForm();
         changeUrl(response.url);
@@ -340,7 +340,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
 
     if(response.status === 204) return setProgress(100);
 
-    if(await replaceContent(html)) {
+    if(await replaceContent(html, response.headers)) {
         if(pushState) changeUrl(response.url);
 
         setupDocument();
@@ -352,7 +352,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
 }
 
 const scriptCache = {};
-async function replaceContent(html) {
+async function replaceContent(html, headers) {
     let result = false;
 
     const parser = new DOMParser();
@@ -410,6 +410,9 @@ async function replaceContent(html) {
     }
 
     if(result) {
+        const csp = headers.get('Content-Security-Policy');
+        const nonce = csp.split(' ').find(a => a.startsWith("'nonce-")).slice("'nonce-".length, -1);
+
         const allScripts = [...newContent.querySelectorAll('script')];
         if(fullReload) allScripts.push(doc.getElementById('initScript'));
 
@@ -424,7 +427,7 @@ async function replaceContent(html) {
                 }
                 eval(scriptText);
             }
-            else eval(script.textContent);
+            else if(script.nonce === nonce) eval(script.textContent);
             if(script.id === 'initScript') {
                 State.page = page;
                 State.session = session;
