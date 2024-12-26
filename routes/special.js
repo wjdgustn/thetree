@@ -78,7 +78,7 @@ const getImageDropdowns = async () => {
     const licenses = await Document.find({
         isFileLicense: true
     })
-        .sort({ title: 1 })
+        .sort({ _id: 1 })
         .select('title')
         .lean();
 
