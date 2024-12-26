@@ -191,7 +191,7 @@ app.get('/js/global.js', (req, res) => {
         global.globalUtilsEtag = crypto.createHash('sha256').update(global.globalUtilsCache).digest('hex');
     }
 
-    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Content-Type', 'text/javascript');
     res.setHeader('Etag', global.globalUtilsEtag);
     res.end(global.globalUtilsCache);
 });

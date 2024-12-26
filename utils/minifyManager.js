@@ -125,6 +125,7 @@ module.exports = {
             fs.writeFileSync(cachePath, minCode);
         }
 
+        res.setHeader('Content-Type', 'text/javascript');
         res.setHeader('Etag', hash);
         res.end(minCode);
     },
@@ -147,6 +148,7 @@ module.exports = {
             fs.writeFileSync(cachePath, minCode);
         }
 
+        res.setHeader('Content-Type', 'text/css');
         res.setHeader('Etag', hash);
         res.end(minCode);
     }
