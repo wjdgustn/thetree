@@ -66,3 +66,15 @@
     border-color: #424242;
     color: #777 !important;
 }
+
+.theseed-dark-mode .searchable-dropdown-menu,
+.theseed-dark-mode .searchable-dropdown-toggle,
+.theseed-dark-mode .searchable-dropdown-search::placeholder {
+    background: #27292d;
+    color: #ddd;
+}
+
+.theseed-dark-mode .searchable-dropdown-option,
+.theseed-dark-mode .searchable-dropdown-selected {
+    color: #ddd;
+}

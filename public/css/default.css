@@ -750,13 +750,6 @@ div.category-document-block div.category-document-many-content div:first-child h
     z-index: 1000;
 }
 
-.theseed-dark-mode .searchable-dropdown-menu,
-.theseed-dark-mode .searchable-dropdown-toggle,
-.theseed-dark-mode .searchable-dropdown-search::placeholder {
-    background: #27292d;
-    color: #ddd;
-}
-
 .searchable-dropdown-option {
     clear: both;
     color: inherit;
@@ -767,12 +760,7 @@ div.category-document-block div.category-document-many-content div:first-child h
     white-space: nowrap;
 }
 
-.theseed-dark-mode .searchable-dropdown-option,
-.theseed-dark-mode .searchable-dropdown-selected {
-    color: #ddd;
-}
-
 .searchable-dropdown-option-highlight {
-    background: #5897fb;
+    background: var(--theme-color, #5897fb);
     color: #fff;
 }
