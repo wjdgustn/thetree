@@ -586,3 +586,28 @@
     display: block;
     max-width: 100%;
 }
+
+.special-box {
+    border-width: 5px 1px 1px;
+    border-style: solid;
+    border-color: black gray gray;
+    border-image: initial;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.blocked-box {
+    border-top-color: red;
+}
+
+.blocked-box:hover {
+    border-top-color: blue;
+}
+
+.admin-box {
+    border-top-color: orange;
+}
+
+.admin-box:hover {
+    border-top-color: red;
+}
