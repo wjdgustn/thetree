@@ -125,6 +125,7 @@ app.use(helmet({
             imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
             styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
             fontSrc: ["'self'", 'fonts.gstatic.com'],
+            frameSrc: ["'self'", 'www.youtube.com'],
             ...(debug ? {
                 upgradeInsecureRequests: null
             } : {})
