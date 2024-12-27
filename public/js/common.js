@@ -542,7 +542,9 @@ document.addEventListener('alpine:init', () => {
             return this.searchFocused && this.searchText.length > 0
         },
         blur() {
-            this.searchFocused = false;
+            setTimeout(() => {
+                this.searchFocused = false;
+            }, 100);
         },
         focus() {
             this.searchFocused = true;
