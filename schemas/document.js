@@ -58,9 +58,9 @@ const newSchema = new Schema({
 newSchema.index({ namespace: 1, title: 1 }, { unique: true });
 
 const validate = (doc, oldDoc) => {
-    if(doc.upperTitle) doc.upperTitle = doc.title.toUpperCase();
-
     if(doc.title) {
+        doc.upperTitle = doc.title.toUpperCase();
+
         const namespace = doc.namespace || oldDoc?.namespace;
         if(namespace === '틀'
             && doc.title.startsWith('이미지 라이선스/')
