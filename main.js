@@ -216,6 +216,7 @@ app.get('/js/global.js', (req, res) => {
 });
 
 app.use(async (req, res, next) => {
+    if(!req.ip) return res.status(500).send('ip error');
     const slicedIp = req.ip.slice(7);
     if(Address4.isValid(slicedIp)) Object.defineProperty(req, 'ip', {
         get() {
