@@ -531,19 +531,12 @@ document.addEventListener('alpine:init', () => {
     });
     window.State = Alpine.store('state');
 
-    const sample = [
-        '얼불춤',
-        '불과 얼음의 춤',
-        '정현수',
-        '샌즈',
-        'A Dance of Fire and Ice',
-        'ADOFAI'
-    ];
     Alpine.data('search', () => ({
         searchFocused: false,
         searchText: '',
         cursor: -1,
         internalItems: [],
+        searchAbortController: null,
         get show() {
             return this.searchFocused && this.searchText.length > 0
         },
@@ -553,20 +546,35 @@ document.addEventListener('alpine:init', () => {
         focus() {
             this.searchFocused = true;
         },
-        inputChange() {
+        async inputChange() {
             if(!this.searchText.length) {
                 this.internalItems = [];
                 return;
             }
 
-            this.internalItems = sample.filter(item => item.toLowerCase().includes(this.searchText.toLowerCase()));
-            this.cursor = -1;
+            if(this.searchAbortController) this.searchAbortController.abort();
+
+            try {
+                this.searchAbortController = new AbortController();
+                const result = await fetch(`/Complete?q=${encodeURIComponent(this.searchText)}`, {
+                    signal: this.searchAbortController.signal
+                });
+                this.internalItems = await result.json();
+                this.cursor = -1;
+            } catch(e) {}
         },
-        onClickItem(item) {
-            console.log(item);
+        async onClickItem(item) {
+            await movePage(`/Go?q=${encodeURIComponent(item)}`);
         },
-        keyEnter() {
-            this.onClickItem(this.internalItems[this.cursor]);
+        async keyEnter(e) {
+            e.preventDefault();
+
+            const item = this.internalItems[this.cursor];
+            if(item) await this.onClickItem(item);
+            else if(this.searchText) await movePage(`/Go?q=${encodeURIComponent(this.searchText)}`);
+            else return;
+
+            e.srcElement.blur();
         },
         keyUp() {
             if(this.cursor >= 0) this.cursor--;
@@ -574,11 +582,19 @@ document.addEventListener('alpine:init', () => {
         keyDown() {
             if(this.cursor < this.internalItems.length) this.cursor++;
         },
-        onClickSearch() {
-            console.log(this.searchText);
+        async onClickSearch(e) {
+            e.preventDefault();
+            if(!this.searchText) return;
+
+            e.srcElement.blur();
+            await movePage(`/Search?q=${encodeURIComponent(this.searchText)}`);
         },
-        onClickMove() {
-            console.log(this.searchText);
+        async onClickMove(e) {
+            e.preventDefault();
+            if(!this.searchText) return;
+
+            e.srcElement.blur();
+            await movePage(doc_action_link(this.searchText, 'w'));
         }
     }));
 

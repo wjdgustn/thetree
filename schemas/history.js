@@ -142,20 +142,7 @@ newSchema.pre('save', async function() {
 newSchema.post('save', async function() {
     delete lastItem[this.document];
 
-    const document = await mongoose.models.Document.findOne({
-        uuid: this.document
-    });
-    if(!document) return;
-
-    const { backlinks, categories } = await docUtils.generateBacklink(document, this);
-
-    await mongoose.models.Document.updateOne({
-        uuid: this.document
-    }, {
-        backlinks,
-        categories,
-        contentExists: this.content != null
-    });
+    await docUtils.postHistorySave(this);
 });
 
 const model = mongoose.model('History', newSchema);

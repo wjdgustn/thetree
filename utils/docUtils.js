@@ -1,6 +1,11 @@
+const mongoose = require('mongoose');
 const Diff = require('diff');
+const { getChoseong } = require('es-hangul');
 
-const { BacklinkFlags } = require('./types');
+const utils = require('./');
+const { BacklinkFlags, ACLTypes } = require('./types');
+
+const ACL = require('../class/acl');
 
 module.exports = {
     blameToLineArr(input) {
@@ -54,25 +59,19 @@ module.exports = {
 
         return this.lineArrToBlame(newLineArr);
     },
-    async generateBacklink(document, rev) {
-        console.log('generating backlink info...');
-
+    async generateBacklink(document, rev, parseResult) {
         if(!rev?.content) return [];
 
-        const parser = new global.NamumarkParser({
-            document,
-            aclData: {
-                alwaysAllow: true
-            }
-        });
+        if(!parseResult) {
+            const parser = new global.NamumarkParser({
+                document,
+                aclData: {
+                    alwaysAllow: true
+                }
+            });
 
-        const {
-            links,
-            files,
-            includes,
-            redirect,
-            categories
-        } = await parser.parse(rev.content);
+            parseResult = await parser.parse(rev.content);
+        }
 
         let backlinks = [];
 
@@ -102,5 +101,54 @@ module.exports = {
             backlinks,
             categories: categories.map(a => a.document.slice('분류:'.length))
         }
+    },
+    async postHistorySave(rev) {
+        const dbDocument = await mongoose.models.Document.findOne({
+            uuid: rev.document
+        });
+        if(!dbDocument) return;
+
+        const document = utils.dbDocumentToDocument(dbDocument);
+
+        const parser = new global.NamumarkParser({
+            document: dbDocument,
+            aclData: {
+                alwaysAllow: true
+            }
+        });
+        const parseResult = await parser.parse(rev.content);
+
+        const { backlinks, categories } = await this.generateBacklink(dbDocument, this, parseResult);
+
+        const contentExists = rev.content != null;
+        await mongoose.models.Document.updateOne({
+            uuid: rev.document
+        }, {
+            backlinks,
+            categories,
+            contentExists
+        });
+
+        let anyoneReadable = contentExists;
+        if(anyoneReadable) {
+            const acl = await ACL.get({ document: dbDocument });
+            const { result: readable } = await acl.check(ACLTypes.Read, {
+                permissions: ['any']
+            });
+            anyoneReadable = readable;
+        }
+
+        if(contentExists) await documentIndex.addDocuments({
+            uuid: dbDocument.uuid,
+            choseong: getChoseong(document.title),
+            namespace: dbDocument.namespace,
+            title: dbDocument.title,
+            content: utils.removeHtmlTags(parseResult.html),
+            raw: rev.content,
+            anyoneReadable
+        }, {
+            primaryKey: 'uuid'
+        });
+        else await documentIndex.deleteDocument(dbDocument.uuid);
     }
 }

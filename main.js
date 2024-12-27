@@ -4,6 +4,7 @@ const passport = require('passport');
 const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
+const querystring = require('querystring');
 const crypto = require('crypto');
 const dayjs = require('dayjs');
 const nodemailer = require('nodemailer');
@@ -15,6 +16,7 @@ const redis = require('redis');
 const RedisStore = require('connect-redis').default;
 const { colorFromUuid } = require('uuid-color');
 const aws = require('@aws-sdk/client-s3');
+const meiliSearch = require('meilisearch');
 
 global.debug = process.env.NODE_ENV === 'development';
 
@@ -59,6 +61,22 @@ Object.defineProperty(global, 'config', {
 
 require('dotenv').config();
 
+global.S3 = new aws.S3Client({
+    region: 'auto',
+    endpoint: process.env.S3_ENDPOINT,
+    credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY_ID,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY
+    }
+});
+
+global.MeiliSearch = new meiliSearch.MeiliSearch({
+    host: process.env.MEILISEARCH_HOST,
+    apiKey: process.env.MEILISEARCH_KEY
+});
+
+global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
+
 global.updateConfig = () => {
     global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
     global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
@@ -67,15 +85,6 @@ global.updateConfig = () => {
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 
     global.skins = fs.readdirSync('./skins');
-
-    global.S3 = new aws.S3Client({
-        region: 'auto',
-        endpoint: process.env.S3_ENDPOINT,
-        credentials: {
-            accessKeyId: process.env.S3_ACCESS_KEY_ID,
-            secretAccessKey: process.env.S3_SECRET_ACCESS_KEY
-        }
-    });
 }
 updateConfig();
 
@@ -239,6 +248,7 @@ app.use(async (req, res, next) => {
     app.locals.path = path;
     app.locals.dayjs = dayjs;
     app.locals.colorFromUuid = colorFromUuid;
+    app.locals.querystring = querystring;
 
     for(let t in types) {
         app.locals[t] = types[t];

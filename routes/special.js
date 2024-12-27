@@ -9,6 +9,7 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const sharp = require('sharp');
 
 const utils = require('../utils');
+const globalUtils = require('../utils/global');
 const {
     HistoryTypes,
     ACLTypes
@@ -18,7 +19,6 @@ const Document = require('../schemas/document');
 const History = require('../schemas/history');
 
 const ACL = require('../class/acl');
-const globalUtils = require('../utils/global');
 
 const app = express.Router();
 

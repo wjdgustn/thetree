@@ -173,21 +173,35 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
             const rev = await History.findOne({
                 document: document.uuid
             }).sort({ rev: -1 });
-            if(!rev?.content) {
-                console.log(`skipping ${document.uuid} because no content, ${total - documents.length}/${total}`);
+            if(!rev) {
+                console.log(`no rev for ${document.uuid}`);
                 continue;
             }
 
-            const { backlinks, categories } = await docUtils.generateBacklink(document, rev);
-            await Document.updateOne({
-                uuid: document.uuid
-            }, {
-                backlinks,
-                categories
-            });
+            await docUtils.postHistorySave(rev);
 
             console.log(`generated backlink info for ${document.uuid}, ${total - documents.length}/${total}`);
         }
+
+        return res.status(204).end();
+    }
+
+    else if(tool === 'resetsearchindex') {
+        await MeiliSearch.deleteIndex(process.env.MEILISEARCH_INDEX);
+        await MeiliSearch.createIndex(process.env.MEILISEARCH_INDEX);
+        global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
+        documentIndex.updateSettings({
+            searchableAttributes: [
+                'choseong',
+                'title',
+                'content',
+                'raw'
+            ],
+            filterableAttributes: [
+                'namespace',
+                'anyoneReadable'
+            ]
+        });
 
         return res.status(204).end();
     }

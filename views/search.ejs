@@ -1,0 +1,73 @@
+<link rel="stylesheet" href="/css/views/search.css">
+<form>
+    <select name="namespace">
+        <option value="">전체</option>
+        <%for(let namespace of readableNamespaces) {%>
+            <option<%=req.query.namespace === namespace ? ' selected' : ''%>><%=namespace%></option>
+        <%}%>
+    </select>
+
+    <select name="target">
+        <%for(let [value, label] of Object.entries({
+            title_content: '제목/내용',
+            title: '제목',
+            content: '내용',
+            raw: '원문'
+        })) {%>
+            <option value="<%=value%>"<%=req.query.target === value ? ' selected' : ''%>><%=label%></option>
+        <%}%>
+    </select>
+
+    <input name="q" value="<%=req.query.q%>">
+
+    <button class="thetree-square-button thetree-blue-button">검색</button>
+</form>
+
+<div class="thetree-alert">
+    <div class="thetree-alert-content">
+        <div class="alert-text-block">
+            <i class="ion-ios-arrow-forward"></i>
+            &nbsp;찾는 문서가 없나요? 문서로 바로 갈 수 있습니다.
+        </div>
+
+        <div class="alert-button-block">
+            <a class="thetree-square-button" href="<%=doc_action_link(req.query.q, 'w')%>">'<%=req.query.q%>' 문서로 가기</a>
+        </div>
+
+        <div class="clear"></div>
+    </div>
+</div>
+
+<div class="search-count">전체 <%=totalHits%> 건 / 처리 시간 <%=processingTime / 1000%>초</div>
+
+<section>
+    <%for(let doc of hits) {%>
+        <div>
+            <h4>
+                <i class="ion-md-document"></i>
+                <a href="<%=doc_action_link(doc, 'w')%>"><%=doc_fulltitle(utils.dbDocumentToDocument(doc))%></a>
+            </h4>
+            <div><%-doc.content || doc.raw%></div>
+        </div>
+    <%}%>
+
+    <nav>
+        <%
+        const getPageLink = page => `/Search?${querystring.stringify({
+            ...req.query,
+            page
+        })}`;
+        const page = parseInt(req.query.page) || 1;
+        const pageStart = page - (page % 10) + 1;
+        const pageEnd = Math.min(pageStart + 9, totalPages);
+        %>
+
+        <ul>
+            <%for(let i = pageStart; i <= pageEnd; i++) {%>
+                <li><a href="<%=getPageLink(i)%>"<%=i === page ? ' class="selected-page"' : ''%>><%=i%></a></li>
+            <%}%>
+        </ul>
+    </nav>
+
+    <div class="clear"></div>
+</section>

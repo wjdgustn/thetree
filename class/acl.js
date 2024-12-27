@@ -1,15 +1,10 @@
+const { models } = require('mongoose');
 const { Address4, Address6 } = require('ip-address');
 const { lookup: ipLookup } = require('ip-location-api');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const { UserTypes, ACLTypes, ACLConditionTypes, ACLActionTypes } = require('../utils/types');
-
-const ACLModel = require('../schemas/acl');
-const User = require('../schemas/user');
-const ACLGroup = require('../schemas/aclGroup');
-const ACLGroupItem = require('../schemas/aclGroupItem');
-const History = require('../schemas/history');
 
 const checkDefaultData = {
     permissions: [],
@@ -19,11 +14,14 @@ const checkDefaultData = {
 
 module.exports = class ACL {
     static async get(filter = {}, document = null) {
-        if(typeof filter.document?.uuid === 'string') filter.document = filter.document.uuid;
+        if(typeof filter.document?.uuid === 'string') {
+            if(document == null) document = filter.document;
+            filter.document = filter.document.uuid;
+        }
 
         let rules;
         if(filter.document === null) rules = [];
-        else rules = await ACLModel.find({
+        else rules = await models.ACL.find({
             ...filter,
             $or: [
                 {
@@ -44,12 +42,12 @@ module.exports = class ACL {
 
         for(let rule of rules) {
             if(rule.conditionType === ACLConditionTypes.Member) {
-                rule.user = await User.findOne({
+                rule.user = await models.User.findOne({
                     uuid: rule.conditionContent
                 }).lean();
             }
             else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-                rule.aclGroup = await ACLGroup.findOne({
+                rule.aclGroup = await models.ACLGroup.findOne({
                     uuid: rule.conditionContent
                 });
             }
@@ -270,7 +268,7 @@ module.exports = class ACL {
             if(rule.conditionContent === 'any') return { action };
 
             if(data.user && rule.document && rule.conditionContent === 'document_contributor') {
-                const contribution = History.exists({
+                const contribution = models.History.exists({
                     document: rule.document,
                     user: data.user.uuid
                 });
@@ -324,7 +322,7 @@ module.exports = class ACL {
             if(!rule.aclGroup) return { action: ACLActionTypes.Skip };
 
             if(data.user?.type === UserTypes.Account) {
-                const userTest = await ACLGroupItem.findOne({
+                const userTest = await models.ACLGroupItem.findOne({
                     aclGroup: rule.aclGroup.uuid,
                     $or: [
                         {
@@ -345,7 +343,7 @@ module.exports = class ACL {
             if(Address4.isValid(data.ip)) ipArr = new Address4(data.ip).toArray();
             else ipArr = new Address6(data.ip).toByteArray();
 
-            const ipTest = await ACLGroupItem.findOne({
+            const ipTest = await models.ACLGroupItem.findOne({
                 aclGroup: rule.aclGroup.uuid,
                 $or: [
                     {

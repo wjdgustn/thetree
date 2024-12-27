@@ -1,15 +1,10 @@
+const { models } = require('mongoose');
 const crypto = require('crypto');
 
 const {
     UserTypes,
     HistoryTypes
 } = require('./types');
-
-const User = require('../schemas/user');
-const ACLGroup = require('../schemas/aclGroup');
-const ACLGroupItem = require('../schemas/aclGroupItem');
-const Document = require('../schemas/document');
-const History = require('../schemas/history');
 
 module.exports = {
     getRandomInt(min, max) {
@@ -50,6 +45,7 @@ module.exports = {
             namespace,
             title,
             forceShowNamespace,
+            namespaceExists
             // anchor
         }
     },
@@ -102,13 +98,13 @@ module.exports = {
         return null;
     },
     async getUserCSS(user) {
-        const aclGroups = await ACLGroup.find({
+        const aclGroups = await models.ACLGroup.find({
             userCSS: {
                 $exists: true,
                 $ne: ''
             }
         }).lean();
-        const aclGroupItem = await ACLGroupItem.findOne({
+        const aclGroupItem = await models.ACLGroupItem.findOne({
             aclGroup: {
                 $in: aclGroups.map(group => group.uuid)
             },
@@ -140,7 +136,7 @@ module.exports = {
                 }
 
                 const uuid = obj.user;
-                obj.user = await User.findOne({
+                obj.user = await models.User.findOne({
                     uuid
                 }).lean();
                 if(obj.user) {
@@ -202,7 +198,7 @@ module.exports = {
                     continue;
                 }
 
-                obj.history = await History.findOne({
+                obj.history = await models.History.findOne({
                     uuid: obj.uuid
                 }).lean();
                 if(obj.history) {
@@ -241,7 +237,7 @@ module.exports = {
                     continue;
                 }
 
-                obj.document = await Document.findOne({
+                obj.document = await models.Document.findOne({
                     uuid: obj.document
                 }).lean();
                 if(obj.document) {
@@ -252,5 +248,5 @@ module.exports = {
         }
 
         return arr;
-    },
+    }
 }
