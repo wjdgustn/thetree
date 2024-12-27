@@ -166,7 +166,7 @@ app.get('/w/*', async (req, res) => {
         });
 
         if(blockedItem) contentHtml = `
-<div onmouseover="this.style.borderTopColor='blue';" onmouseout="this.style.borderTopColor='red';" style="border-width: 5px 1px 1px; border-style: solid; border-color: red gray gray; border-image: initial; padding: 10px; margin-bottom: 10px;">
+<div nonce="${res.locals.cspNonce}" onmouseover="this.style.borderTopColor='blue';" onmouseout="this.style.borderTopColor='red';" style="border-width: 5px 1px 1px; border-style: solid; border-color: red gray gray; border-image: initial; padding: 10px; margin-bottom: 10px;">
 <span>이 사용자는 차단된 사용자입니다. (#${blockedItem.id})</span>
 <br><br>
 이 사용자는 ${globalUtils.getFullDateTag(blockedItem.createdAt)}에 ${blockedItem.expiresAt ? globalUtils.getFullDateTag(blockedItem.expiresAt) + ' 까지' : '영구적으로'} 차단되었습니다.
@@ -176,7 +176,7 @@ app.get('/w/*', async (req, res) => {
         `.replaceAll('\n', '').trim() + contentHtml;
 
         if(user.permissions.includes('admin')) contentHtml = `
-<div style="border-width: 5px 1px 1px; border-style: solid; border-color: orange gray gray; border-image: initial; padding: 10px; margin-bottom: 10px;" onmouseover="this.style.borderTopColor='red';" onmouseout="this.style.borderTopColor='orange';">
+<div nonce="${res.locals.cspNonce}" style="border-width: 5px 1px 1px; border-style: solid; border-color: orange gray gray; border-image: initial; padding: 10px; margin-bottom: 10px;" onmouseover="this.style.borderTopColor='red';" onmouseout="this.style.borderTopColor='orange';">
 <span>이 사용자는 특수 권한을 가지고 있습니다.</span>
 </div>
         `.replaceAll('\n', '').trim() + contentHtml;
