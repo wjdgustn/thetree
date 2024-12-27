@@ -61,13 +61,6 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
 });
 
 app.get('/admin/config/tools/:tool', middleware.permission('developer'), middleware.referer('/admin/config'), async (req, res) => {
-    try {
-        const referer = new URL(req.get('Referer'));
-        if(referer.pathname !== '/admin/config') return res.status(400).send('invalid referer');
-    } catch(e) {
-        return res.status(400).send('invalid referer');
-    }
-
     const tool = req.params.tool;
     if(tool === 'getgrant') {
         await User.updateOne({
