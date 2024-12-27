@@ -281,7 +281,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/acl/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -311,7 +311,7 @@ app.get('/acl/*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/acl/*', middleware.parseDocumentName, async (req, res) => {
+app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     const target = req.body.target;
 
     const document = req.document;
@@ -548,7 +548,7 @@ app.patch('/action/acl/reorder', async (req, res) => {
     res.redirect(303, req.get('Referer'));
 });
 
-app.get('/edit/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     const section = parseInt(req.query.section);
 
     const invalidSection = () => res.error('섹션이 올바르지 않습니다.')
@@ -612,7 +612,7 @@ app.get('/edit/*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/preview/*', middleware.parseDocumentName, async (req, res) => {
+app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     const content = req.body.content;
     if(typeof content !== 'string') return res.status(400).send('내용을 입력해주세요.');
 
@@ -633,7 +633,7 @@ app.post('/preview/*', middleware.parseDocumentName, async (req, res) => {
     return res.send(categoryHtml + contentHtml);
 });
 
-app.post('/edit/*', middleware.parseDocumentName, async (req, res) => {
+app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     if(req.body.agree !== 'Y') return res.status(400).send('수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
 
@@ -696,7 +696,7 @@ app.post('/edit/*', middleware.parseDocumentName, async (req, res) => {
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
-app.get('/history/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -748,7 +748,7 @@ app.get('/history/*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/raw/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/raw/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -784,7 +784,7 @@ app.get('/raw/*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/revert/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -826,7 +826,7 @@ app.get('/revert/*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/revert/*', middleware.parseDocumentName, async (req, res) => {
+app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     if(req.body.log.length > 255) return res.error('요약의 값은 255글자 이하여야 합니다.');
 
     const document = req.document;
@@ -878,7 +878,7 @@ app.post('/revert/*', middleware.parseDocumentName, async (req, res) => {
 });
 
 const CHANGE_AROUND_LINES = 3;
-app.get('/diff/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1080,7 +1080,7 @@ app.get('/diff/*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/blame/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1120,7 +1120,7 @@ app.get('/blame/*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/backlink/*', middleware.parseDocumentName, async (req, res) => {
+app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
     const docName = globalUtils.doc_fulltitle(document);
 

@@ -29,7 +29,9 @@ module.exports = {
         next();
     },
     parseDocumentName: (req, res, next) => {
-        req.document = utils.parseDocumentName(req.params[0] || req.query.doc);
+        const name = req.params[0] || req.query.doc;
+        if(!name) return res.error('문서 이름이 없습니다.', 404);
+        req.document = utils.parseDocumentName(name);
         next();
     }
 }

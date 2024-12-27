@@ -3,6 +3,14 @@ const dayjsUtc = require('dayjs/plugin/utc');
 
 dayjs.extend(dayjsUtc);
 
+const specialUrls = [
+    '.',
+    '..',
+    '\\'
+];
+
+const specialChars = ',/?:@&=+$#'.split('');
+
 module.exports = {
     doc_fulltitle(document) {
         const type = typeof document;
@@ -22,8 +30,17 @@ module.exports = {
     contribution_link_discuss(uuid) {
         return `/contribution/${uuid}/discuss`;
     },
+    encodeSpecialChars(str) {
+        return str.split('').map(a => specialChars.includes(a) ? encodeURIComponent(a) : a).join('');
+    },
     doc_action_link(document, route, query = {}) {
-        let str = `/${route}/${this.doc_fulltitle(document).replaceAll('#', '%23')}`;
+        const title = this.doc_fulltitle(document);
+        let str;
+        if(specialUrls.includes(title)) {
+            query.doc = encodeURIComponent(title);
+            str = `/${route}`;
+        }
+        else str = `/${route}/${this.encodeSpecialChars(title)}`;
         if(Object.keys(query).length > 0) {
             str += '?';
             str += Object.keys(query).filter(k => query[k]).map(k => `${k}=${query[k]}`).join('&');
