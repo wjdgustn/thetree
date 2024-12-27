@@ -1,3 +1,4 @@
+const utils = require('./');
 const { UserTypes } = require('./types');
 
 module.exports = {
@@ -25,6 +26,10 @@ module.exports = {
             return error();
         }
 
+        next();
+    },
+    parseDocumentName: (req, res, next) => {
+        req.document = utils.parseDocumentName(req.params[0] || req.query.doc);
         next();
     }
 }
