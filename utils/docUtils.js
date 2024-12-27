@@ -91,10 +91,10 @@ module.exports = {
             }
         }
 
-        addBacklinks(BacklinkFlags.Link, links);
-        addBacklinks(BacklinkFlags.File, files);
-        addBacklinks(BacklinkFlags.Include, includes);
-        addBacklinks(BacklinkFlags.Redirect, redirect);
+        addBacklinks(BacklinkFlags.Link, parseResult.links);
+        addBacklinks(BacklinkFlags.File, parseResult.files);
+        addBacklinks(BacklinkFlags.Include, parseResult.includes);
+        addBacklinks(BacklinkFlags.Redirect, parseResult.redirect);
 
         // return backlinks.sort((a, b) => Intl.Collator('en').compare(a.docName, b.docName));
         return {
