@@ -106,8 +106,6 @@ app.get('/Search', async (req, res) => {
         cropLength: 64
     });
 
-    console.log(result);
-
     res.renderSkin('검색', {
         contentName: 'search',
         serverData: {
