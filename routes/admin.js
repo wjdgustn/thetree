@@ -327,12 +327,12 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                             fileInfo.fileKey = Key;
 
                              try {
-                                 // await S3.send(new PutObjectCommand({
-                                 //     Bucket: process.env.S3_BUCKET_NAME,
-                                 //     Key,
-                                 //     Body: img,
-                                 //     ContentType: ext === 'svg' ? 'image/svg+xml' : `image/${ext}`
-                                 // }));
+                                 await S3.send(new PutObjectCommand({
+                                     Bucket: process.env.S3_BUCKET_NAME,
+                                     Key,
+                                     Body: img,
+                                     ContentType: ext === 'svg' ? 'image/svg+xml' : `image/${ext}`
+                                 }));
                                  log(`uploaded file: ${imgPath}`);
                                  isFile = true;
                              } catch(e) {
