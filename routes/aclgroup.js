@@ -264,7 +264,7 @@ app.get('/self_unblock', async (req, res) => {
     await ACLGroupItem.deleteOne({
         uuid: item.uuid
     });
-    res.redirect(req.get('referer'));
+    res.reload();
 });
 
 module.exports = app;

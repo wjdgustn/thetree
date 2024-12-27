@@ -79,7 +79,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         if(path.includes('..')) return res.status(400).send('invalid path');
         fs.unlinkSync('./customStatic' + path);
 
-        return res.status(204).end();
+        return res.reload();
     }
 
     else if(tool === 'fixstringconfig') {
@@ -91,7 +91,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
-        return res.status(204).end();
+        return res.reload();
     }
 
     else if(tool === 'minifyjs') {
@@ -298,7 +298,7 @@ app.post('/admin/grant', middleware.permission('grant'), async (req, res) => {
         permissions: newPerm
     });
 
-    return res.redirect(req.get('referer'));
+    return res.reload();
 });
 
 module.exports = app;

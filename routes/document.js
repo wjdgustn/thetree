@@ -501,7 +501,7 @@ app.get('/action/acl/delete', async (req, res) => {
         });
     }
 
-    res.redirect(req.get('Referer'));
+    res.reload();
 });
 
 app.patch('/action/acl/reorder', async (req, res) => {

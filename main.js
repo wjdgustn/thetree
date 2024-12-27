@@ -423,6 +423,8 @@ document.getElementById('initScript')?.remove();
         status
     });
 
+    res.reload = () => res.redirect(req.get('Referrer') || '/');
+
     next();
 });
 
