@@ -2,7 +2,8 @@ module.exports = {
     UserTypes: {
         Deleted: -1,
         IP: 0,
-        Account: 1
+        Account: 1,
+        Migrated: 2
     },
     HistoryTypes: {
         Create: 0,

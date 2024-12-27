@@ -157,7 +157,7 @@ module.exports = {
         const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
 
         return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
-                ? `<a class="user-text-name${user.type === UserTypes.Account ? ' user-text-member' : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}>${name}</a>`
+                ? `<a class="user-text-name${user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}>${name}</a>`
                 : `<span class="user-text-name user-text-deleted">(삭제된 사용자)</span>`)
             + '</span>';
     },

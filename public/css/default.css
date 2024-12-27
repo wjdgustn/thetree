@@ -466,6 +466,11 @@ span.user-text-name {
     font-style: italic;
 }
 
+.user-text-migrated {
+    font-weight: 700;
+    color: darkblue;
+}
+
 .category-document-block h2, .category-document-block h3 {
     border-bottom: 1px solid #ccc;
     margin: 1.2em 0 .8em;

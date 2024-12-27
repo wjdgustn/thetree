@@ -280,7 +280,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                             user = new User({
                                 email: `O:${row.ip}@migrated.internal`,
                                 password: await bcrypt.hash(process.env.SESSION_SECRET, 12),
-                                name: `O:${row.ip}`
+                                name: `O:${row.ip}`,
+                                type: UserTypes.Migrated
                             });
                             await user.save();
 
@@ -326,12 +327,12 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                             fileInfo.fileKey = Key;
 
                              try {
-                                 await S3.send(new PutObjectCommand({
-                                     Bucket: process.env.S3_BUCKET_NAME,
-                                     Key,
-                                     Body: img,
-                                     ContentType: ext === 'svg' ? 'image/svg+xml' : `image/${ext}`
-                                 }));
+                                 // await S3.send(new PutObjectCommand({
+                                 //     Bucket: process.env.S3_BUCKET_NAME,
+                                 //     Key,
+                                 //     Body: img,
+                                 //     ContentType: ext === 'svg' ? 'image/svg+xml' : `image/${ext}`
+                                 // }));
                                  log(`uploaded file: ${imgPath}`);
                                  isFile = true;
                              } catch(e) {
@@ -362,7 +363,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                         ...fileInfo
                     });
 
-                    log(`create history: ${document.namespace}:${document.title}, id: ${row.id}, ${i + 1} / ${rows.length}`);
+                    log(`create history: ${document.namespace}:${document.title}, id: ${row.id}, ${i - -1} / ${rows.length}`);
                 }
                 log('migration complete!');
 
