@@ -4,10 +4,12 @@ const { Address4, Address6 } = require('ip-address');
 
 const utils = require('../utils');
 const middleware = require('../utils/middleware');
+const { BlockHistoryTypes } = require('../utils/types');
 
+const User = require('../schemas/user');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
-const User = require("../schemas/user");
+const BlockHistory = require('../schemas/blockHistory');
 
 const app = express.Router();
 
@@ -185,7 +187,24 @@ app.post('/aclgroup',
     const duration = req.modifiedBody.duration;
     if(duration > 0) newItem.expiresAt = new Date(Date.now() + duration * 1000);
 
-    await ACLGroupItem.create(newItem);
+    const aclGroupItem = await ACLGroupItem.create(newItem);
+
+    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+        type: BlockHistoryTypes.ACLGroupAdd,
+        createdUser: req.user.uuid,
+        ...(mode === 'ip' ? {
+            targetContent: req.body.ip
+        } : {
+            targetUser: req.modifiedBody.user.uuid,
+            targetUsername: req.modifiedBody.user.name
+        }),
+        aclGroup: group.uuid,
+        aclGroupId: aclGroupItem.id,
+        ...(duration > 0 ? {
+            duration: duration * 1000
+        } : {}),
+        content: req.body.note
+    });
 
     res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
 });
@@ -224,6 +243,25 @@ app.post('/aclgroup/remove', middleware.permission('admin'),
         uuid: req.body.uuid
     });
     if(!deleted) return res.status(404).send('ACL 요소가 존재하지 않습니다.');
+
+    let targetUser;
+    if(deleted.user) targetUser = await User.findOne({
+        uuid: deleted.user
+    });
+
+    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+        type: BlockHistoryTypes.ACLGroupRemove,
+        createdUser: req.user.uuid,
+        ...(deleted.user == null ? {
+            targetContent: deleted.ip
+        } : {
+            targetUser: targetUser.uuid,
+            targetUsername: targetUser.name
+        }),
+        aclGroup: deleted.aclGroup,
+        aclGroupId: deleted.id,
+        content: req.body.note
+    });
 
     res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
 });

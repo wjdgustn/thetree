@@ -119,5 +119,17 @@ module.exports = {
                 reject(error);
             });
         });
+    },
+    durationToString(diff) {
+        const relative = new Intl.RelativeTimeFormat();
+
+        let text;
+        if(diff < 1000 * 10) text = '방금 전';
+        else if(diff < 1000 * 60) text = relative.format(-Math.floor(diff / 1000), 'second');
+        else if(diff < 1000 * 60 * 60) text = relative.format(-Math.floor(diff / 1000 / 60), 'minute');
+        else if(diff < 1000 * 60 * 60 * 24) text = relative.format(-Math.floor(diff / 1000 / 60 / 60), 'hour');
+        else if(diff < 1000 * 60 * 60 * 24 * 30) text = relative.format(-Math.floor(diff / 1000 / 60 / 60 / 24), 'day');
+
+        return text;
     }
 }

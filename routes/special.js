@@ -15,8 +15,11 @@ const {
     ACLTypes
 } = require('../utils/types');
 
+const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
+const BlockHistory = require('../schemas/blockHistory');
+const ACLGroup = require('../schemas/aclGroup');
 
 const ACL = require('../class/acl');
 
@@ -277,6 +280,87 @@ app.post('/Upload', uploadFile,
     });
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
+});
+
+app.get('/BlockHistory', async (req, res) => {
+    const baseQuery = {};
+
+    const query = req.query.query;
+    if(query) {
+        if(req.query.target === 'author') {
+            if(query.includes('-')) baseQuery.createdUser = query;
+            else {
+                const checkUser = await User.findOne({
+                    name: query
+                });
+                if(checkUser) baseQuery.createdUser = checkUser.uuid;
+            }
+        }
+        else {
+            const regex = {
+                $regex: new RegExp(utils.escapeRegExp(query), 'i')
+            };
+            baseQuery.$or = [
+                { targetUser: query },
+                { targetUsername: query },
+                { targetContent: regex },
+                { content: regex }
+            ]
+        }
+    }
+
+    const findQuery = { ...baseQuery };
+
+    const pageQuery = req.query.until || req.query.from;
+    if(pageQuery) {
+        const log = await BlockHistory.findOne({
+            uuid: pageQuery
+        });
+        if(log) {
+            if(req.query.until) findQuery._id = { $gte: log._id };
+            else findQuery._id = { $lte: log._id };
+        }
+    }
+
+    let logs = await BlockHistory.find(findQuery)
+        .sort({ _id: findQuery._id?.$gte ? 1 : -1 })
+        .limit(100)
+        .lean();
+
+    if(findQuery._id?.$gte) logs.reverse();
+
+    let prevItem;
+    let nextItem;
+    if(logs.length) {
+        prevItem = await BlockHistory.findOne({
+            ...baseQuery,
+            _id: { $gt: logs[0]._id }
+        }).sort({ _id: 1 });
+        nextItem = await BlockHistory.findOne({
+            ...baseQuery,
+            _id: { $lt: logs[logs.length - 1]._id }
+        }).sort({ _id: -1 });
+
+        logs = await utils.findUsers(logs, 'createdUser', true);
+        logs = await utils.findUsers(logs, 'targetUser', true);
+
+        const aclGroups = await ACLGroup.find();
+        for(let log of logs) {
+            if(log.aclGroup) {
+                const foundGroup = aclGroups.find(a => a.uuid === log.aclGroup);
+                if(foundGroup) log.aclGroup = foundGroup;
+            }
+        }
+    }
+
+    res.renderSkin('차단 내역', {
+        contentName: 'blockHistory',
+        serverData: {
+            logs,
+            prevItem,
+            nextItem
+        }
+    });
 });
 
 module.exports = app;

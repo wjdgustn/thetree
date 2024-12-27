@@ -125,25 +125,25 @@ module.exports = {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
         return aclGroup.userCSS;
     },
-    async findUsers(arr) {
+    async findUsers(arr, key = 'user', noCSS = false) {
         const cache = {};
 
         for(let obj of arr) {
-            if(obj?.user) {
-                if(cache[obj.user]) {
-                    obj.user = cache[obj.user];
+            if(obj?.[key]) {
+                if(cache[obj[key]]) {
+                    obj[key] = cache[obj[key]];
                     continue;
                 }
 
-                const uuid = obj.user;
-                obj.user = await models.User.findOne({
+                const uuid = obj[key];
+                obj[key] = await models.User.findOne({
                     uuid
                 }).lean();
-                if(obj.user) {
-                    obj.user.userCSS = await this.getUserCSS(obj.user);
-                    cache[obj.user.uuid] = obj.user;
+                if(obj[key]) {
+                    if(!noCSS) obj[key].userCSS = await this.getUserCSS(obj[key]);
+                    cache[obj[key].uuid] = obj[key];
                 }
-                else obj.user = {
+                else obj[key] = {
                     type: UserTypes.Deleted,
                     uuid
                 }
@@ -248,5 +248,8 @@ module.exports = {
         }
 
         return arr;
+    },
+    escapeRegExp(s) {
+        return s.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 }

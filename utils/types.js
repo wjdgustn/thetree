@@ -44,6 +44,11 @@ module.exports = {
         Include: 4,
         Redirect: 8
     },
+    BlockHistoryTypes: {
+        ACLGroupAdd: 0,
+        ACLGroupRemove: 1,
+        Grant: 2
+    },
     GrantablePermissions: [
         'delete_thread',
         'admin',

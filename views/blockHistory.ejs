@@ -1,0 +1,99 @@
+<link rel="stylesheet" href="/css/views/blockHistory.css">
+<form>
+    <select class="search-type" name="target">
+        <option value="text">내용</option>
+        <option value="author">실행자</option>
+    </select>
+
+    <input class="search-input" name="query" placeholder="검색" value="<%=req.query.query%>">
+
+    <div class="buttons-block">
+        <button class="thetree-button thetree-primary-button">검색</button>
+        <a href="/BlockHistory" role="button" class="thetree-button">초기화</a>
+    </div>
+</form>
+
+<%
+const blockHistoryLink = query => `/BlockHistory?${querystring.stringify({
+    ...utils.withoutKeys(req.query, [query.from ? 'until' : 'from']),
+    ...query
+})}`;
+
+const enabledButton = (query, content) => `<a href="${blockHistoryLink(query)}" role="button" class="navigation-button navigation-page-button">${content}</a>`;
+const disabledButton = content => `<span role="button" class="navigation-button thetree-button-disabled navigation-page-button">${content}</span>`;
+
+const prevButtonContent = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>
+<span>이전</span>
+`.trim();
+const nextButtonContent = `
+<span>다음</span>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>
+`;
+
+const navigationPage = `
+${prevItem ? enabledButton({
+    until: prevItem.uuid
+}, prevButtonContent) : disabledButton(prevButtonContent)}
+${nextItem ? enabledButton({
+    from: nextItem.uuid
+}, nextButtonContent) : disabledButton(nextButtonContent)}
+`.trim();
+%>
+
+<div class="search-buttons-block">
+    <div class="navigation-div navigation-page"><%-navigationPage%></div>
+</div>
+
+<ul>
+    <%for(let log of logs) {%>
+        <%if(log.type === BlockHistoryTypes.ACLGroupAdd) {%>
+            <li>
+                <div class="item-block icon-block">
+                    <span class="icon icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3zM504 312V248H440c-13.3 0-24-10.7-24-24s10.7-24 24-24h64V136c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24H552v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"></path></svg>
+                    </span>
+                </div>
+                <div class="item-block content-block">
+                    <div><%-utils.userHtml(log.createdUser)%> 사용자가 <%-log.targetUser ? `${utils.userHtml(log.targetUser)} 사용자를` : `${log.targetContent} IP를`%><%=log.targetUser && log.targetUser.name !== log.targetUsername ? ` (차단 당시 이름: ${log.targetUsername})` : ''%> <span class="bold"><%=log.aclGroup?.name || log.aclGroup%></span> ACL 그룹에 <%=log.duration ? `${durationToString(log.duration)} 동안` : '영구적으로'%> 등록함 <span class="gray">#<%=log.aclGroupId%></span></div>
+                    <div class="log-content">
+                        <%-getFullDateTag(log.createdAt)%>
+                        <span>(<%=log.content%>)</span>
+                    </div>
+                </div>
+            </li>
+        <%} else if(log.type === BlockHistoryTypes.ACLGroupRemove) {%>
+            <li>
+                <div class="item-block icon-block">
+                    <span class="icon icon-gray">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3zM472 200H616c13.3 0 24 10.7 24 24s-10.7 24-24 24H472c-13.3 0-24-10.7-24-24s10.7-24 24-24z"></path></svg>
+                    </span>
+                </div>
+                <div class="item-block content-block">
+                    <div><%-utils.userHtml(log.createdUser)%> 사용자가 <%-log.targetUser ? `${utils.userHtml(log.targetUser)} 사용자를` : `${log.targetContent} IP를`%><%=log.targetUser && log.targetUser.name !== log.targetUsername ? ` (차단 당시 이름: ${log.targetUsername})` : ''%> <span class="bold"><%=log.aclGroup?.name || log.aclGroup%></span> ACL 그룹에서 제거함 <span class="gray">#<%=log.aclGroupId%></span></div>
+                    <div class="log-content">
+                        <%-getFullDateTag(log.createdAt)%>
+                        <span>(<%=log.content%>)</span>
+                    </div>
+                </div>
+            </li>
+        <%} else if(log.type === BlockHistoryTypes.Grant) {%>
+            <li>
+                <div class="item-block icon-block">
+                    <span class="icon icon-orange">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3zM625 177L497 305c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L591 143c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"></path></svg>
+                    </span>
+                </div>
+                <div class="item-block content-block">
+                    <div><%-utils.userHtml(log.createdUser)%> 사용자가 <%-utils.userHtml(log.targetUser)%> 사용자의 권한 설정</div>
+                    <div class="log-content"><%=log.content%></div>
+                    <div class="log-content"><%-getFullDateTag(log.createdAt)%></div>
+                </div>
+            </li>
+        <%} else {%>
+            <li>not implemented</li>
+        <%}%>
+    <%}%>
+</ul>
+
+<div class="navigation-div navigation-page"><%-navigationPage%></div>

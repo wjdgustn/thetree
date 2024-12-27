@@ -225,16 +225,12 @@ function updateTimeTag() {
             const diff = Date.now() - date.getTime();
             const relative = new Intl.RelativeTimeFormat();
 
-            isRelative = true;
+            const durationStr = durationToString(diff);
 
-            if(diff < 1000 * 10) time.textContent = '방금 전';
-            else if(diff < 1000 * 60) time.textContent = relative.format(-Math.floor(diff / 1000), 'second');
-            else if(diff < 1000 * 60 * 60) time.textContent = relative.format(-Math.floor(diff / 1000 / 60), 'minute');
-            else if(diff < 1000 * 60 * 60 * 24) time.textContent = relative.format(-Math.floor(diff / 1000 / 60 / 60), 'hour');
-            else if(diff < 1000 * 60 * 60 * 24 * 30) time.textContent = relative.format(-Math.floor(diff / 1000 / 60 / 60 / 24), 'day');
-            else isRelative = false;
-
-            if(isRelative) continue;
+            if(durationStr) {
+                time.textContent = durationStr;
+                continue;
+            }
         }
 
         const dateStr = [

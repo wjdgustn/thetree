@@ -15,7 +15,13 @@ const sharp = require('sharp');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const utils = require('../utils');
-const { GrantablePermissions, DevPermissions, UserTypes, HistoryTypes } = require('../utils/types');
+const {
+    GrantablePermissions,
+    DevPermissions,
+    UserTypes,
+    HistoryTypes,
+    BlockHistoryTypes
+} = require('../utils/types');
 const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
@@ -24,6 +30,7 @@ const docUtils = require('../utils/docUtils');
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
+const BlockHistory = require('../schemas/blockHistory');
 
 const app = express.Router();
 
@@ -476,6 +483,27 @@ app.post('/admin/grant', middleware.permission('grant'), async (req, res) => {
         uuid: req.body.uuid
     }, {
         permissions: newPerm
+    });
+
+    const addedPerms = [];
+    const removedPerms = [];
+
+    for(let perm of newPerm) {
+        if(!targetUser.permissions.includes(perm)) addedPerms.push(perm);
+    }
+    for(let perm of targetUser.permissions) {
+        if(!newPerm.includes(perm)) removedPerms.push(perm);
+    }
+
+    await BlockHistory.create({
+        type: BlockHistoryTypes.Grant,
+        createdUser: req.user.uuid,
+        targetUser: targetUser.uuid,
+        targetUsername: targetUser.name,
+        content: [
+            ...addedPerms.map(a => `+${a}`),
+            ...removedPerms.map(r => `-${r}`)
+        ].join(' ')
     });
 
     return res.reload();
