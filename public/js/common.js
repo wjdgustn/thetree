@@ -533,6 +533,7 @@ document.addEventListener('alpine:init', () => {
 
     Alpine.data('search', () => ({
         searchFocused: false,
+        lastSearchText: '',
         searchText: '',
         cursor: -1,
         internalItems: [],
@@ -546,7 +547,10 @@ document.addEventListener('alpine:init', () => {
         focus() {
             this.searchFocused = true;
         },
-        async inputChange() {
+        async inputChange(e) {
+            if(this.searchText === this.lastSearchText) return;
+            this.lastSearchText = this.searchText;
+
             if(!this.searchText.length) {
                 this.internalItems = [];
                 return;
