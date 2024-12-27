@@ -514,6 +514,15 @@ document.addEventListener('alpine:init', () => {
         page,
         session,
         localConfig,
+        recent: [],
+        async init() {
+            setInterval(() => this.updateSidebar(), 1000 * 30);
+            await this.updateSidebar();
+        },
+        async updateSidebar() {
+            const result = await fetch('/sidebar.json');
+            this.recent = await result.json();
+        },
         getLocalConfig(key) {
             return this.localConfig[key] ?? defaultConfig[key];
         },
@@ -602,10 +611,6 @@ document.addEventListener('alpine:init', () => {
             e.srcElement.blur();
             await movePage(doc_action_link(this.searchText, 'w'));
         }
-    }));
-
-    Alpine.data('recent', () => ({
-        recent: [{"document":"냥냥냥","status":"normal","date":1730462638},{"document":"A","status":"normal","date":1730461011}]
     }));
 });
 

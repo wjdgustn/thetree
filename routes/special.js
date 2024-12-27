@@ -49,6 +49,37 @@ app.get('/RecentChanges', async (req, res) => {
     });
 });
 
+let sidebarCache = [];
+let lastSidebarUpdate = 0;
+app.get('/sidebar.json', async (req, res) => {
+    if(Date.now() - lastSidebarUpdate > 1000 * 30) {
+        const documents = await Document.find({
+            namespace: '문서'
+        })
+            .sort({ updatedAt: -1 })
+            .limit(15);
+
+        let newSidebar = [];
+        for(let doc of documents) {
+            const latestRev = await History.findOne({
+                document: doc.uuid
+            }).sort({ rev: -1 });
+            if(!latestRev) continue;
+
+            newSidebar.push({
+                document: globalUtils.doc_fulltitle(utils.dbDocumentToDocument(doc)),
+                status: latestRev.type === HistoryTypes.Delete ? 'delete' : 'normal',
+                date: Math.floor(doc.updatedAt / 1000)
+            });
+        }
+
+        sidebarCache = newSidebar;
+        lastSidebarUpdate = Date.now();
+    }
+
+    return res.json(sidebarCache);
+});
+
 let commitId;
 let skinCommitId = {};
 let openSourceLicense;

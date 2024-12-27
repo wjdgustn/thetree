@@ -30,6 +30,11 @@ const newSchema = new Schema({
         required: true,
         default: false
     },
+    updatedAt: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
 
     backlinks: [{
         docName: {
@@ -74,6 +79,8 @@ const validate = (doc, oldDoc) => {
             doc.isFileCategory = true;
         } else if(doc.isFileCategory || oldDoc?.isFileCategory) doc.isFileCategory = false;
     }
+
+    doc.updatedAt = new Date();
 }
 
 newSchema.pre('save', function() {
