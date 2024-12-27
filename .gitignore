@@ -3,6 +3,7 @@
 /customStatic/
 /publicMin/
 /cache/
+/opennamu_data/
 
 .env
 

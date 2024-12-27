@@ -6,7 +6,16 @@ const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
 const multer = require('multer');
 
-const { GrantablePermissions, DevPermissions } = require('../utils/types');
+// openNAMU migration things
+const sqlite3 = require('sqlite3').verbose();
+const { Address4, Address6 } = require('ip-address');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const sharp = require('sharp');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+
+const utils = require('../utils');
+const { GrantablePermissions, DevPermissions, UserTypes, HistoryTypes } = require('../utils/types');
 const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
@@ -206,7 +215,163 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         return res.status(204).end();
     }
 
-    return res.status(404).send('tool not found');
+    else if(tool === 'migrateopennamu') {
+        if(!fs.existsSync('./opennamu_data/data.db')) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
+        const db = new sqlite3.Database('./opennamu_data/data.db', sqlite3.OPEN_READONLY);
+
+        let logs = [];
+        const log = msg => {
+            logs.push(msg);
+            console.log(msg);
+        }
+
+        db.serialize(() => {
+            const rows = [];
+            log('loading all rows...');
+            db.each('SELECT * FROM history ORDER BY date', (err, row) => {
+                rows.push(row);
+            }, async () => {
+                log('loaded all rows, migrating...');
+                for(let i in rows) {
+                    const row = rows[i];
+
+                    console.log(utils.withoutKeys(row, ['data']));
+                    let title = row.title;
+
+                    if(title.startsWith('file:')) title = title.replace('file:', '파일:');
+                    else if(title.startsWith('category:')) title = title.replace('category:', '분류:');
+                    else if(title.startsWith('user:')) title = title.replace('user:', '사용자:');
+
+                    const document = utils.parseDocumentName(title);
+
+                    if(document.namespace === '사용자') {
+                        log(`skip: ${title}, reason: user document`);
+                        continue;
+                    }
+
+                    let content = row.data
+                        .replaceAll('\r\n', '\n')
+                        .replaceAll('[[file:', '[[파일:')
+                        .replaceAll('[[category:', '[[분류:')
+                        .replaceAll(`direct_input\n[[category:direct_input]]\n`, '')
+                        .replaceAll(`direct_input\n[[분류:direct_input]]\n`, '');
+
+                    const isIp = Address4.isValid(row.ip) || Address6.isValid(row.ip);
+                    let user;
+                    if(isIp) {
+                        user = await User.findOne({
+                            ip: row.ip
+                        });
+                        if(!user) {
+                            user = new User({
+                                ip: row.ip,
+                                type: UserTypes.IP
+                            });
+                            await user.save();
+
+                            log(`created IP user: ${row.ip}`);
+                        }
+                    }
+                    else {
+                        user = await User.findOne({
+                            name: 'O:' + row.ip
+                        });
+                        if(!user) {
+                            user = new User({
+                                email: `O:${row.ip}@migrated.internal`,
+                                password: await bcrypt.hash(process.env.SESSION_SECRET, 12),
+                                name: `O:${row.ip}`
+                            });
+                            await user.save();
+
+                            log(`created openNAMU user: O:${row.ip}`);
+                        }
+                    }
+
+                    let dbDocument = await Document.findOne({
+                        namespace: document.namespace,
+                        title: document.title
+                    });
+                    if(!dbDocument) {
+                        dbDocument = new Document({
+                            namespace: document.namespace,
+                            title: document.title
+                        });
+                        await dbDocument.save();
+
+                        log(`create document: ${document.namespace}:${document.title}, uuid: ${dbDocument.uuid}`);
+                    }
+
+                    let isFile = false;
+                    let fileInfo = {};
+                    if(document.namespace === '파일' && row.id === '1') {
+                        const splittedTitle = document.title.split('.');
+                        const ext = splittedTitle.pop();
+                        const filename = splittedTitle.join('.');
+                        const hash = crypto.createHash('sha224').update(filename).digest('hex');
+                        const imgPath = path.resolve(`./opennamu_data/data/images/${hash}.${ext}`);
+
+                        if(fs.existsSync(imgPath)) {
+                            const img = fs.readFileSync(imgPath);
+                            try {
+                                const metadata = await sharp(img).metadata();
+                                fileInfo.fileWidth = metadata.width;
+                                fileInfo.fileHeight = metadata.height;
+                                fileInfo.fileSize = metadata.size;
+                            } catch(e) {}
+
+                            const fileHash = crypto.createHash('sha256').update(img).digest('hex');
+                            const Key = 'i/' + fileHash + '.' + ext;
+
+                            fileInfo.fileKey = Key;
+
+                             try {
+                                 await S3.send(new PutObjectCommand({
+                                     Bucket: process.env.S3_BUCKET_NAME,
+                                     Key,
+                                     Body: img,
+                                     ContentType: ext === 'svg' ? 'image/svg+xml' : `image/${ext}`
+                                 }));
+                                 log(`uploaded file: ${imgPath}`);
+                                 isFile = true;
+                             } catch(e) {
+                                 console.error(e);
+                                 log(`failed to upload file: ${imgPath}`);
+                             }
+                        }
+                    }
+                    if(!isFile) fileInfo = {};
+
+                    if(row.type === 'delete') await History.create({
+                        user: user.uuid,
+                        type: HistoryTypes.Delete,
+                        document: dbDocument.uuid,
+                        content: null,
+                        log: row.send,
+                        createdAt: new Date(row.date),
+                        migrated: true
+                    });
+                    else await History.create({
+                        user: user.uuid,
+                        type: row.type === 'r1' ? HistoryTypes.Create : HistoryTypes.Modify,
+                        document: dbDocument.uuid,
+                        content,
+                        log: row.send,
+                        createdAt: new Date(row.date),
+                        migrated: true,
+                        ...fileInfo
+                    });
+
+                    log(`create history: ${document.namespace}:${document.title}, id: ${row.id}, ${i + 1} / ${rows.length}`);
+                }
+                log('migration complete!');
+
+                fs.writeFileSync(`./opennamu_data/migration_${Date.now()}.log`, logs.join('\n'));
+            });
+        });
+    }
+
+    else return res.status(404).send('tool not found');
 });
 
 app.post('/admin/config/configjson', middleware.permission('developer'), (req, res) => {

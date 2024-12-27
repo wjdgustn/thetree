@@ -89,6 +89,9 @@ const newSchema = new Schema({
     },
     blame: {
         type: Array
+    },
+    migrated: {
+        type: Boolean
     }
 });
 
@@ -142,7 +145,7 @@ newSchema.pre('save', async function() {
 newSchema.post('save', async function() {
     delete lastItem[this.document];
 
-    await docUtils.postHistorySave(this);
+    if(!this.migrated) await docUtils.postHistorySave(this);
 });
 
 const model = mongoose.model('History', newSchema);
