@@ -52,7 +52,7 @@ app.get('/RecentChanges', async (req, res) => {
 let sidebarCache = [];
 let lastSidebarUpdate = 0;
 app.get('/sidebar.json', async (req, res) => {
-    if(Date.now() - lastSidebarUpdate > 1000 * 30) {
+    if(Date.now() - lastSidebarUpdate > 1000 * 10) {
         const documents = await Document.find({
             namespace: '문서'
         })
