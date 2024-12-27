@@ -118,7 +118,7 @@ newSchema.pre('save', async function() {
         this.content = last ? last.content : null;
     }
     else if(this.diffLength == null) {
-        this.diffLength = last ? this.content.length - last.content?.length : this.content.length;
+        this.diffLength = last ? this.content?.length - last.content?.length : (this.content?.length || 0);
     }
 
     if(this.fileKey == null && last?.fileKey) {
