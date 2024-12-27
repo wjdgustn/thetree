@@ -203,8 +203,14 @@ app.post('/Upload', uploadFile,
         const dupDoc = await Document.findOne({
             uuid: checkExists.document
         });
-        const doc = utils.dbDocumentToDocument(dupDoc);
-        return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
+        const latest = await History.findOne({
+            document: checkExists.document
+        });
+
+        if(latest.uuid === checkExists.uuid) {
+            const doc = utils.dbDocumentToDocument(dupDoc);
+            return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
+        }
     }
 
     try {
