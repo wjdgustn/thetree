@@ -102,7 +102,7 @@ module.exports = {
             categories: categories.map(a => a.document.slice('분류:'.length))
         }
     },
-    async postHistorySave(rev) {
+    async postHistorySave(rev, backlink = true, search = true) {
         const dbDocument = await mongoose.models.Document.findOne({
             uuid: rev.document
         });
@@ -118,37 +118,41 @@ module.exports = {
         });
         const parseResult = await parser.parse(rev.content);
 
-        const { backlinks, categories } = await this.generateBacklink(dbDocument, this, parseResult);
-
         const contentExists = rev.content != null;
-        await mongoose.models.Document.updateOne({
-            uuid: rev.document
-        }, {
-            backlinks,
-            categories,
-            contentExists
-        });
+        if(backlink) {
+            const { backlinks, categories } = await this.generateBacklink(dbDocument, this, parseResult);
 
-        let anyoneReadable = contentExists;
-        if(anyoneReadable) {
-            const acl = await ACL.get({ document: dbDocument });
-            const { result: readable } = await acl.check(ACLTypes.Read, {
-                permissions: ['any']
+            await mongoose.models.Document.updateOne({
+                uuid: rev.document
+            }, {
+                backlinks,
+                categories,
+                contentExists
             });
-            anyoneReadable = readable;
         }
 
-        if(contentExists) await documentIndex.addDocuments({
-            uuid: dbDocument.uuid,
-            choseong: getChoseong(document.title),
-            namespace: dbDocument.namespace,
-            title: dbDocument.title,
-            content: utils.removeHtmlTags(parseResult.html),
-            raw: rev.content,
-            anyoneReadable
-        }, {
-            primaryKey: 'uuid'
-        });
-        else await documentIndex.deleteDocument(dbDocument.uuid);
+        if(search) {
+            let anyoneReadable = contentExists;
+            if(anyoneReadable) {
+                const acl = await ACL.get({ document: dbDocument });
+                const { result: readable } = await acl.check(ACLTypes.Read, {
+                    permissions: ['any']
+                });
+                anyoneReadable = readable;
+            }
+
+            if(contentExists) await documentIndex.addDocuments({
+                uuid: dbDocument.uuid,
+                choseong: getChoseong(document.title),
+                namespace: dbDocument.namespace,
+                title: dbDocument.title,
+                content: utils.removeHtmlTags(parseResult.html),
+                raw: rev.content,
+                anyoneReadable
+            }, {
+                primaryKey: 'uuid'
+            });
+            else await documentIndex.deleteDocument(dbDocument.uuid);
+        }
     }
 }

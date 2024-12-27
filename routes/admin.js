@@ -169,7 +169,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         return res.status(204).end();
     }
 
-    else if(tool === 'generatebacklink') {
+    else if(tool.startsWith('generatebacklink')) {
         const documents = await Document.find().lean();
 
         const total = documents.length;
@@ -187,7 +187,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                 continue;
             }
 
-            await docUtils.postHistorySave(rev);
+            await docUtils.postHistorySave(rev, !tool.endsWith('_searchonly'), !tool.endsWith('_backlinkonly'));
 
             console.log(`generated backlink info for ${document.uuid}, ${total - documents.length}/${total}`);
         }
