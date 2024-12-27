@@ -99,7 +99,7 @@ module.exports = {
         // return backlinks.sort((a, b) => Intl.Collator('en').compare(a.docName, b.docName));
         return {
             backlinks,
-            categories: categories.map(a => a.document.slice('분류:'.length))
+            categories: parseResult.categories.map(a => a.document.slice('분류:'.length))
         }
     },
     async postHistorySave(rev, backlink = true, search = true) {
@@ -120,7 +120,7 @@ module.exports = {
 
         const contentExists = rev.content != null;
         if(backlink) {
-            const { backlinks, categories } = await this.generateBacklink(dbDocument, this, parseResult);
+            const { backlinks, categories } = await this.generateBacklink(dbDocument, rev, parseResult);
 
             await mongoose.models.Document.updateOne({
                 uuid: rev.document
