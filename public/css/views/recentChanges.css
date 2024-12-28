@@ -10,6 +10,10 @@
         grid-template-columns: 1fr 10rem 11rem 13rem;
     }
 
+    .troll-line {
+        text-decoration: line-through;
+    }
+
     .changes-block.nouser > .changes-line {
         grid-template-columns: 1fr 10rem 13rem;
     }
