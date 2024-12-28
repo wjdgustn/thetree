@@ -16,7 +16,7 @@ module.exports = {
     noEscapeChar: true,
     format: async (content, namumark, originalContent) => {
         if(Format(content, namumark) !== undefined) return null;
-        if(await ContentChange(content, namumark) !== undefined) return null;
+        if(await ContentChange(content, namumark) !== undefined) return '<hideNewLine/>';
 
         if(content.includes('<newLine/>')) {
             let result = originalContent;

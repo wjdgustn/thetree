@@ -9,7 +9,7 @@ module.exports = async (content, namumark) => {
     if(firstParam.startsWith('#!wiki')) {
         content = utils.parseIncludeParams(content, namumark.includeData);
 
-        let lines = content.split('<newLine/>');
+        let lines = content.replaceAll('<newLine_/>', '<newLine/>').split('<newLine/>');
         let wikiParamsStr = lines[0].slice('#!wiki '.length);
 
         const styleCloseStr = '&quot;';
