@@ -120,7 +120,7 @@ module.exports = {
             });
         });
     },
-    durationToString(diff) {
+    durationToString(diff, removeSuffix = false) {
         const relative = new Intl.RelativeTimeFormat('ko');
 
         let text;
@@ -129,6 +129,8 @@ module.exports = {
         else if(diff < 1000 * 60 * 60) text = relative.format(-Math.floor(diff / 1000 / 60), 'minute');
         else if(diff < 1000 * 60 * 60 * 24) text = relative.format(-Math.floor(diff / 1000 / 60 / 60), 'hour');
         else if(diff < 1000 * 60 * 60 * 24 * 30) text = relative.format(-Math.floor(diff / 1000 / 60 / 60 / 24), 'day');
+
+        if(text && removeSuffix) text = text.slice(0, -2);
 
         return text;
     }
