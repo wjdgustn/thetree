@@ -223,7 +223,6 @@ function updateTimeTag() {
         let isRelative = false;
         if(type === 'relative' && !State.getLocalConfig('wiki.no_relative_date')) {
             const diff = Date.now() - date.getTime();
-            const relative = new Intl.RelativeTimeFormat();
 
             const durationStr = durationToString(diff);
 

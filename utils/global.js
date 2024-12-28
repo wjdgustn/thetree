@@ -121,7 +121,7 @@ module.exports = {
         });
     },
     durationToString(diff) {
-        const relative = new Intl.RelativeTimeFormat();
+        const relative = new Intl.RelativeTimeFormat('ko');
 
         let text;
         if(diff < 1000 * 10) text = '방금 전';
