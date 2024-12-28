@@ -109,6 +109,15 @@ document.addEventListener('thetree:pageLoad', () => {
         </div>
     </div>
 
+    <h2 class="wiki-heading wiki-heading-folded">openNAMU 기여 이동</h2>
+    <div class="wiki-heading-content wiki-heading-content-folded">
+        <form method="post" action="/admin/config/migratecontribution">
+            <input name="from" placeholder="openNAMU 기여자 이름(O: 포함)" required>
+            <input name="to" placeholder="새 기여자 이름" required>
+            <button class="thetree-button thetree-danger-button">이동</button>
+        </form>
+    </div>
+
     <h2 class="wiki-heading">정적 파일</h2>
     <div class="wiki-heading-content">
         <%for(let file of customStaticFiles) {%>

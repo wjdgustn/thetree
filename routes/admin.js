@@ -579,4 +579,31 @@ app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentN
     else return res.status(404).send('action not found');
 });
 
+app.post('/admin/config/migratecontribution', middleware.permission('developer'), async (req, res) => {
+    const fromUser = await User.findOne({
+        name: req.body.from
+    });
+    if(!fromUser || !req.body.from) return res.status(404).send('이전 기여자 계정을 찾을 수 없습니다.');
+    if(fromUser.type !== UserTypes.Migrated) return res.status(400).send('이전 기여자 계정이 openNAMU 계정이 아닙니다.');
+
+    const toUser = await User.findOne({
+        name: req.body.to
+    });
+    if(!toUser || !req.body.to) return res.status(404).send('대상 계정을 찾을 수 없습니다.');
+    if(toUser.type !== UserTypes.Account) return res.status(400).send('대상 계정이 가입된 계정이 아닙니다.');
+
+    await History.updateMany({
+        user: fromUser.uuid
+    }, {
+        user: toUser.uuid,
+        migrated: false
+    });
+
+    await User.deleteOne({
+        uuid: fromUser.uuid
+    });
+
+    return res.status(204).end();
+});
+
 module.exports = app;
