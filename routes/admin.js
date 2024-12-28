@@ -245,6 +245,11 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                 for(let i in rows) {
                     const row = rows[i];
 
+                    if(row.type === 'setting') {
+                        log(`skip: ${row.title}, reason: setting`);
+                        continue;
+                    }
+
                     console.log(utils.withoutKeys(row, ['data']));
                     let title = row.title;
 
