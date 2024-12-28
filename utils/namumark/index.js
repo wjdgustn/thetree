@@ -335,7 +335,6 @@ module.exports = class NamumarkParser {
                             const content = text.slice(syntax.index + syntax.openStr.length, text.length);
                             const originalContent = sourceText.slice(syntax.sourceIndex + syntax.openStr.length, i);
                             if(content) {
-                                if(syntax.name === 'link') console.log(text);
                                 let output = await syntax.format(content, this, originalContent, i, sourceText);
                                 if(typeof output === 'number') output = output.toString();
                                 if(output != null) {
