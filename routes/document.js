@@ -50,6 +50,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 
     const acl = await ACL.get({ document: dbDocument }, document);
 
+    const isOldVer = req.query.uuid && req.query.uuid === rev?.uuid;
     const defaultData = {
         viewName: 'wiki',
         date: undefined,
@@ -57,8 +58,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         document,
         edit_acl_message: null,
         editable: false,
-        rev: req.query.uuid && req.query.uuid === rev?.uuid ? rev.rev : null,
-        uuid: req.query.uuid && req.query.uuid === rev?.uuid ? rev.uuid : null,
+        rev: isOldVer ? rev.rev : null,
+        uuid: isOldVer ? rev.uuid : null,
         star_count: undefined,
         starred: null,
         user: null
@@ -75,6 +76,14 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         ...defaultData,
         date: null,
         contentHtml: '<h2>해당 리비전이 존재하지 않습니다.</h2>'
+    });
+
+    if(isOldVer && (rev.hidden || rev.troll)) return res.renderSkin(undefined, {
+        ...defaultData,
+        date: null,
+        rev: null,
+        uuid: null,
+        contentHtml: `<h2>${rev.hidden ? '숨겨진 리비젼입니다.' : '이 리비젼은 반달로 표시 되었습니다.'}</h2>`
     });
 
     const { result: editable, aclMessage: edit_acl_message } = await acl.check(ACLTypes.Edit, req.aclData);
@@ -736,6 +745,8 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
     if(!dbDocument || !revs.length) return res.error('문서를 찾을 수 없습니다.');
 
     revs = await utils.findUsers(revs);
+    revs = await utils.findUsers(revs, 'trollBy');
+    revs = await utils.findUsers(revs, 'hideLogBy');
 
     res.renderSkin(undefined, {
         viewName: 'history',
@@ -771,6 +782,8 @@ app.get('/raw/?*', middleware.parseDocumentName, async (req, res) => {
     }).sort({ rev: -1 });
 
     if(req.query.uuid && !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
+
+    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
     res.renderSkin(undefined, {
         contentName: 'raw',
@@ -813,6 +826,9 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         HistoryTypes.Modify,
         HistoryTypes.Revert
     ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
+
+    if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
+    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
     res.renderSkin(undefined, {
         contentName: 'revert',
@@ -857,6 +873,9 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         HistoryTypes.Modify,
         HistoryTypes.Revert
     ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
+
+    if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
+    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
     const currentRev = await History.findOne({
         document: dbDocument.uuid
@@ -913,6 +932,8 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
     });
 
     if(!oldRev || oldRev.rev >= rev.rev) return noRev();
+
+    if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
     const lineDiff = Diff.diffLines(namumarkUtils.escapeHtml(oldRev.content), namumarkUtils.escapeHtml(rev.content)).map(a => ({
         ...a,
@@ -1103,6 +1124,8 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     });
 
     if(!req.query.uuid || !rev) res.error('해당 리비전이 존재하지 않습니다.', 404);
+
+    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
     let blame = await utils.findHistories(rev.blame);
     blame = await utils.findUsers(blame);

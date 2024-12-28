@@ -77,10 +77,16 @@ const newSchema = new Schema({
         required: true,
         default: false
     },
+    trollBy: {
+        type: String
+    },
     hideLog: {
         type: Boolean,
         required: true,
         default: false
+    },
+    hideLogBy: {
+        type: String
     },
     hidden: {
         type: Boolean,

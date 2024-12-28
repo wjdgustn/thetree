@@ -20,7 +20,8 @@ const {
     DevPermissions,
     UserTypes,
     HistoryTypes,
-    BlockHistoryTypes
+    BlockHistoryTypes,
+    ACLTypes
 } = require('../utils/types');
 const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
@@ -31,6 +32,8 @@ const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const BlockHistory = require('../schemas/blockHistory');
+
+const ACL = require('../class/acl');
 
 const app = express.Router();
 
@@ -507,6 +510,68 @@ app.post('/admin/grant', middleware.permission('grant'), async (req, res) => {
     });
 
     return res.reload();
+});
+
+app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentName, async (req, res) => {
+    if(!req.query.uuid) return res.status(400).send('missing uuid');
+
+    const history = await History.findOne({
+        uuid: req.query.uuid
+    });
+    if(!history) return res.status(404).send('리비전을 찾을 수 없습니다.');
+
+    const dbDocument = await Document.findOne({
+        uuid: history.document
+    });
+
+    const document = req.document;
+    if(document.namespace !== dbDocument.namespace || document.title !== dbDocument.title) return res.status(400).send('document mismatch');
+
+    const acl = await ACL.get({ document: dbDocument });
+    const { result: editable } = await acl.check(ACLTypes.Edit, req.aclData);
+    if(!editable) return res.status(403).send('permission_edit');
+
+    const action = req.params.action;
+    if(action === 'mark_troll' || action === 'unmark_troll') {
+        if(!req.permissions.includes('mark_troll_revision')) return res.status(403).send('missing mark_troll_revision permission');
+
+        await History.updateOne({
+            uuid: history.uuid
+        }, {
+            troll: action === 'mark_troll',
+            trollBy: req.user.uuid
+        });
+
+        return res.reload();
+    }
+
+    else if(action === 'hide_log' || action === 'unhide_log') {
+        if(!req.permissions.includes('hide_document_history_log')) return res.status(403).send('missing hide_document_history_log permission');
+        if(!history.log) return res.status(400).send('no log');
+
+        await History.updateOne({
+            uuid: history.uuid
+        }, {
+            hideLog: action === 'hide_log',
+            hideLogBy: req.user.uuid
+        });
+
+        return res.reload();
+    }
+
+    else if(action === 'hide' || action === 'unhide') {
+        if(!req.permissions.includes('hide_revision')) return res.status(403).send('missing hide_revision permission');
+
+        await History.updateOne({
+            uuid: history.uuid
+        }, {
+            hidden: action === 'hide'
+        });
+
+        return res.reload();
+    }
+
+    else return res.status(404).send('action not found');
 });
 
 module.exports = app;

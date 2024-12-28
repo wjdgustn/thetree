@@ -50,7 +50,7 @@ ${enableNext ? enabledButton({
         <%for(let rev of revs) {%>
             <%rev = utils.addHistoryData(rev);%>
 
-            <li>
+            <li<%-rev.troll ? ' class="troll"' : ''%>>
                 <span><%-getFullDateTag(rev.createdAt)%></span>
                 <span class="history-action">
                     <%const actions = [
@@ -115,10 +115,12 @@ ${enableNext ? enabledButton({
 
                 </span>
 
+                <%if(!rev.troll) {%>
                 <span>
                     <input type="radio" name="olduuid" value="<%=rev.uuid%>"><input type="radio" name="uuid" value="<%=rev.uuid%>">
 
                 </span>
+                <%}%>
 
                 <%if(rev.infoText) {%><i>(<%-rev.infoText%>)</i><%}%>
 
@@ -131,8 +133,10 @@ ${enableNext ? enabledButton({
 
                 <%-rev.userHtml%>
 
-                <%if(rev.log) {%>
-                    (<span class="history-log"><%=rev.log%></span>)
+                <%if(rev.troll) {%>
+                    [<%-utils.userHtml(rev.trollBy)%> 사용자에 의해 반달로 표시됨]
+                <%} else if(rev.log) {%>
+                    (<span class="history-log"><%if(rev.hideLog) {%><%-utils.userHtml(rev.hideLogBy)%> 사용자에 의해 편집 요약 숨겨짐<%} else {%><%=rev.log%><%}%></span>)
                 <%}%>
             </li>
         <%}%>

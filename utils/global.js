@@ -39,7 +39,7 @@ module.exports = {
 
         const title = this.doc_fulltitle(document);
         let str;
-        if(specialUrls.includes(title)) {
+        if(specialUrls.includes(title) || route.includes('/')) {
             query.doc = encodeURIComponent(title);
             str = `/${route}`;
         }

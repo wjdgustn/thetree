@@ -51,6 +51,10 @@
         margin: .4em 0;
     }
 
+    .troll {
+        font-size: 7pt;
+    }
+
     .history-action {
         font-size: 8pt;
     }

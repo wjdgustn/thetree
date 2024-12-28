@@ -21,7 +21,7 @@ module.exports = {
 
         try {
             const referer = new URL(req.get('Referer'));
-            if(referer.pathname !== pathname) return error();
+            if(!referer.pathname.startsWith(pathname)) return error();
         } catch(e) {
             return error();
         }
