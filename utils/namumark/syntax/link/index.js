@@ -1,7 +1,8 @@
 const { Priority } = require('../../types');
 const processImage = require('./image');
 
-const utils = require('../../../../utils');
+const utils = require('../../utils');
+const mainUtils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 
 const Document = require('../../../../schemas/document');
@@ -12,6 +13,8 @@ module.exports = {
     openStr: `[[`,
     closeStr: `]]`,
     format: async (content, namumark) => {
+        content = utils.parseIncludeParams(content, namumark.includeData);
+
         const docTitle = globalUtils.doc_fulltitle(namumark.document);
 
         const splittedContent = content.split('|');
@@ -127,7 +130,7 @@ module.exports = {
                 else link = `/w/${link}`;
             }
 
-            const document = utils.parseDocumentName(title);
+            const document = mainUtils.parseDocumentName(title);
             const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.exists;
             else if(isImage) notExist = true;
