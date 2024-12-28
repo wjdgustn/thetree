@@ -378,4 +378,14 @@ app.get('/RandomPage', async (req, res) => {
     });
 });
 
+app.get('/random', async (req, res) => {
+    const docs = await Document.aggregate([
+        { $match: { namespace: '문서' } },
+        { $sample: { size: 1 } }
+    ]);
+    const document = utils.dbDocumentToDocument(docs[0]);
+
+    res.redirect(globalUtils.doc_action_link(document, 'w'));
+});
+
 module.exports = app;
