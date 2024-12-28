@@ -337,10 +337,7 @@ module.exports = class NamumarkParser {
                             if(content) {
                                 let output = await syntax.format(content, this, originalContent, i, sourceText);
                                 if(typeof output === 'number') output = output.toString();
-                                if(output != null) {
-                                    if(output === '<hideNewLine/>') text = text.slice(0, syntax.index) + syntax.openStr + content.replaceAll(NewLineTag, '<newLine_/>') + syntax.closeStr;
-                                    else text = text.slice(0, syntax.index) + output.replaceAll('\n', '');
-                                }
+                                if(output != null) text = text.slice(0, syntax.index) + output.replaceAll('\n', '');
                                 else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
                                 openedSyntaxes.splice(syntaxIndex, 1);
                             }
@@ -549,7 +546,6 @@ module.exports = class NamumarkParser {
         let html = `${(this.includeData || childParse) ? '' : '<div class="wiki-content">'}${
             text
                 .replaceAll(NewLineTag, '<br>')
-                .replaceAll('<newLine_/>', '<br>')
                 // .replaceAll('<br><removebr/>', '')
                 // .replaceAll('<removebr/>', '')
         }${(this.includeData || childParse) ? '' : '</div>'}`;
