@@ -363,4 +363,19 @@ app.get('/BlockHistory', async (req, res) => {
     });
 });
 
+app.get('/RandomPage', async (req, res) => {
+    const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
+    const docs = await Document.aggregate([
+        { $match: { namespace } },
+        { $sample: { size: 20 } }
+    ]);
+
+    res.renderSkin('RandomPage', {
+        contentName: 'randomPage',
+        serverData: {
+            docs: docs.map(a => utils.dbDocumentToDocument(a))
+        }
+    });
+});
+
 module.exports = app;

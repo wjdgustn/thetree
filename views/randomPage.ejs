@@ -1,0 +1,17 @@
+<link rel="stylesheet" href="/css/views/randomPage.css">
+<form id="randomPageForm">
+    <label for="namespaceSelect">이름공간:</label>
+    <select id="namespaceSelect" name="namespace">
+        <%for(let namespace of config.namespaces) {%>
+            <option><%=namespace%></option>
+        <%}%>
+    </select>
+
+    <button class="thetree-button thetree-primary-button">제출</button>
+</form>
+
+<ul>
+    <%for(let doc of docs) {%>
+        <li><a href="<%=doc_action_link(doc, 'w')%>"><%=doc_fulltitle(doc)%></a></li>
+    <%}%>
+</ul>
