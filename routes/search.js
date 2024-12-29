@@ -39,7 +39,7 @@ app.get('/Go', async (req, res) => {
     const document = utils.parseDocumentName(req.query.q);
     const docs = await Document.find({
         namespace: document.namespace,
-        upperTitle: document.upperTitle.toUpperCase()
+        upperTitle: document.title.toUpperCase()
     });
     const dbDocument = docs.find(a => a.title === document.title) || docs[0];
     if(!dbDocument) return res.redirect(`/Search?q=${encodeURIComponent(req.query.q)}`);
