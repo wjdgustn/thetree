@@ -133,7 +133,7 @@ module.exports = {
 
         if(search) {
             let anyoneReadable = contentExists;
-            if(anyoneReadable) {
+            if(anyoneReadable && !['문서', '사용자', config.site_name].includes(dbDocument.namespace)) {
                 const acl = await ACL.get({ document: dbDocument });
                 const { result: readable } = await acl.check(ACLTypes.Read, {
                     permissions: ['any']
