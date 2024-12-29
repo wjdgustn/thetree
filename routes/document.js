@@ -115,7 +115,14 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     if(!req.query.noredirect && rev.content?.startsWith('#redirect ')) {
-        const redirectName = rev.content.split('\n')[0].slice(10);
+        let anchor = undefined;
+        let redirectName = rev.content.split('\n')[0].slice('#redirect '.length);
+        const hashSplitted = redirectName.split('#');
+        if(hashSplitted.length >= 2) {
+            anchor = hashSplitted.pop();
+            redirectName = hashSplitted.join('#').replaceAll('#', '%23');
+        }
+
         const redirectDoc = utils.parseDocumentName(redirectName);
         const checkDoc = await Document.exists({
             namespace: redirectDoc.namespace,
@@ -123,7 +130,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         });
         if(checkDoc) return res.redirect(globalUtils.doc_action_link(redirectDoc, 'w', {
             from: globalUtils.doc_fulltitle(document),
-            anchor: redirectDoc.anchor
+            anchor
         }));
     }
 

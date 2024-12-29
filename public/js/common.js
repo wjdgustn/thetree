@@ -311,7 +311,7 @@ function changeUrl(url) {
         const anchor = newUrl.searchParams.get('anchor');
         if(anchor) {
             const element = document.getElementById(anchor);
-            if(element) element.scrollIntoView();
+            if(element) requestAnimationFrame(() => element.scrollIntoView());
             newUrl.searchParams.delete('anchor');
         }
         history.pushState({}, null, newUrl.toString());
@@ -331,7 +331,12 @@ async function movePage(response, pushState = true, prevUrl = null) {
 
     increaseProgress(100);
 
-    if(typeof response === 'string') response = await fetch(response);
+    let anchor = '';
+    if(typeof response === 'string') {
+        const url = new URL(response, location.origin);
+        if(url.hash) anchor = url.hash;
+        response = await fetch(response);
+    }
 
     const html = await response.text();
 
@@ -343,7 +348,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
     if(response.status === 204) return setProgress(100);
 
     if(await replaceContent(html, response.headers)) {
-        if(pushState) changeUrl(response.url);
+        if(pushState) changeUrl(response.url + anchor);
 
         setupDocument();
         restoreForm();
