@@ -145,11 +145,7 @@ module.exports = {
                     namespace: document.namespace,
                     title: document.title
                 });
-                let latestRev;
-                if(dbDocument) latestRev = await History.findOne({
-                    document: dbDocument.uuid
-                }).sort({ rev: -1 });
-                const documentExists = latestRev?.content != null;
+                const documentExists = dbDocument?.contentExists;
                 linkExistsCache.push({
                     ...document,
                     exists: documentExists
