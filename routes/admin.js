@@ -506,7 +506,7 @@ app.post('/admin/grant', middleware.permission('grant'), async (req, res) => {
         if(!newPerm.includes(perm)) removedPerms.push(perm);
     }
 
-    await BlockHistory.create({
+    if(addedPerms.length || removedPerms.length) await BlockHistory.create({
         type: BlockHistoryTypes.Grant,
         createdUser: req.user.uuid,
         targetUser: targetUser.uuid,
