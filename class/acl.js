@@ -339,30 +339,32 @@ module.exports = class ACL {
                 if(userTest) return { action, aclGroupItem: userTest };
             }
 
-            let ipArr;
-            if(Address4.isValid(data.ip)) ipArr = new Address4(data.ip).toArray();
-            else ipArr = new Address6(data.ip).toByteArray();
+            if(data.ip) {
+                let ipArr;
+                if(Address4.isValid(data.ip)) ipArr = new Address4(data.ip).toArray();
+                else ipArr = new Address6(data.ip).toByteArray();
 
-            const ipTest = await models.ACLGroupItem.findOne({
-                aclGroup: rule.aclGroup.uuid,
-                $or: [
-                    {
-                        expiresAt: {
-                            $gte: new Date()
+                const ipTest = await models.ACLGroupItem.findOne({
+                    aclGroup: rule.aclGroup.uuid,
+                    $or: [
+                        {
+                            expiresAt: {
+                                $gte: new Date()
+                            }
+                        },
+                        {
+                            expiresAt: null
                         }
+                    ],
+                    ipMin: {
+                        $lte: ipArr
                     },
-                    {
-                        expiresAt: null
+                    ipMax: {
+                        $gte: ipArr
                     }
-                ],
-                ipMin: {
-                    $lte: ipArr
-                },
-                ipMax: {
-                    $gte: ipArr
-                }
-            });
-            if(ipTest) return { action, aclGroupItem: ipTest };
+                });
+                if(ipTest) return { action, aclGroupItem: ipTest };
+            }
         }
 
         return { action: ACLActionTypes.Skip };
