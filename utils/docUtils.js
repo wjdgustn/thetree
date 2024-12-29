@@ -3,7 +3,7 @@ const Diff = require('diff');
 const { getChoseong } = require('es-hangul');
 
 const utils = require('./');
-const { BacklinkFlags, ACLTypes } = require('./types');
+const { BacklinkFlags, ACLTypes, HistoryTypes} = require('./types');
 
 const ACL = require('../class/acl');
 
@@ -122,12 +122,25 @@ module.exports = {
         if(backlink) {
             const { backlinks, categories } = await this.generateBacklink(dbDocument, rev, parseResult);
 
+            let lastReadACL = dbDocument.lastReadACL;
+            if(rev.type === HistoryTypes.ACL) {
+                const acl = await mongoose.models.ACL.findOne({
+                    document: dbDocument.uuid,
+                    type: ACLTypes.Read
+                }).sort({ expiresAt: -1 });
+
+                lastReadACL = acl
+                    ? (acl.expiresAt ? acl.expiresAt.getTime() : 0)
+                    : -1;
+            }
+
             await mongoose.models.Document.updateOne({
                 uuid: rev.document
             }, {
                 backlinks,
                 categories,
-                contentExists
+                contentExists,
+                lastReadACL
             });
         }
 

@@ -30,6 +30,11 @@ const newSchema = new Schema({
         required: true,
         default: false
     },
+    lastReadACL: {
+        type: Number,
+        required: true,
+        default: -1
+    },
     updatedAt: {
         type: Date,
         required: true,

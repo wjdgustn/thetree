@@ -7,7 +7,7 @@ const globalUtils = require('../../../../utils/global');
 const Document = require('../../../../schemas/document');
 const History = require('../../../../schemas/history');
 const ACL = require('../../../../class/acl');
-const {ACLTypes} = require('../../../types');
+const { ACLTypes } = require('../../../types');
 
 module.exports = async (content, splittedContent, link, namumark) => {
     if(!link.startsWith('파일:')) return;
@@ -22,21 +22,39 @@ module.exports = async (content, splittedContent, link, namumark) => {
     const document = mainUtils.parseDocumentName(link);
     const { namespace, title } = document;
 
-    const dbDocument = await Document.findOne({
-        namespace,
-        title
-    });
-    if(!dbDocument) return fallback;
+    let rev;
+    const fileDocCache = namumark.syntaxData.fileDocCache ??= [];
+    const checkCache = fileDocCache.find(a => a.namespace === namespace && a.title === title);
+    if(checkCache) {
+        if(!checkCache.readable) return fallback;
+        if(!checkCache.rev.fileKey) return fallback;
+        rev = checkCache.rev;
+    }
+    else {
+        const dbDocument = await Document.findOne({
+            namespace,
+            title
+        });
+        if(!dbDocument) return fallback;
 
-    const acl = await ACL.get({ document: dbDocument }, document);
+        const acl = await ACL.get({ document: dbDocument }, document);
 
-    const { result: readable } = await acl.check(ACLTypes.Read, namumark.aclData);
-    if(!readable) return fallback;
+        const { result: readable } = await acl.check(ACLTypes.Read, namumark.aclData);
+        if(!readable) return fallback;
 
-    const rev = await History.findOne({
-        document: dbDocument.uuid
-    }).sort({ rev: -1 });
-    if(!rev?.fileKey) return fallback;
+        const dbRev = await History.findOne({
+            document: dbDocument.uuid
+        }).sort({ rev: -1 });
+        if(!dbRev?.fileKey) return fallback;
+        rev = dbRev;
+
+        fileDocCache.push({
+            namespace: dbDocument.namespace,
+            title: dbDocument.title,
+            readable,
+            rev
+        });
+    }
 
     const imgUrl = new URL(rev.fileKey, process.env.S3_PUBLIC_HOST);
 

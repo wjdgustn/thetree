@@ -148,10 +148,10 @@ newSchema.pre('save', async function() {
     else this.blame = last ? last.blame : [];
 });
 
-newSchema.post('save', async function() {
+newSchema.post('save', function() {
     delete lastItem[this.document];
 
-    if(!this.migrated) await docUtils.postHistorySave(this);
+    if(!this.migrated) docUtils.postHistorySave(this).then();
 });
 
 const model = mongoose.model('History', newSchema);

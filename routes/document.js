@@ -146,6 +146,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 
     const parser = new NamumarkParser({
         document,
+        dbDocument,
         aclData: req.aclData,
         req
     });

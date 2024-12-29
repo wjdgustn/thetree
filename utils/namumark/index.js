@@ -119,15 +119,17 @@ module.exports = class NamumarkParser {
         if(debug) syntaxLoader();
 
         if(data.document) {
-            if(data.document._id)
+            if(data.document._id) {
+                this.dbDocument = data.document;
                 this.document = mainUtils.parseDocumentName(`${data.document.namespace}:${data.document.title}`);
+            }
             else
                 this.document = data.document;
         }
+        if(data.dbDocument) this.dbDocument = data.dbDocument;
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
         if(data.includeData) this.includeData = data.includeData;
-        if(data.linkExistsCache) this.linkExistsCache = data.linkExistsCache;
     }
 
     get NamumarkParser() {

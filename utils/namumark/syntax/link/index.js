@@ -4,9 +4,12 @@ const processImage = require('./image');
 const utils = require('../../utils');
 const mainUtils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
+const { BacklinkFlags, ACLTypes } = require('../../../types');
 
 const Document = require('../../../../schemas/document');
 const History = require('../../../../schemas/history');
+
+const ACL = require('../../../../class/acl');
 
 module.exports = {
     priority: Priority.ContentChange,
@@ -14,6 +17,83 @@ module.exports = {
     closeStr: `]]`,
     allowMultiline: true,
     format: async (content, namumark) => {
+        const linkExistsCache = namumark.syntaxData.linkExistsCache ??= [];
+
+        if(!namumark.syntaxData.checkedLinkCache) {
+            namumark.syntaxData.checkedLinkCache = true;
+
+            const bulkFindDocuments = async docNames => {
+                const parsedDocs = docNames.map(a => mainUtils.parseDocumentName(a));
+                const namespaces = [...new Set(parsedDocs.map(a => a.namespace))];
+
+                const query = { $or: [] };
+                for(let namespace of namespaces) {
+                    query.$or.push({
+                        namespace,
+                        title: {
+                            $in: parsedDocs.filter(a => a.namespace === namespace).map(a => a.title)
+                        }
+                    });
+                }
+                if(!query.$or.length) return [];
+
+                return Document.find(query);
+            }
+            if(namumark.dbDocument) {
+                const links = namumark.dbDocument.backlinks
+                    .filter(a => a.flags.includes(BacklinkFlags.Link))
+                    .map(a => a.docName);
+                const files = namumark.dbDocument.backlinks
+                    .filter(a => a.flags.includes(BacklinkFlags.File))
+                    .map(a => a.docName);
+
+                const linkDocs = await bulkFindDocuments(links);
+                const fileDocs = await bulkFindDocuments(files);
+
+                for(let doc of linkDocs) {
+                    linkExistsCache.push({
+                        namespace: doc.namespace,
+                        title: doc.title,
+                        exists: doc.contentExists
+                    });
+                }
+
+                const fileDocCache = namumark.syntaxData.fileDocCache ??= [];
+                const revs = await History.find({
+                    document: {
+                        $in: fileDocs.map(a => a.uuid)
+                    }
+                });
+
+                const nsACLResultCache = {};
+                for(let doc of fileDocs) {
+                    let readable;
+                    if(doc.lastReadACL === -1) {
+                        if(nsACLResultCache[doc.namespace] == null) {
+                            const acl = await ACL.get({ namespace: doc.namespace }, doc);
+                            const { result } = await acl.check(ACLTypes.Read, namumark.aclData);
+                            readable = result;
+                            nsACLResultCache[doc.namespace] = readable;
+                        }
+
+                        readable = nsACLResultCache[doc.namespace];
+                    }
+                    else {
+                        const acl = await ACL.get({ document: doc });
+                        const { result } = await acl.check(ACLTypes.Read, namumark.aclData);
+                        readable = result;
+                    }
+
+                    fileDocCache.push({
+                        namespace: doc.namespace,
+                        title: doc.title,
+                        readable,
+                        rev: revs.find(a => a.document === doc.uuid)
+                    });
+                }
+            }
+        }
+
         content = utils.parseIncludeParams(content, namumark.includeData);
 
         const docTitle = globalUtils.doc_fulltitle(namumark.document);
@@ -94,8 +174,6 @@ module.exports = {
                 'ftp'
             ].includes(parsedLink.protocol.slice(0, -1))) parsedLink = null;
         }
-
-        const linkExistsCache = namumark.syntaxData.linkExistsCache ??= namumark.linkExistsCache ?? [];
 
         let title;
         if(parsedLink) {
