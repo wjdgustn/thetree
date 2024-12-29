@@ -12,6 +12,7 @@ module.exports = {
     priority: Priority.ContentChange,
     openStr: `[[`,
     closeStr: `]]`,
+    allowMultiline: true,
     format: async (content, namumark) => {
         content = utils.parseIncludeParams(content, namumark.includeData);
 
@@ -76,6 +77,10 @@ module.exports = {
             splittedText.pop();
             text = splittedText.join('#');
         }
+
+        const parseResult = await namumark.parse(text, true);
+        if(parseResult.hasNewline) return null;
+        text = parseResult.html;
 
         let parsedLink;
         try {

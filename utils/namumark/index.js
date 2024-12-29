@@ -543,6 +543,7 @@ module.exports = class NamumarkParser {
         // 남은 removeNoParagraph 제거
         text = text.replaceAll('<removeNoParagraph/>', '');
 
+        const hasNewline = text.includes(NewLineTag);
         let html = `${(this.includeData || childParse) ? '' : '<div class="wiki-content">'}${
             text
                 .replaceAll(NewLineTag, '<br>')
@@ -563,7 +564,8 @@ module.exports = class NamumarkParser {
             files: this.files,
             includes: this.includes,
             redirect: this.redirect,
-            categories: this.categories
+            categories: this.categories,
+            hasNewline
         }
     }
 }
