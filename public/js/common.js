@@ -272,6 +272,8 @@ function focusAnchor() {
 function setupDocument() {
     const aElements = document.getElementsByTagName('a');
     for(let a of aElements) {
+        if(a.getAttribute('@click').includes('aClickHandler')) continue;
+
         a.removeEventListener('click', aClickHandler);
         a.addEventListener('click', aClickHandler);
     }
