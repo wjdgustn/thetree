@@ -313,6 +313,7 @@ function changeUrl(url) {
             const element = document.getElementById(anchor);
             if(element) requestAnimationFrame(() => element.scrollIntoView());
             newUrl.searchParams.delete('anchor');
+            newUrl.searchParams.delete('f');
         }
         history.pushState({}, null, newUrl.toString());
         currentUrl = newUrl.toString();
