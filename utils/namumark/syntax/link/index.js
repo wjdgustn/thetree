@@ -118,13 +118,14 @@ module.exports = {
             }
             else {
                 const splittedLink = link.split('#');
-                if(splittedLink.length > 2) {
+                if(splittedLink.length >= 2) {
                     const hash = splittedLink.pop();
                     const front = splittedLink.join('#').replaceAll('#', '%23');
                     link = `${front}#${hash}`;
+                    title = front;
                 }
+                else title = link;
 
-                title = link;
                 if(link.startsWith('문서:')) link = link.slice(3);
                 if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}`;
                 else link = `/w/${link}`;
