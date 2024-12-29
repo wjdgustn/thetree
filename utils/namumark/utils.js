@@ -76,7 +76,9 @@ module.exports = {
                 continue;
             }
 
-            newText += includeData[key] ?? value;
+            let finalText = includeData[key] ?? value;
+            if(finalText.startsWith(' ')) finalText = '<!s>' + finalText.slice(1);
+            newText += finalText;
         }
 
         newText += text.slice(textPos);

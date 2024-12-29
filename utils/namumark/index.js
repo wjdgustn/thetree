@@ -547,6 +547,7 @@ module.exports = class NamumarkParser {
         let html = `${(this.includeData || childParse) ? '' : '<div class="wiki-content">'}${
             text
                 .replaceAll(NewLineTag, '<br>')
+                .replaceAll('<!s>', ' ')
                 // .replaceAll('<br><removebr/>', '')
                 // .replaceAll('<removebr/>', '')
         }${(this.includeData || childParse) ? '' : '</div>'}`;
