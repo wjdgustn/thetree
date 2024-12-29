@@ -769,3 +769,9 @@ div.category-document-block div.category-document-many-content div:first-child h
     background: var(--theme-color, #5897fb);
     color: #fff;
 }
+
+.content-tools {
+    padding-right: 1rem;
+    padding-top: 1rem;
+    float: right;
+}
