@@ -12,6 +12,7 @@ const {
 
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
+const AutoLoginToken = require('../schemas/autoLoginToken');
 const LoginHistory = require('../schemas/loginHistory');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
@@ -261,7 +262,7 @@ const renderLogin = (res, data = {}) => res.renderSkin('로그인', {
 });
 
 const renderPinVerification = (res, data = {}) => res.renderSkin('로그인', {
-    ...data,
+    serverData: data,
     contentName: 'pin_verification'
 });
 
@@ -298,20 +299,39 @@ app.post('/member/login',
             trusted: true
         });
 
-        if(!user.totpToken && !config.use_email_verification) checkTrusted = true;
+        if(!user.totpToken && !config.use_email_verification) {
+            await LoginHistory.create({
+                uuid: user.uuid,
+                ip: req.ip
+            });
 
-        if(checkTrusted) return req.login(user, err => {
-            if(err) console.error(err);
-            if(!res.headersSent) {
-                req.session.fullReload = true;
-                return res.redirect(req.body.redirect || '/');
+            checkTrusted = true;
+        }
+
+        if(checkTrusted) {
+            if(req.body.autologin === 'Y') {
+                const token = await AutoLoginToken.create({
+                    uuid: user.uuid
+                });
+                res.cookie('honoka', token.token, {
+                    httpOnly: true
+                });
             }
-        });
+
+            return req.login(user, err => {
+                if(err) console.error(err);
+                if(!res.headersSent) {
+                    req.session.fullReload = true;
+                    return res.redirect(req.body.redirect || '/');
+                }
+            });
+        }
 
         req.session.pinUser = user.uuid;
         req.session.redirect = req.body.redirect;
         renderPinVerification(res, {
-            user
+            user,
+            autologin: req.body.autologin
         });
 
         if(!user.totpToken) await mailTransporter.sendMail({
@@ -385,10 +405,16 @@ app.post('/member/login/pin',
     });
 });
 
-app.get('/member/logout', middleware.isLogin, (req, res) => {
+app.get('/member/logout', middleware.isLogin, async (req, res) => {
+    await AutoLoginToken.deleteOne({
+        uuid: req.user.uuid,
+        token: req.cookies.honoka
+    });
     req.logout(err => {
         if(err) console.error(err);
         req.session.fullReload = true;
+        delete req.session.contributor;
+        res.clearCookie('honoka');
         res.redirect('/');
     });
 });

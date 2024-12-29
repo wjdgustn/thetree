@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const passport = require('passport');
 const session = require('express-session');
@@ -32,6 +33,7 @@ const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
 const History = require('./schemas/history');
+const AutoLoginToken = require('./schemas/autoLoginToken');
 
 const ACL = require('./class/acl');
 
@@ -113,6 +115,8 @@ passport.deserializeUser(async (uuid, done) => {
     });
 });
 
+app.use(cookieParser());
+
 app.use((req, res, next) => {
     res.locals.cspNonce = crypto.randomBytes(32).toString('hex');
     next();
@@ -188,6 +192,19 @@ app.use(session({
     saveUninitialized: false,
     store
 }));
+
+app.use(async (req, res, next) => {
+    if(!req.session.passport && req.cookies.honoka) {
+        const token = await AutoLoginToken.findOne({
+            token: req.cookies.honoka
+        });
+        if(token) req.session.passport = {
+            user: token.uuid
+        }
+    }
+
+    next();
+});
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -296,6 +313,7 @@ app.use(async (req, res, next) => {
     }
 
     req.permissions = [...new Set(req.permissions)];
+    if(req.user) req.user.permissions = req.permissions;
     req.displayPermissions = req.permissions.filter(a => ![
         'any',
         'contributor',
