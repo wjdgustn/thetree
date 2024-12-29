@@ -57,6 +57,7 @@ app.get('/Search', async (req, res) => {
         const { result: readable } = await acl.check(ACLTypes.Read, req.aclData);
         if(readable) readableNamespaces.push(namespace);
     }
+    if(!readableNamespaces.length) return res.error('읽을 수 있는 이름공간이 없습니다.');
 
     const filter = [];
     const attributesToRetrieve = ['namespace', 'title'];
