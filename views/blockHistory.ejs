@@ -2,7 +2,7 @@
 <form>
     <select class="search-type" name="target">
         <option value="text">내용</option>
-        <option value="author">실행자</option>
+        <option value="author"<%=req.query.target === 'text' ? ' author' : ''%>>실행자</option>
     </select>
 
     <input class="search-input" name="query" placeholder="검색" value="<%=req.query.query%>">
