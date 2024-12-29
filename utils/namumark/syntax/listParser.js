@@ -230,6 +230,10 @@ module.exports = {
             if(newLine != null) newLines.push(newLine);
         }
 
+        for(let tag of listCloseTags) {
+            newLines[newLines.length - 1] += tag;
+        }
+
         // console.log(newLines);
         // console.log('=== 리스트 파싱 후 ===');
         // console.log(newLines.join('\n'));
