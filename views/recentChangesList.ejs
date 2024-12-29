@@ -9,6 +9,7 @@
     </div>
 
     <%for(let rev of revs) {%>
+    <%if(!rev.document) continue;%>
     <%rev = utils.addHistoryData(rev);%>
     <div class="changes-line<%=rev.troll ? ' troll-line' : ''%>">
         <div class="changes-value">
