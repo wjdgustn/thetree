@@ -314,7 +314,8 @@ app.post('/member/login',
                     uuid: user.uuid
                 });
                 res.cookie('honoka', token.token, {
-                    httpOnly: true
+                    httpOnly: true,
+                    maxAge: 1000 * 60 * 60 * 24 * 365
                 });
             }
 
