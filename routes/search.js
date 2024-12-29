@@ -37,10 +37,11 @@ app.get('/Go', async (req, res) => {
     if(!req.query.q) return res.error('검색어가 없습니다.');
 
     const document = utils.parseDocumentName(req.query.q);
-    const dbDocument = await Document.findOne({
+    const docs = await Document.find({
         namespace: document.namespace,
-        title: document.title
+        upperTitle: document.upperTitle
     });
+    const dbDocument = docs.find(a => a.title === document.title) || docs[0];
     if(!dbDocument) return res.redirect(`/Search?q=${encodeURIComponent(req.query.q)}`);
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
