@@ -78,7 +78,7 @@ module.exports = {
             text = splittedText.join('#');
         }
 
-        const parseResult = await namumark.parse(text, true);
+        const parseResult = await namumark.parse(text, true, true);
         if(parseResult.hasNewline) return null;
         text = parseResult.html;
 
