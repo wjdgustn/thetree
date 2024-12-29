@@ -44,7 +44,10 @@ app.get('/Go', async (req, res) => {
     const dbDocument = docs.find(a => a.title === document.title) || docs[0];
     if(!dbDocument) return res.redirect(`/Search?q=${encodeURIComponent(req.query.q)}`);
 
-    res.redirect(globalUtils.doc_action_link(document, 'w'));
+    res.redirect(globalUtils.doc_action_link({
+        ...document,
+        title: dbDocument.title
+    }, 'w'));
 });
 
 app.get('/Search', async (req, res) => {
