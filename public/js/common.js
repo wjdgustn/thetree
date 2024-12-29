@@ -427,10 +427,15 @@ async function replaceContent(html, headers) {
             if(script.src) {
                 let scriptText = scriptCache[script.src];
                 if(!scriptText) {
-                    const response = await fetch(script.src);
-                    if (!response.ok) continue;
-                    scriptText = await response.text();
-                    scriptCache[script.src] = scriptText;
+                    try {
+                        const response = await fetch(script.src);
+                        if(!response.ok) continue;
+                        scriptText = await response.text();
+                        scriptCache[script.src] = scriptText;
+                    } catch(e) {
+                        console.error(e);
+                        console.error('script fetch error, src:', script.src);
+                    }
                 }
                 eval(scriptText);
             }
