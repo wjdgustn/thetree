@@ -522,6 +522,7 @@ document.addEventListener('alpine:init', () => {
         session,
         localConfig,
         recent: [],
+        aClickHandler,
         async init() {
             setInterval(() => this.updateSidebar(), 1000 * 30);
             await this.updateSidebar();
