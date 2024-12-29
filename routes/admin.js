@@ -148,6 +148,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
     }
 
     else if(tool === 'generateblame') {
+        res.send('작업 중... 서버 로그 확인');
+
         const noBlameRevs = await History.find({
             blame: {
                 $exists: false
@@ -175,11 +177,11 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
 
             console.log(`created blame for ${rev.uuid}, ${total - noBlameRevs.length}/${total}`);
         }
-
-        return res.status(204).end();
     }
 
     else if(tool.startsWith('generatebacklink')) {
+        res.send('작업 중... 서버 로그 확인');
+
         const documents = await Document.find().lean();
 
         const total = documents.length;
@@ -201,11 +203,11 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
 
             console.log(`generated backlink info for ${document.uuid}, ${total - documents.length}/${total}`);
         }
-
-        return res.status(204).end();
     }
 
     else if(tool === 'resetsearchindex') {
+        res.send('작업 중... 서버 로그 확인');
+
         await MeiliSearch.deleteIndex(process.env.MEILISEARCH_INDEX);
         await MeiliSearch.createIndex(process.env.MEILISEARCH_INDEX);
         global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
@@ -221,12 +223,13 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                 'anyoneReadable'
             ]
         });
-
-        return res.status(204).end();
     }
 
     else if(tool === 'migrateopennamu') {
         if(!fs.existsSync('./opennamu_data/data.db')) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
+
+        res.send('작업 중... 서버 로그 확인');
+
         const db = new sqlite3.Database('./opennamu_data/data.db', sqlite3.OPEN_READONLY);
 
         let logs = [];
