@@ -10,11 +10,11 @@ module.exports = {
     doc_fulltitle(document) {
         const type = typeof document;
 
-        if(type === 'string') return document;
         if(type === 'object') {
             if(document.forceShowNamespace === false) return document.title;
             return `${document.namespace}:${document.title}`;
         }
+        else return document;
     },
     user_doc(str) {
         return `사용자:${str}`;
