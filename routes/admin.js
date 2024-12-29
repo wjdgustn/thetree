@@ -148,7 +148,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
     }
 
     else if(tool === 'generateblame') {
-        res.send('작업 중... 서버 로그 확인');
+        res.status(204).end();
 
         const noBlameRevs = await History.find({
             blame: {
@@ -180,7 +180,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
     }
 
     else if(tool.startsWith('generatebacklink')) {
-        res.send('작업 중... 서버 로그 확인');
+        res.status(204).end();
 
         const documents = await Document.find().lean();
 
@@ -206,7 +206,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
     }
 
     else if(tool === 'resetsearchindex') {
-        res.send('작업 중... 서버 로그 확인');
+        res.status(204).end();
 
         await MeiliSearch.deleteIndex(process.env.MEILISEARCH_INDEX);
         await MeiliSearch.createIndex(process.env.MEILISEARCH_INDEX);
@@ -228,7 +228,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
     else if(tool === 'migrateopennamu') {
         if(!fs.existsSync('./opennamu_data/data.db')) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
 
-        res.send('작업 중... 서버 로그 확인');
+        res.status(204).end();
 
         const db = new sqlite3.Database('./opennamu_data/data.db', sqlite3.OPEN_READONLY);
 
