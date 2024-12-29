@@ -10,6 +10,8 @@ module.exports = {
 
         const docName = content.slice('#redirect '.length);
         namumark.redirect = docName;
-        return `#redirect [[${docName}]]`;
+        let link = docName;
+        if(link.startsWith('파일:') || link.startsWith('분류:')) link = `:${link}`;
+        return `#redirect [[${link}]]`;
     }
 }
