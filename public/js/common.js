@@ -335,7 +335,8 @@ async function movePage(response, pushState = true, prevUrl = null) {
     if(typeof response === 'string') {
         const url = new URL(response, location.origin);
         if(url.hash) anchor = url.hash;
-        response = await fetch(response);
+        url.searchParams.set('f', '1');
+        response = await fetch(url);
     }
 
     const html = await response.text();
