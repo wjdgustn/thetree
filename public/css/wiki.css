@@ -470,6 +470,10 @@
     border-collapse: collapse;
 }
 
+.theseed-dark-mode .wiki-content .wiki-table {
+    background-color: #2d2f34;
+}
+
 .wiki-content .wiki-table td {
     border: 1px solid #ddd;
     padding: 5px 10px;
