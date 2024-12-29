@@ -110,14 +110,16 @@ app.get('/License', (req, res) => {
 
 const getImageDropdowns = async () => {
     const licenses = await Document.find({
-        isFileLicense: true
+        isFileLicense: true,
+        contentExists: true
     })
         .sort({ _id: 1 })
         .select('title')
         .lean();
 
     const catgories = await Document.find({
-        isFileCategory: true
+        isFileCategory: true,
+        contentExists: true
     })
         .sort({ title: 1 })
         .select('title')
