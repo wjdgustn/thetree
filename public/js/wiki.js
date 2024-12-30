@@ -87,6 +87,35 @@ function setupWikiHandlers() {
 
     if(footnoteType === 'tooltip') setupFootnoteTooltip();
     else if(footnoteType === 'modal') setupFootnoteModal();
+
+    const oldDarkStyle = document.getElementById('darkStyle');
+    if(oldDarkStyle) oldDarkStyle.remove();
+
+    const darkStyleElements = document.querySelectorAll('*[data-dark-style]');
+    const darkStyles = [];
+    for(let element of darkStyleElements) {
+        const styleData = element.dataset.darkStyle.split(';').map(a => a.trim()).filter(a => a);
+        let style = '';
+        for(let stylePart of styleData) {
+            const [key, value] = stylePart.split(':').map(a => a.trim());
+            style += `${key}:${value} !important;`;
+        }
+
+        let darkStyle = darkStyles.find(a => a.style === style);
+        if(!darkStyle) {
+            darkStyle = {
+                style,
+                class: '_' + crypto.randomUUID().replaceAll('-', '')
+            }
+            darkStyles.push(darkStyle);
+        }
+        element.classList.add(darkStyle.class);
+    }
+
+    const newDarkStyle = document.createElement('style');
+    newDarkStyle.id = 'darkStyle';
+    newDarkStyle.innerHTML = darkStyles.map(a => `.theseed-dark-mode .${a.class}{${a.style}}`).join('');
+    document.body.appendChild(newDarkStyle);
 }
 
 const footnotes = document.getElementsByClassName('wiki-fn-content');
