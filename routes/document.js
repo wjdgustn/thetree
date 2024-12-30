@@ -135,7 +135,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     let user;
-    if(namespace === '사용자') {
+    if(namespace === '사용자' && !title.includes('/')) {
         user = await User.findOne({
             name: title
         });
