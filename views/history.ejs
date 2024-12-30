@@ -46,9 +46,9 @@ ${enableNext ? enabledButton({
         <button class="navigation-button">선택 리비전 비교</button>
     </p>
 
-    <ul>
-        <%for(let rev of revs) {%>
-            <%rev = utils.addHistoryData(rev);%>
+    <ul x-data="{ oldRow: <%=revs.length%>, newRow: -1 }">
+        <%for(let i in revs) {%>
+            <%rev = utils.addHistoryData(revs[i]);%>
 
             <li<%-rev.troll ? ' class="troll"' : ''%>>
                 <span><%-getFullDateTag(rev.createdAt)%></span>
@@ -117,7 +117,7 @@ ${enableNext ? enabledButton({
 
                 <%if(!rev.troll) {%>
                 <span>
-                    <input type="radio" name="olduuid" value="<%=rev.uuid%>"><input type="radio" name="uuid" value="<%=rev.uuid%>">
+                    <input type="radio" name="olduuid" value="<%=rev.uuid%>" @change="oldRow=<%=i%>" :style="{ visibility: <%=i%> > newRow ? 'visible' : 'hidden' }"><input type="radio" name="uuid" value="<%=rev.uuid%>" @change="newRow=<%=i%>" :style="{ visibility: <%=i%> < oldRow ? 'visible' : 'hidden' }">
 
                 </span>
                 <%}%>
