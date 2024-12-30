@@ -151,9 +151,16 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         res.status(204).end();
 
         const noBlameRevs = await History.find({
-            blame: {
-                $exists: false
-            }
+            $or: [
+                {
+                    blame: {
+                        $exists: false
+                    }
+                },
+                {
+                    blame: null
+                }
+            ]
         }).sort({ rev: 1 }).lean();
 
         const total = noBlameRevs.length;
