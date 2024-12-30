@@ -1297,7 +1297,7 @@ app.post('/delete/?*', middleware.parseDocumentName, async (req, res) => {
 
     const { namespace, title } = document;
 
-    if(namespace === '사용자' && !title.includes('/')) return res.status(403).error('disable_user_document');
+    if(namespace === '사용자' && !title.includes('/')) return res.status(403).send('disable_user_document');
 
     const dbDocument = await Document.findOne({
         namespace,
