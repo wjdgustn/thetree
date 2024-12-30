@@ -1322,4 +1322,132 @@ app.post('/delete/?*', middleware.parseDocumentName, async (req, res) => {
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
+app.get('/move/?*', middleware.parseDocumentName, async (req, res) => {
+    const document = req.document;
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result, aclMessage } = await acl.check(ACLTypes.Move, req.aclData);
+    if(!result) return res.error(aclMessage, 403);
+
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+
+    res.renderSkin(undefined, {
+        contentName: 'move',
+        viewName: 'move',
+        document
+    });
+});
+
+app.post('/move/?*', middleware.parseDocumentName, async (req, res) => {
+    if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
+    if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+
+    const document = req.document;
+    const otherDocument = utils.parseDocumentName(req.body.title);
+
+    const isSwap = req.body.mode === 'swap';
+
+    const dbDocument = await Document.findOne({
+        namespace: document.namespace,
+        title: document.title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result, aclMessage } = await acl.check(ACLTypes.Move, req.aclData);
+    if(!result) return res.error(aclMessage, 403);
+
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+
+    let dbOtherDocument = await Document.findOne({
+        namespace: otherDocument.namespace,
+        title: otherDocument.title
+    });
+    let dbOtherDocumentExists = !!dbOtherDocument;
+
+    if(!dbOtherDocument) {
+        dbOtherDocument = new Document({
+            namespace: otherDocument.namespace,
+            title: otherDocument.title
+        });
+    }
+
+    const otherAcl = await ACL.get({ document: dbOtherDocument }, otherDocument);
+
+    const { result: otherResult, aclMessage: otherAclMessage } = await otherAcl.check(ACLTypes.Move, req.aclData);
+    if(!otherResult) return res.error(otherAclMessage, 403);
+
+    if(otherDocument.namespace === '사용자' && !otherDocument.title.includes('/'))
+        return res.error('이 문서를 해당 이름 공간으로 이동할 수 없습니다.', 403);
+
+    const revExists = await History.exists({
+        document: dbOtherDocument.uuid
+    });
+
+    if(isSwap) {
+        if(!revExists || dbDocument.uuid === dbOtherDocument.uuid) return res.error('문서를 찾을 수 없습니다.', 404);
+
+        if(!dbOtherDocumentExists) await dbOtherDocument.save();
+
+        await Document.updateOne({
+            uuid: dbDocument.uuid
+        }, {
+            namespace: 'internal temp',
+            title: otherDocument.title
+        });
+        await Document.updateOne({
+            uuid: dbOtherDocument.uuid
+        }, {
+            namespace: document.namespace,
+            title: document.title
+        });
+        await Document.updateOne({
+            uuid: dbDocument.uuid
+        }, {
+            namespace: otherDocument.namespace
+        });
+    }
+    else {
+        if(revExists) return res.error('문서가 이미 존재합니다.', 409);
+
+        if(dbOtherDocumentExists) await Document.deleteOne({
+            uuid: dbOtherDocument.uuid
+        });
+
+        await Document.updateOne({
+            uuid: dbDocument.uuid
+        }, {
+            namespace: otherDocument.namespace,
+            title: otherDocument.title
+        });
+    }
+
+    await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.Move,
+        document: dbDocument.uuid,
+        log: req.body.log,
+        moveOldDoc: globalUtils.doc_fulltitle(document),
+        moveNewDoc: globalUtils.doc_fulltitle(otherDocument)
+    });
+    if(isSwap) await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.Move,
+        document: dbOtherDocument.uuid,
+        log: req.body.log,
+        moveOldDoc: globalUtils.doc_fulltitle(otherDocument),
+        moveNewDoc: globalUtils.doc_fulltitle(document)
+    });
+
+    res.redirect(globalUtils.doc_action_link(otherDocument, 'w'));
+});
+
 module.exports = app;

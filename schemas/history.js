@@ -69,6 +69,12 @@ const newSchema = new Schema({
     revertUuid: {
         type: String
     },
+    moveOldDoc: {
+        type: String
+    },
+    moveNewDoc: {
+        type: String
+    },
     editRequest: {
         type: String
     },

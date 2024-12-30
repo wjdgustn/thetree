@@ -177,6 +177,9 @@ module.exports = {
         else if(rev.type === HistoryTypes.Delete) {
             rev.infoText = `삭제`
         }
+        else if(rev.type === HistoryTypes.Move) {
+            rev.infoText = `${rev.moveOldDoc}에서 ${rev.moveNewDoc}로 문서 이동`;
+        }
 
         rev.userHtml = this.userHtml(rev.user);
 

@@ -1,0 +1,24 @@
+<link rel="stylesheet" href="/css/views/delete.css">
+
+<form method="post">
+    <div class="form-block">
+        <label for="titleInput">변경할 문서 제목</label>
+        <input type="text" id="titleInput" name="title">
+    </div>
+
+    <div class="form-block">
+        <label for="logInput" x-ref="logLabel">요약</label>
+        <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">
+    </div>
+
+    <label>
+        <input type="checkbox" name="mode" value="swap">
+        문서를 서로 맞바꾸기
+    </label>
+
+    <div></div>
+
+    <div class="button-block">
+        <button class="thetree-square-button thetree-blue-button">이동</button>
+    </div>
+</form>
