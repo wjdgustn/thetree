@@ -454,6 +454,12 @@
     padding: 1em;
 }
 
+.theseed-dark-mode .wiki-content .wiki-quote {
+    background-color: #2d2f34;
+    border-color: #383b40 #383b40 #383b40 #666c75;
+    color: #ddd;
+}
+
 .wiki-content .wiki-quote .wiki-paragraph {
     margin-bottom: 0;
 }
