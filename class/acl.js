@@ -167,12 +167,12 @@ module.exports = class ACL {
         }[typeof ruleOrActionType === 'object' ? ruleOrActionType.actionType : ruleOrActionType];
     }
 
-    async check(aclType = ACLTypes.None, data = {}) {
+    async check(aclType = ACLTypes.None, data = {}, noReadCheck = false) {
         if(data.alwaysAllow) return { result: true };
 
         if(aclType === ACLTypes.ACL && data?.permissions?.includes('nsacl')) return { result: true };
 
-        if(aclType !== ACLTypes.Read && aclType !== ACLTypes.ACL) {
+        if(!noReadCheck && aclType !== ACLTypes.Read && aclType !== ACLTypes.ACL) {
             const readCheck = await this.check(ACLTypes.Read, data);
             if(!readCheck.result) return readCheck;
         }
@@ -181,7 +181,7 @@ module.exports = class ACL {
             ACLTypes.Move,
             ACLTypes.Delete
         ].includes(aclType)) {
-            const editCheck = await this.check(ACLTypes.Edit, data);
+            const editCheck = await this.check(ACLTypes.Edit, data, true);
             if(!editCheck.result) return editCheck;
         }
 
@@ -189,14 +189,14 @@ module.exports = class ACL {
         if(!rules.length && this.namespaceACL) rules = this.namespaceACL.aclTypes[aclType];
 
         let nsResult;
-        if(rules.some(r => r.actionType === ACLActionTypes.GotoNS)) nsResult = await this.namespaceACL.check(aclType, data);
+        if(rules.some(r => r.actionType === ACLActionTypes.GotoNS)) nsResult = await this.namespaceACL.check(aclType, data, true);
 
         const otherNSResults = {};
 
         const allowedRules = [];
         for(let rule of rules) {
             if(rule.actionType === ACLActionTypes.GotoOtherNS && !otherNSResults[rule.actionContent]) {
-                otherNSResults[rule.actionContent] = await rule.otherNamespaceACL.check(aclType, data);
+                otherNSResults[rule.actionContent] = await rule.otherNamespaceACL.check(aclType, data, true);
             }
 
             if([
@@ -231,7 +231,7 @@ module.exports = class ACL {
                 }
             }
             else if(action === ACLActionTypes.GotoNS) return nsResult;
-            else if(action === ACLActionTypes.GotoOtherNS) return await rule.otherNamespaceACL.check(aclType, data);
+            else if(action === ACLActionTypes.GotoOtherNS) return await rule.otherNamespaceACL.check(aclType, data, true);
         }
 
         if(allowedRules.length) {
