@@ -558,7 +558,7 @@ document.addEventListener('alpine:init', () => {
         internalItems: [],
         searchAbortController: null,
         get show() {
-            return this.searchFocused && this.searchText.length > 0
+            return this.searchFocused && this.searchText.length > 0 && this.internalItems.length > 0;
         },
         blur() {
             setTimeout(() => {
