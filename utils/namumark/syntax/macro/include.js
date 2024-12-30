@@ -74,6 +74,7 @@ module.exports = async (params, namumark) => {
 
     const parser = new namumark.NamumarkParser({
         document: document.document,
+        dbDocument: document.dbDocument,
         aclData: namumark.aclData,
         req: namumark.req,
         includeData
