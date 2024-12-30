@@ -339,7 +339,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
         const url = new URL(response, location.origin);
         if(url.hash) anchor = url.hash;
         url.searchParams.set('f', '1');
-        response = await fetch(url);
+        response = await fetch((response.startsWith('?') ? '' : url.pathname) + url.search);
     }
 
     const html = await response.text();
