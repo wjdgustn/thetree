@@ -1,0 +1,46 @@
+@scope (#content-style) {
+    .form-block {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: inline-block;
+        margin-bottom: .5rem;
+    }
+
+    input {
+        font-size: .9rem;
+    }
+
+    input[type=text] {
+        border: .0625rem solid #ccc;
+        border-radius: 0;
+        color: #55595c;
+        line-height: 1.5;
+        margin: 0;
+        padding: .25rem .5rem;
+        width: 100%;
+    }
+
+    input[type=checkbox] {
+        line-height: inherit;
+        margin: 0;
+        padding: 0;
+    }
+
+    .theseed-dark-mode input[type=text] {
+        background-color: #27292d;
+        border-color: #383b40;
+        color: #ddd;
+    }
+
+    p {
+        font-weight: 700;
+        margin-bottom: 1rem;
+        margin-top: 0;
+    }
+
+    .button-block {
+        float: right;
+    }
+}

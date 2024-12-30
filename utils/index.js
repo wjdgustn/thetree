@@ -174,6 +174,9 @@ module.exports = {
         else if(rev.type === HistoryTypes.Revert) {
             rev.infoText = `r${rev.revertRev}으로 되돌림`
         }
+        else if(rev.type === HistoryTypes.Delete) {
+            rev.infoText = `삭제`
+        }
 
         rev.userHtml = this.userHtml(rev.user);
 

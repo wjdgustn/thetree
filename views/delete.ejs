@@ -1,0 +1,22 @@
+<link rel="stylesheet" href="/css/views/delete.css">
+
+<%alert = typeof alert === 'undefined' ? '' : alert;%>
+<%-include('alert', { alert })%>
+
+<form method="post">
+    <div class="form-block">
+        <label for="logInput" x-ref="logLabel">요약</label>
+        <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">
+    </div>
+
+    <label>
+        <input type="checkbox" name="agree" id="agreeCheckbox" value="Y">
+        문서 이동 및 일부 내용 제거가 아닌 문서 전체를 삭제하기 위한 기능임을 확인합니다.
+    </label>
+
+    <p><b>알림! :</b> 문서의 제목을 변경하려는 경우 <a href="<%=doc_action_link(document, 'move')%>">문서 이동</a> 기능을 사용해 주세요. 문서 이동 기능을 사용할 수 없는 경우 토론 기능이나 게시판을 통해 대행 요청을 해주세요.</p>
+
+    <div class="button-block">
+        <button class="thetree-square-button thetree-danger-button">삭제</button>
+    </div>
+</form>

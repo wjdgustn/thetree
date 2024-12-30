@@ -1264,4 +1264,62 @@ app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
+app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
+    const document = req.document;
+
+    const { namespace, title } = document;
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
+    if(!result) return res.error(aclMessage, 403);
+
+    if(!dbDocument?.contentExists) return res.error('문서를 찾을 수 없습니다.', 404);
+
+    res.renderSkin(undefined, {
+        contentName: 'delete',
+        viewName: 'delete',
+        document
+    });
+});
+
+app.post('/delete/?*', middleware.parseDocumentName, async (req, res) => {
+    if(req.body.agree !== 'Y') return res.status(400).send('문서 삭제에 대한 안내를 확인해 주세요.');
+    if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
+    if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+
+    const document = req.document;
+
+    const { namespace, title } = document;
+
+    if(namespace === '사용자' && !title.includes('/')) return res.status(403).error('disable_user_document');
+
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
+    if(!result) return res.status(400).send(aclMessage, 403);
+
+    if(!dbDocument?.contentExists) return res.status(400).send('문서를 찾을 수 없습니다.', 404);
+
+    await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.Delete,
+        document: dbDocument.uuid,
+        content: null,
+        log: req.body.log
+    });
+
+    res.redirect(globalUtils.doc_action_link(document, 'w'));
+});
+
 module.exports = app;
