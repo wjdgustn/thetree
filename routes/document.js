@@ -692,7 +692,7 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     if(content.startsWith('#redirect ')) content = content.split('\n')[0];
     if(content.startsWith('#redirect 문서:')) content = content.replace('#redirect 문서:', '#redirect ');
 
-    if((rev?.content ?? '') === content) return res.status(400).send('문서 내용이 같습니다.');
+    if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
 
     // TODO: automerge
     const isCreate = rev?.content == null;
