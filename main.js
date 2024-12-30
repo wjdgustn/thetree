@@ -456,10 +456,11 @@ document.getElementById('initScript')?.remove();
     res.reload = () => res.redirect(req.get('Referrer') || '/');
 
     res.originalRedirect = res.redirect;
-    res.redirect = (target, ...args) => {
+    res.redirect = (...args) => {
+        const target = args.pop();
         const url = new URL(target, 'http://' + req.hostname);
         if(req.query.f) url.searchParams.set('f', req.query.f);
-        res.originalRedirect(url.pathname + url.search, ...args);
+        res.originalRedirect(...args, url.pathname + url.search);
     }
 
     next();
