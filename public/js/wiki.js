@@ -112,10 +112,12 @@ function setupWikiHandlers() {
         element.classList.add(darkStyle.class);
     }
 
-    const newDarkStyle = document.createElement('style');
-    newDarkStyle.id = 'darkStyle';
-    newDarkStyle.innerHTML = darkStyles.map(a => `.theseed-dark-mode .${a.class}{${a.style}}`).join('');
-    document.body.appendChild(newDarkStyle);
+    if(darkStyles.length) {
+        const newDarkStyle = document.createElement('style');
+        newDarkStyle.id = 'darkStyle';
+        newDarkStyle.innerHTML = darkStyles.map(a => `.theseed-dark-mode .${a.class}{${a.style}}`).join('');
+        document.body.appendChild(newDarkStyle);
+    }
 }
 
 const footnotes = document.getElementsByClassName('wiki-fn-content');
