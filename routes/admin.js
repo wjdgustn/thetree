@@ -69,7 +69,8 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
     let result;
     try {
         const evalResult = await eval(req.body.code);
-        result = util.inspect(evalResult, { depth: 2, maxArrayLength: 200 });
+        if(typeof evalResult === 'string') result = evalResult;
+        else result = util.inspect(evalResult, { depth: 2, maxArrayLength: 200 });
     } catch(e) {
         res.status(400);
         result = e.stack;
