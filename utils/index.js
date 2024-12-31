@@ -69,7 +69,7 @@ module.exports = {
         });
     }),
     renderCategoryDocument: data => new Promise((resolve, reject) => {
-        expressApp.render('categoryDocument', {
+        expressApp.render('specialDocument/category', {
             ...data
         }, (err, html) => {
             if(err) {
