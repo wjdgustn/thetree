@@ -635,8 +635,14 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
 
     const document = req.document;
 
+    const dbDocument = await Document.findOne({
+        namespace: document.namespace,
+        title: document.title
+    });
+
     const parser = new NamumarkParser({
         document,
+        dbDocument
         aclData: req.aclData
     });
     const { html: contentHtml, categories } = await parser.parse(content);
