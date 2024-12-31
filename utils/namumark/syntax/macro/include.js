@@ -80,7 +80,10 @@ module.exports = async (params, namumark) => {
         includeData
     });
 
-    const { html: contentHtml } = await parser.parse(document.content);
+    const { html: contentHtml } = await parser.parse(document.content, false, false, {
+        linkExistsCache: namumark.linkExistsCache,
+        fileDocCache: namumark.fileDocCache
+    });
     namumark.includes.push(docName);
     return `${contentHtml}`;
 }

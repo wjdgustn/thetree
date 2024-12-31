@@ -17,7 +17,8 @@ module.exports = {
     closeStr: `]]`,
     allowMultiline: true,
     format: async (content, namumark) => {
-        const linkExistsCache = namumark.syntaxData.linkExistsCache ??= [];
+        const linkExistsCache = namumark.linkExistsCache;
+        const fileDocCache = namumark.fileDocCache;
 
         if(!namumark.syntaxData.checkedLinkCache) {
             namumark.syntaxData.checkedLinkCache = true;
@@ -51,10 +52,18 @@ module.exports = {
             if(namumark.dbDocument) {
                 const links = namumark.dbDocument.backlinks
                     .filter(a => a.flags.includes(BacklinkFlags.Link))
-                    .map(a => a.docName);
+                    .map(a => a.docName)
+                    .filter(a => {
+                        const docName = mainUtils.parseDocumentName(a);
+                        return !linkExistsCache.some(b => b.namespace === docName.namespace && b.title === docName.title);
+                    });
                 const files = namumark.dbDocument.backlinks
                     .filter(a => a.flags.includes(BacklinkFlags.File))
-                    .map(a => a.docName);
+                    .map(a => a.docName)
+                    .filter(a => {
+                        const docName = mainUtils.parseDocumentName(a);
+                        return !fileDocCache.some(b => b.namespace === docName.namespace && b.title === docName.title);
+                    });
 
                 const linkDocs = await bulkFindDocuments(links);
                 const fileDocs = await bulkFindDocuments(files);
@@ -67,7 +76,6 @@ module.exports = {
                     });
                 }
 
-                const fileDocCache = namumark.syntaxData.fileDocCache ??= [];
                 const revs = await History.find({
                     document: {
                         $in: fileDocs.map(a => a.uuid)

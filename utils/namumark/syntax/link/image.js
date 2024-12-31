@@ -23,7 +23,7 @@ module.exports = async (content, splittedContent, link, namumark) => {
     const { namespace, title } = document;
 
     let rev;
-    const fileDocCache = namumark.syntaxData.fileDocCache ??= [];
+    const fileDocCache = namumark.fileDocCache;
     const checkCache = fileDocCache.find(a => a.namespace === namespace && a.title === title);
     if(checkCache) {
         if(!checkCache.readable) return fallback;

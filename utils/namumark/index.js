@@ -162,7 +162,7 @@ module.exports = class NamumarkParser {
         return await this.parse(editorLines.join('\n'));
     }
 
-    async parse(input, childParse = false, disableNoParagraph = false) {
+    async parse(input, childParse = false, disableNoParagraph = false, cacheOptions = {}) {
         if((debug||true) && !childParse) console.time(`parse "${this.document.title}"`);
 
         if(!childParse) {
@@ -178,6 +178,9 @@ module.exports = class NamumarkParser {
             this.headings = [];
             this.footnoteValues = {};
             this.footnoteList = [];
+
+            this.linkExistsCache = cacheOptions.linkExistsCache ?? [];
+            this.fileDocCache = cacheOptions.fileDocCache ?? [];
         }
         else this.childDepth++;
 
