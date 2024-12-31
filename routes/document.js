@@ -1007,7 +1007,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
             }
         }
         else if(curr.removed) {
-            if(next.added) {
+            if(next?.added) {
                 const nextLines = next.value.split('\n');
 
                 const currArr = [];
