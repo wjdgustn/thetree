@@ -35,12 +35,14 @@ const sanitizeHtmlOptions = {
     }
 }
 
-module.exports = (content, namumark) => {
+module.exports = (content, namumark, check = false) => {
     const splittedContent = content.split(' ');
     const firstParam = splittedContent[0];
     const paramContent = splittedContent.slice(1).join(' ');
 
     if(firstParam.startsWith('#!html')) {
+        if(check) return content;
+
         const html = utils.unescapeHtml(content.slice('#!html'.length).trim());
         const safeHtml = sanitizeHtml(html.replaceAll('<newLine/>', ' '), sanitizeHtmlOptions);
         return `${safeHtml}`;

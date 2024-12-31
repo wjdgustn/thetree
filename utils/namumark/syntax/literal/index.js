@@ -15,8 +15,8 @@ module.exports = {
     allowMultiline: true,
     noEscapeChar: true,
     format: async (content, namumark, originalContent) => {
-        if(Format(content, namumark) !== undefined) return null;
-        if(await ContentChange(content, namumark) !== undefined) return null;
+        if(Format(content, namumark, true) !== undefined) return null;
+        if(await ContentChange(content, namumark, true) !== undefined) return null;
 
         if(content.includes('<newLine/>')) {
             let result = originalContent;

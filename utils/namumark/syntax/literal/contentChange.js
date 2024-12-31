@@ -2,11 +2,13 @@ const utils = require('../../utils');
 const CSSFilter = require('./cssFilter');
 // const removeNoParagraph = require('../../removeNoParagraph');
 
-module.exports = async (content, namumark) => {
+module.exports = async (content, namumark, check = false) => {
     const splittedContent = content.split(' ');
     const firstParam = splittedContent[0];
 
     if(firstParam.startsWith('#!wiki')) {
+        if(check) return content;
+
         content = utils.parseIncludeParams(content, namumark.includeData);
 
         let lines = content.split('<newLine/>');
@@ -52,6 +54,8 @@ module.exports = async (content, namumark) => {
     }
 
     if(firstParam.startsWith('#!folding')) {
+        if(check) return content;
+
         const lines = content.split('<newLine/>');
         const foldingText = namumark.escape(lines[0].slice('#!folding'.length) || 'More');
         // let { text, hasList } = removeNewParagraph(lines.slice(1).join('\n'));
