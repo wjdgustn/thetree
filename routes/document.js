@@ -1258,7 +1258,7 @@ app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     res.renderSkin(undefined, {
-        contentName: 'doucment/backlink',
+        contentName: 'document/backlink',
         viewName: 'baclink',
         document,
         serverData: {
