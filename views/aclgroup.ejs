@@ -2,7 +2,7 @@
 <script src="/js/aclgroup.js"></script>
 
 <%alert = typeof alert === 'undefined' ? '' : alert;%>
-<%-include('alert', { alert })%>
+<%-include('components/alert', { alert })%>
 
 <%const adminPerm = req.permissions.includes('admin');%>
 <%const aclgroupPerm = req.permissions.includes('aclgroup');%>
@@ -239,7 +239,7 @@ ${nextItem ? enabledButton({
     <div class="thetree-modal-block thetree-modal-bg"></div>
     <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
         <div class="thetree-modal-content">
-            <%-include('alert', { alert })%>
+            <%-include('components/alert', { alert })%>
             <form method="post" action="/aclgroup/remove">
                 <input id="delete-aclgroup-modal-id" type="hidden" name="uuid">
                 <input type="hidden" name="group" value="<%=selectedGroup.uuid%>">
@@ -277,7 +277,7 @@ ${nextItem ? enabledButton({
     <div class="thetree-modal-block thetree-modal-bg"></div>
     <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
         <div class="thetree-modal-content">
-            <%-include('alert', { alert })%>
+            <%-include('components/alert', { alert })%>
             <form method="post" action="/aclgroup/group_add">
                 <h4>ACL그룹 생성</h4>
                 <div>
