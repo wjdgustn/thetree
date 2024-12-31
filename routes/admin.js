@@ -67,16 +67,20 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
     const Models = mongoose.models;
 
     let result;
+    let isStr = false;
     try {
         const evalResult = await eval(req.body.code);
-        if(typeof evalResult === 'string') result = evalResult;
+        if(typeof evalResult === 'string') {
+            isStr = true;
+            result = evalResult;
+        }
         else result = util.inspect(evalResult, { depth: 2, maxArrayLength: 200 });
     } catch(e) {
         res.status(400);
         result = e.stack;
     }
 
-    if(typeof result !== 'string') result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
+    if(!isStr) result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
     res.send(result);
 });
 
