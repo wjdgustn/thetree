@@ -506,6 +506,8 @@ app.get('/contribution/:uuid/document',
     }
     const query = { ...baseQuery };
 
+    const total = await History.countDocuments(query);
+
     const pageQuery = req.query.until || req.query.from;
     if(pageQuery) {
         const history = await History.findOne({
@@ -541,7 +543,7 @@ app.get('/contribution/:uuid/document',
 
     res.renderSkin(`"${user.name || user.ip}" 기여 목록`, {
         viewName: 'contribution',
-        contentName: 'documentContribution',
+        contentName: 'userContribution/document',
         account: {
             uuid: user.uuid,
             name: user.name,
@@ -550,8 +552,10 @@ app.get('/contribution/:uuid/document',
         serverData: {
             user,
             revs,
+            total,
             prevItem,
-            nextItem
+            nextItem,
+            contributionType: 'document'
         }
     });
 });
