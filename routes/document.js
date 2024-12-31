@@ -324,7 +324,7 @@ app.get('/acl/?*', middleware.parseDocumentName, async (req, res) => {
             editableACL,
             editableNSACL
         },
-        contentName: 'acl'
+        contentName: 'document/acl'
     });
 });
 
@@ -613,7 +613,7 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     res.renderSkin(undefined, {
-        viewName: 'edit',
+        viewName: 'document/edit',
         contentName: 'edit',
         document,
         body: {
@@ -763,7 +763,7 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
             revs,
             latestRev
         },
-        contentName: 'history'
+        contentName: 'document/history'
     });
 });
 
@@ -794,7 +794,7 @@ app.get('/raw/?*', middleware.parseDocumentName, async (req, res) => {
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
     res.renderSkin(undefined, {
-        contentName: 'raw',
+        contentName: 'document/raw',
         viewName: 'raw',
         document,
         rev: rev.rev,
@@ -839,7 +839,7 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
     res.renderSkin(undefined, {
-        contentName: 'revert',
+        contentName: 'document/revert',
         viewName: 'revert',
         document,
         rev: rev.rev,
@@ -1095,7 +1095,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     res.renderSkin(undefined, {
-        contentName: 'diff',
+        contentName: 'document/diff',
         viewName: 'diff',
         document,
         oldRev: oldRev.rev,
@@ -1141,7 +1141,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     blame = await utils.findUsers(blame);
 
     res.renderSkin(undefined, {
-        contentName: 'blame',
+        contentName: 'document/blame',
         viewName: 'blame',
         document,
         rev: rev.rev,
@@ -1252,7 +1252,7 @@ app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     res.renderSkin(undefined, {
-        contentName: 'backlink',
+        contentName: 'doucment/backlink',
         viewName: 'baclink',
         document,
         serverData: {
@@ -1284,7 +1284,7 @@ app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
     if(!dbDocument?.contentExists) return res.error('문서를 찾을 수 없습니다.', 404);
 
     res.renderSkin(undefined, {
-        contentName: 'delete',
+        contentName: 'document/delete',
         viewName: 'delete',
         document
     });
@@ -1342,7 +1342,7 @@ app.get('/move/?*', middleware.parseDocumentName, async (req, res) => {
     if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
 
     res.renderSkin(undefined, {
-        contentName: 'move',
+        contentName: 'document/move',
         viewName: 'move',
         document
     });
