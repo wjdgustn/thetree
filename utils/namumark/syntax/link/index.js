@@ -230,6 +230,7 @@ module.exports = {
             const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.exists;
             else if(isImage) notExist = true;
+            else if(isCategory) notExist = false;
             else {
                 const dbDocument = await Document.findOne({
                     namespace: document.namespace,
