@@ -15,6 +15,13 @@
                 <%}%>
             </ul>
         </div>
+
+        <%if(req.permissions.includes('admin')) {%>
+            <label style="float: right;">
+                <input type="checkbox" @change="$store.state.movePage('<%=req.query.userDoc === '1' ? `?logtype=${logType}` : `?logtype=${logType}&userDoc=1`%>')"<%=req.query.userDoc === '1' ? ' checked' : ''%>>
+                사용자 문서 보기
+            </label>
+        <%}%>
     </div>
 </div>
 

@@ -44,7 +44,8 @@ app.get('/RecentChanges', async (req, res) => {
     revs = await utils.findDocuments(revs);
 
     const logTypeText = logType != null ? req.query.logtype : 'all';
-    if(logTypeText === 'all') revs = revs.filter(a => a.document.namespace !== '사용자');
+    if(logTypeText === 'all'
+        && (!req.permissions.includes('developer') || req.query.userDoc !== '1')) revs = revs.filter(a => a.document.namespace !== '사용자');
 
     res.renderSkin('최근 변경내역', {
         contentName: 'recentChanges',
