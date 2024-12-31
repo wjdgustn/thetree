@@ -58,7 +58,7 @@ app.get('/admin/config', middleware.permission('developer'), (req, res) => {
     readDir(customStaticRoot);
 
     res.renderSkin('개발자 설정', {
-        contentName: 'config',
+        contentName: 'admin/config',
         customStaticFiles
     });
 });
@@ -463,7 +463,7 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
     }
 
     res.renderSkin('권한 부여', {
-        contentName: 'grant',
+        contentName: 'admin/grant',
         targetUser,
         grantablePermissions: [
             ...GrantablePermissions,

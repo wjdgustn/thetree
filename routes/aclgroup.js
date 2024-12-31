@@ -54,7 +54,7 @@ app.get('/aclgroup', async (req, res) => {
     }
 
     res.renderSkin('ACLGroup', {
-        contentName: 'aclgroup',
+        contentName: 'admin/aclgroup',
         serverData: {
             aclGroups,
             selectedGroup,
