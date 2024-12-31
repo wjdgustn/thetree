@@ -554,7 +554,10 @@ module.exports = class NamumarkParser {
                 // .replaceAll('<removebr/>', '')
         }${(this.includeData || childParse) ? '' : '</div>'}`;
 
-        if((debug||true) && !childParse) console.timeEnd(`parse "${this.document.title}"`);
+        if((debug||true) && !childParse) {
+            console.timeEnd(`parse "${this.document.title}"`);
+            if(debug) console.log();
+        }
 
         this.links = [...new Set(this.links)];
         this.files = [...new Set(this.files)];
