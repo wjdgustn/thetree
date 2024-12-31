@@ -24,6 +24,8 @@ document.addEventListener('thetree:pageLoad', () => {
     evalRun.addEventListener('click', async () => {
         if(!evalContent.value) return;
 
+        evalOutput.innerHTML = '';
+
         const response = await fetch('/admin/config/eval', {
             method: 'POST',
             headers: {
