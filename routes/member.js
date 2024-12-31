@@ -23,7 +23,7 @@ const app = express.Router();
 
 const renderSignup = (res, data = {}) => res.renderSkin('계정 만들기', {
     ...data,
-    contentName: 'signup'
+    contentName: 'member/signup'
 });
 
 app.get('/member/signup', middleware.isLogout, (req, res) => {
@@ -91,7 +91,7 @@ app.post('/member/signup',
     if(!!checkUserExists) {
         if(config.use_email_verification) {
             res.renderSkin('계정 만들기', {
-                contentName: 'signup_email_sent',
+                contentName: 'member/signup_email_sent',
                 email
             });
 
@@ -138,7 +138,7 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
     const signupUrl = `/member/signup/${newToken.token}`;
     if(config.use_email_verification) {
         res.renderSkin('계정 만들기', {
-            contentName: 'signup_email_sent',
+            contentName: 'member/signup_email_sent',
             email
         });
 
@@ -161,7 +161,7 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
 
 const renderFinalSignup = (res, data = {}) => res.renderSkin('계정 만들기', {
     ...data,
-    contentName: 'signup_final'
+    contentName: 'member/signup_final'
 });
 
 app.get('/member/signup/:token', async (req, res) => {
@@ -258,12 +258,12 @@ app.post('/member/signup/:token',
 
 const renderLogin = (res, data = {}) => res.renderSkin('로그인', {
     ...data,
-    contentName: 'login'
+    contentName: 'member/login'
 });
 
 const renderPinVerification = (res, data = {}) => res.renderSkin('로그인', {
     serverData: data,
-    contentName: 'pin_verification'
+    contentName: 'member/pin_verification'
 });
 
 app.get('/member/login', middleware.isLogout, (req, res) => {
@@ -422,7 +422,7 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
 
 app.get('/member/mypage', middleware.isLogin, (req, res) => {
     res.renderSkin('내 정보', {
-        contentName: 'mypage'
+        contentName: 'member/mypage'
     });
 });
 
@@ -452,7 +452,7 @@ app.post('/member/mypage', middleware.isLogin,
 
 const renderChangePassword = (res, data = {}) => res.renderSkin('비밀번호 변경', {
     ...data,
-    contentName: 'change_password'
+    contentName: 'member/change_password'
 });
 
 app.get('/member/change_password', middleware.isLogin, (req, res) => {
