@@ -48,7 +48,7 @@ app.get('/RecentChanges', async (req, res) => {
         && (!req.permissions.includes('admin') || req.query.userDoc !== '1')) revs = revs.filter(a => a.document.namespace !== '사용자');
 
     res.renderSkin('최근 변경내역', {
-        contentName: 'recentChanges',
+        contentName: 'special/recentChanges',
         serverData: {
             revs,
             logType: logTypeText
@@ -103,7 +103,7 @@ app.get('/License', (req, res) => {
 
     res.renderSkin('라이선스', {
         viewName: 'license',
-        contentName: 'license',
+        contentName: 'special/license',
         serverData: {
             commitId,
             skinCommitId: skinCommitId[skin],
@@ -142,7 +142,7 @@ app.get('/Upload', async (req, res) => {
     } = await getImageDropdowns();
 
     res.renderSkin('파일 올리기', {
-        contentName: 'upload',
+        contentName: 'special/upload',
         serverData: {
             licenses,
             categories
@@ -360,7 +360,7 @@ app.get('/BlockHistory', async (req, res) => {
     }
 
     res.renderSkin('차단 내역', {
-        contentName: 'blockHistory',
+        contentName: 'special/blockHistory',
         serverData: {
             logs,
             prevItem,
@@ -377,7 +377,7 @@ app.get('/RandomPage', async (req, res) => {
     ]);
 
     res.renderSkin('RandomPage', {
-        contentName: 'randomPage',
+        contentName: 'special/randomPage',
         serverData: {
             docs: docs.map(a => utils.dbDocumentToDocument(a))
         }

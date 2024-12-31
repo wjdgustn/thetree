@@ -28,12 +28,12 @@
 
         <div class="form-block">
             <label for="licenseSelect">라이선스</label>
-            <%-include('searchableDropdown', { id: 'licenseSelect', name: 'license', options: licenses })%>
+            <%-include('../components/searchableDropdown', { id: 'licenseSelect', name: 'license', options: licenses })%>
         </div>
 
         <div class="form-block">
             <label for="categorySelect">분류</label>
-            <%-include('searchableDropdown', { id: 'categorySelect', name: 'category', options: categories })%>
+            <%-include('../components/searchableDropdown', { id: 'categorySelect', name: 'category', options: categories })%>
         </div>
 
         <div class="form-block">
