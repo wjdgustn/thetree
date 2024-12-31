@@ -613,8 +613,8 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     res.renderSkin(undefined, {
-        viewName: 'document/edit',
-        contentName: 'edit',
+        viewName: 'edit',
+        contentName: 'document/edit',
         document,
         body: {
             baserev: docExists ? rev.rev.toString() : '0',
