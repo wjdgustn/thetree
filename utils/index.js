@@ -56,7 +56,7 @@ module.exports = {
         return str.replace(/(.)([A-Z][a-z]+)/, '$1_$2').replace(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase();
     },
     renderCategory: (categories = [], fromWiki = false) => new Promise((resolve, reject) => {
-        expressApp.render('category', {
+        expressApp.render('components/category', {
             categories,
             fromWiki
         }, (err, html) => {
