@@ -37,7 +37,16 @@ module.exports = {
                 }
                 if(!query.$or.length) return [];
 
-                return Document.find(query);
+                const result = await Document.find(query);
+                return [
+                    ...result,
+                    ...parsedDocs
+                        .map(a => !result.some(b => a.namespace === b.namespace && a.title === b.title) ? {
+                            ...a,
+                            contentExists: false
+                        } : null)
+                        .filter(a => a)
+                ]
             }
             if(namumark.dbDocument) {
                 const links = namumark.dbDocument.backlinks
@@ -68,21 +77,24 @@ module.exports = {
                 const nsACLResultCache = {};
                 for(let doc of fileDocs) {
                     let readable;
-                    if(doc.lastReadACL === -1) {
-                        if(nsACLResultCache[doc.namespace] == null) {
-                            const acl = await ACL.get({ namespace: doc.namespace }, doc);
+                    if(doc.contentExists) {
+                        if(doc.lastReadACL === -1) {
+                            if(nsACLResultCache[doc.namespace] == null) {
+                                const acl = await ACL.get({ namespace: doc.namespace }, doc);
+                                const { result } = await acl.check(ACLTypes.Read, namumark.aclData);
+                                readable = result;
+                                nsACLResultCache[doc.namespace] = readable;
+                            }
+
+                            readable = nsACLResultCache[doc.namespace];
+                        }
+                        else {
+                            const acl = await ACL.get({ document: doc });
                             const { result } = await acl.check(ACLTypes.Read, namumark.aclData);
                             readable = result;
-                            nsACLResultCache[doc.namespace] = readable;
                         }
-
-                        readable = nsACLResultCache[doc.namespace];
                     }
-                    else {
-                        const acl = await ACL.get({ document: doc });
-                        const { result } = await acl.check(ACLTypes.Read, namumark.aclData);
-                        readable = result;
-                    }
+                    else readable = false;
 
                     fileDocCache.push({
                         namespace: doc.namespace,
