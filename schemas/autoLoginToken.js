@@ -10,7 +10,7 @@ const newSchema = new Schema({
     token: {
         type: String,
         required: true,
-        default: crypto.randomBytes(96).toString('base64url')
+        default: () => crypto.randomBytes(96).toString('base64url')
     },
     createdAt: {
         type: Date,
