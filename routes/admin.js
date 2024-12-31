@@ -76,7 +76,7 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
         result = e.stack;
     }
 
-    result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
+    if(typeof result !== 'string') result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
     res.send(result);
 });
 
