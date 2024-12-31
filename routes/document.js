@@ -943,7 +943,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    const lineDiff = Diff.diffLines(namumarkUtils.escapeHtml(oldRev.content), namumarkUtils.escapeHtml(rev.content)).map(a => ({
+    const lineDiff = Diff.diffLines(namumarkUtils.escapeHtml(oldRev.content || ''), namumarkUtils.escapeHtml(rev.content || '')).map(a => ({
         ...a,
         value: a.value.endsWith('\n') ? a.value.slice(0, -1) : a.value
     }));
