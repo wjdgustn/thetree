@@ -315,6 +315,7 @@ function changeUrl(url) {
             const element = document.getElementById(anchor);
             if(element) requestAnimationFrame(() => element.scrollIntoView());
             newUrl.searchParams.delete('anchor');
+            newUrl.hash = anchor;
         }
         newUrl.searchParams.delete('f');
         history.pushState({}, null, newUrl.toString());
@@ -357,7 +358,13 @@ async function movePage(response, pushState = true, prevUrl = null) {
         setupDocument();
         restoreForm();
     }
-    else location.href = response.url;
+    else {
+        const newUrl = new URL(response.url);
+        newUrl.hash = anchor;
+        newUrl.searchParams.delete('f');
+
+        location.href = response.url;
+    }
 
     setProgress(100);
 }
