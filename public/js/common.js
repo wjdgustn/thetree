@@ -228,7 +228,7 @@ function updateTimeTag() {
 
             if(durationStr) {
                 time.textContent = durationStr;
-                continue;
+                isRelative = true;
             }
         }
 
@@ -251,7 +251,8 @@ function updateTimeTag() {
             result += (offset > 0 ? '+' : '-') + (offset * 100).toString().padStart(4, '0');
         }
 
-        time.textContent = result;
+        if(isRelative) time.title = result;
+        else time.textContent = result;
     }
 }
 
