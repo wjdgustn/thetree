@@ -80,10 +80,12 @@ module.exports = async (params, namumark) => {
         includeData
     });
 
+    if(debug) console.time(`parse include ${docName}`);
     const { html: contentHtml } = await parser.parse(document.content, false, false, {
         linkExistsCache: namumark.linkExistsCache,
         fileDocCache: namumark.fileDocCache
     });
+    if(debug) console.timeEnd(`parse include ${docName}`);
     namumark.includes.push(docName);
     return `${contentHtml}`;
 }
