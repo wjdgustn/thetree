@@ -1036,7 +1036,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
                         lineCompared = true;
 
-                        const diff = Diff.diffChars(content, nextContent);
+                        const diff = Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent));
                         let c = '';
                         let n = '';
                         for(let d of diff) {
@@ -1045,8 +1045,8 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
                                 c += val;
                                 n += val;
                             }
-                            else if(d.added) n += `<ins class="diff">${d.value}</ins>`;
-                            else if(d.removed) c += `<del class="diff">${d.value}</del>`;
+                            else if(d.added) n += `<ins class="diff">${namumarkUtils.escapeHtml(d.value)}</ins>`;
+                            else if(d.removed) c += `<del class="diff">${namumarkUtils.escapeHtml(d.value)}</del>`;
                         }
 
                         currArr.push({
