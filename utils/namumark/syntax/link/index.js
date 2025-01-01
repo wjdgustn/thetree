@@ -178,9 +178,11 @@ module.exports = {
             text = splittedText.join('#');
         }
 
-        const parseResult = await namumark.parse(text, true, true);
-        if(parseResult.hasNewline) return null;
-        text = parseResult.html;
+        if(!isImage) {
+            const parseResult = await namumark.parse(text, true, true);
+            if(parseResult.hasNewline) return null;
+            text = parseResult.html;
+        }
 
         let parsedLink;
         try {
@@ -196,6 +198,7 @@ module.exports = {
         }
 
         let title;
+        let titleDocument;
         if(parsedLink) {
             link = parsedLink.href;
             title = link;
@@ -220,7 +223,7 @@ module.exports = {
                 notExist = false;
             }
             else {
-                const splittedLink = link.split('#');
+                const splittedLink = utils.unescapeHtml(link).split('#').map(a => utils.escapeHtml(a));
                 if(splittedLink.length >= 2) {
                     const hash = splittedLink.pop();
                     const front = splittedLink.join('#').replaceAll('#', '%23');
@@ -234,7 +237,8 @@ module.exports = {
                 else link = `/w/${link}`;
             }
 
-            const document = mainUtils.parseDocumentName(title);
+            const document = mainUtils.parseDocumentName(utils.unescapeHtml(title));
+            titleDocument = document;
             const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.exists;
             else if(isImage) notExist = true;
@@ -285,9 +289,10 @@ module.exports = {
             return '<removeNewline/>';
         }
 
+        const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
         if(!parsedLink
-            && title !== docTitle
-            && !namumark.redirect) namumark.links.push(title);
+            && titleDocName !== docTitle
+            && !namumark.redirect) namumark.links.push(titleDocName);
         return html;
     }
 }
