@@ -1041,7 +1041,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
                         let n = '';
                         for(let d of diff) {
                             if(!d.added && !d.removed) {
-                                const val = d.value;
+                                const val = namumarkUtils.escapeHtml(d.value);
                                 c += val;
                                 n += val;
                             }
