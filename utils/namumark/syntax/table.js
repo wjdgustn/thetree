@@ -261,17 +261,15 @@ module.exports = {
                 const startsWithSpace = value.startsWith(' ');
                 const endsWithSpace = value.endsWith(' ');
 
-                if(!align) {
-                    if(startsWithSpace && endsWithSpace) {
-                        align = 'center';
-                        value = value.slice(1, -1);
-                    } else if(startsWithSpace) {
-                        align = 'right';
-                        value = value.slice(1);
-                    } else if(endsWithSpace) {
-                        align = 'left';
-                        value = value.slice(0, -1);
-                    }
+                if(startsWithSpace && endsWithSpace) {
+                    align ??= 'center';
+                    value = value.slice(1, -1);
+                } else if(startsWithSpace) {
+                    align ??= 'right';
+                    value = value.slice(1);
+                } else if(endsWithSpace) {
+                    align ??= 'left';
+                    value = value.slice(0, -1);
                 }
                 if(align) tdStyle += `text-align:${align};`;
 
