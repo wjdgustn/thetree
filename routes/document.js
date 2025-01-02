@@ -572,7 +572,7 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 
     const invalidSection = () => res.error('섹션이 올바르지 않습니다.')
 
-    if(req.query.section && (isNaN(section) || section < 0)) return invalidSection();
+    if(req.query.section && (isNaN(section) || section < 1)) return invalidSection();
 
     const document = req.document;
 
@@ -679,7 +679,7 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 
     const invalidSection = () => res.status(400).send('섹션이 올바르지 않습니다.');
 
-    if(req.query.section && (isNaN(section) || section < 0)) return invalidSection();
+    if(req.query.section && (isNaN(section) || section < 1)) return invalidSection();
 
     const document = req.document;
 
