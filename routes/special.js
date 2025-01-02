@@ -188,7 +188,10 @@ app.post('/Upload', uploadFile,
         'image/bmp',
         'image/svg+xml',
         'image/ico'
-    ].includes(req.file.mimetype)) return res.status(400).send('올바르지 않은 파일입니다.');
+    ].includes(req.file.mimetype)) return res.status(400).send(
+        '올바르지 않은 파일입니다.'
+        + (req.permissions.includes('developer') ? ` (${req.file.mimetype})` : '')
+    );
 
     const {
         licenses,
