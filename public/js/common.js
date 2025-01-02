@@ -580,20 +580,22 @@ document.addEventListener('alpine:init', () => {
                 console.log(`quick block ${State.userPopup.name}`);
             },
             open(userText) {
-                requestAnimationFrame(() => userPopup.classList.remove('userpopup-close'));
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    userPopup.classList.remove('userpopup-close');
 
-                FloatingUIDOM.computePosition(userText, userPopup, {
-                    placement: 'bottom-start',
-                    middleware: [
-                        FloatingUIDOM.offset(5),
-                        FloatingUIDOM.flip()
-                    ]
-                }).then(({x, y}) => {
-                    Object.assign(userPopup.style, {
-                        left: `${x}px`,
-                        top: `${y}px`
+                    FloatingUIDOM.computePosition(userText, userPopup, {
+                        placement: 'bottom-start',
+                        middleware: [
+                            FloatingUIDOM.offset(5),
+                            FloatingUIDOM.flip()
+                        ]
+                    }).then(({x, y}) => {
+                        Object.assign(userPopup.style, {
+                            left: `${x}px`,
+                            top: `${y}px`
+                        });
                     });
-                });
+                }));
             },
             close() {
                 userPopup.classList.add('userpopup-close');
