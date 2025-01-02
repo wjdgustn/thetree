@@ -46,6 +46,21 @@ const getLowestLevel = lines => {
 module.exports = {
     priority: Priority.Heading,
     fullLine: true,
+    getHeadingLines(str) {
+        const result = [];
+        const lines = str.split('\n');
+        for(let i in lines) {
+            i = parseInt(i);
+            const line = lines[i];
+
+            const checkLevel = getLevel(line);
+            if(!checkLevel) continue;
+
+            result.push(i);
+        }
+
+        return result;
+    },
     format(content, namumark, lines) {
         const lowestLevel = namumark.syntaxData.lowestLevel ??= getLowestLevel(lines);
 

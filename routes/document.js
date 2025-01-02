@@ -17,6 +17,8 @@ const {
     BacklinkFlags
 } = require('../utils/types');
 
+const headingSyntax = require('../utils/namumark/syntax/heading');
+
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
@@ -600,7 +602,20 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 
     const docExists = rev?.content != null;
 
-    // TODO: edit one section(after implement parser)
+    let content = '';
+    if(docExists) {
+        content = rev.content;
+        if(req.query.section) {
+            const lines = content.split('\n');
+            const headingLines = headingSyntax.getHeadingLines(rev.content);
+            if(section > headingLines.length) return invalidSection();
+
+            const start = headingLines[section - 1];
+            const next = headingLines[section] ?? lines.length;
+
+            content = lines.slice(start, next).join('\n');
+        }
+    }
 
     let contentHtml;
     if(rev?.content) {
@@ -623,7 +638,7 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
         },
         serverData: {
             aclMessage,
-            content: docExists ? rev.content : '',
+            content,
             contentHtml
         }
     });
@@ -662,7 +677,7 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 
     const section = parseInt(req.query.section);
 
-    const invalidSection = () => res.error('섹션이 올바르지 않습니다.');
+    const invalidSection = () => res.status(400).send('섹션이 올바르지 않습니다.');
 
     if(req.query.section && (isNaN(section) || section < 0)) return invalidSection();
 
@@ -692,11 +707,37 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
+    let editedRev = rev;
+    if(req.body.baseuuid !== 'create' && rev.uuid !== req.body.baseuuid) {
+        editedRev = await History.findOne({
+            uuid: req.body.baseuuid
+        });
+        if(!editedRev) return res.status(400).send('baseuuid가 올바르지 않습니다.');
+    }
+
     let content = req.body.text;
 
-    if(content.startsWith('#넘겨주기 ')) content = content.replace('#넘겨주기 ', '#redirect');
-    if(content.startsWith('#redirect ')) content = content.split('\n')[0];
-    if(content.startsWith('#redirect 문서:')) content = content.replace('#redirect 문서:', '#redirect ');
+    if(rev?.content != null && req.query.section) {
+        const newLines = [];
+
+        const fullLines = editedRev.content.split('\n');
+        const headingLines = headingSyntax.getHeadingLines(rev.content);
+        if(section > headingLines.length) return invalidSection();
+
+        const start = headingLines[section - 1];
+        const next = headingLines[section] ?? fullLines.length;
+
+        newLines.push(...fullLines.slice(0, start));
+        newLines.push(content);
+        newLines.push(...fullLines.slice(next));
+
+        content = newLines.join('\n');
+    }
+    else {
+        if(content.startsWith('#넘겨주기 ')) content = content.replace('#넘겨주기 ', '#redirect');
+        if(content.startsWith('#redirect ')) content = content.split('\n')[0];
+        if(content.startsWith('#redirect 문서:')) content = content.replace('#redirect 문서:', '#redirect ');
+    }
 
     if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
 
