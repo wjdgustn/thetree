@@ -6,9 +6,11 @@ Object.defineProperty(window, 'query', {
     }
 });
 
+let userPopup;
 function contentLoadedHandler() {
     content = document.getElementById('content');
     progressBar = document.getElementById('progress-bar');
+    userPopup = document.getElementById('userpopup');
 }
 
 document.addEventListener('DOMContentLoaded', contentLoadedHandler);
@@ -295,13 +297,33 @@ function setupDocument() {
     for(let element of allElements) {
         if(typeof element.className !== 'string'
             || !element.className.includes('thetree')) continue;
-        if(element.thetree) continue;
+        if(element._thetree) continue;
 
         element._thetree = {
             modal: {},
             dropdown: {},
             preHandler: null
         };
+    }
+
+    const userTexts = document.getElementsByClassName('user-text-name');
+    for(let userText of userTexts) {
+        const handler = e => {
+            e.preventDefault();
+
+            State.userPopup.name = userText.textContent;
+            State.userPopup.uuid = userText.dataset.uuid;
+            State.userPopup.type = parseInt(userText.dataset.type);
+
+            State.userPopup.open(userText);
+
+            return false;
+        }
+
+        if(userText.tagName === 'A') userText._thetree = {
+            preHandler: handler
+        }
+        else userText.addEventListener('click', handler);
     }
 
     emit('thetree:pageLoad');
@@ -532,8 +554,52 @@ document.addEventListener('alpine:init', () => {
         session,
         localConfig,
         recent: [],
+
         aClickHandler,
         movePage,
+
+        userPopup: {
+            type: 1,
+            name: '',
+            uuid: '',
+            get typeStr() {
+                switch(parseInt(State.userPopup.type)) {
+                    case 0:
+                        return 'IP';
+                    default:
+                        return '사용자';
+                }
+            },
+            get deleted() {
+                return State.userPopup.type === -1;
+            },
+            get account() {
+                return State.userPopup.type === 1;
+            },
+            block() {
+                console.log(`quick block ${State.userPopup.name}`);
+            },
+            open(userText) {
+                requestAnimationFrame(() => userPopup.classList.remove('userpopup-close'));
+
+                FloatingUIDOM.computePosition(userText, userPopup, {
+                    placement: 'bottom-start',
+                    middleware: [
+                        FloatingUIDOM.offset(5),
+                        FloatingUIDOM.flip()
+                    ]
+                }).then(({x, y}) => {
+                    Object.assign(userPopup.style, {
+                        left: `${x}px`,
+                        top: `${y}px`
+                    });
+                });
+            },
+            close() {
+                userPopup.classList.add('userpopup-close');
+            }
+        },
+
         async init() {
             setInterval(() => this.updateSidebar(), 1000 * 30);
             await this.updateSidebar();

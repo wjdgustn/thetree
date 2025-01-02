@@ -152,16 +152,29 @@ module.exports = {
 
         return arr;
     },
-    userHtml(user) {
+    userHtml(user, {
+        isAdmin = false,
+        document = null,
+        thread = null
+    } = {}) {
         const name = user?.name ?? user?.ip;
         const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
 
+        let dataset = '';
+        const data = {};
+
+        if(isAdmin) data.uuid = user.uuid;
+        data.type = user.type;
+
+        for(let [key, value] of Object.entries(data))
+            dataset += ` data-${key}="${value}"`;
+
         return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
-                ? `<a class="user-text-name${user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}>${name}</a>`
-                : `<span class="user-text-name user-text-deleted">(삭제된 사용자)</span>`)
+                ? `<a class="user-text-name${user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
+                : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
     },
-    addHistoryData(rev) {
+    addHistoryData(rev, isAdmin = false) {
         rev.infoText = null;
 
         if(rev.type === HistoryTypes.ACL) {
@@ -181,7 +194,7 @@ module.exports = {
             rev.infoText = `${rev.moveOldDoc}에서 ${rev.moveNewDoc}로 문서 이동`;
         }
 
-        rev.userHtml = this.userHtml(rev.user);
+        rev.userHtml = this.userHtml(rev.user, { isAdmin });
 
         const diffClassList = ['diff-text'];
 
@@ -193,7 +206,7 @@ module.exports = {
 
         return rev;
     },
-    async findHistories(arr) {
+    async findHistories(arr, isAdmin = false) {
         const cache = {};
 
         for(let obj of arr) {
@@ -208,7 +221,7 @@ module.exports = {
                     uuid: obj.uuid
                 }).lean();
                 if(obj.history) {
-                    obj.history = this.addHistoryData(obj.history);
+                    obj.history = this.addHistoryData(obj.history, isAdmin);
                     cache[obj.uuid] = obj.history;
                     obj.user = obj.history.user;
                 }

@@ -6,7 +6,7 @@
     <h3>이 문서의 역사</h3>
     <ul>
         <%for(let rev of revs) {%>
-            <%rev = utils.addHistoryData(rev);%>
+            <%rev = addHistoryData(rev);%>
             <li>
                 <span><%-getFullDateTag(rev.createdAt)%></span>
                 <strong>r<%=rev.rev%></strong>

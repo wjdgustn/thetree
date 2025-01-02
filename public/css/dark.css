@@ -38,7 +38,7 @@
 }
 
 .theseed-dark-mode .thetree-button:hover:not([disabled]):not(.thetree-button-disabled) {
-    background-color: #555;
+    background-color: #555 !important;
 }
 
 .theseed-dark-mode .thetree-primary-button {
@@ -77,4 +77,26 @@
 .theseed-dark-mode .searchable-dropdown-option,
 .theseed-dark-mode .searchable-dropdown-selected {
     color: #ddd;
+}
+
+.theseed-dark-mode #userpopup {
+    background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
+    border-color: #484848;
+}
+
+.theseed-dark-mode #userpopup>div>div>hr {
+    border-color: #484848;
+}
+
+.theseed-dark-mode #userpopup>div>div>a,
+.theseed-dark-mode #userpopup>div>div>span {
+    background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
+}
+
+.theseed-dark-mode .thetree-block-button:not(.thetree-button-disabled) {
+    background-color: #75121c !important;
+}
+
+.theseed-dark-mode .thetree-block-button:not([disabled]):not(.thetree-button-disabled):hover {
+    background-color: #8d101d !important;
 }

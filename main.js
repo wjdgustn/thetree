@@ -416,6 +416,7 @@ document.getElementById('initScript')?.remove();
         `.replaceAll('\n', '').trim() + data.contentHtml;
         }
 
+        const isAdmin = req.permissions.includes('admin');
         app.render('main', {
             ...data,
             ...(data.serverData ?? {}),
@@ -423,7 +424,12 @@ document.getElementById('initScript')?.remove();
             page,
             session,
             browserGlobalVarScript,
-            cspNonce: res.locals.cspNonce
+            cspNonce: res.locals.cspNonce,
+            userHtml: (user, data) => utils.userHtml(user, {
+                ...data,
+                isAdmin
+            }),
+            addHistoryData: rev => utils.addHistoryData(rev, isAdmin)
         }, async (err, html) => {
             if(err) {
                 console.error(err);

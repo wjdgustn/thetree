@@ -83,7 +83,7 @@ a.thetree-square-button, button.thetree-square-button {
 }
 
 .thetree-button:hover:not([disabled]):not(.thetree-button-disabled) {
-    background-color: #f2f2f2;
+    background-color: #f2f2f2 !important;
 }
 
 .thetree-primary-button {
@@ -774,4 +774,85 @@ div.category-document-block div.category-document-many-content div:first-child h
     padding-right: 1rem;
     padding-top: 1rem;
     float: right;
+}
+
+#userpopup {
+    outline: none;
+    background-color: var(--light-article-background-color, var(--article-background-color, #fff));
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .165), 0 4px 6px -4px rgba(0, 0, 0, .165);
+    margin: .25rem 0 0;
+    padding: .25rem 0;
+    word-break: break-all;
+    z-index: 1000;
+    max-width: 15rem;
+    min-width: 12rem;
+    opacity: 1;
+    transition: opacity .15s;
+    visibility: visible;
+    position: absolute;
+    width: max-content;
+    top: 0;
+    left: 0;
+}
+
+#userpopup>div {
+    box-sizing: border-box;
+    overflow-y: auto;
+    position: relative;
+}
+
+#userpopup>div>div {
+    max-height: inherit;
+    max-width: inherit;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.userpopup-username {
+    padding: .25rem 1rem;
+}
+
+.userpopup-username-type {
+    font-size: .8rem;
+}
+
+.userpopup-username-name {
+    font-size: .95rem;
+    font-weight: 600;
+    line-height: 1;
+    margin: 0 0 .3rem;
+}
+
+#userpopup>div>div>hr {
+    border: 0;
+    border-top: 1px solid #d5d5d5;
+    margin: .25rem 0;
+}
+
+#userpopup>div>div>a, #userpopup>div>div>span {
+    background-color: var(--light-article-background-color, var(--article-background-color, #fff));
+    border: none !important;
+    justify-content: flex-start !important;
+    margin: .125rem .25rem;
+    padding: .2rem .75rem !important;
+}
+
+.thetree-block-button:not(.thetree-button-disabled) {
+    background-color: #d64a58 !important;
+    color: #fff !important;
+}
+
+.thetree-block-button:not([disabled]):not(.thetree-button-disabled):hover {
+    background-color: #c1434f !important;
+}
+
+.userpopup-close {
+    opacity: 0 !important;
+    pointer-events: none;
+    transition: opacity .15s,visibility .15s !important;
+    visibility: hidden !important;
 }
