@@ -190,7 +190,7 @@ module.exports = class NamumarkParser {
 
         if(sourceText.endsWith('\n')) sourceText = sourceText.slice(0, -1);
 
-        sourceText = sourceText.replaceAll('\n', NewLineTag);
+        sourceText = sourceText.replaceAll('\r', '').replaceAll('\n', NewLineTag);
 
         // 문법 파싱
         let text = '';
