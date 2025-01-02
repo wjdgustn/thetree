@@ -181,7 +181,7 @@ app.post('/Upload', uploadFile,
 
     if(!req.file) return res.status(400).send('파일이 업로드되지 않았습니다.');
     if(![
-        'image/jpg',
+        'image/jpeg',
         'image/png',
         'image/gif',
         'image/webp',
