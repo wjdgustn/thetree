@@ -361,7 +361,10 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                                      Bucket: process.env.S3_BUCKET_NAME,
                                      Key,
                                      Body: img,
-                                     ContentType: ext === 'svg' ? 'image/svg+xml' : `image/${ext}`
+                                     ContentType: {
+                                         svg: 'image/svg+xml',
+                                         jpg: 'image/jpeg'
+                                     }[ext] ?? `image/${ext}`
                                  }));
                                  log(`uploaded file: ${imgPath}`);
                                  isFile = true;
