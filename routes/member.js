@@ -299,13 +299,14 @@ app.post('/member/login',
             trusted: true
         });
 
-        if(!user.totpToken && !config.use_email_verification) {
-            await LoginHistory.create({
-                uuid: user.uuid,
-                ip: req.ip,
-                userAgent: req.get('User-Agent')
-            });
+        const createLoginHistory = async () => await LoginHistory.create({
+            uuid: user.uuid,
+            ip: req.ip,
+            userAgent: req.get('User-Agent')
+        });
 
+        if(!user.totpToken && !config.use_email_verification) {
+            await createLoginHistory();
             checkTrusted = true;
         }
 
@@ -319,6 +320,8 @@ app.post('/member/login',
                     maxAge: 1000 * 60 * 60 * 24 * 365
                 });
             }
+
+            await createLoginHistory();
 
             return req.login(user, err => {
                 if(err) console.error(err);
