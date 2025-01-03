@@ -249,13 +249,14 @@ app.use(async (req, res, next) => {
             ip: req.ip
         }).lean();
 
-        if(!req.session.ipUser) {
+        if(!req.session.ipUser && req.method === 'POST' && !req.url.startsWith('/member')) {
             const newUser = new User({
                 ip: req.ip,
                 type: UserTypes.IP
             });
             await newUser.save();
             req.session.ipUser = newUser.toJSON();
+            req.session.fullReload = true;
         }
     }
 
@@ -302,7 +303,7 @@ app.use(async (req, res, next) => {
     if(req.useragent.isBot) req.permissions.push('bot');
 
     if(req.session.contributor) req.permissions.push('contributor');
-    else {
+    else if(req.user) {
         const contribution = await History.exists({
             user: req.user.uuid
         });
