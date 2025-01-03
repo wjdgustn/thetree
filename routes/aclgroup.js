@@ -311,11 +311,26 @@ app.get('/self_unblock', async (req, res) => {
     const item = await ACLGroupItem.findOne({
         id: req.query.id
     });
-    if(!item || !req.query.id || item.user !== req.user.uuid) return res.error('aclgroup_not_found');
+    if(!item || !req.query.id || (item.user !== req.user.uuid && item.ip !== req.ip)) return res.error('aclgroup_not_found');
 
     await ACLGroupItem.deleteOne({
         uuid: item.uuid
     });
+
+    await BlockHistory.create({
+        type: BlockHistoryTypes.ACLGroupRemove,
+        createdUser: req.user.uuid,
+        ...(item.user == null ? {
+            targetContent: item.ip
+        } : {
+            targetUser: item.uuid,
+            targetUsername: item.name
+        }),
+        aclGroup: item.aclGroup,
+        aclGroupId: item.id,
+        content: '확인했습니다.'
+    });
+
     res.reload();
 });
 
