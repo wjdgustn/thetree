@@ -642,16 +642,8 @@ document.addEventListener('alpine:init', () => {
             ip = null,
             note = '긴급차단'
         } = {}) {
-            const res = await fetch('/aclgroup/groups');
-            const groups = await res.json();
-
             quickBlockGroupSelect.innerHTML = '';
-            for(let group of groups) {
-                const option = document.createElement('option');
-                option.value = group.uuid;
-                option.textContent = group.name;
-                quickBlockGroupSelect.appendChild(option);
-            }
+            quickBlockGroupSelect.disabled = true;
 
             quickBlockMode.value = username == null ? 'ip' : 'username';
             quickBlockMode.dispatchEvent(new Event('change'));
@@ -663,6 +655,18 @@ document.addEventListener('alpine:init', () => {
             quickBlockModal.querySelectorAll('.input-error').forEach(a => a.remove());
 
             quickBlockModal._thetree.modal.open();
+
+            const res = await fetch('/aclgroup/groups');
+            const groups = await res.json();
+
+            for(let group of groups) {
+                const option = document.createElement('option');
+                option.value = group.uuid;
+                option.textContent = group.name;
+                quickBlockGroupSelect.appendChild(option);
+            }
+
+            quickBlockGroupSelect.disabled = false;
         },
 
         async init() {
