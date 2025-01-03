@@ -97,7 +97,7 @@
                         <%}%>
                     </select>
 
-                    <%if(isDev) {%><input type="text" list="permissions" name="permission" value="<%=ACLPermissions[0]%>" x-show="conditionType === 'Perm'"><%}%>
+                    <%if(isDev) {%><input type="text" list="permissions" name="permission" x-show="conditionType === 'Perm'"><%}%>
                     <<%-isDev ? 'datalist' : 'select name="permission"'%> id="permissions" x-show="conditionType === 'Perm'">
                         <%for(let i in ACLPermissions) {%>
                         <%const perm = ACLPermissions[i];%>
