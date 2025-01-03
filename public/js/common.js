@@ -592,6 +592,9 @@ document.addEventListener('alpine:init', () => {
             name: '',
             uuid: '',
             note: null,
+            deleted: false,
+            account: false,
+            blockable: false,
             get typeStr() {
                 switch(parseInt(State.userPopup.type)) {
                     case 0:
@@ -599,15 +602,6 @@ document.addEventListener('alpine:init', () => {
                     default:
                         return '사용자';
                 }
-            },
-            get deleted() {
-                return State.userPopup.type === -1;
-            },
-            get account() {
-                return State.userPopup.type === 1;
-            },
-            get blockable() {
-                return [0, 1].includes(State.userPopup.type);
             },
             async block() {
                 const isAccount = State.userPopup.account;
@@ -618,6 +612,10 @@ document.addEventListener('alpine:init', () => {
                 });
             },
             open(userText) {
+                State.userPopup.deleted = State.userPopup.type === -1;
+                State.userPopup.account = State.userPopup.type === 1;
+                State.userPopup.blockable = [0, 1].includes(State.userPopup.type);
+
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     userPopup.classList.remove('userpopup-close');
 
