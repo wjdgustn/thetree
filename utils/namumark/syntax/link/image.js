@@ -19,7 +19,7 @@ module.exports = async (content, splittedContent, link, namumark) => {
         text: link
     }
 
-    const document = mainUtils.parseDocumentName(link);
+    const document = mainUtils.parseDocumentName(utils.unescapeHtml(link));
     const { namespace, title } = document;
 
     let rev;
