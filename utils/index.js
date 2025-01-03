@@ -164,9 +164,9 @@ module.exports = {
         const data = {};
 
         if(isAdmin) {
-            data.uuid = user.uuid;
             if(note) data.note = note;
         }
+        if(user.type !== UserTypes.Deleted || isAdmin) data.uuid = user.uuid;
         data.type = user.type;
 
         for(let [key, value] of Object.entries(data))
