@@ -4,7 +4,7 @@
     <div class="changes-line changes-heading">
         <div class="changes-value">문서</div>
         <div class="changes-value">기능</div>
-        <%if(!hideUser) {%><div class="changes-value">수정자</div><%}%>
+        <div class="changes-value"<%=hideUser ? ' hidden' : ''%>>수정자</div>
         <div class="changes-value">수정 시간</div>
     </div>
 
@@ -31,11 +31,9 @@
             </div>
         </div>
 
-        <%if(!hideUser) {%>
-            <div class="changes-value">
-                <%-utils.userHtml(rev.user)%>
-            </div>
-        <%}%>
+        <div class="changes-value"<%=hideUser ? ' hidden' : ''%>>
+            <%if(!hideUser) {%><%-utils.userHtml(rev.user)%><%}%>
+        </div>
 
         <div class="changes-value">
             <%-getFullDateTag(rev.createdAt, 'relative')%>
