@@ -323,8 +323,8 @@ app.get('/self_unblock', async (req, res) => {
         ...(item.user == null ? {
             targetContent: item.ip
         } : {
-            targetUser: item.uuid,
-            targetUsername: item.name
+            targetUser: req.user.uuid,
+            targetUsername: req.user.name
         }),
         aclGroup: item.aclGroup,
         aclGroupId: item.id,
