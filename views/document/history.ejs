@@ -48,7 +48,7 @@ ${enableNext ? enabledButton({
 
     <ul x-data="{ oldRow: <%=revs.length%>, newRow: -1 }">
         <%for(let i in revs) {%>
-            <%rev = utils.addHistoryData(revs[i]);%>
+            <%rev = addHistoryData(revs[i], document);%>
 
             <li<%-rev.troll ? ' class="troll"' : ''%>>
                 <span><%-getFullDateTag(rev.createdAt)%></span>
@@ -134,9 +134,9 @@ ${enableNext ? enabledButton({
                 <%-rev.userHtml%>
 
                 <%if(rev.troll) {%>
-                    [<%-utils.userHtml(rev.trollBy)%> 사용자에 의해 반달로 표시됨]
+                    [<%-userHtml(rev.trollBy)%> 사용자에 의해 반달로 표시됨]
                 <%} else if(rev.log) {%>
-                    (<span class="history-log"><%if(rev.hideLog) {%><%-utils.userHtml(rev.hideLogBy)%> 사용자에 의해 편집 요약 숨겨짐<%} else {%><%=rev.log%><%}%></span>)
+                    (<span class="history-log"><%if(rev.hideLog) {%><%-userHtml(rev.hideLogBy)%> 사용자에 의해 편집 요약 숨겨짐<%} else {%><%=rev.log%><%}%></span>)
                 <%}%>
             </li>
         <%}%>

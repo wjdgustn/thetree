@@ -374,7 +374,7 @@ app.use(async (req, res, next) => {
             },
             gravatar_url: req.user?.avatar,
             user_document_discuss: null,
-            quick_block: false
+            quick_block: req.permissions.includes('admin')
         }
 
         const browserGlobalVarScript = `
@@ -416,6 +416,7 @@ document.getElementById('initScript')?.remove();
         `.replaceAll('\n', '').trim() + data.contentHtml;
         }
 
+        const isAdmin = req.permissions.includes('admin');
         app.render('main', {
             ...data,
             ...(data.serverData ?? {}),
@@ -423,7 +424,12 @@ document.getElementById('initScript')?.remove();
             page,
             session,
             browserGlobalVarScript,
-            cspNonce: res.locals.cspNonce
+            cspNonce: res.locals.cspNonce,
+            userHtml: (user, data) => utils.userHtml(user, {
+                ...data,
+                isAdmin
+            }),
+            addHistoryData: (rev, document) => utils.addHistoryData(rev, isAdmin, document)
         }, async (err, html) => {
             if(err) {
                 console.error(err);

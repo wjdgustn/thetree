@@ -28,7 +28,7 @@
 
                 <th rowspan="<%=remainingCount%>" style="background-color: <%=utils.increaseBrightness(colorFromUuid(diff.user.uuid), 50)%>"><a href="<%=doc_action_link(document, 'diff', {
                         uuid: diff.uuid
-                    })%>">r<%=diff.history.rev%></a><br><%-utils.userHtml(diff.user);%><%-infoHtml ? `<br>${infoHtml}` : ''%></th>
+                    })%>">r<%=diff.history.rev%></a><br><%-userHtml(diff.user);%><%-infoHtml ? `<br>${infoHtml}` : ''%></th>
             <%}%>
             <%remainingCount--;%>
 

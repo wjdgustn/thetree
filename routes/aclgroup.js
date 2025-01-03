@@ -65,6 +65,14 @@ app.get('/aclgroup', async (req, res) => {
     });
 });
 
+app.get('/aclgroup/groups', middleware.permission('admin'), async (req, res) => {
+    const aclGroups = await ACLGroup.find();
+    res.json(aclGroups.map(a => ({
+        uuid: a.uuid,
+        name: a.name
+    })));
+});
+
 app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, res) => {
     const name = req.body.name;
 
@@ -136,7 +144,7 @@ app.post('/aclgroup',
             if(req.body.mode !== 'username') return true;
 
             const user = await User.findOne({ name: value });
-            if(!user) throw new Error('사용자 이름이 올바르지 않습니다.');
+            if(!user || !value) throw new Error('사용자 이름이 올바르지 않습니다.');
 
             req.modifiedBody.user = user;
         }),
@@ -187,7 +195,13 @@ app.post('/aclgroup',
     const duration = req.modifiedBody.duration;
     if(duration > 0) newItem.expiresAt = new Date(Date.now() + duration * 1000);
 
-    const aclGroupItem = await ACLGroupItem.create(newItem);
+    let aclGroupItem;
+    try {
+        aclGroupItem = await ACLGroupItem.create(newItem);
+    } catch (e) {
+        if(e.code === 11000) return res.status(409).send('이미 해당 요소가 존재합니다.');
+        throw e;
+    }
 
     if(req.body.hidelog !== 'Y') await BlockHistory.create({
         type: BlockHistoryTypes.ACLGroupAdd,
