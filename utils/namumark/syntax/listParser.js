@@ -125,7 +125,7 @@ module.exports = {
                     if(levelDiff < 0) for(let i = 0; i < -levelDiff; i++) {
                         openedListSpaces.pop();
 
-                        let tag = listCloseTags.pop();
+                        let tag = listCloseTags.shift();
                         if(i > 0) tag = tag.slice('</li>'.length);
                         prevLine += tag;
                     }
@@ -135,11 +135,11 @@ module.exports = {
                         (levelDiff === 0 && listSpace !== lastListSpace)
                         // 세는 리스트 타입이 변한 경우
                         || (levelDiff === 0 && lastListTypeStr && listTypeStr !== lastListTypeStr);
-                    if(needSameLevelReopen) prevLine += listCloseTags.pop();
+                    if(needSameLevelReopen) prevLine += listCloseTags.shift();
 
                     const needOpen = levelDiff > 0 || listTypeStr !== lastListTypeStr || needSameLevelReopen;
                     // console.log('needOpen:', needOpen);
-                    if(levelDiff < 0 && needOpen) prevLine += listCloseTags.pop().slice('</li>'.length);
+                    if(levelDiff < 0 && needOpen) prevLine += listCloseTags.shift().slice('</li>'.length);
 
                     if(needOpen) {
                         const tagName = listTypeStr === '*' ? 'ul' : 'ol';
@@ -170,7 +170,7 @@ module.exports = {
                         }
                         prevLine += `${'<div class="wiki-indent">'.repeat(indentCount)}<${tagName} class="${`wiki-list ${listClass}`.trim()}"${startNum ? ` start="${startNum}"` : ''}>`;
                         // console.log(`open list! prevLine: ${prevLine}`);
-                        listCloseTags.push(`</li></${tagName}>${'</div>'.repeat(indentCount)}`);
+                        listCloseTags.unshift(`</li></${tagName}>${'</div>'.repeat(indentCount)}`);
                         openedListSpaces[level - 1] = listSpace;
                     }
                 } else {
