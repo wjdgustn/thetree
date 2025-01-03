@@ -212,7 +212,11 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         for(let namespace of allNamespaces) {
             const baseQuery = {
                 namespace,
-                categories: title
+                categories: {
+                    $elemMatch: {
+                        document: title
+                    }
+                }
             }
             const query = { ...baseQuery };
 
@@ -267,6 +271,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 if(choseong) char = choseong;
 
                 document.parsedName = utils.parseDocumentName(`${document.namespace}:${document.title}`);
+                document.category = document.categories.find(a => a.document === title);
 
                 const arr = categoriesPerChar[char] ??= [];
                 arr.push(document);

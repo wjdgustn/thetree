@@ -104,7 +104,10 @@ module.exports = {
         // return backlinks.sort((a, b) => Intl.Collator('en').compare(a.docName, b.docName));
         return {
             backlinks,
-            categories: parseResult.categories.map(a => a.document.slice('분류:'.length))
+            categories: parseResult.categories.map(a => ({
+                document: a.document.slice('분류:'.length),
+                text: a.text
+            }))
         }
     },
     async postHistorySave(rev, backlink = true, search = true) {

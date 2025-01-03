@@ -142,7 +142,6 @@ module.exports = {
         let newCategory;
         if(link.startsWith('분류:')) {
             isCategory = true;
-            text = text.slice(3);
 
             if(!namumark.categories.find(a => a.document === link)) {
                 let blur;
@@ -151,12 +150,14 @@ module.exports = {
                     blur = true;
                 }
                 newCategory = {
-                    document: link,
-                    text: splittedContent[1],
+                    document: utils.unescapeHtml(link),
+                    text: splittedContent.length > 1 ? utils.unescapeHtml(text) : null,
                     blur
                 }
                 namumark.categories.push(newCategory);
             }
+
+            text = link;
         }
 
         if(link.startsWith(':')) {

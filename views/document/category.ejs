@@ -40,7 +40,7 @@ ${data.nextItem ? enabledButton({
                         <ul>
                             <%for(let document of documents) {%>
                                 <li>
-                                    <a href="<%=doc_action_link(document.parsedName, 'w')%>"><%=doc_fulltitle(document.parsedName)%></a>
+                                    <a href="<%=doc_action_link(document.parsedName, 'w')%>"><%=document.category.text || doc_fulltitle(document.parsedName)%></a>
                                 </li>
                             <%}%>
                         </ul>
