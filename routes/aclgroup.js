@@ -187,7 +187,13 @@ app.post('/aclgroup',
     const duration = req.modifiedBody.duration;
     if(duration > 0) newItem.expiresAt = new Date(Date.now() + duration * 1000);
 
-    const aclGroupItem = await ACLGroupItem.create(newItem);
+    let aclGroupItem;
+    try {
+        aclGroupItem = await ACLGroupItem.create(newItem);
+    } catch (e) {
+        if(e.code === 11000) return res.status(409).send('이미 해당 요소가 존재합니다.');
+        throw e;
+    }
 
     if(req.body.hidelog !== 'Y') await BlockHistory.create({
         type: BlockHistoryTypes.ACLGroupAdd,
