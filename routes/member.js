@@ -302,7 +302,8 @@ app.post('/member/login',
         if(!user.totpToken && !config.use_email_verification) {
             await LoginHistory.create({
                 uuid: user.uuid,
-                ip: req.ip
+                ip: req.ip,
+                userAgent: req.get('User-Agent')
             });
 
             checkTrusted = true;
@@ -402,6 +403,7 @@ app.post('/member/login/pin',
     await LoginHistory.create({
         uuid: user.uuid,
         ip: req.ip,
+        userAgent: req.get('User-Agent'),
         trusted: !!req.body.trust
     });
 });

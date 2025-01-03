@@ -10,6 +10,10 @@ const newSchema = new Schema({
         type: String,
         required: true
     },
+    userAgent: {
+        type: String,
+        required: true
+    },
     createdAt: {
         type: Date,
         required: true,
