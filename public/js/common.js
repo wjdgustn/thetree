@@ -57,14 +57,21 @@ function plainAlert(text) {
     const message = doc.body.textContent;
 
     const errorAlerts = document.getElementsByClassName('thetree-error-alert');
-    if(errorAlerts.length) for(let alert of errorAlerts) {
+    let hasErrorAlert = false;
+    for(let alert of errorAlerts) {
+        const probModal = alert.parentElement.parentElement.parentElement.parentElement;
+        if(probModal.classList.contains('thetree-modal')) {
+            if(!probModal.classList.contains('thetree-modal-open')) continue;
+        }
+
         const content = alert.getElementsByClassName('thetree-alert-content-text')[0];
         if(!content) continue;
 
         alert.hidden = false;
         content.innerHTML = doc.body.innerHTML;
+        hasErrorAlert = true;
     }
-    else alert(message);
+    if(!hasErrorAlert) alert(message);
 }
 
 const aClickHandler = async e => {
