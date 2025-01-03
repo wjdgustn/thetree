@@ -1,6 +1,7 @@
 const { models } = require('mongoose');
 const crypto = require('crypto');
 
+const globalUtils = require('./global');
 const {
     UserTypes,
     HistoryTypes
@@ -154,8 +155,7 @@ module.exports = {
     },
     userHtml(user, {
         isAdmin = false,
-        document = null,
-        thread = null
+        note = null
     } = {}) {
         const name = user?.name ?? user?.ip;
         const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
@@ -163,7 +163,10 @@ module.exports = {
         let dataset = '';
         const data = {};
 
-        if(isAdmin) data.uuid = user.uuid;
+        if(isAdmin) {
+            data.uuid = user.uuid;
+            if(note) data.note = note;
+        }
         data.type = user.type;
 
         for(let [key, value] of Object.entries(data))
@@ -174,7 +177,9 @@ module.exports = {
                 : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
     },
-    addHistoryData(rev, isAdmin = false) {
+    addHistoryData(rev, isAdmin = false, document = null) {
+        document ??= rev.document;
+
         rev.infoText = null;
 
         if(rev.type === HistoryTypes.ACL) {
@@ -194,7 +199,10 @@ module.exports = {
             rev.infoText = `${rev.moveOldDoc}에서 ${rev.moveNewDoc}로 문서 이동`;
         }
 
-        rev.userHtml = this.userHtml(rev.user, { isAdmin });
+        rev.userHtml = this.userHtml(rev.user, {
+            isAdmin,
+            note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
+        });
 
         const diffClassList = ['diff-text'];
 

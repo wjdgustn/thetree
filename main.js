@@ -374,7 +374,7 @@ app.use(async (req, res, next) => {
             },
             gravatar_url: req.user?.avatar,
             user_document_discuss: null,
-            quick_block: false
+            quick_block: req.permissions.includes('admin')
         }
 
         const browserGlobalVarScript = `
@@ -429,7 +429,7 @@ document.getElementById('initScript')?.remove();
                 ...data,
                 isAdmin
             }),
-            addHistoryData: rev => utils.addHistoryData(rev, isAdmin)
+            addHistoryData: (rev, document) => utils.addHistoryData(rev, isAdmin, document)
         }, async (err, html) => {
             if(err) {
                 console.error(err);

@@ -88,10 +88,10 @@
             <hr>
             <a x-show="$store.state.userPopup.account" :href="doc_action_link({namespace: '사용자', title: $store.state.userPopup.name}, 'w')" role="button" class="thetree-button">사용자 문서</a>
             <hr x-show="$store.state.userPopup.account">
-            <a x-show="!$store.state.userPopup.deleted" :href="`/contribution/${$store.state.userPopup.uuid}/document`" role="button" class="thetree-button">문서 기여 내역</a>
-            <a x-show="!$store.state.userPopup.deleted" :href="`/contribution/${$store.state.userPopup.uuid}/discuss`" role="button" class="thetree-button">토론 기여 내역</a>
+            <a x-show="$store.state.userPopup.uuid" :href="`/contribution/${$store.state.userPopup.uuid}/document`" role="button" class="thetree-button">문서 기여 내역</a>
+            <a x-show="$store.state.userPopup.uuid" :href="`/contribution/${$store.state.userPopup.uuid}/discuss`" role="button" class="thetree-button">토론 기여 내역</a>
             <%if(req.permissions.includes('admin')) {%>
-                <hr x-show="!$store.state.userPopup.deleted">
+                <hr>
                 <a @click.prevent="navigator.clipboard.writeText($store.state.userPopup.uuid)" href="#" role="button" class="thetree-button">UUID 복사</a>
                 <a :href="`/BlockHistory?query=${$store.state.userPopup.uuid}&target=text`" role="button" class="thetree-button">차단 내역 조회</a>
                 <hr x-show="!$store.state.userPopup.deleted">
@@ -102,5 +102,74 @@
         </div>
     </div>
 </div>
+
+<%if(req.permissions.includes('admin')) {%>
+    <div id="quickblock-modal" class="thetree-modal-block thetree-modal">
+        <div class="thetree-modal-block thetree-modal-bg"></div>
+        <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
+            <div class="thetree-modal-content">
+                <form method="post" action="/aclgroup">
+                    <h4>빠른 ACLGroup</h4>
+                    <%-include('components/alert', { alert: '' })%>
+
+                    <div>
+                        <p>그룹:</p>
+                        <select id="quickblock-group-select" name="group"></select>
+                    </div>
+                    <div x-data="{ mode: '' }">
+                        <p>대상:</p>
+                        <select id="quickblock-mode" name="mode" x-model="mode" x-init="mode = $el.value">
+                            <option value="ip">아이피</option>
+                            <option value="username">사용자 이름</option>
+                        </select>
+                        <input id="quickblock-target" type="text" :name="mode">
+                    </div>
+                    <div>
+                        <p>사유:</p>
+                        <input id="quickblock-note" type="text" name="note">
+                    </div>
+                    <div x-data="{ duration: '' }">
+                        <p>차단 기간 :</p>
+                        <span>
+                            <select id="quickblock-duration" name="duration" x-model="duration" x-init="duration = $el.value">
+                                <option value="0">영구</option>
+                                <option value="300">5분</option>
+                                <option value="600">10분</option>
+                                <option value="1800">30분</option>
+                                <option value="3600">1시간</option>
+                                <option value="7200">2시간</option>
+                                <option value="86400">하루</option>
+                                <option value="259200">3일</option>
+                                <option value="432000">5일</option>
+                                <option value="604800">7일</option>
+                                <option value="1209600">2주</option>
+                                <option value="1814400">3주</option>
+                                <option value="2419200">4주</option>
+                                <option value="4838400">2개월</option>
+                                <option value="7257600">3개월</option>
+                                <option value="14515200">6개월</option>
+                                <option value="29030400">1년</option>
+                                <option value="raw">직접입력</option>
+                            </select>
+                            <input type="number" name="rawDuration" x-show="duration === 'raw'">
+                            <select name="rawMultiplier" x-show="duration === 'raw'">
+                                <option value="1">초</option>
+                                <option value="60">분</option>
+                                <option value="3600">시간</option>
+                                <option value="86400">일</option>
+                                <option value="604800">주</option>
+                            </select>
+                        </span>
+                    </div>
+
+                    <div class="aclgroup-modal-buttons">
+                        <button class="thetree-modal-button thetree-square-button thetree-danger-button">추가</button>
+                        <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<%}%>
 </body>
 </html>

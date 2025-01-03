@@ -21,21 +21,25 @@ document.addEventListener('thetree:pageLoad', () => {
             }));
         }
 
-        modalProps.close = () => {
+        modalProps.close = (skipAnim = false) => {
             if(!modal.classList.contains('thetree-modal-open')) return;
+
+            if(skipAnim) modal.classList.add('thetree-modal-noanim');
 
             modal.classList.remove('thetree-modal-open');
             document.body.style.overflow = '';
 
             modal.addEventListener('transitionend', () => {
                 modal.classList.remove('thetree-modal-display');
+                modal.classList.remove('thetree-modal-noanim');
             }, { once: true });
+
+            if(skipAnim) modal.dispatchEvent(new Event('transitionend'));
         }
 
-        // bg.addEventListener('click', modalProps.close);
-        container.addEventListener('click', modalProps.close);
+        container.addEventListener('click', () => modalProps.close());
         content.addEventListener('click', e => e.stopPropagation());
-        closeButton.addEventListener('click', modalProps.close);
+        closeButton.addEventListener('click', () => modalProps.close());
 
         modalProps.initialized = true;
     }

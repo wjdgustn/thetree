@@ -48,7 +48,7 @@ ${enableNext ? enabledButton({
 
     <ul x-data="{ oldRow: <%=revs.length%>, newRow: -1 }">
         <%for(let i in revs) {%>
-            <%rev = addHistoryData(revs[i]);%>
+            <%rev = addHistoryData(revs[i], document);%>
 
             <li<%-rev.troll ? ' class="troll"' : ''%>>
                 <span><%-getFullDateTag(rev.createdAt)%></span>

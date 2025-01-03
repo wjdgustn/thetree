@@ -114,36 +114,4 @@
     table tr:last-of-type td {
         border-bottom: 1px solid #eceeef;
     }
-
-    .thetree-modal form {
-        box-sizing: border-box;
-        flex: 1 0 auto;
-        font-size: 14px;
-        padding: 15px;
-        width: 100%;
-    }
-
-    .thetree-modal form h4 {
-        font-weight: 600;
-        margin: 0;
-        padding: 0;
-    }
-
-    .thetree-modal form div p {
-        margin-bottom: 0;
-    }
-
-    .thetree-modal form div.aclgroup-modal-buttons {
-        float: right;
-        margin-bottom: 1rem;
-        margin-top: 1rem;
-    }
-
-    .thetree-modal form input {
-        margin: 0;
-    }
-
-    .thetree-modal form input:not([type=checkbox]) {
-        width: 100%;
-    }
 }

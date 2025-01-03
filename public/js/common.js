@@ -7,10 +7,25 @@ Object.defineProperty(window, 'query', {
 });
 
 let userPopup;
+
+let quickBlockModal;
+let quickBlockGroupSelect;
+let quickBlockMode;
+let quickBlockTarget;
+let quickBlockNote;
+let quickBlockDuration;
+
 function contentLoadedHandler() {
     content = document.getElementById('content');
     progressBar = document.getElementById('progress-bar');
     userPopup = document.getElementById('userpopup');
+
+    quickBlockModal = document.getElementById('quickblock-modal');
+    quickBlockGroupSelect = document.getElementById('quickblock-group-select');
+    quickBlockMode = document.getElementById('quickblock-mode');
+    quickBlockTarget = document.getElementById('quickblock-target');
+    quickBlockNote = document.getElementById('quickblock-note');
+    quickBlockDuration = document.getElementById('quickblock-duration');
 }
 
 document.addEventListener('DOMContentLoaded', contentLoadedHandler);
@@ -151,6 +166,12 @@ const formHandler = async e => {
     backupForm();
 
     if(response.redirected) {
+        const probModal = e.target.parentElement.parentElement.parentElement;
+        console.log(probModal);
+        if(probModal.classList.contains('thetree-modal')) {
+            probModal._thetree.modal.close(true);
+        }
+
         window.beforePageLoad = null;
         window.beforePopstate = null;
         return await movePage(response);
@@ -314,6 +335,7 @@ function setupDocument() {
             State.userPopup.name = userText.textContent;
             State.userPopup.uuid = userText.dataset.uuid;
             State.userPopup.type = parseInt(userText.dataset.type);
+            State.userPopup.note = userText.dataset.note || null;
 
             State.userPopup.open(userText);
 
@@ -562,6 +584,7 @@ document.addEventListener('alpine:init', () => {
             type: 1,
             name: '',
             uuid: '',
+            note: null,
             get typeStr() {
                 switch(parseInt(State.userPopup.type)) {
                     case 0:
@@ -576,8 +599,13 @@ document.addEventListener('alpine:init', () => {
             get account() {
                 return State.userPopup.type === 1;
             },
-            block() {
-                console.log(`quick block ${State.userPopup.name}`);
+            async block() {
+                const isAccount = State.userPopup.account;
+                await State.openQuickACLGroup({
+                    username: isAccount ? State.userPopup.name : null,
+                    ip: !isAccount ? State.userPopup.name : null,
+                    note: State.userPopup.note ?? undefined
+                });
             },
             open(userText) {
                 requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -600,6 +628,34 @@ document.addEventListener('alpine:init', () => {
             close() {
                 userPopup.classList.add('userpopup-close');
             }
+        },
+
+        async openQuickACLGroup({
+            username = null,
+            ip = null,
+            note = '긴급차단'
+        } = {}) {
+            const res = await fetch('/aclgroup/groups');
+            const groups = await res.json();
+
+            quickBlockGroupSelect.innerHTML = '';
+            for(let group of groups) {
+                const option = document.createElement('option');
+                option.value = group.uuid;
+                option.textContent = group.name;
+                quickBlockGroupSelect.appendChild(option);
+            }
+
+            quickBlockMode.value = username == null ? 'ip' : 'username';
+            quickBlockMode.dispatchEvent(new Event('change'));
+            quickBlockTarget.value = username ?? ip;
+            quickBlockNote.value = note;
+            quickBlockDuration.value = '0';
+
+            quickBlockModal.querySelector('.thetree-alert').hidden = true;
+            quickBlockModal.querySelectorAll('.input-error').forEach(a => a.remove());
+
+            quickBlockModal._thetree.modal.open();
         },
 
         async init() {

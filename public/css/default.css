@@ -379,6 +379,10 @@ a.navigation-button {
     display: none;
 }
 
+.thetree-modal-noanim {
+    transition: none;
+}
+
 .thetree-modal-display {
     display: block;
 }
@@ -855,4 +859,50 @@ div.category-document-block div.category-document-many-content div:first-child h
     pointer-events: none;
     transition: opacity .15s,visibility .15s !important;
     visibility: hidden !important;
+}
+
+.thetree-modal form {
+    box-sizing: border-box;
+    flex: 1 0 auto;
+    font-size: 14px;
+    padding: 15px;
+    width: 100%;
+}
+
+.thetree-modal form h4 {
+    font-weight: 600;
+    margin: 0;
+    padding: 0;
+}
+
+.thetree-modal form div p {
+    margin-bottom: 0;
+}
+
+.thetree-modal form div.aclgroup-modal-buttons {
+    float: right;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+}
+
+.thetree-modal form div>input:not([type=checkbox]), .thetree-modal form div>select {
+    margin: 0;
+    width: 100%;
+}
+
+.thetree-modal form div>input[type=checkbox] {
+    margin: 0;
+}
+
+.thetree-modal input, .thetree-modal select {
+    background-color: #fff;
+    background-image: none;
+    border: .0625rem solid #ccc;
+    border-radius: 0;
+    color: #55595c;
+    display: inline-block;
+    font-size: .9rem;
+    line-height: 1.5;
+    margin: 0 0 0 .7rem;
+    padding: .25rem .5rem;
 }

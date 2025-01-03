@@ -65,6 +65,14 @@ app.get('/aclgroup', async (req, res) => {
     });
 });
 
+app.get('/aclgroup/groups', middleware.permission('admin'), async (req, res) => {
+    const aclGroups = await ACLGroup.find();
+    res.json(aclGroups.map(a => ({
+        uuid: a.uuid,
+        name: a.name
+    })));
+});
+
 app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, res) => {
     const name = req.body.name;
 
