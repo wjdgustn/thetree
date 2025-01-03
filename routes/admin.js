@@ -466,7 +466,9 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
 
     if(req.query.username) {
         targetUser = await User.findOne({
-            name: req.query.username
+            name: {
+                $regex: new RegExp(utils.escapeRegExp(req.query.username), 'i')
+            }
         });
     }
 

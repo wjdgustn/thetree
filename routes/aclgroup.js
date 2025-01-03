@@ -143,7 +143,11 @@ app.post('/aclgroup',
         .custom(async (value, { req }) => {
             if(req.body.mode !== 'username') return true;
 
-            const user = await User.findOne({ name: value });
+            const user = await User.findOne({
+                name: {
+                    $regex: new RegExp(utils.escapeRegExp(value), 'i')
+                }
+            });
             if(!user || !value) throw new Error('사용자 이름이 올바르지 않습니다.');
 
             req.modifiedBody.user = user;
