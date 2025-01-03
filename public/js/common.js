@@ -577,24 +577,6 @@ window.addEventListener('beforeunload', e => {
 });
 
 const localConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
-
-function getLocalConfig(key) {
-    return localConfig[key] ?? defaultConfig[key];
-}
-
-function setLocalConfig(key, value) {
-    localConfig[key] = value;
-    localStorage.setItem('thetree_settings', JSON.stringify(localConfig));
-
-    emit('thetree:configChange');
-}
-
-function getCurrentTheme() {
-    let theme = getLocalConfig('wiki.theme');
-    if(theme === 'auto') theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    return theme;
-}
-
 document.addEventListener('alpine:init', () => {
     Alpine.store('state', {
         page,
@@ -696,10 +678,19 @@ document.addEventListener('alpine:init', () => {
             const result = await fetch('/sidebar.json');
             this.recent = await result.json();
         },
-        getLocalConfig,
-        setLocalConfig,
+        getLocalConfig(key) {
+            return this.localConfig[key] ?? defaultConfig[key];
+        },
+        setLocalConfig(key, value) {
+            this.localConfig[key] = value;
+            localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig));
+
+            emit('thetree:configChange');
+        },
         get currentTheme() {
-            return getCurrentTheme();
+            let theme = this.getLocalConfig('wiki.theme');
+            if(theme === 'auto') theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            return theme;
         }
     });
     window.State = Alpine.store('state');
