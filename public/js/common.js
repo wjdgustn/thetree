@@ -606,6 +606,9 @@ document.addEventListener('alpine:init', () => {
             get account() {
                 return State.userPopup.type === 1;
             },
+            get blockable() {
+                return [0, 1].includes(State.userPopup.type);
+            },
             async block() {
                 const isAccount = State.userPopup.account;
                 await State.openQuickACLGroup({
