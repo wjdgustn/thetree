@@ -170,7 +170,7 @@ module.exports = {
             }
         }
 
-        link = link.trim();
+        link = utils.unescapeHtml(link.trim());
         text = text.trim();
 
         if(!isImage && splittedContent.length === 1 && link.slice(1).includes('#')) {
@@ -224,7 +224,7 @@ module.exports = {
                 notExist = false;
             }
             else {
-                const splittedLink = utils.unescapeHtml(link).split('#').map(a => utils.escapeHtml(a));
+                const splittedLink = link.split('#');
                 if(splittedLink.length >= 2) {
                     const hash = splittedLink.pop();
                     const front = splittedLink.join('#').replaceAll('#', '%23');
