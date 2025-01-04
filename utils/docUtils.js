@@ -116,6 +116,13 @@ module.exports = {
         });
         if(!dbDocument) return;
 
+        await mongoose.models.History.updateMany({
+            document: dbDocument.uuid,
+            uuid: { $ne: rev.uuid }
+        }, {
+            latest: false
+        });
+
         const document = utils.dbDocumentToDocument(dbDocument);
 
         const parser = new global.NamumarkParser({

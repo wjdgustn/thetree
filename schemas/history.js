@@ -40,6 +40,11 @@ const newSchema = new Schema({
         required: true,
         index: true
     },
+    latest: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
     content: {
         type: String
     },
