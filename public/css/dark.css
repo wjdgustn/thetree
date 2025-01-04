@@ -21,7 +21,7 @@
     color: #ddd !important;
 }
 
-.theseed-dark-mode .thetree-square-button:not([disabled]):hover {
+.theseed-dark-mode .thetree-square-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #2d2f34;
     border-color: #383b40;
 }
