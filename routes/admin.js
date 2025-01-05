@@ -405,10 +405,11 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         });
     }
 
-    else if(tool === 'deleteddisabledfeature') {
+    else if(tool === 'deletedisabledfeature') {
         const index = parseInt(req.query.index);
         global.disabledFeatures.splice(index, 1);
-        fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+        if(globbal.disabledFeatures.length) fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+        else fs.rmSync('./cache/disabledFeatures.json');
 
         res.reload();
     }
