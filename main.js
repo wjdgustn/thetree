@@ -61,6 +61,9 @@ Object.defineProperty(global, 'config', {
     }
 });
 
+const disabledFeaturesPath = './cache/disabledFeatures.json';
+global.disabledFeatures = fs.existsSync(disabledFeaturesPath) ? JSON.parse(fs.readFileSync(disabledFeaturesPath).toString()) : [];
+
 require('dotenv').config();
 
 global.S3 = new aws.S3Client({
@@ -468,6 +471,18 @@ document.getElementById('initScript')?.remove();
         const url = new URL(target, 'http://' + req.hostname);
         if(req.query.f) url.searchParams.set('f', req.query.f);
         res.originalRedirect(...args, url.pathname + url.search);
+    }
+
+    const url = req.url;
+    if(!url.startsWith('/admin/config')) for(let item of global.disabledFeatures) {
+        if(item.method !== 'ALL' && item.method !== req.method) continue;
+
+        if(item.type === 'string' && !req.url.startsWith(item.condition)) continue;
+        if(item.type === 'js' && !eval(item.condition)) continue;
+
+        const msg = item.message || '비활성화된 기능입니다.';
+        if(item.messageType === 'res.error') return res.error(msg, 403);
+        if(item.messageType === 'plaintext') return res.status(403).send(msg);
     }
 
     next();

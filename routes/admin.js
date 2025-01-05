@@ -405,6 +405,14 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         });
     }
 
+    else if(tool === 'deleteddisabledfeature') {
+        const index = parseInt(req.query.index);
+        global.disabledFeatures.splice(index, 1);
+        fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+
+        res.reload();
+    }
+
     else return res.status(404).send('tool not found');
 });
 
@@ -624,6 +632,30 @@ app.post('/admin/config/migratecontribution', middleware.permission('developer')
     });
 
     return res.status(204).end();
+});
+
+app.post('/admin/config/disabledfeatures', middleware.permission('developer'), (req, res) => {
+    console.log(req.body);
+    const {
+        methodField: method,
+        type,
+        condition,
+        message,
+        messageType
+    } = req.body;
+
+    if(!method || !type || !condition) return res.status(400).send('method와 type과 condition은 필수입니다.');
+
+    global.disabledFeatures.push({
+        method,
+        type,
+        condition,
+        message,
+        messageType
+    });
+    fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+
+    res.reload();
 });
 
 module.exports = app;
