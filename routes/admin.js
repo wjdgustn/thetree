@@ -333,9 +333,10 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                         log(`create document: ${document.namespace}:${document.title}, uuid: ${dbDocument.uuid}`);
                     }
 
+                    const isFileRev1 = document.namespace === '파일' && row.id === '1';
                     let isFile = false;
                     let fileInfo = {};
-                    if(document.namespace === '파일' && row.id === '1') {
+                    if(isFileRev1) {
                         const splittedTitle = document.title.split('.');
                         const ext = splittedTitle.pop();
                         const filename = splittedTitle.join('.');
@@ -387,7 +388,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
                     });
                     else await History.create({
                         user: user.uuid,
-                        type: row.type === 'r1' ? HistoryTypes.Create : HistoryTypes.Modify,
+                        type: (row.type === 'r1' || isFileRev1) ? HistoryTypes.Create : HistoryTypes.Modify,
                         document: dbDocument.uuid,
                         content,
                         log: row.send,
