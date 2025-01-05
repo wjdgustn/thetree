@@ -1,5 +1,6 @@
 const { Priority } = require('../types');
 
+const utils = require('../utils');
 const globalUtils = require('../../../utils/global');
 
 const getLevel = content => {
@@ -98,7 +99,7 @@ module.exports = {
 
         namumark.headings.push({
             num: paragraphNumText,
-            text
+            text: utils.removeBackslash(text)
         });
 
         return `

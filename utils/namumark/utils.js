@@ -129,5 +129,18 @@ module.exports = {
         }
         console.timeEnd('isPlainHtmlTag');
         return true;
+    },
+    removeBackslash: text => {
+        let newText = '';
+        for(let i = 0; i < text.length; i++) {
+            const char = text[i];
+            if(char === '\\') {
+                newText += text[++i] || '';
+                continue;
+            }
+
+            newText += char;
+        }
+        return newText;
     }
 }
