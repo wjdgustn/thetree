@@ -113,30 +113,33 @@ document.addEventListener('thetree:pageLoad', () => {
 
     <h2 class="wiki-heading">기능 비활성화</h2>
     <div class="wiki-heading-content">
-        <table class="wiki-table">
-            <tbody>
-            <tr style="font-weight: 600">
-                <td>Method</td>
-                <td>Type</td>
-                <td>Condition</td>
-                <td>MessageType</td>
-                <td>Message</td>
-                <td>Action</td>
-            </tr>
-
-            <%for(let i in disabledFeatures) {%>
-                <%let item = disabledFeatures[i];%>
-                <tr>
-                    <td><%=item.method%></td>
-                    <td><%=item.type%></td>
-                    <td style="max-width: 300px; white-space: nowrap; overflow-x: auto;"><%=item.condition%></td>
-                    <td><%=item.messageType%></td>
-                    <td><%=item.message%></td>
-                    <td><a href="/admin/config/tools/deletedisabledfeature?index=<%=i%>" class="thetree-square-button thetree-danger-button">삭제</a></td>
+        <div class="wiki-table-wrap">
+            <table class="wiki-table">
+                <tbody>
+                <tr style="font-weight: 600">
+                    <td>Method</td>
+                    <td>Type</td>
+                    <td>Condition</td>
+                    <td>MessageType</td>
+                    <td>Message</td>
+                    <td>Action</td>
                 </tr>
-            <%}%>
-            </tbody>
-        </table>
+
+                <%for(let i in disabledFeatures) {%>
+                    <%let item = disabledFeatures[i];%>
+                    <tr>
+                        <td style="min-width: 100px;"><%=item.method%></td>
+                        <td style="min-width: 100px;"><%=item.type%></td>
+                        <td style="max-width: 300px; white-space: nowrap; overflow-x: auto;"><%=item.condition%></td>
+                        <td style="min-width: 120px;"><%=item.messageType%></td>
+                        <td style="min-width: 100px;"><%=item.message%></td>
+                        <td><a href="/admin/config/tools/deletedisabledfeature?index=<%=i%>" class="thetree-square-button thetree-danger-button">삭제</a></td>
+                    </tr>
+                <%}%>
+                </tbody>
+            </table>
+        </div>
+
 
         <form method="post" action="/admin/config/disabledfeatures">
             <select name="methodField">
