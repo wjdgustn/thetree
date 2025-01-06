@@ -194,7 +194,11 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
     else if(tool.startsWith('generatebacklink')) {
         res.status(204).end();
 
-        const documents = await Document.find().lean();
+        const documents = await Document.find()
+            .sort({
+                updatedAt: 1
+            })
+            .lean();
 
         const total = documents.length;
         console.log(`generating backlink info... total: ${total}`);
