@@ -218,6 +218,11 @@
         resize: vertical;
         width: 100%;
     }
+
+    .preview-tab-loading {
+        background-color: #ccc;
+        text-align: center;
+    }
 }
 
 @keyframes comment-blink {

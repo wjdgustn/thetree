@@ -75,7 +75,7 @@ newSchema.pre('save', async function() {
         locks.push(resolve);
     }), 5000);
 
-    if (!last) last = await model.findOne({ thread: this.id }).sort({ id: -1 });
+    if (!last) last = await model.findOne({ thread: this.thread }).sort({ id: -1 });
 
     locks.forEach(r => r());
 

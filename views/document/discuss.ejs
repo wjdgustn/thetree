@@ -3,20 +3,22 @@
 
 <h3>편집 요청</h3>
 <ul>
-    <li><a href="/">편집 요청 Sans</a></li>
+    <%#<li><a href="/">편집 요청 Sans</a></li>%>
 </ul>
 <p><a href="/">[닫힌 편집 요청 보기]</a></p>
 
 <h3>토론</h3>
 <ul>
-    <li>
-        <a href="#s-1">1</a>.
-        <a href="/">샌즈티비</a>
-    </li>
-    <li>
-        <a href="#s-2">1</a>.
-        <a href="/">real?</a>
-    </li>
+    <%for(let i in openThreads) {%>
+        <%
+        const thread = openThreads[i];
+        const num = parseInt(i) + 1;
+        %>
+        <li>
+            <a href="#s-<%=num%>"><%=num%></a>.
+            <a href="/thread/<%=thread.url%>"><%=thread.topic%></a>
+        </li>
+    <%}%>
 </ul>
 <p><a href="/">[닫힌 토론 목록 보기]</a></p>
 

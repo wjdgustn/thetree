@@ -26,7 +26,10 @@ document.addEventListener('thetree:pageLoad', () => {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({
-                content: textInput.value
+                content: textInput.value,
+                ...(page.data.thread ? {
+                    mode: 'thread'
+                } : {})
             }).toString()
         });
         previewTabContent.innerHTML = await response.text();

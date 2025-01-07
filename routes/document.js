@@ -14,7 +14,8 @@ const {
     ACLConditionTypes,
     ACLActionTypes,
     HistoryTypes,
-    BacklinkFlags
+    BacklinkFlags,
+    ThreadStatusTypes
 } = require('../utils/types');
 
 const headingSyntax = require('../utils/namumark/syntax/heading');
@@ -25,6 +26,7 @@ const History = require('../schemas/history');
 const ACLModel = require('../schemas/acl');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
+const Thread = require('../schemas/thread');
 
 const ACL = require('../class/acl');
 
@@ -52,11 +54,19 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 
     const acl = await ACL.get({ document: dbDocument }, document);
 
+    const threadExists = await Thread.exists({
+        document: dbDocument.uuid,
+        status: {
+            $ne: ThreadStatusTypes.Close
+        },
+        deleted: false
+    });
+
     const isOldVer = req.query.uuid && req.query.uuid === rev?.uuid;
     const defaultData = {
         viewName: 'wiki',
         date: undefined,
-        discuss_progress: false,
+        discuss_progress: !!threadExists,
         document,
         edit_acl_message: null,
         editable: false,

@@ -1,13 +1,14 @@
 <link rel="stylesheet" href="/css/views/thread.css">
 <script src="/js/thread.js"></script>
+<script src="/js/preview.js"></script>
 
-<form method="post" class="delete-thread-form delete-thread-form-thread" action="/admin/thread/asdf/delete">
+<form method="post" class="delete-thread-form delete-thread-form-thread" action="/admin/thread/<%=thread.url%>/delete">
     <%if(req.permissions.includes('delete_thread')) {%><button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button><%}%>
     <input type="checkbox" id="noDisplayHideAuthor" x-model="$store.state.page.data.hideHiddenComments">
     <label for="noDisplayHideAuthor">숨겨진 댓글 보이지 않기</label>
 </form>
 
-<h2 class="thread-title">토론 제목</h2>
+<h2 class="thread-title" x-text="$store.state.page.data.thread.topic"><%=thread.topic%></h2>
 <div>
     <template x-for="(comment, index) in $store.state.page.data.comments.filter(a => !a.hidden || !$store.state.page.data.hideHiddenComments)">
         <div :data-index="index" :data-fetched="comment.userHtml ? '1' : ''" class="comment-block" :class="{ 'comment-block-loading': !comment.userHtml }">
@@ -36,44 +37,45 @@
 </div>
 
 <h3 class="comment-title">댓글 달기</h3>
+<%-include('components/alert', { alert: '' })%>
 <%if(req.permissions.includes('update_thread_status')) {%>
-    <form method="post" action="/admin/thread/asdf/status">
+    <form method="post" action="/admin/thread/<%=thread.url%>/status">
         [ADMIN] 스레드 상태 변경
         <select name="status">
-            <option value="normal">normal</option>
-            <option value="pause">pause</option>
-            <option value="close">close</option>
+            <%for(let [name, value] of Object.entries(ThreadStatusTypes)) {%>
+                <option<%=thread.status === value ? ' selected' : ''%>><%=name.toLowerCase()%></option>
+            <%}%>
         </select>
         <button class="thetree-square-button">변경</button>
     </form>
 <%}%>
 <%if(req.permissions.includes('update_thread_document')) {%>
-    <form method="post" action="/admin/thread/asdf/document">
+    <form method="post" action="/admin/thread/<%=thread.url%>/document">
         [ADMIN] 스레드 이동
         <input name="document" value="<%=doc_fulltitle(document)%>">
         <button class="thetree-square-button">변경</button>
     </form>
 <%}%>
 <%if(req.permissions.includes('update_thread_topic')) {%>
-    <form method="post" action="/admin/thread/asdf/topic">
+    <form method="post" action="/admin/thread/<%=thread.url%>/topic">
         [ADMIN] 스레드 주제 변경
-        <input name="topic" value="토론 제목">
+        <input name="topic" value="<%=thread.topic%>">
         <button class="thetree-square-button">변경</button>
     </form>
 <%}%>
 
-<form method="post" class="comment-form" action="/thread/asdf" x-data="{ selectedTab: 'raw' }">
+<form id="comment-form" class="comment-form" method="post" action="/thread/<%=thread.url%>" x-data="{ selectedTab: 'raw' }">
     <ul>
         <li>
             <button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button>
         </li>
         <li>
-            <button type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button>
+            <button id="preview-tab-button" type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button>
         </li>
     </ul>
     <div class="tabs">
         <div :class="selectedTab === 'raw' && 'selected-tab-content'">
-            <textarea rows="5" name="text"></textarea>
+            <textarea id="text-input" rows="5" name="text"></textarea>
         </div>
 
         <div id="preview-tab-content" :class="selectedTab === 'preview' && 'selected-tab-content'">

@@ -179,7 +179,7 @@ module.exports = {
         if(thread) {
             if(threadAdmin) nameClass = ' user-text-admin';
         }
-        else nameClass = user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : ''
+        else nameClass = user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : '';
 
         return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
                 ? `<a class="user-text-name${nameClass}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`

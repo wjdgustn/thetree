@@ -105,8 +105,8 @@ function backupForm() {
     }
 }
 
-function restoreForm() {
-    const forms = content.querySelectorAll('form');
+function restoreForm(reset = false, form = null) {
+    const forms = form ? [form] : content.querySelectorAll('form');
     const usedFormIds = [];
     for(let form of forms) {
         const backup = formBackup[form.id];
@@ -115,7 +115,7 @@ function restoreForm() {
         usedFormIds.push(form.id);
 
         for(let [key, value] of backup) {
-            const input = form.querySelector(`input[name="${key}"], select[name="${key}"]`);
+            const input = form.querySelector(`input[name="${key}"], select[name="${key}"], textarea[name="${key}"]`);
             if(!input) continue;
 
             if(input.type === 'hidden') continue;
@@ -123,6 +123,8 @@ function restoreForm() {
             if(input.type === 'checkbox' || input.type === 'radio')
                 input.checked = !!value;
             else {
+                if(reset) value = input.getAttribute('value') ?? '';
+
                 if(input._x_model)
                     input._x_model.set(value);
                 else
@@ -172,6 +174,8 @@ const formHandler = async e => {
 
     backupForm();
 
+    if(response.status === 204) return restoreForm(true, form);
+
     if(response.redirected) {
         const probModal = e.target.parentElement.parentElement.parentElement;
         console.log(probModal);
@@ -190,7 +194,7 @@ const formHandler = async e => {
         try {
             json = JSON.parse(html);
             if(json.fieldErrors) {
-                const inputs = form.querySelectorAll('input, select');
+                const inputs = form.querySelectorAll('input, select, textarea');
                 for(let input of inputs) {
                     if(!input.name) continue;
 
@@ -288,6 +292,33 @@ function focusAnchor() {
     else window.scrollTo(0, 0);
 }
 
+function setupUserText() {
+    const userTexts = document.getElementsByClassName('user-text-name');
+    for(let userText of userTexts) {
+        if(userText._thetree?.userTextInitialized) continue;
+
+        const handler = e => {
+            e.preventDefault();
+
+            State.userPopup.name = userText.textContent;
+            State.userPopup.uuid = userText.dataset.uuid;
+            State.userPopup.type = parseInt(userText.dataset.type);
+            State.userPopup.note = userText.dataset.note || null;
+            State.userPopup.threadAdmin = !!userText.dataset.threadadmin;
+
+            State.userPopup.open(userText);
+
+            return false;
+        }
+
+        userText._thetree ??= {};
+        if(userText.tagName === 'A') userText.removeEventListener('click', aClickHandler);
+        userText.addEventListener('click', handler);
+
+        userText._thetree.userTextInitialized = true;
+    }
+}
+
 function setupDocument() {
     const aElements = document.getElementsByTagName('a');
     for(let a of aElements) {
@@ -322,27 +353,7 @@ function setupDocument() {
         };
     }
 
-    const userTexts = document.getElementsByClassName('user-text-name');
-    for(let userText of userTexts) {
-        const handler = e => {
-            e.preventDefault();
-
-            State.userPopup.name = userText.textContent;
-            State.userPopup.uuid = userText.dataset.uuid;
-            State.userPopup.type = parseInt(userText.dataset.type);
-            State.userPopup.note = userText.dataset.note || null;
-            State.userPopup.threadAdmin = !!userText.dataset.threadadmin;
-
-            State.userPopup.open(userText);
-
-            return false;
-        }
-
-        if(userText.tagName === 'A') userText._thetree = {
-            preHandler: handler
-        }
-        else userText.addEventListener('click', handler);
-    }
+    setupUserText();
 
     emit('thetree:pageLoad');
 }

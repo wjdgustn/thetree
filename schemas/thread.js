@@ -24,6 +24,11 @@ const newSchema = new Schema({
         index: true,
         default: urlGenerator
     },
+    document: {
+        type: String,
+        required: true,
+        index: true
+    },
     topic: {
         type: String,
         required: true
