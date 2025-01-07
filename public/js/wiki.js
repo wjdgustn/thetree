@@ -28,10 +28,19 @@ function setupWikiHandlers() {
         const foldingText = folding.firstElementChild;
         const foldingContent = foldingText.nextElementSibling;
 
-        foldingContent.classList.add('wiki-folding-opened');
-        const offsetWidth = folding.offsetWidth;
-        const offsetHeight = folding.offsetHeight;
-        foldingContent.classList.remove('wiki-folding-opened');
+        let offsetWidth;
+        let offsetHeight;
+        const resizeObserver = new ResizeObserver(([entry]) => {
+            if(!entry.contentRect.height) return;
+
+            foldingContent.classList.add('wiki-folding-opened');
+            offsetWidth = foldingContent.offsetWidth;
+            offsetHeight = foldingContent.offsetHeight;
+            foldingContent.classList.remove('wiki-folding-opened');
+
+            resizeObserver.disconnect();
+        });
+        resizeObserver.observe(foldingText);
 
         let transitionCount = 0;
         const transitioning = () => transitionCount !== 0;
