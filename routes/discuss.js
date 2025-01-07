@@ -211,7 +211,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
     for(let comment of comments) {
         comment.userHtml = utils.userHtml(comment.user, {
             isAdmin: req.permissions.includes('admin'),
-            note: `토론 ${thread.url} #${thread.id} 긴급차단`,
+            note: `토론 ${thread.url} #${comment.id} 긴급차단`,
             thread: true,
             threadAdmin: comment.admin
         });
