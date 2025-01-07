@@ -93,7 +93,7 @@
             <%if(req.permissions.includes('admin')) {%>
                 <hr>
                 <a @click.prevent="navigator.clipboard.writeText($store.state.userPopup.uuid)" href="#" role="button" class="thetree-button">UUID 복사</a>
-                <a x-show="$store.state.userPopup.type !== 2" :href="`/BlockHistory?query=${$store.state.userPopup.uuid}&target=text`" role="button" class="thetree-button">차단 내역 조회</a>
+                <a x-show="$store.state.userPopup.type !== 2" :href="`/BlockHistory?query=${$store.state.userPopup.type === 0 ? $store.state.userPopup.name : $store.state.userPopup.uuid}&target=text`" role="button" class="thetree-button">차단 내역 조회</a>
                 <hr x-show="$store.state.userPopup.blockable">
                 <a x-show="$store.state.userPopup.blockable" @click.prevent="$store.state.userPopup.block" href="#" role="button" class="thetree-button thetree-block-button">차단</a>
             <%} else {%>

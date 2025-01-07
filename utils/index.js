@@ -6,6 +6,7 @@ const {
     UserTypes,
     HistoryTypes
 } = require('./types');
+const {Address4, Address6} = require('ip-address');
 
 module.exports = {
     getRandomInt(min, max) {
@@ -99,6 +100,12 @@ module.exports = {
         return null;
     },
     async getUserCSS(user) {
+        let ipArr;
+        if(user.ip) {
+            if(Address4.isValid(user.ip)) ipArr = new Address4(user.ip).toArray();
+            else ipArr = new Address6(user.ip).toByteArray();
+        }
+
         const aclGroups = await models.ACLGroup.find({
             userCSS: {
                 $exists: true,
@@ -109,17 +116,35 @@ module.exports = {
             aclGroup: {
                 $in: aclGroups.map(group => group.uuid)
             },
-            $or: [
+            $and: [
                 {
-                    expiresAt: {
-                        $gte: new Date()
-                    }
+                    $or: [
+                        {
+                            expiresAt: {
+                                $gte: new Date()
+                            }
+                        },
+                        {
+                            expiresAt: null
+                        }
+                    ]
                 },
                 {
-                    expiresAt: null
+                    $or: [
+                        {
+                            user: user.uuid
+                        },
+                        ...(ipArr ? [{
+                            ipMin: {
+                                $lte: ipArr
+                            },
+                            ipMax: {
+                                $gte: ipArr
+                            }
+                        }] : [])
+                    ]
                 }
-            ],
-            user: user.uuid
+            ]
         }).lean();
         if(!aclGroupItem) return '';
 
