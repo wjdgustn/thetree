@@ -130,6 +130,7 @@ module.exports = class NamumarkParser {
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
         if(data.includeData) this.includeData = data.includeData;
+        if(data.thread) this.thread = true;
     }
 
     get NamumarkParser() {
@@ -549,7 +550,7 @@ module.exports = class NamumarkParser {
         text = text.replaceAll('<removeNoParagraph/>', '');
 
         const hasNewline = text.includes(NewLineTag);
-        let html = `${(this.includeData || childParse) ? '' : '<div class="wiki-content">'}${
+        let html = `${(this.includeData || childParse) ? '' : `<div class="wiki-content${this.thread ? ' wiki-thread-content' : ''}">`}${
             text
                 .replaceAll(NewLineTag, '<br>')
                 .replaceAll('<!s>', ' ')

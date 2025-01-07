@@ -1,0 +1,131 @@
+<link rel="stylesheet" href="/css/views/discuss.css">
+<link rel="stylesheet" href="/css/views/thread.css">
+
+<h3>편집 요청</h3>
+<ul>
+    <li><a href="/">편집 요청 Sans</a></li>
+</ul>
+<p><a href="/">[닫힌 편집 요청 보기]</a></p>
+
+<h3>토론</h3>
+<ul>
+    <li>
+        <a href="#s-1">1</a>.
+        <a href="/">샌즈티비</a>
+    </li>
+    <li>
+        <a href="#s-2">1</a>.
+        <a href="/">real?</a>
+    </li>
+</ul>
+<p><a href="/">[닫힌 토론 목록 보기]</a></p>
+
+<div>
+    <%if(req.permissions.includes('delete_thread')) {%>
+        <form method="post" class="delete-thread-form" action="/admin/thread/asdf/delete">
+            <button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button>
+        </form>
+    <%}%>
+    <h2>
+        1.
+        <a href="/" id="s-1">샌즈티비</a>
+    </h2>
+    <div class="comment-preview-block">
+        <div>
+            <div class="comment-block">
+                <div class="comment-block-inner">
+                    <div class="comment-block-user">
+                        <span>
+                            <a id="1">#1</a>
+                        </span>
+                        <%-userHtml(req.user)%>
+                        <span class="time-block">
+                            <%-getFullDateTag(new Date())%>
+                        </span>
+                    </div>
+                    <div class="comment-block-content">
+                        asdf
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <a href="/" class="thread-more">more...</a>
+            <div class="comment-block">
+                <div class="comment-block-inner">
+                    <div class="comment-block-user">
+                        <span>
+                            <a id="1">#1</a>
+                        </span>
+                        <%-userHtml(req.user)%>
+                        <span class="time-block">
+                            <%-getFullDateTag(new Date())%>
+                        </span>
+                    </div>
+                    <div class="comment-block-content">
+                        asdf
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="comment-block">
+                <div class="comment-block-inner">
+                    <div class="comment-block-user">
+                        <span>
+                            <a id="1">#1</a>
+                        </span>
+                        <%-userHtml(req.user)%>
+                        <span class="time-block">
+                            <%-getFullDateTag(new Date())%>
+                        </span>
+                    </div>
+                    <div class="comment-block-content">
+                        asdf
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="comment-block">
+                <div class="comment-block-inner">
+                    <div class="comment-block-user">
+                        <span>
+                            <a id="1">#1</a>
+                        </span>
+                        <%-userHtml(req.user)%>
+                        <span class="time-block">
+                            <%-getFullDateTag(new Date())%>
+                        </span>
+                    </div>
+                    <div class="comment-block-content">
+                        asdf
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>새 주제 생성</h3>
+<form method="post">
+    <%if(req.query.doc) {%><input type="hidden" name="document" value="<%=req.query.doc%>"><%}%>
+    <div class="form-block">
+        <label for="topicInput">주제 :</label>
+        <input type="text" id="topicInput" name="topic">
+    </div>
+    <div class="form-block">
+        <label for="contentInput">내용 :</label>
+        <textarea name="text" id="contentInput" rows="5"></textarea>
+    </div>
+
+    <div>
+        <%if(session.account.type !== UserTypes.Account) {%><p class="ip-warn">비로그인 상태로 토론에 참여합니다. 토론 내역에 IP(<%=req.ip%>) 주소 전체가 영구히 기록됩니다.</p><%}%>
+    </div>
+
+    <button class="thetree-square-button thetree-blue-button">전송</button>
+    <div class="clearboth"></div>
+</form>

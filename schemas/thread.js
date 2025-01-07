@@ -28,6 +28,10 @@ const newSchema = new Schema({
         type: String,
         required: true
     },
+    createdUser: {
+        type: String,
+        required: true
+    },
     lastUpdateUser: {
         type: String,
         required: true

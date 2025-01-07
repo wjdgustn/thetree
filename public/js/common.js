@@ -262,19 +262,7 @@ function updateTimeTag() {
             }
         }
 
-        const dateStr = [
-            date.getFullYear(),
-            date.getMonth() + 1,
-            date.getDate()
-        ].map(num => num.toString().padStart(2, '0')).join('-');
-
-        const timeStr = [
-            date.getHours(),
-            date.getMinutes(),
-            date.getSeconds()
-        ].map(num => num.toString().padStart(2, '0')).join(':');
-
-        let result = dateStr + ' ' + timeStr;
+        let result = getTimeStr(date);
 
         if(type === 'timezone') {
             const offset = -(date.getTimezoneOffset() / 60);
@@ -343,6 +331,7 @@ function setupDocument() {
             State.userPopup.uuid = userText.dataset.uuid;
             State.userPopup.type = parseInt(userText.dataset.type);
             State.userPopup.note = userText.dataset.note || null;
+            State.userPopup.threadAdmin = !!userText.dataset.threadadmin;
 
             State.userPopup.open(userText);
 
@@ -586,12 +575,14 @@ document.addEventListener('alpine:init', () => {
 
         aClickHandler,
         movePage,
+        updateTimeTag,
 
         userPopup: {
             type: 1,
             name: '',
             uuid: '',
             note: null,
+            threadAdmin: false,
             deleted: false,
             account: false,
             blockable: false,
@@ -600,7 +591,7 @@ document.addEventListener('alpine:init', () => {
                     case 0:
                         return 'IP';
                     default:
-                        return '사용자';
+                        return '사용자' + (State.userPopup.threadAdmin ? ' (관리자)' : '');
                 }
             },
             async block() {
@@ -617,7 +608,7 @@ document.addEventListener('alpine:init', () => {
                 State.userPopup.blockable = [0, 1].includes(State.userPopup.type);
 
                 requestAnimationFrame(() => requestAnimationFrame(() => {
-                    userPopup.classList.remove('userpopup-close');
+                    userPopup.classList.remove('popup-close');
 
                     FloatingUIDOM.computePosition(userText, userPopup, {
                         placement: 'bottom-start',
@@ -634,9 +625,64 @@ document.addEventListener('alpine:init', () => {
                 }));
             },
             close() {
-                userPopup.classList.add('userpopup-close');
+                userPopup.classList.add('popup-close');
             }
         },
+        threadPopup: {
+            num: 0,
+            commentHidden: false,
+            open(num, button) {
+                const threadPopup = document.getElementById('threadpopup');
+                if(!threadPopup) return;
+
+                State.threadPopup.num = num;
+
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    threadPopup.classList.remove('popup-close');
+
+                    FloatingUIDOM.computePosition(button, threadPopup, {
+                        placement: 'bottom-end',
+                        middleware: [
+                            FloatingUIDOM.offset(6),
+                            FloatingUIDOM.flip()
+                        ]
+                    }).then(({x, y}) => {
+                        Object.assign(threadPopup.style, {
+                            left: `${x}px`,
+                            top: `${y}px`
+                        });
+                    });
+                }));
+            },
+            close() {
+                const threadPopup = document.getElementById('threadpopup');
+                if(!threadPopup) return;
+
+                threadPopup.classList.add('popup-close');
+            },
+            async toggleRaw() {
+                console.log('toggleRaw', State.threadPopup.num);
+            },
+            async hide() {
+                console.log('hide', State.threadPopup.num);
+            },
+            async show() {
+                console.log('show', State.threadPopup.num);
+            }
+        },
+
+        threadIntersectionObserver: new IntersectionObserver(async entries => {
+            for(let entry of entries) {
+                const element = entry.target.parentElement;
+
+                if(entry.isIntersecting) {
+                    element.classList.add('comment-block-visible');
+                }
+                else {
+                    element.classList.remove('comment-block-visible');
+                }
+            }
+        }),
 
         async openQuickACLGroup({
             username = null,

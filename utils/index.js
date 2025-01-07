@@ -155,7 +155,9 @@ module.exports = {
     },
     userHtml(user, {
         isAdmin = false,
-        note = null
+        note = null,
+        thread = false,
+        threadAdmin = false
     } = {}) {
         const name = user?.name ?? user?.ip;
         const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
@@ -168,12 +170,19 @@ module.exports = {
         }
         if(user.type !== UserTypes.Deleted || isAdmin) data.uuid = user.uuid;
         data.type = user.type;
+        if(threadAdmin) data.threadadmin = '1';
 
         for(let [key, value] of Object.entries(data))
             dataset += ` data-${key}="${value}"`;
 
+        let nameClass = '';
+        if(thread) {
+            if(threadAdmin) nameClass = ' user-text-admin';
+        }
+        else nameClass = user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : ''
+
         return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
-                ? `<a class="user-text-name${user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
+                ? `<a class="user-text-name${nameClass}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
                 : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
     },

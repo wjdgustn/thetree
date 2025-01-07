@@ -1,0 +1,103 @@
+<link rel="stylesheet" href="/css/views/thread.css">
+<script src="/js/thread.js"></script>
+
+<form method="post" class="delete-thread-form delete-thread-form-thread" action="/admin/thread/asdf/delete">
+    <%if(req.permissions.includes('delete_thread')) {%><button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button><%}%>
+    <input type="checkbox" id="noDisplayHideAuthor" x-model="$store.state.page.data.hideHiddenComments">
+    <label for="noDisplayHideAuthor">숨겨진 댓글 보이지 않기</label>
+</form>
+
+<h2 class="thread-title">토론 제목</h2>
+<div>
+    <template x-for="(comment, index) in $store.state.page.data.comments.filter(a => !a.hidden || !$store.state.page.data.hideHiddenComments)">
+        <div :data-index="index" :data-fetched="comment.userHtml ? '1' : ''" class="comment-block" :class="{ 'comment-block-loading': !comment.userHtml }">
+            <div class="comment-block-inner" x-init="$store.state.threadIntersectionObserver.observe($el)">
+                <div class="comment-block-user" :class="{ 'comment-block-user-starter': comment.starter }">
+                <span class="num-text">
+                    <a :id="comment.id" x-text="'#' + comment.id"></a>
+                </span>
+                <span x-show="comment.userHtml">
+                    <span x-html="comment.userHtml"></span>
+                    <span class="time-block">
+                        <span x-html="getFullDateTag(comment.createdAt, 'keep') ?? ''"></span>
+                        <div class="menu-block">
+                            <span @click="$store.state.threadPopup.open(1, $el)" role="button" class="navigation-button menu-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"></path></svg>
+                            </span>
+                        </div>
+                    </span>
+                </span>
+
+                </div>
+                <div class="comment-block-content" x-html="comment.contentHtml ?? ''"></div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<h3 class="comment-title">댓글 달기</h3>
+<%if(req.permissions.includes('update_thread_status')) {%>
+    <form method="post" action="/admin/thread/asdf/status">
+        [ADMIN] 스레드 상태 변경
+        <select name="status">
+            <option value="normal">normal</option>
+            <option value="pause">pause</option>
+            <option value="close">close</option>
+        </select>
+        <button class="thetree-square-button">변경</button>
+    </form>
+<%}%>
+<%if(req.permissions.includes('update_thread_document')) {%>
+    <form method="post" action="/admin/thread/asdf/document">
+        [ADMIN] 스레드 이동
+        <input name="document" value="<%=doc_fulltitle(document)%>">
+        <button class="thetree-square-button">변경</button>
+    </form>
+<%}%>
+<%if(req.permissions.includes('update_thread_topic')) {%>
+    <form method="post" action="/admin/thread/asdf/topic">
+        [ADMIN] 스레드 주제 변경
+        <input name="topic" value="토론 제목">
+        <button class="thetree-square-button">변경</button>
+    </form>
+<%}%>
+
+<form method="post" class="comment-form" action="/thread/asdf" x-data="{ selectedTab: 'raw' }">
+    <ul>
+        <li>
+            <button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button>
+        </li>
+        <li>
+            <button type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button>
+        </li>
+    </ul>
+    <div class="tabs">
+        <div :class="selectedTab === 'raw' && 'selected-tab-content'">
+            <textarea rows="5" name="text"></textarea>
+        </div>
+
+        <div id="preview-tab-content" :class="selectedTab === 'preview' && 'selected-tab-content'">
+            put preview comment box here
+        </div>
+    </div>
+
+    <div>
+        <%if(session.account.type !== UserTypes.Account) {%><p class="ip-warn">비로그인 상태로 토론에 참여합니다. 토론 내역에 IP(<%=req.ip%>) 주소 전체가 영구히 기록됩니다.</p><%}%>
+    </div>
+
+    <button class="thetree-square-button thetree-blue-button">전송</button>
+    <div class="clearboth"></div>
+</form>
+
+<div id="threadpopup" class="popup popup-close" @click="$store.state.threadPopup.close" @click.outside="$store.state.threadPopup.close">
+    <div>
+        <div>
+            <a @click.prevent="$store.state.threadPopup.toggleRaw()" role="button" href="#" class="thetree-button">원문 보기</a>
+            <%if(req.permissions.includes('hide_thread_comment')) {%>
+                <hr>
+                <a x-show="!$store.state.threadPopup.commentHidden" @click.prevent="$store.state.threadPopup.hide()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기</a>
+                <a x-show="$store.state.threadPopup.commentHidden" @click.prevent="$store.state.threadPopup.show()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기 해제</a>
+            <%}%>
+        </div>
+    </div>
+</div>
