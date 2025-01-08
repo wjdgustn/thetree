@@ -22,6 +22,74 @@ const app = express.Router();
 
 const COMMENT_LOAD_AMOUNT = 10;
 
+const threadCommentMapper = ({
+    req,
+    thread,
+    parser,
+    user
+} = {}) => async comment => {
+    comment.userHtml = utils.userHtml(user ?? comment.user, {
+        isAdmin: req.permissions.includes('admin'),
+        note: `토론 ${thread.url} #${comment.id} 긴급차단`,
+        thread: true,
+        threadAdmin: comment.admin
+    });
+
+    if(comment.type === ThreadCommentTypes.Default) {
+        const { html } = await parser.parse(comment.content);
+        comment.contentHtml = html;
+    }
+    else if(comment.type === ThreadCommentTypes.UpdateStatus) {
+
+    }
+    else if(comment.type === ThreadCommentTypes.UpdateTopic) {
+
+    }
+    else if(comment.type === ThreadCommentTypes.UpdateDocument) {
+
+    }
+
+    if(typeof comment.user === 'object')
+        comment.user = comment.user.uuid;
+
+    return utils.onlyKeys(comment, [
+        'id',
+        'hidden',
+
+        'createdAt',
+        'user',
+        'userHtml',
+        'hideUserHtml',
+        'contentHtml'
+    ]);
+}
+
+SocketIO.of('/thread').use(async (socket, next) => {
+    const req = socket.request;
+
+    const url = socket.handshake.query.thread;
+    if(!url) return next(new Error('missing thread'));
+
+    const thread = await Thread.findOne({
+        url,
+        deleted: false
+    });
+    if(!thread) return next(new Error('thread not found'));
+
+    const dbDocument = await Document.findOne({
+        uuid: thread.document
+    });
+    const document = utils.dbDocumentToDocument(dbDocument);
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return next(new Error(readAclMessage));
+
+    socket.join(thread.uuid);
+
+    next();
+});
+
 app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
@@ -138,6 +206,10 @@ app.get('/thread/:url', async (req, res) => {
     });
     const document = utils.dbDocumentToDocument(dbDocument);
 
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(readAclMessage, 403);
+
     const comments = await ThreadComment.find({
         thread: thread.uuid
     })
@@ -145,6 +217,7 @@ app.get('/thread/:url', async (req, res) => {
             id: 1
         })
         .select([
+            '-_id',
             'id',
             'hidden'
         ])
@@ -228,39 +301,13 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
         thread: true
     });
 
-    for(let comment of comments) {
-        comment.userHtml = utils.userHtml(comment.user, {
-            isAdmin: req.permissions.includes('admin'),
-            note: `토론 ${thread.url} #${comment.id} 긴급차단`,
-            thread: true,
-            threadAdmin: comment.admin
-        });
-
-        if(comment.type === ThreadCommentTypes.Default) {
-            const { html } = await parser.parse(comment.content);
-            comment.contentHtml = html;
-        }
-        else if(comment.type === ThreadCommentTypes.UpdateStatus) {
-
-        }
-        else if(comment.type === ThreadCommentTypes.UpdateTopic) {
-
-        }
-        else if(comment.type === ThreadCommentTypes.UpdateDocument) {
-
-        }
-    }
-
-    res.json(comments.map(a => ({
-        id: a.id,
-        hidden: a.hidden,
-
-        createdAt: a.createdAt,
-        user: a.user.uuid,
-        userHtml: a.userHtml,
-        hideUserHtml: a.hideUserHtml,
-        contentHtml: a.contentHtml
+    comments = await Promise.all(comments.map(threadCommentMapper({
+        req,
+        thread,
+        parser
     })));
+
+    res.json(comments);
 });
 
 app.post('/thread/:url', async (req, res) => {
@@ -272,14 +319,29 @@ app.post('/thread/:url', async (req, res) => {
     });
     if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
 
-    const comment = await ThreadComment.create({
+    const document = await Document.findOne({
+        uuid: thread.document
+    });
+
+    const dbComment = await ThreadComment.create({
         thread: thread.uuid,
         user: req.user.uuid,
         admin: req.permissions.includes('admin'),
         content: req.body.text
     });
 
-    // TODO: send updated packet with comment
+    const parser = new NamumarkParser({
+        document,
+        thread: true
+    });
+    const comment = await threadCommentMapper({
+        req,
+        thread,
+        parser,
+        user: req.user
+    })(dbComment.toJSON());
+
+    SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);
 
     res.status(204).end();
 });

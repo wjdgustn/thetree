@@ -174,7 +174,11 @@ const formHandler = async e => {
 
     backupForm();
 
-    if(response.status === 204) return restoreForm(true, form);
+    if(response.status === 204) {
+        restoreForm(true, form);
+        setProgress(100);
+        return;
+    }
 
     if(response.redirected) {
         const probModal = e.target.parentElement.parentElement.parentElement;
@@ -183,7 +187,7 @@ const formHandler = async e => {
             probModal._thetree.modal.close(true);
         }
 
-        window.beforePageLoad = null;
+        window.beforePageLoad = [];
         window.beforePopstate = null;
         return await movePage(response);
     }
@@ -337,7 +341,7 @@ function setupDocument() {
     updateTimeTag();
     focusAnchor();
 
-    window.beforePageLoad = null;
+    window.beforePageLoad = [];
     window.beforePopstate = null;
 
     const allElements = document.getElementsByTagName('*');
@@ -377,8 +381,8 @@ function changeUrl(url) {
 
 let content;
 async function movePage(response, pushState = true, prevUrl = null) {
-    if(typeof window.beforePageLoad === 'function') {
-        const canMove = await window.beforePageLoad();
+    if(window.beforePageLoad.length) for(let handler of window.beforePageLoad) {
+        const canMove = await handler();
         if(!canMove) {
             if(prevUrl) history.pushState({}, null, prevUrl);
             return;
@@ -570,10 +574,12 @@ function resetProgress() {
 }
 
 window.addEventListener('beforeunload', e => {
-    if(typeof window.beforePageLoad !== 'function') return;
+    if(!window.beforePageLoad.length) return;
 
-    const canMove = window.beforePageLoad();
-    if(!canMove) e.preventDefault();
+    for(let handler of window.beforePageLoad) {
+        const canMove = handler();
+        if(!canMove) e.preventDefault();
+    }
 });
 
 const localConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');

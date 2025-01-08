@@ -1,18 +1,21 @@
 const { models } = require('mongoose');
 const crypto = require('crypto');
+const { Address4, Address6 } = require('ip-address');
 
 const globalUtils = require('./global');
 const {
     UserTypes,
     HistoryTypes
 } = require('./types');
-const {Address4, Address6} = require('ip-address');
 
 module.exports = {
     getRandomInt(min, max) {
         min = Math.ceil(min);
         max = Math.floor(max + 1);
         return Math.floor(Math.random() * (max - min)) + min;
+    },
+    onlyKeys(obj, keys = []) {
+        return Object.fromEntries(Object.entries(obj).filter(([k]) => keys.includes(k)));
     },
     withoutKeys(obj, keys = []) {
         return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
@@ -312,5 +315,45 @@ module.exports = {
     },
     escapeRegExp(s) {
         return s.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    },
+    async makeACLData(req) {
+        req.permissions = req.user?.permissions ?? [];
+
+        req.permissions.unshift('any');
+
+        if(req.user?.type === UserTypes.Account) {
+            req.permissions.unshift('member');
+            if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
+                req.permissions.push('member_signup_15days_ago');
+        }
+        else req.permissions.unshift('ip');
+
+        if(req.useragent?.isBot) req.permissions.push('bot');
+
+        if(req.session.contributor) req.permissions.push('contributor');
+        else if(req.user) {
+            const contribution = await models.History.exists({
+                user: req.user.uuid
+            });
+            if(contribution) {
+                req.permissions.push('contributor');
+                req.session.contributor = true;
+                req.session.save();
+            }
+        }
+
+        req.permissions = [...new Set(req.permissions)];
+        if(req.user) req.user.permissions = req.permissions;
+        req.displayPermissions = req.permissions.filter(a => ![
+            'any',
+            'contributor',
+            'member_signup_15days_ago'
+        ].includes(a));
+
+        req.aclData = {
+            permissions: req.permissions,
+            user: req.user,
+            ip: req.ip
+        }
     }
 }

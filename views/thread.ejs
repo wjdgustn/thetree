@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="/css/views/thread.css">
-<script src="/js/thread.js"></script>
 <script src="/js/preview.js"></script>
+<script src="/js/thread.js"></script>
 
 <form method="post" class="delete-thread-form delete-thread-form-thread" action="/admin/thread/<%=thread.url%>/delete">
     <%if(req.permissions.includes('delete_thread')) {%><button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button><%}%>
@@ -13,7 +13,7 @@
     <template x-for="(comment, index) in $store.state.page.data.comments.filter(a => !a.hidden || !$store.state.page.data.hideHiddenComments)">
         <div :data-index="index" :data-fetched="comment.userHtml ? '1' : ''" class="comment-block" :class="{ 'comment-block-loading': !comment.userHtml }">
             <div class="comment-block-inner" x-init="$store.state.threadIntersectionObserver.observe($el)">
-                <div class="comment-block-user" :class="{ 'comment-block-user-starter': comment.starter }">
+                <div class="comment-block-user" :class="{ 'comment-block-user-starter': comment.user === $store.state.page.data.thread.createdUser }">
                 <span class="num-text">
                     <a :id="comment.id" x-text="'#' + comment.id"></a>
                 </span>

@@ -1,4 +1,7 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const { instrument } = require('@socket.io/admin-ui');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const passport = require('passport');
@@ -32,7 +35,6 @@ const { UserTypes, permissionMenus } = types;
 const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
-const History = require('./schemas/history');
 const AutoLoginToken = require('./schemas/autoLoginToken');
 
 const ACL = require('./class/acl');
@@ -100,6 +102,42 @@ if(!fs.existsSync('./customStatic')) fs.mkdirSync('./customStatic');
 
 const app = express();
 global.expressApp = app;
+
+const server = http.createServer(app);
+
+const onlyForHandshake = middleware => (req, res, next) => {
+    const isHandshake = req._query.sid === undefined;
+    if (isHandshake) {
+        middleware(req, res, next);
+    } else {
+        next();
+    }
+}
+
+global.SocketIO = new Server(server, {
+    ...(debug ? {
+        cors: {
+            origin: 'https://admin.socket.io',
+            credentials: true
+        }
+    } : {})
+});
+if(debug) instrument(SocketIO, {
+    auth: false,
+    mode: 'development'
+});
+
+SocketIO.on('new_namespace', namespace => {
+    namespace.use(async (socket, next) => {
+        socket.request.ip = process.env.TRUST_PROXY === 'true'
+            ? socket.handshake.headers["x-forwarded-for"].split(",")[0]
+            : socket.handshake.address;
+
+        await utils.makeACLData(socket.request);
+
+        next();
+    });
+});
 
 app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
@@ -188,13 +226,15 @@ if(process.env.USE_REDIS === 'true') {
     store = new RedisStore({ client });
 }
 
-app.use(session({
+const sessionMiddleware = session({
     name: 'kotori',
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store
-}));
+});
+app.use(sessionMiddleware);
+SocketIO.engine.use(onlyForHandshake(sessionMiddleware));
 
 app.use(async (req, res, next) => {
     if(!req.session.passport && req.cookies.honoka) {
@@ -211,6 +251,7 @@ app.use(async (req, res, next) => {
 
 app.use(passport.initialize());
 app.use(passport.session());
+SocketIO.engine.use(onlyForHandshake(passport.session()));
 
 for(let f of fs.readdirSync('./login')) {
     require(`./login/${f}`)(passport);
@@ -292,43 +333,7 @@ app.use(async (req, res, next) => {
         app.locals[util] = globalUtils[util];
     }
 
-    req.permissions = req.user?.permissions ?? [];
-
-    req.permissions.unshift('any');
-
-    if(req.user?.type === UserTypes.Account) {
-        req.permissions.unshift('member');
-        if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
-            req.permissions.push('member_signup_15days_ago');
-    }
-    else req.permissions.unshift('ip');
-
-    if(req.useragent.isBot) req.permissions.push('bot');
-
-    if(req.session.contributor) req.permissions.push('contributor');
-    else if(req.user) {
-        const contribution = await History.exists({
-            user: req.user.uuid
-        });
-        if(contribution) {
-            req.permissions.push('contributor');
-            req.session.contributor = true;
-        }
-    }
-
-    req.permissions = [...new Set(req.permissions)];
-    if(req.user) req.user.permissions = req.permissions;
-    req.displayPermissions = req.permissions.filter(a => ![
-        'any',
-        'contributor',
-        'member_signup_15days_ago'
-    ].includes(a));
-
-    req.aclData = {
-        permissions: req.permissions,
-        user: req.user,
-        ip: req.ip
-    }
+    await utils.makeACLData(req);
 
     app.locals.isDev = req.permissions.includes('developer');
 
@@ -505,6 +510,6 @@ app.use((err, req, res, _) => {
 });
 
 const port = process.env.PORT ?? 3000;
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });

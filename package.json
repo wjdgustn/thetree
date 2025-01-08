@@ -51,14 +51,18 @@
     "redis": "^4.7.0",
     "sanitize-html": "^2.13.1",
     "sharp": "^0.33.5",
+    "socket.io": "^4.8.1",
     "sqlite3": "^5.1.7",
     "uglify-js": "^3.19.3",
     "uuid-color": "^0.1.1",
     "validate-color": "^2.2.4"
   },
   "devDependencies": {
+    "@socket.io/admin-ui": "^0.5.1",
     "cross-env": "^7.0.3",
-    "nodemon": "^3.1.7"
+    "i": "^0.3.7",
+    "nodemon": "^3.1.7",
+    "npm": "^11.0.0"
   },
   "nodemonConfig": {
     "ignore": [

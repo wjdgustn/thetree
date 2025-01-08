@@ -28,8 +28,6 @@ document.addEventListener('thetree:pageLoad', () => {
             const response = await fetch(`/thread/${data.thread.url}/${comment.id}`);
             const comments = await response.json();
             for(let comment of comments) {
-                comment.starter = comment.user === data.thread.createdUser;
-
                 const commentIndex = data.comments.findIndex(a => a.id === comment.id);
                 if(commentIndex !== -1) data.comments[commentIndex] = comment;
                 else data.comments.push(comment);
@@ -46,10 +44,20 @@ document.addEventListener('thetree:pageLoad', () => {
 
     window.addEventListener('scroll', scrollHandler);
 
-    window.beforePageLoad = () => {
+    const socket = io('/thread', {
+        query: {
+            thread: data.thread.url
+        }
+    });
+    socket.on('comment', comment => {
+        data.comments.push(comment);
+    });
+
+    window.beforePageLoad.push(() => {
         window.removeEventListener('scroll', scrollHandler);
+        socket.disconnect();
         return true;
-    }
+    });
 
     scrollHandler();
 }, { once: true });
