@@ -47,20 +47,23 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     });
 
     let rev;
-    if(dbDocument) rev = await History.findOne({
-        document: dbDocument.uuid,
-        ...(req.query.uuid ? { uuid: req.query.uuid } : {})
-    }).sort({ rev: -1 });
+    let threadExists = false;
+    if(dbDocument) {
+        rev = await History.findOne({
+            document: dbDocument.uuid,
+            ...(req.query.uuid ? { uuid: req.query.uuid } : {})
+        }).sort({ rev: -1 });
+
+        threadExists = await Thread.exists({
+            document: dbDocument.uuid,
+            status: {
+                $ne: ThreadStatusTypes.Close
+            },
+            deleted: false
+        });
+    }
 
     const acl = await ACL.get({ document: dbDocument }, document);
-
-    const threadExists = await Thread.exists({
-        document: dbDocument.uuid,
-        status: {
-            $ne: ThreadStatusTypes.Close
-        },
-        deleted: false
-    });
 
     const isOldVer = req.query.uuid && req.query.uuid === rev?.uuid;
     const defaultData = {

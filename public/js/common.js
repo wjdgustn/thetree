@@ -426,6 +426,12 @@ async function movePage(response, pushState = true, prevUrl = null) {
     setProgress(100);
 }
 
+function updateTitle() {
+    document.title = page.data.document
+        ? `${doc_fulltitle(page.data.document)}${getTitleDescription(page)} - ${CONFIG.site_name}`
+        : `${page.title} - ${CONFIG.site_name}`;
+}
+
 const scriptCache = {};
 async function replaceContent(html, headers) {
     let result = false;
@@ -514,9 +520,7 @@ async function replaceContent(html, headers) {
             }
         }
 
-        document.title = page.data.document
-            ? `${doc_fulltitle(page.data.document)}${getTitleDescription(page)} - ${CONFIG.site_name}`
-            : `${page.title} - ${CONFIG.site_name}`;
+        updateTitle();
     }
 
     return result;

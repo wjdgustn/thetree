@@ -97,6 +97,14 @@
         background: #27292d;
     }
 
+    div.comment-block div.comment-block-content.special-comment {
+        background: #fc6;
+    }
+
+    .theseed-dark-mode div.comment-block div.comment-block-content.special-content {
+        background: #54411a;
+    }
+
     div.comment-block.comment-block-loading div.comment-block-content {
         height: 80px;
     }
@@ -205,7 +213,7 @@
         padding: 20px;
     }
 
-    form.comment-form textarea {
+    textarea {
         background-color: #fff;
         background-image: none;
         border: none;
@@ -217,6 +225,12 @@
         padding: .25rem .5rem;
         resize: vertical;
         width: 100%;
+    }
+
+    textarea[disabled] {
+        background-color: #eceeef;
+        cursor: not-allowed;
+        opacity: 1;
     }
 
     .preview-tab-loading {

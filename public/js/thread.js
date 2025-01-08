@@ -54,12 +54,21 @@ document.addEventListener('thetree:pageLoad', () => {
             thread: data.thread.url
         }
     });
+
     socket.on('comment', comment => {
         data.comments.push(comment);
 
         requestAnimationFrame(() => {
             setupUserText();
         });
+    });
+    socket.on('updateThread', thread => {
+        data.thread = {
+            ...data.thread,
+            ...thread
+        }
+
+        if(thread.topic) updateTitle();
     });
 
     window.beforePageLoad.push(() => {
