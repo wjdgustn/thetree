@@ -390,9 +390,12 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     let rawConditionContent = req.body.conditionContent;
 
     if(conditionType === ACLConditionTypes.Perm) {
-        if(!req.body.permission) return res.status(400).send('권한 값을 입력해주세요!');
-        conditionContent = req.body.permission;
-        rawConditionContent = req.body.permission;
+        let value = req.body.permission;
+        if(!req.body.permission
+            && !req.permissions.includes('developer')) return res.status(400).send('권한 값을 입력해주세요!');
+        value ||= 'any';
+        conditionContent = value;
+        rawConditionContent = value;
     }
     else if(conditionType === ACLConditionTypes.Member) {
         const member = await User.findOne({
