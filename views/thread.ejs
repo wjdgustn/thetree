@@ -45,8 +45,8 @@ const isFrontPage = docTitle === config.front_page;
                 </span>
 
                 </div>
-                <div x-show="!comment.hidden || comment.forceShow" class="comment-block-content" :class="{ 'special-comment': comment.userHtml && comment.type !== 0 }" x-html="comment.contentHtml ?? ''"></div>
-                <div x-show="comment.hidden && !comment.forceShow" class="comment-block-content hidden-comment">
+                <div x-show="!comment.userHtml || !comment.hidden || comment.forceShow" class="comment-block-content" :class="{ 'special-comment': comment.userHtml && comment.type !== 0 }" x-html="comment.contentHtml ?? ''"></div>
+                <div x-show="comment.userHtml && comment.hidden && !comment.forceShow" class="comment-block-content hidden-comment">
                     [<span x-html="comment.hideUserHtml"></span>에 의해 숨겨진 글입니다.]
                     <%if(req.permissions.includes('hide_thread_comment')) {%><button @click="comment.forceShow = true" class="thetree-square-button thetree-danger-button">[ADMIN] SHOW</button><%}%>
                 </div>
