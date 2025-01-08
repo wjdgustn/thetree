@@ -13,17 +13,22 @@ document.addEventListener('thetree:pageLoad', () => {
             }), 5000);
 
             const visibleComments = [...document.getElementsByClassName('comment-block-visible')];
-            const lastUnfetchedComment = visibleComments.findLast(a => !a.dataset.fetched);
-            if(!lastUnfetchedComment) return;
+            const firstUnfetchedComment = visibleComments.find(a => !a.dataset.fetched);
+            if(!firstUnfetchedComment) return;
 
             fetchingComments = true;
 
-            const lastIndex = lastUnfetchedComment.dataset.index;
-            const lastComment = data.comments[lastIndex];
-            console.log(lastComment);
-            const comment = data.comments.find(a => !a.userHtml && a.id >= lastComment.id - State.page.data.commentLoadAmount + 1);
-            console.log(`fetch comments under ${comment.id}`);
-            console.log(comment);
+            const firstIndex = firstUnfetchedComment.dataset.index;
+            const firstComment = data.comments[firstIndex];
+
+            let commentOffset = 0;
+            const firstFetchedBelowComment = data.comments.find(a => a.id > firstComment.id && a.userHtml);
+            if(firstFetchedBelowComment) {
+                const belowCommentAmount = firstFetchedBelowComment.id - 1 - firstComment.id;
+                commentOffset += data.commentLoadAmount - belowCommentAmount;
+            }
+
+            const comment = data.comments.find(a => !a.userHtml && a.id >= firstComment.id - commentOffset);
 
             const response = await fetch(`/thread/${data.thread.url}/${comment.id}`);
             const comments = await response.json();
