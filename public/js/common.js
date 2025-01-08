@@ -657,11 +657,12 @@ document.addEventListener('alpine:init', () => {
         threadPopup: {
             num: 0,
             commentHidden: false,
-            open(num, button) {
+            open(num, hidden, button) {
                 const threadPopup = document.getElementById('threadpopup');
                 if(!threadPopup) return;
 
                 State.threadPopup.num = num;
+                State.threadPopup.commentHidden = hidden;
 
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     threadPopup.classList.remove('popup-close');
@@ -690,10 +691,14 @@ document.addEventListener('alpine:init', () => {
                 console.log('toggleRaw', State.threadPopup.num);
             },
             async hide() {
-                console.log('hide', State.threadPopup.num);
+                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.num}/hide`, {
+                    method: 'POST'
+                });
             },
             async show() {
-                console.log('show', State.threadPopup.num);
+                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.num}/show`, {
+                    method: 'POST'
+                });
             }
         },
 

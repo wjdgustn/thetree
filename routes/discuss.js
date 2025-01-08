@@ -26,7 +26,8 @@ const threadCommentMapper = ({
     req,
     thread,
     parser,
-    user
+    user,
+    hideUser
 } = {}) => async comment => {
     comment.userHtml = utils.userHtml(user ?? comment.user, {
         isAdmin: req?.permissions.includes('admin'),
@@ -35,18 +36,30 @@ const threadCommentMapper = ({
         threadAdmin: comment.admin
     });
 
-    if(comment.type === ThreadCommentTypes.Default) {
-        const { html } = await parser.parse(comment.content);
-        comment.contentHtml = html;
+    const canSeeHidden = req?.permissions.includes('hide_thread_comment');
+    if(comment.hidden) {
+        hideUser ??= comment.hiddenBy;
+        comment.hideUserHtml = utils.userHtml(hideUser, {
+            isAdmin: hideUser.permissions.includes('admin'),
+            thread: true,
+            threadAdmin: true
+        });
     }
-    else if(comment.type === ThreadCommentTypes.UpdateStatus) {
-        comment.contentHtml = `스레드 상태를 <b>${utils.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
-    }
-    else if(comment.type === ThreadCommentTypes.UpdateTopic) {
-        comment.contentHtml = `스레드 주제를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 변경`;
-    }
-    else if(comment.type === ThreadCommentTypes.UpdateDocument) {
-        comment.contentHtml = `스레드를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 이동`;
+
+    if(!comment.hidden || canSeeHidden) {
+        if(comment.type === ThreadCommentTypes.Default) {
+            const { html } = await parser.parse(comment.content);
+            comment.contentHtml = html;
+        }
+        else if(comment.type === ThreadCommentTypes.UpdateStatus) {
+            comment.contentHtml = `스레드 상태를 <b>${utils.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
+        }
+        else if(comment.type === ThreadCommentTypes.UpdateTopic) {
+            comment.contentHtml = `스레드 주제를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 변경`;
+        }
+        else if(comment.type === ThreadCommentTypes.UpdateDocument) {
+            comment.contentHtml = `스레드를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 이동`;
+        }
     }
 
     if(typeof comment.user === 'object')
@@ -69,7 +82,8 @@ const threadCommentEvent = async ({
     req,
     thread,
     document,
-    dbComment
+    dbComment,
+    hideUser
 } = {}) => {
     const parser = new NamumarkParser({
         document,
@@ -79,7 +93,8 @@ const threadCommentEvent = async ({
     const comment = await threadCommentMapper({
         thread,
         parser,
-        user: req.user
+        user: req.user,
+        hideUser
     })(dbComment.toJSON());
 
     SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);
@@ -292,6 +307,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
         .limit(COMMENT_LOAD_AMOUNT)
         .lean();
     comments = await utils.findUsers(comments);
+    comments = await utils.findUsers(comments, 'hiddenBy');
 
     const parser = new NamumarkParser({
         document,
@@ -519,6 +535,55 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
         deleted: true
     });
     SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { deleted: true });
+
+    res.status(204).end();
+});
+
+app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_comment'), async (req, res) => {
+    if(![
+        'hide',
+        'show'
+    ].includes(req.params.action)) return res.error('잘못된 요청입니다.');
+    const isHide = req.params.action === 'hide';
+
+    const thread = await Thread.findOne({
+        url: req.params.url,
+        deleted: false
+    });
+    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+
+    const document = await Document.findOne({
+        uuid: thread.document
+    });
+
+    const acl = await ACL.get({ document });
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(aclMessage, 403);
+
+    let dbComment = await ThreadComment.findOne({
+        thread: thread.uuid,
+        id: parseInt(req.params.id)
+    });
+    if(!dbComment) return res.status(404).send('댓글이 존재하지 않습니다.');
+    if(dbComment.type !== ThreadCommentTypes.Default) return res.status(400).send('숨길 수 없는 댓글입니다.');
+    if(isHide && dbComment.hidden) return res.status(409).send('이미 숨겨진 댓글입니다.');
+    if(!isHide && !dbComment.hidden) return res.status(409).send('숨겨지지 않은 댓글입니다.');
+
+    dbComment = await ThreadComment.findOneAndUpdate({
+        uuid: dbComment.uuid
+    }, {
+        hidden: isHide,
+        hiddenBy: req.user.uuid
+    }, {
+        new: true
+    });
+    await threadCommentEvent({
+        req,
+        thread,
+        document,
+        dbComment,
+        hideUser: req.user
+    });
 
     res.status(204).end();
 });

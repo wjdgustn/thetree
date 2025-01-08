@@ -56,7 +56,13 @@ document.addEventListener('thetree:pageLoad', () => {
     });
 
     socket.on('comment', comment => {
-        data.comments.push(comment);
+        const commentIndex = data.comments.findIndex(a => a.id === comment.id);
+        const prevComment = data.comments[commentIndex];
+        if(commentIndex !== -1) data.comments[commentIndex] = comment;
+        else data.comments.push(comment);
+
+        if(prevComment.contentHtml)
+            comment.contentHtml = prevComment.contentHtml;
 
         requestAnimationFrame(() => {
             setupUserText();

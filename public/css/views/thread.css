@@ -105,6 +105,15 @@
         background: #54411a;
     }
 
+    div.comment-block div.comment-block-content.hidden-comment {
+        background: #6b6b6b;
+        color: #fff;
+    }
+
+    .theseed-dark-mode div.comment-block div.comment-block-content.hidden-content {
+        background: #54411a;
+    }
+
     div.comment-block.comment-block-loading div.comment-block-content {
         height: 80px;
     }
