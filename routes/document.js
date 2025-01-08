@@ -686,7 +686,7 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     });
     let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml = '';
-    try {
+    if(!isThread) try {
         categoryHtml = await utils.renderCategory(categories);
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');

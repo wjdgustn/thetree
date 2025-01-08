@@ -287,7 +287,7 @@ module.exports = {
 
         const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
-        if(isCategory) {
+        if(isCategory && !namumark.thread) {
             // namumark.categoryHtmls.push(html);
             return '<removeNewline/>';
         }
