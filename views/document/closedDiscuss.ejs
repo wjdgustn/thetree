@@ -1,6 +1,13 @@
 <link rel="stylesheet" href="/css/views/discussList.css">
 <ul>
-    <%for(let thread of threads) {%>
-        <li><a href="/thread/<%=thread.url%>"><%=thread.topic%></a></li>
+    <%for(let i in threads) {%>
+        <%
+        const thread = threads[i];
+        const num = parseInt(i) + 1;
+        %>
+        <li>
+            <%=num%>.
+            <a href="/thread/<%=thread.url%>"><%=thread.topic%></a>
+        </li>
     <%}%>
 </ul>
