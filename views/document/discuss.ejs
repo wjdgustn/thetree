@@ -113,6 +113,22 @@
 </div>
 
 <h3>새 주제 생성</h3>
+
+<%
+const docTitle = doc_fulltitle(page.data.document);
+const isFrontPage = docTitle === config.front_page;
+%>
+<%if(isFrontPage) {%>
+<div class="thetree-alert">
+    <div class="thetree-alert-content">
+        <strong>[경고!]</strong>
+        이 토론은 <%=docTitle%> 문서의 토론입니다.
+        <%=docTitle%> 문서와 관련 없는 토론은 각 문서의 토론에서 진행해 주시기 바랍니다.
+        <%=docTitle%> 문서와 관련 없는 토론은 삭제될 수 있습니다.
+    </div>
+</div>
+<%}%>
+
 <form method="post">
     <%if(req.query.doc) {%><input type="hidden" name="document" value="<%=req.query.doc%>"><%}%>
     <div class="form-block">
