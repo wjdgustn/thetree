@@ -56,6 +56,10 @@ document.addEventListener('thetree:pageLoad', () => {
     });
     socket.on('comment', comment => {
         data.comments.push(comment);
+
+        requestAnimationFrame(() => {
+            setupUserText();
+        });
     });
 
     window.beforePageLoad.push(() => {
