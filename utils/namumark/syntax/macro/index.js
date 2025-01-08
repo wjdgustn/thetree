@@ -30,6 +30,8 @@ module.exports = {
     format: async (content, namumark) => {
         // if(debug) loadMacros();
 
+        if(namumark.thread) return '';
+
         const openParamIndex = content.indexOf('(');
 
         let name;
