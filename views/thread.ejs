@@ -25,8 +25,8 @@ const isFrontPage = docTitle === config.front_page;
 
 <h2 class="thread-title" x-text="$store.state.page.data.thread.topic"><%=thread.topic%></h2>
 <div>
-    <template x-for="(comment, index) in $store.state.page.data.comments.filter(a => !a.hidden || !$store.state.page.data.hideHiddenComments)">
-        <div :data-index="index" :data-fetched="comment.userHtml ? '1' : ''" class="comment-block" :class="{ 'comment-block-loading': !comment.userHtml }">
+    <template x-for="(comment, index) in $store.state.page.data.comments">
+        <div x-show="!comment.hidden || !$store.state.page.data.hideHiddenComments" :data-index="index" :data-fetched="comment.userHtml ? '1' : ''" class="comment-block" :class="{ 'comment-block-loading': !comment.userHtml }">
             <div class="comment-block-inner" x-init="$store.state.threadIntersectionObserver.observe($el)">
                 <div class="comment-block-user" :class="{ 'comment-block-user-starter': comment.user === $store.state.page.data.thread.createdUser }">
                 <span class="num-text">
