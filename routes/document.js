@@ -15,7 +15,8 @@ const {
     ACLActionTypes,
     HistoryTypes,
     BacklinkFlags,
-    ThreadStatusTypes
+    ThreadStatusTypes,
+    ThreadCommentTypes
 } = require('../utils/types');
 
 const headingSyntax = require('../utils/namumark/syntax/heading');
@@ -666,6 +667,7 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 });
 
 app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
+    const isThread = req.body.mode === 'thread';
     const content = req.body.content;
     if(typeof content !== 'string') return res.status(400).send('내용을 입력해주세요.');
 
@@ -679,15 +681,34 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     const parser = new NamumarkParser({
         document,
         dbDocument,
-        aclData: req.aclData
+        aclData: req.aclData,
+        thread: isThread
     });
-    const { html: contentHtml, categories } = await parser.parse(content);
+    let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml = '';
     try {
         categoryHtml = await utils.renderCategory(categories);
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
     }
+
+    const isAdmin = req.user.permissions.includes('admin');
+    if(isThread) expressApp.render('components/commentPreview', {
+        comment: {
+            id: 1,
+            type: ThreadCommentTypes.Default,
+            userHtml: utils.userHtml(req.user, {
+                isAdmin,
+                thread: true,
+                threadAdmin: isAdmin
+            }),
+            contentHtml,
+            createdAt: new Date()
+        }
+    }, (err, html) => {
+        if(err) return res.status(500).send('댓글 미리보기 렌더 오류');
+        contentHtml = html;
+    });
 
     return res.send(categoryHtml + contentHtml);
 });

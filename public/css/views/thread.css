@@ -250,6 +250,14 @@
     .wiki-raw {
         white-space: pre-wrap;
     }
+
+    #preview-tab-content {
+        padding: 20px;
+    }
+
+    #preview-tab-content>div {
+        padding-bottom: 0;
+    }
 }
 
 @keyframes comment-blink {
