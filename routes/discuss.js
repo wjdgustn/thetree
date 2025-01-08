@@ -34,6 +34,26 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(readAclMessage, 403);
 
+    if(req.query.state === 'close') {
+        const threads = await Thread.find({
+            document: dbDocument.uuid,
+            status: ThreadStatusTypes.Close,
+            deleted: false
+        })
+            .sort({
+                lastUpdatedAt: -1
+            })
+            .lean();
+        return res.renderSkin(undefined, {
+            viewName: 'thread_list_close',
+            contentName: 'document/closedDiscuss',
+            document,
+            serverData: {
+                threads
+            }
+        });
+    }
+
     let openThreads = [];
     if(dbDocument) {
         openThreads = await Thread.find({

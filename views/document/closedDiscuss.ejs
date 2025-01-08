@@ -1,0 +1,6 @@
+<link rel="stylesheet" href="/css/views/discussList.css">
+<ul>
+    <%for(let thread of threads) {%>
+        <li><a href="/thread/<%=thread.url%>"><%=thread.topic%></a></li>
+    <%}%>
+</ul>

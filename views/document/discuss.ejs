@@ -5,7 +5,7 @@
 <ul>
     <%#<li><a href="/">편집 요청 Sans</a></li>%>
 </ul>
-<p><a href="/">[닫힌 편집 요청 보기]</a></p>
+<p><a href="<%=doc_action_link(document, 'discuss', { state: 'closed_edit_requests' })%>">[닫힌 편집 요청 보기]</a></p>
 
 <h3>토론</h3>
 <ul>
@@ -20,7 +20,7 @@
         </li>
     <%}%>
 </ul>
-<p><a href="/">[닫힌 토론 목록 보기]</a></p>
+<p><a href="<%=doc_action_link(document, 'discuss', { state: 'close' })%>">[닫힌 토론 목록 보기]</a></p>
 
 <div>
     <%if(req.permissions.includes('delete_thread')) {%>
