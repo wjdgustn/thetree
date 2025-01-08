@@ -25,7 +25,7 @@ document.addEventListener('thetree:pageLoad', () => {
             const firstFetchedBelowComment = data.comments.find(a => a.id > firstComment.id && a.userHtml);
             if(firstFetchedBelowComment) {
                 const belowCommentAmount = firstFetchedBelowComment.id - 1 - firstComment.id;
-                commentOffset += data.commentLoadAmount - belowCommentAmount;
+                commentOffset += data.commentLoadAmount - Math.min(data.commentLoadAmount, belowCommentAmount);
             }
 
             const comment = data.comments.find(a => !a.userHtml && a.id >= firstComment.id - commentOffset);
