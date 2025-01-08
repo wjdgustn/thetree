@@ -18,6 +18,7 @@ module.exports = async (content, splittedContent, link, namumark) => {
         link,
         text: link
     }
+    if(namumark.thread) return fallback;
 
     const document = mainUtils.parseDocumentName(utils.unescapeHtml(link));
     const { namespace, title } = document;
