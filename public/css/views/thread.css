@@ -222,7 +222,7 @@
         padding: 20px;
     }
 
-    textarea {
+    textarea:not(#contentInput) {
         background-color: #fff;
         background-image: none;
         border: none;
