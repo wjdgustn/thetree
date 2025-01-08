@@ -346,17 +346,15 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
     comments = await utils.findUsers(comments);
     comments = await utils.findUsers(comments, 'hiddenBy');
 
-    const parser = new NamumarkParser({
-        document,
-        dbDocument,
-        thread: true
-    });
-
-    comments = await Promise.all(comments.map(threadCommentMapper({
+    comments = await Promise.all(comments.map(c => threadCommentMapper({
         req,
         thread,
-        parser
-    })));
+        parser: new NamumarkParser({
+            document,
+            dbDocument,
+            thread: true
+        })
+    })(c)));
 
     res.json(comments);
 });
