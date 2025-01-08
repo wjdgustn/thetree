@@ -57,9 +57,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 
         threadExists = await Thread.exists({
             document: dbDocument.uuid,
-            status: {
-                $ne: ThreadStatusTypes.Close
-            },
+            status: ThreadStatusTypes.Normal,
             deleted: false
         });
     }
