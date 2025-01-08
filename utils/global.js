@@ -119,7 +119,11 @@ module.exports = {
             blame: `r${page.data.rev} Blame`,
             wiki: page.data.rev ? `r${page.data.rev}` : '',
         }[page.viewName];
-        return text ? ` (${text})` : '';
+
+        let additionalText;
+        if(page.data.thread) additionalText = page.data.thread.topic;
+
+        return text ? ` (${text})` + (additionalText ? ` - ${additionalText}` : '') : '';
     },
     async waitUntil(promise, timeout = -1) {
         let resolved = false;
