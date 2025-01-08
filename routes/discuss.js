@@ -498,4 +498,29 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
     res.status(204).end();
 });
 
+app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), async (req, res) => {
+    const thread = await Thread.findOne({
+        url: req.params.url,
+        deleted: false
+    });
+    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+
+    const document = await Document.findOne({
+        uuid: thread.document
+    });
+
+    const acl = await ACL.get({ document });
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(aclMessage, 403);
+
+    await Thread.updateOne({
+        uuid: thread.uuid
+    }, {
+        deleted: true
+    });
+    SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { deleted: true });
+
+    res.status(204).end();
+});
+
 module.exports = app;

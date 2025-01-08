@@ -62,7 +62,9 @@ document.addEventListener('thetree:pageLoad', () => {
             setupUserText();
         });
     });
-    socket.on('updateThread', thread => {
+    socket.on('updateThread', async thread => {
+        if(thread.deleted) return await movePage(doc_action_link(page.data.document, 'discuss'));
+
         data.thread = {
             ...data.thread,
             ...thread
