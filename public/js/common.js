@@ -402,7 +402,8 @@ async function movePage(response, pushState = true, prevUrl = null) {
 
     const html = await response.text();
 
-    if(response.status.toString().startsWith('4')) {
+    if(response.status.toString().startsWith('4')
+        && (response.status !== 404 || !html.startsWith('<'))) {
         setProgress(100);
         return plainAlert(html);
     }
