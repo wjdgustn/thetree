@@ -29,7 +29,7 @@ const threadCommentMapper = ({
     user
 } = {}) => async comment => {
     comment.userHtml = utils.userHtml(user ?? comment.user, {
-        isAdmin: req.permissions.includes('admin'),
+        isAdmin: req?.permissions.includes('admin'),
         note: `토론 ${thread.url} #${comment.id} 긴급차단`,
         thread: true,
         threadAdmin: comment.admin
@@ -335,7 +335,6 @@ app.post('/thread/:url', async (req, res) => {
         thread: true
     });
     const comment = await threadCommentMapper({
-        req,
         thread,
         parser,
         user: req.user
