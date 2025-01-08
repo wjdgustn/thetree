@@ -34,6 +34,12 @@ module.exports = {
     },
     generateBlame(last, curr) {
         const lineDiff = Diff.diffLines(last?.content || '', curr.content || '');
+        if(!lineDiff.length) lineDiff.push({
+            count: 1,
+            added: true,
+            removed: false,
+            value: ''
+        });
         const newLineArr = [];
         const lineArr = this.blameToLineArr(last?.blame || []);
 
