@@ -308,6 +308,7 @@ function setupUserText() {
             State.userPopup.uuid = userText.dataset.uuid;
             State.userPopup.type = parseInt(userText.dataset.type);
             State.userPopup.note = userText.dataset.note || null;
+            State.userPopup.isAdmin = !!userText.dataset.admin;
             State.userPopup.threadAdmin = !!userText.dataset.threadadmin;
 
             State.userPopup.open(userText);
@@ -599,6 +600,7 @@ document.addEventListener('alpine:init', () => {
             name: '',
             uuid: '',
             note: null,
+            isAdmin: false,
             threadAdmin: false,
             deleted: false,
             account: false,
@@ -608,7 +610,10 @@ document.addEventListener('alpine:init', () => {
                     case 0:
                         return 'IP';
                     default:
-                        return '사용자' + (State.userPopup.threadAdmin ? ' (관리자)' : '');
+                        let str = '사용자';
+                        if(State.userPopup.isAdmin) str += ' (관리자)';
+                        else if(State.userPopup.threadAdmin) str += ' (전 관리자)';
+                        return str;
                 }
             },
             async block() {
