@@ -164,7 +164,7 @@ module.exports = class NamumarkParser {
     }
 
     async parse(input, childParse = false, disableNoParagraph = false, cacheOptions = {}) {
-        if((debug||true) && !childParse && !this.includeData) console.time(`parse "${this.document.title}"`);
+        if((debug||true) && !childParse && !this.includeData && !this.thread) console.time(`parse "${this.document.title}"`);
 
         if(!childParse) {
             this.childDepth = 0;
@@ -220,7 +220,7 @@ module.exports = class NamumarkParser {
                 text = await syntax.format(sourceText, this);
             }
             else if(syntax.fullLine) {
-                if(debug && !childParse && !this.includeData) console.time('fullLine ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.time('fullLine ' + syntax.name);
                 const lines = sourceText
                     .split(NewLineTag);
                 const newLines = [];
@@ -263,12 +263,12 @@ module.exports = class NamumarkParser {
                     if(setRemoveNextNewLine) removeNextNewLine = true;
                 }
                 text = newLines.join(NewLineTag);
-                if(debug && !childParse && !this.includeData) console.timeEnd('fullLine ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.timeEnd('fullLine ' + syntax.name);
             }
             else {
                 // let brIsNewLineMode = false;
 
-                if(debug && !childParse && !this.includeData) console.time('syntax ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.time('syntax ' + syntax.name);
                 outer: for (let i = 0; i < sourceText.length; i++) {
                     const char = sourceText[i];
                     const prevChar = sourceText[i - 1];
@@ -372,7 +372,7 @@ module.exports = class NamumarkParser {
 
                     text += char;
                 }
-                if(debug && !childParse && !this.includeData) console.timeEnd('syntax ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.timeEnd('syntax ' + syntax.name);
             }
 
             sourceText = text;
@@ -558,7 +558,7 @@ module.exports = class NamumarkParser {
                 // .replaceAll('<removebr/>', '')
         }${(this.includeData || childParse) ? '' : '</div>'}`;
 
-        if((debug||true) && !childParse && !this.includeData) {
+        if((debug||true) && !childParse && !this.includeData && !this.thread) {
             console.timeEnd(`parse "${this.document.title}"`);
             if(debug) console.log();
         }
