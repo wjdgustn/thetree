@@ -246,6 +246,10 @@
         background-color: #ccc;
         text-align: center;
     }
+
+    .wiki-raw {
+        white-space: pre-wrap;
+    }
 }
 
 @keyframes comment-blink {

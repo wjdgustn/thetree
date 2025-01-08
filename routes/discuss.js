@@ -588,4 +588,31 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_co
     res.status(204).end();
 });
 
+app.get('/admin/thread/:url/:id/raw', async (req, res) => {
+    const thread = await Thread.findOne({
+        url: req.params.url,
+        deleted: false
+    });
+    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+
+    const document = await Document.findOne({
+        uuid: thread.document
+    });
+
+    const acl = await ACL.get({ document });
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(aclMessage, 403);
+
+    const dbComment = await ThreadComment.findOne({
+        thread: thread.uuid,
+        id: parseInt(req.params.id)
+    });
+    if(!dbComment) return res.status(404).send('댓글이 존재하지 않습니다.');
+    if(dbComment.hidden
+        && !req.permissions.includes('hide_thread_comment'))
+        return res.status(403).send('권한이 부족합니다.');
+
+    res.send(dbComment.content);
+});
+
 module.exports = app;

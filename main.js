@@ -457,7 +457,7 @@ document.getElementById('initScript')?.remove();
 
             if(sendOnlyContent) {
                 const $ = cheerio.load(html);
-                res.send(browserGlobalVarScript + $('#content').html());
+                res.status(status).send(browserGlobalVarScript + $('#content').html());
             }
             else res.status(status).send(html);
         });

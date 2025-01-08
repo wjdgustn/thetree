@@ -655,14 +655,12 @@ document.addEventListener('alpine:init', () => {
             }
         },
         threadPopup: {
-            num: 0,
-            commentHidden: false,
-            open(num, hidden, button) {
+            comment: null,
+            open(comment, button) {
                 const threadPopup = document.getElementById('threadpopup');
                 if(!threadPopup) return;
 
-                State.threadPopup.num = num;
-                State.threadPopup.commentHidden = hidden;
+                State.threadPopup.comment = comment;
 
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     threadPopup.classList.remove('popup-close');
@@ -688,15 +686,30 @@ document.addEventListener('alpine:init', () => {
                 threadPopup.classList.add('popup-close');
             },
             async toggleRaw() {
-                console.log('toggleRaw', State.threadPopup.num);
+                const comment = State.threadPopup.comment;
+
+                if(!comment.rawHtml) {
+                    const response = await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/raw`);
+                    const text = await response.text();
+                    if(!response.ok) return alert(text);
+
+                    const rawHtml = document.createElement('div');
+                    rawHtml.classList.add('wiki-raw');
+                    rawHtml.innerText = text;
+
+                    comment.rawHtml = rawHtml.outerHTML;
+                }
+
+                comment.seeRaw = !comment.seeRaw;
+                comment.forceShow = true;
             },
             async hide() {
-                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.num}/hide`, {
+                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/hide`, {
                     method: 'POST'
                 });
             },
             async show() {
-                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.num}/show`, {
+                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/show`, {
                     method: 'POST'
                 });
             }

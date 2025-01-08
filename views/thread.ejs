@@ -37,7 +37,7 @@ const isFrontPage = docTitle === config.front_page;
                     <span class="time-block">
                         <span x-html="getFullDateTag(comment.createdAt, 'keep') ?? ''"></span>
                         <div x-show="comment.type === 0" class="menu-block">
-                            <span @click="$store.state.threadPopup.open(comment.id, comment.hidden, $el)" role="button" class="navigation-button menu-button">
+                            <span @click="$store.state.threadPopup.open(comment, $el)" role="button" class="navigation-button menu-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"></path></svg>
                             </span>
                         </div>
@@ -45,7 +45,7 @@ const isFrontPage = docTitle === config.front_page;
                 </span>
 
                 </div>
-                <div x-show="!comment.userHtml || !comment.hidden || comment.forceShow" class="comment-block-content" :class="{ 'special-comment': comment.userHtml && comment.type !== 0 }" x-html="comment.contentHtml ?? ''"></div>
+                <div x-show="!comment.userHtml || !comment.hidden || comment.forceShow" class="comment-block-content" :class="{ 'special-comment': comment.userHtml && comment.type !== 0 }" x-html="(comment.seeRaw ? comment.rawHtml : comment.contentHtml) ?? ''"></div>
                 <div x-show="comment.userHtml && comment.hidden && !comment.forceShow" class="comment-block-content hidden-comment">
                     [<span x-html="comment.hideUserHtml"></span>에 의해 숨겨진 글입니다.]
                     <%if(req.permissions.includes('hide_thread_comment')) {%><button @click="comment.forceShow = true" class="thetree-square-button thetree-danger-button">[ADMIN] SHOW</button><%}%>
@@ -114,11 +114,11 @@ const isFrontPage = docTitle === config.front_page;
 <div id="threadpopup" class="popup popup-close" @click="$store.state.threadPopup.close" @click.outside="$store.state.threadPopup.close">
     <div>
         <div>
-            <a @click.prevent="$store.state.threadPopup.toggleRaw()" role="button" href="#" class="thetree-button">원문 보기</a>
+            <a @click.prevent="$store.state.threadPopup.toggleRaw()" role="button" href="#" class="thetree-button" x-text="$store.state.threadPopup.comment?.seeRaw ? '위키 보기' : '원문 보기'"></a>
             <%if(req.permissions.includes('hide_thread_comment')) {%>
                 <hr>
-                <a x-show="!$store.state.threadPopup.commentHidden" @click.prevent="$store.state.threadPopup.hide()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기</a>
-                <a x-show="$store.state.threadPopup.commentHidden" @click.prevent="$store.state.threadPopup.show()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기 해제</a>
+                <a x-show="!$store.state.threadPopup.comment?.hidden" @click.prevent="$store.state.threadPopup.hide()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기</a>
+                <a x-show="$store.state.threadPopup.comment?.hidden" @click.prevent="$store.state.threadPopup.show()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기 해제</a>
             <%}%>
         </div>
     </div>
