@@ -22,95 +22,32 @@
 </ul>
 <p><a href="<%=doc_action_link(document, 'discuss', { state: 'close' })%>">[닫힌 토론 목록 보기]</a></p>
 
-<div>
-    <%if(req.permissions.includes('delete_thread')) {%>
-        <form method="post" class="delete-thread-form" action="/admin/thread/asdf/delete">
-            <button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button>
-        </form>
-    <%}%>
-    <h2>
-        1.
-        <a href="/" id="s-1">샌즈티비</a>
-    </h2>
-    <div class="comment-preview-block">
-        <div>
-            <div class="comment-block">
-                <div class="comment-block-inner">
-                    <div class="comment-block-user">
-                        <span>
-                            <a id="1">#1</a>
-                        </span>
-                        <%-userHtml(req.user)%>
-                        <span class="time-block">
-                            <%-getFullDateTag(new Date())%>
-                        </span>
-                    </div>
-                    <div class="comment-block-content">
-                        asdf
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div>
-            <a href="/" class="thread-more">more...</a>
-            <div class="comment-block">
-                <div class="comment-block-inner">
-                    <div class="comment-block-user">
-                        <span>
-                            <a id="1">#1</a>
-                        </span>
-                        <%-userHtml(req.user)%>
-                        <span class="time-block">
-                            <%-getFullDateTag(new Date())%>
-                        </span>
-                    </div>
-                    <div class="comment-block-content">
-                        asdf
-                    </div>
+<%for(let i in openThreads) {%>
+    <%
+        const thread = openThreads[i];
+        const num = parseInt(i) + 1;
+    %>
+    <div>
+        <%if(req.permissions.includes('delete_thread')) {%>
+            <form method="post" class="delete-thread-form" action="/admin/thread/<%=thread.url%>/delete">
+                <button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button>
+            </form>
+        <%}%>
+        <h2>
+            <%=num%>.
+            <a href="/thread/<%=thread.url%>" id="s-<%=num%>"><%=thread.topic%></a>
+        </h2>
+        <div class="comment-preview-block">
+            <%for(let j in thread.recentComments) {%>
+                <%const comment = thread.recentComments[j];%>
+                <div>
+                    <%-include('../components/commentPreview', { comment, showMore: j == 1 && comment.id !== 2 })%>
                 </div>
-            </div>
-        </div>
-
-        <div>
-            <div class="comment-block">
-                <div class="comment-block-inner">
-                    <div class="comment-block-user">
-                        <span>
-                            <a id="1">#1</a>
-                        </span>
-                        <%-userHtml(req.user)%>
-                        <span class="time-block">
-                            <%-getFullDateTag(new Date())%>
-                        </span>
-                    </div>
-                    <div class="comment-block-content">
-                        asdf
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div>
-            <div class="comment-block">
-                <div class="comment-block-inner">
-                    <div class="comment-block-user">
-                        <span>
-                            <a id="1">#1</a>
-                        </span>
-                        <%-userHtml(req.user)%>
-                        <span class="time-block">
-                            <%-getFullDateTag(new Date())%>
-                        </span>
-                    </div>
-                    <div class="comment-block-content">
-                        asdf
-                    </div>
-                </div>
-            </div>
+            <%}%>
         </div>
     </div>
-</div>
+<%}%>
 
 <h3>새 주제 생성</h3>
 

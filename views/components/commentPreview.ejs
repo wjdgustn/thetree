@@ -1,0 +1,23 @@
+<%if(typeof showMore !== 'undefined' && showMore) {%><a href="/" class="thread-more">more...</a><%}%>
+<div class="comment-block">
+    <div class="comment-block-inner">
+        <div class="comment-block-user">
+            <span>
+                <a id="<%=comment.id%>">#<%=comment.id%></a>
+            </span>
+            <%-comment.userHtml%>
+            <span class="time-block">
+                <%-getFullDateTag(comment.createdAt)%>
+            </span>
+        </div>
+        <%if(comment.hidden) {%>
+            <div class="comment-block-content hidden-comment">
+                [<%-comment.hideUserHtml%>에 의해 숨겨진 글입니다.]
+            </div>
+        <%} else {%>
+            <div class="comment-block-content<%=comment.type !== ThreadCommentTypes.Default ? ' special-comment' : ''%>">
+                <%-comment.contentHtml%>
+            </div>
+        <%}%>
+    </div>
+</div>

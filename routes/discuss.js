@@ -171,6 +171,43 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .lean();
     }
 
+    const parser = new NamumarkParser({
+        document,
+        dbDocument,
+        thread: true
+    });
+
+    for(let thread of openThreads) {
+        let comments = await ThreadComment.find({
+            thread: thread.uuid
+        })
+            .sort({
+                id: -1
+            })
+            .limit(3)
+            .lean();
+        comments.reverse();
+
+        if(comments[0].id !== 1) {
+            const firstComment = await ThreadComment.findOne({
+                thread: thread.uuid,
+                id: 1
+            }).lean();
+            comments.unshift(firstComment);
+        }
+
+        comments = await utils.findUsers(comments);
+        comments = await utils.findUsers(comments, 'hiddenBy');
+
+        comments = await Promise.all(comments.map(threadCommentMapper({
+            req,
+            thread,
+            parser
+        })));
+
+        thread.recentComments = comments;
+    }
+
     res.renderSkin(undefined, {
         viewName: 'thread_list',
         contentName: 'document/discuss',
