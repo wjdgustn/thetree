@@ -66,10 +66,10 @@ newSchema.index({ thread: 1, id: 1 }, { unique: true });
 const lastItem = {};
 const lockPromise = {};
 newSchema.pre('save', async function() {
-    const locks = lockPromise[this.id] ??= [];
+    const locks = lockPromise[this.thread] ??= [];
 
-    let last = lastItem[this.id];
-    lastItem[this.id] = this;
+    let last = lastItem[this.thread];
+    lastItem[this.thread] = this;
 
     if(last && last.id == null) await globalUtils.waitUntil(new Promise(resolve => {
         locks.push(resolve);
