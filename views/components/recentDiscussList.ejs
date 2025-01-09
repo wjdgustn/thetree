@@ -24,7 +24,7 @@
 
             <%if(!hideUser) {%>
                 <div class="changes-value">
-                    <%-userHtml(req.user, {
+                    <%-userHtml(thread.lastUpdateUser, {
                         note: `토론 ${thread.url} 긴급차단`
                     })%>
                 </div>
