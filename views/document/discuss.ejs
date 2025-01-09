@@ -43,7 +43,7 @@
             <%for(let j in thread.recentComments) {%>
                 <%const comment = thread.recentComments[j];%>
                 <div>
-                    <%if(j === '1' && comment.id !== 2) {%><a href="/" class="thread-more">more...</a><%}%>
+                    <%if(j === '1' && comment.id !== 2) {%><a href="/thread/<%=thread.url%>" class="thread-more">more...</a><%}%>
                     <%-include('../components/commentPreview', { comment })%>
                 </div>
             <%}%>
