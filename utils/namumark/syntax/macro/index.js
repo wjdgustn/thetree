@@ -30,8 +30,6 @@ module.exports = {
     format: async (content, namumark) => {
         // if(debug) loadMacros();
 
-        if(namumark.thread) return '';
-
         const openParamIndex = content.indexOf('(');
 
         let name;
@@ -46,6 +44,8 @@ module.exports = {
         name = name.toLowerCase();
 
         if(!macros[name]) return;
+
+        if(namumark.thread) return '';
 
         return await macros[name](params, namumark);
     }
