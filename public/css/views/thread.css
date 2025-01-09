@@ -236,7 +236,7 @@
         width: 100%;
     }
 
-    textarea[disabled] {
+    textarea[disabled]:not(#contentInput) {
         background-color: #eceeef;
         cursor: not-allowed;
         opacity: 1;
