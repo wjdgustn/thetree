@@ -16,7 +16,8 @@ const {
     HistoryTypes,
     BacklinkFlags,
     ThreadStatusTypes,
-    ThreadCommentTypes
+    ThreadCommentTypes,
+    UserTypes
 } = require('../utils/types');
 
 const headingSyntax = require('../utils/namumark/syntax/heading');
@@ -153,9 +154,11 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         user = await User.findOne({
             name: title
         });
-        if(user) defaultData.user = {
-            uuid: user.uuid
-        }
+        if(user
+            && (user.type !== UserTypes.Deleted || req.permissions.includes('admin')))
+            defaultData.user = {
+                uuid: user.uuid
+            }
     }
 
     const parser = new NamumarkParser({
