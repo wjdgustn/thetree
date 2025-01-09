@@ -23,14 +23,15 @@ function updateNavs(hash) {
             other.href = newOtherHref;
 
             const parent = other.parentNode;
+            const targetName = splittedOther[0].slice(1);
             if(hash.includes('.')
                 ? splittedOther[1] === splittedHref[1]
-                : parent.parentNode.children[0] === parent) {
+                : parent.parentNode.children[targetName === 'document' ? 1 : 0] === parent) {
                 other.classList.add('nav-content-selected');
                 showTarget = newOtherHref;
                 title.innerText = other.innerText;
 
-                target.value = splittedOther[0].slice(1);
+                target.value = targetName;
                 aclType.value = other.dataset.type;
             }
             else other.classList.remove('nav-content-selected');
