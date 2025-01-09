@@ -690,7 +690,7 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         return res.status(500).send('카테고리 렌더 오류');
     }
 
-    const isAdmin = req.user.permissions.includes('admin');
+    const isAdmin = req.permissions.includes('admin');
     if(isThread) expressApp.render('components/commentPreview', {
         comment: {
             id: 1,

@@ -346,7 +346,7 @@ module.exports = {
         }
 
         req.permissions = [...new Set(req.permissions)];
-        if(req.user) req.user.permissions = req.permissions;
+        // if(req.user) req.user.permissions = req.permissions;
         req.displayPermissions = req.permissions.filter(a => ![
             'any',
             'contributor',
