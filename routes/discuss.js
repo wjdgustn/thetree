@@ -658,7 +658,7 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_co
     res.status(204).end();
 });
 
-app.get('/admin/thread/:url/:id/raw', async (req, res) => {
+app.get('/admin/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
