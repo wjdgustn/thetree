@@ -39,7 +39,7 @@
             <td class="<%=diff.class%>"><div><%-diff.content%></div></td>
         </tr>
 
-        <%if(isLast && diff.class === 'equal' && lineDiff.length > 1) {%><%-skipRow%><%}%>
+        <%if(isLast && diff.class === 'equal' && lineDiff[lineDiff.length - 1].count > changeAroundLines) {%><%-skipRow%><%}%>
 
         <%
         lastLine = diff.line;

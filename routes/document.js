@@ -1194,7 +1194,8 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: rev.uuid,
         serverData: {
             lineDiff,
-            diffLines
+            diffLines,
+            changeAroundLines: CHANGE_AROUND_LINES
         }
     });
 });
