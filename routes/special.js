@@ -68,7 +68,8 @@ app.get('/RecentDiscuss', async (req, res) => {
 
     if(isThread) {
         const query = {
-            status: ThreadStatusTypes.Normal
+            status: ThreadStatusTypes.Normal,
+            deleted: false
         };
         const sort = {
             lastUpdateAt: -1
