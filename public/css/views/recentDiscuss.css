@@ -130,10 +130,10 @@
     }
 
     .document-link {
-        color: var(--light-text-color, var(--text-color, #212529));
+        color: var(--light-text-color, var(--text-color, #212529)) !important;
     }
 
     .theseed-dark-mode .document-link {
-        color: var(--dark-text-color, var(--text-color, #e0e0e0));
+        color: var(--dark-text-color, var(--text-color, #e0e0e0)) !important;
     }
 }
