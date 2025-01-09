@@ -10,7 +10,8 @@ module.exports = {
         ChildParser: 8,
         LiteralFormat: 9,
         Format: 10,
-        Last: 11
+        Last: 11,
+        Discuss: 12
     },
     AllowedLanguages: [
         'basic',

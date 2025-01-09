@@ -130,6 +130,7 @@ module.exports = class NamumarkParser {
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
         if(data.includeData) this.includeData = data.includeData;
+        if(data.thread) this.thread = true;
     }
 
     get NamumarkParser() {
@@ -163,7 +164,7 @@ module.exports = class NamumarkParser {
     }
 
     async parse(input, childParse = false, disableNoParagraph = false, cacheOptions = {}) {
-        if((debug||true) && !childParse && !this.includeData) console.time(`parse "${this.document.title}"`);
+        if((debug||true) && !childParse && !this.includeData && !this.thread) console.time(`parse "${this.document.title}"`);
 
         if(!childParse) {
             this.childDepth = 0;
@@ -203,7 +204,7 @@ module.exports = class NamumarkParser {
             const syntax = sortedSyntaxes[syntaxIndex];
             const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
             // 각주에 들어가는 이스케이프 문자 제거해야 함, Priority.Last 문법은 이스케이프 문자 영향 안 받음(파싱 중 생성됨)
-            const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
+            const isLastSyntax = !sortedSyntaxes.find((a, i) => i > syntaxIndex && a.fullContent && a.fullLine);
             // if(text) {
             //     sourceText = text;
             //     text = '';
@@ -219,7 +220,7 @@ module.exports = class NamumarkParser {
                 text = await syntax.format(sourceText, this);
             }
             else if(syntax.fullLine) {
-                if(debug && !childParse && !this.includeData) console.time('fullLine ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.time('fullLine ' + syntax.name);
                 const lines = sourceText
                     .split(NewLineTag);
                 const newLines = [];
@@ -262,12 +263,12 @@ module.exports = class NamumarkParser {
                     if(setRemoveNextNewLine) removeNextNewLine = true;
                 }
                 text = newLines.join(NewLineTag);
-                if(debug && !childParse && !this.includeData) console.timeEnd('fullLine ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.timeEnd('fullLine ' + syntax.name);
             }
             else {
                 // let brIsNewLineMode = false;
 
-                if(debug && !childParse && !this.includeData) console.time('syntax ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.time('syntax ' + syntax.name);
                 outer: for (let i = 0; i < sourceText.length; i++) {
                     const char = sourceText[i];
                     const prevChar = sourceText[i - 1];
@@ -371,7 +372,7 @@ module.exports = class NamumarkParser {
 
                     text += char;
                 }
-                if(debug && !childParse && !this.includeData) console.timeEnd('syntax ' + syntax.name);
+                if(debug && !childParse && !this.includeData && !this.thread) console.timeEnd('syntax ' + syntax.name);
             }
 
             sourceText = text;
@@ -549,7 +550,7 @@ module.exports = class NamumarkParser {
         text = text.replaceAll('<removeNoParagraph/>', '');
 
         const hasNewline = text.includes(NewLineTag);
-        let html = `${(this.includeData || childParse) ? '' : '<div class="wiki-content">'}${
+        let html = `${(this.includeData || childParse) ? '' : `<div class="wiki-content${this.thread ? ' wiki-thread-content' : ''}">`}${
             text
                 .replaceAll(NewLineTag, '<br>')
                 .replaceAll('<!s>', ' ')
@@ -557,7 +558,7 @@ module.exports = class NamumarkParser {
                 // .replaceAll('<removebr/>', '')
         }${(this.includeData || childParse) ? '' : '</div>'}`;
 
-        if((debug||true) && !childParse && !this.includeData) {
+        if((debug||true) && !childParse && !this.includeData && !this.thread) {
             console.timeEnd(`parse "${this.document.title}"`);
             if(debug) console.log();
         }

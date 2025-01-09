@@ -66,7 +66,8 @@ module.exports = {
                     });
 
                 const linkDocs = await bulkFindDocuments(links);
-                const fileDocs = await bulkFindDocuments(files);
+                let fileDocs = [];
+                if(!namumark.thread) fileDocs = await bulkFindDocuments(files);
 
                 for(let doc of linkDocs) {
                     linkExistsCache.push({
@@ -76,7 +77,8 @@ module.exports = {
                     });
                 }
 
-                const revs = await History.find({
+                let revs;
+                if(!namumark.thread) revs = await History.find({
                     document: {
                         $in: fileDocs.map(a => a.uuid)
                     }
@@ -242,7 +244,7 @@ module.exports = {
             titleDocument = document;
             const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.exists;
-            else if(isImage) notExist = true;
+            else if(isImage && !namumark.thread) notExist = true;
             else if(isCategory) notExist = false;
             else {
                 const dbDocument = await Document.findOne({
@@ -285,7 +287,7 @@ module.exports = {
 
         const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
-        if(isCategory) {
+        if(isCategory && !namumark.thread) {
             // namumark.categoryHtmls.push(html);
             return '<removeNewline/>';
         }

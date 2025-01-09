@@ -95,6 +95,10 @@
     margin-bottom: 1rem;
 }
 
+.wiki-content.wiki-thread-content .wiki-paragraph:last-of-type {
+    margin-bottom: 0;
+}
+
 .wiki-content .wiki-list li .wiki-paragraph {
     margin-bottom: 0;
 }

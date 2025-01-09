@@ -467,6 +467,10 @@ span.user-text-name {
     font-weight: 700;
 }
 
+.user-text-admin {
+    font-weight: 700;
+}
+
 .user-text-deleted {
     color: gray;
     font-style: italic;
@@ -782,7 +786,7 @@ div.category-document-block div.category-document-many-content div:first-child h
     float: right;
 }
 
-#userpopup {
+.popup {
     outline: none;
     background-color: var(--light-article-background-color, var(--article-background-color, #fff));
     border: 1px solid #d5d5d5;
@@ -803,13 +807,13 @@ div.category-document-block div.category-document-many-content div:first-child h
     left: 0;
 }
 
-#userpopup>div {
+.popup>div {
     box-sizing: border-box;
     overflow-y: auto;
     position: relative;
 }
 
-#userpopup>div>div {
+.popup>div>div {
     max-height: inherit;
     max-width: inherit;
     position: relative;
@@ -833,13 +837,13 @@ div.category-document-block div.category-document-many-content div:first-child h
     margin: 0 0 .3rem;
 }
 
-#userpopup>div>div>hr {
+.popup>div>div>hr {
     border: 0;
     border-top: 1px solid #d5d5d5;
     margin: .25rem 0;
 }
 
-#userpopup>div>div>a, #userpopup>div>div>span {
+.popup>div>div>a, .popup>div>div>span {
     background-color: var(--light-article-background-color, var(--article-background-color, #fff));
     border: none !important;
     justify-content: flex-start !important;
@@ -856,7 +860,7 @@ div.category-document-block div.category-document-many-content div:first-child h
     background-color: #c1434f !important;
 }
 
-.userpopup-close {
+.popup-close {
     opacity: 0 !important;
     pointer-events: none;
     transition: opacity .15s,visibility .15s !important;

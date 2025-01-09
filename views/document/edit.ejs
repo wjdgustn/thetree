@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="/css/views/edit.css">
+<script src="/js/unsavedWarn.js"></script>
 
-<script src="/js/edit.js"></script>
+<script src="/js/preview.js"></script>
 
 <%-include('../components/alert', { alert: aclMessage })%>
 
@@ -23,7 +24,7 @@
 
     <div class="tabs">
         <div :class="selectedTab === 'raw' && 'selected-tab-content'">
-            <textarea id="text-input" name="text" wrap="soft"<%=aclMessage ? ' readonly' : ''%>><%=content%></textarea>
+            <textarea id="text-input" class="unsaved-warn" name="text" wrap="soft"<%=aclMessage ? ' readonly' : ''%>><%=content%></textarea>
         </div>
 
         <div id="preview-tab-content" :class="selectedTab === 'preview' && 'selected-tab-content'">

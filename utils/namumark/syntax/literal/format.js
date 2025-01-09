@@ -40,7 +40,7 @@ module.exports = (content, namumark, check = false) => {
     const firstParam = splittedContent[0];
     const paramContent = splittedContent.slice(1).join(' ');
 
-    if(firstParam.startsWith('#!html')) {
+    if(firstParam.startsWith('#!html') && !namumark.thread) {
         if(check) return content;
 
         const html = utils.unescapeHtml(content.slice('#!html'.length).trim());

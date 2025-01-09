@@ -49,6 +49,17 @@ module.exports = {
         ACLGroupRemove: 1,
         Grant: 2
     },
+    ThreadStatusTypes: {
+        Normal: 0,
+        Pause: 1,
+        Close: 2
+    },
+    ThreadCommentTypes: {
+        Default: 0,
+        UpdateStatus: 1,
+        UpdateTopic: 2,
+        UpdateDocument: 3
+    },
     GrantablePermissions: [
         'delete_thread',
         'admin',

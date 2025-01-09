@@ -105,8 +105,8 @@ function backupForm() {
     }
 }
 
-function restoreForm() {
-    const forms = content.querySelectorAll('form');
+function restoreForm(reset = false, form = null) {
+    const forms = form ? [form] : content.querySelectorAll('form');
     const usedFormIds = [];
     for(let form of forms) {
         const backup = formBackup[form.id];
@@ -115,7 +115,7 @@ function restoreForm() {
         usedFormIds.push(form.id);
 
         for(let [key, value] of backup) {
-            const input = form.querySelector(`input[name="${key}"], select[name="${key}"]`);
+            const input = form.querySelector(`input[name="${key}"], select[name="${key}"], textarea[name="${key}"]`);
             if(!input) continue;
 
             if(input.type === 'hidden') continue;
@@ -123,6 +123,8 @@ function restoreForm() {
             if(input.type === 'checkbox' || input.type === 'radio')
                 input.checked = !!value;
             else {
+                if(reset) value = input.getAttribute('value') ?? '';
+
                 if(input._x_model)
                     input._x_model.set(value);
                 else
@@ -172,6 +174,12 @@ const formHandler = async e => {
 
     backupForm();
 
+    if(response.status === 204) {
+        restoreForm(true, form);
+        setProgress(100);
+        return;
+    }
+
     if(response.redirected) {
         const probModal = e.target.parentElement.parentElement.parentElement;
         console.log(probModal);
@@ -179,7 +187,7 @@ const formHandler = async e => {
             probModal._thetree.modal.close(true);
         }
 
-        window.beforePageLoad = null;
+        window.beforePageLoad = [];
         window.beforePopstate = null;
         return await movePage(response);
     }
@@ -190,7 +198,7 @@ const formHandler = async e => {
         try {
             json = JSON.parse(html);
             if(json.fieldErrors) {
-                const inputs = form.querySelectorAll('input, select');
+                const inputs = form.querySelectorAll('input, select, textarea');
                 for(let input of inputs) {
                     if(!input.name) continue;
 
@@ -262,19 +270,7 @@ function updateTimeTag() {
             }
         }
 
-        const dateStr = [
-            date.getFullYear(),
-            date.getMonth() + 1,
-            date.getDate()
-        ].map(num => num.toString().padStart(2, '0')).join('-');
-
-        const timeStr = [
-            date.getHours(),
-            date.getMinutes(),
-            date.getSeconds()
-        ].map(num => num.toString().padStart(2, '0')).join(':');
-
-        let result = dateStr + ' ' + timeStr;
+        let result = getTimeStr(date);
 
         if(type === 'timezone') {
             const offset = -(date.getTimezoneOffset() / 60);
@@ -300,6 +296,34 @@ function focusAnchor() {
     else window.scrollTo(0, 0);
 }
 
+function setupUserText() {
+    const userTexts = document.getElementsByClassName('user-text-name');
+    for(let userText of userTexts) {
+        if(userText._thetree?.userTextInitialized) continue;
+
+        const handler = e => {
+            e.preventDefault();
+
+            State.userPopup.name = userText.textContent;
+            State.userPopup.uuid = userText.dataset.uuid;
+            State.userPopup.type = parseInt(userText.dataset.type);
+            State.userPopup.note = userText.dataset.note || null;
+            State.userPopup.isAdmin = !!userText.dataset.admin;
+            State.userPopup.threadAdmin = !!userText.dataset.threadadmin;
+
+            State.userPopup.open(userText);
+
+            return false;
+        }
+
+        userText._thetree ??= {};
+        if(userText.tagName === 'A') userText.removeEventListener('click', aClickHandler);
+        userText.addEventListener('click', handler);
+
+        userText._thetree.userTextInitialized = true;
+    }
+}
+
 function setupDocument() {
     const aElements = document.getElementsByTagName('a');
     for(let a of aElements) {
@@ -318,7 +342,7 @@ function setupDocument() {
     updateTimeTag();
     focusAnchor();
 
-    window.beforePageLoad = null;
+    window.beforePageLoad = [];
     window.beforePopstate = null;
 
     const allElements = document.getElementsByTagName('*');
@@ -334,26 +358,7 @@ function setupDocument() {
         };
     }
 
-    const userTexts = document.getElementsByClassName('user-text-name');
-    for(let userText of userTexts) {
-        const handler = e => {
-            e.preventDefault();
-
-            State.userPopup.name = userText.textContent;
-            State.userPopup.uuid = userText.dataset.uuid;
-            State.userPopup.type = parseInt(userText.dataset.type);
-            State.userPopup.note = userText.dataset.note || null;
-
-            State.userPopup.open(userText);
-
-            return false;
-        }
-
-        if(userText.tagName === 'A') userText._thetree = {
-            preHandler: handler
-        }
-        else userText.addEventListener('click', handler);
-    }
+    setupUserText();
 
     emit('thetree:pageLoad');
 }
@@ -377,8 +382,8 @@ function changeUrl(url) {
 
 let content;
 async function movePage(response, pushState = true, prevUrl = null) {
-    if(typeof window.beforePageLoad === 'function') {
-        const canMove = await window.beforePageLoad();
+    if(window.beforePageLoad.length) for(let handler of window.beforePageLoad) {
+        const canMove = await handler();
         if(!canMove) {
             if(prevUrl) history.pushState({}, null, prevUrl);
             return;
@@ -397,7 +402,8 @@ async function movePage(response, pushState = true, prevUrl = null) {
 
     const html = await response.text();
 
-    if(response.status.toString().startsWith('4')) {
+    if(response.status.toString().startsWith('4')
+        && (response.status !== 404 || !html.startsWith('<'))) {
         setProgress(100);
         return plainAlert(html);
     }
@@ -419,6 +425,12 @@ async function movePage(response, pushState = true, prevUrl = null) {
     }
 
     setProgress(100);
+}
+
+function updateTitle() {
+    document.title = page.data.document
+        ? `${doc_fulltitle(page.data.document)}${getTitleDescription(page)} - ${CONFIG.site_name}`
+        : `${page.title} - ${CONFIG.site_name}`;
 }
 
 const scriptCache = {};
@@ -509,9 +521,7 @@ async function replaceContent(html, headers) {
             }
         }
 
-        document.title = page.data.document
-            ? `${doc_fulltitle(page.data.document)}${getTitleDescription(page)} - ${CONFIG.site_name}`
-            : `${page.title} - ${CONFIG.site_name}`;
+        updateTitle();
     }
 
     return result;
@@ -570,10 +580,12 @@ function resetProgress() {
 }
 
 window.addEventListener('beforeunload', e => {
-    if(typeof window.beforePageLoad !== 'function') return;
+    if(!window.beforePageLoad.length) return;
 
-    const canMove = window.beforePageLoad();
-    if(!canMove) e.preventDefault();
+    for(let handler of window.beforePageLoad) {
+        const canMove = handler();
+        if(!canMove) e.preventDefault();
+    }
 });
 
 const localConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
@@ -592,6 +604,8 @@ document.addEventListener('alpine:init', () => {
             name: '',
             uuid: '',
             note: null,
+            isAdmin: false,
+            threadAdmin: false,
             deleted: false,
             account: false,
             blockable: false,
@@ -600,7 +614,10 @@ document.addEventListener('alpine:init', () => {
                     case 0:
                         return 'IP';
                     default:
-                        return '사용자';
+                        let str = '사용자';
+                        if(State.userPopup.isAdmin) str += ' (관리자)';
+                        else if(State.userPopup.threadAdmin) str += ' (전 관리자)';
+                        return str;
                 }
             },
             async block() {
@@ -617,7 +634,7 @@ document.addEventListener('alpine:init', () => {
                 State.userPopup.blockable = [0, 1].includes(State.userPopup.type);
 
                 requestAnimationFrame(() => requestAnimationFrame(() => {
-                    userPopup.classList.remove('userpopup-close');
+                    userPopup.classList.remove('popup-close');
 
                     FloatingUIDOM.computePosition(userText, userPopup, {
                         placement: 'bottom-start',
@@ -634,9 +651,82 @@ document.addEventListener('alpine:init', () => {
                 }));
             },
             close() {
-                userPopup.classList.add('userpopup-close');
+                userPopup.classList.add('popup-close');
             }
         },
+        threadPopup: {
+            comment: null,
+            open(comment, button) {
+                const threadPopup = document.getElementById('threadpopup');
+                if(!threadPopup) return;
+
+                State.threadPopup.comment = comment;
+
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    threadPopup.classList.remove('popup-close');
+
+                    FloatingUIDOM.computePosition(button, threadPopup, {
+                        placement: 'bottom-end',
+                        middleware: [
+                            FloatingUIDOM.offset(6),
+                            FloatingUIDOM.flip()
+                        ]
+                    }).then(({x, y}) => {
+                        Object.assign(threadPopup.style, {
+                            left: `${x}px`,
+                            top: `${y}px`
+                        });
+                    });
+                }));
+            },
+            close() {
+                const threadPopup = document.getElementById('threadpopup');
+                if(!threadPopup) return;
+
+                threadPopup.classList.add('popup-close');
+            },
+            async toggleRaw() {
+                const comment = State.threadPopup.comment;
+
+                if(!comment.rawHtml) {
+                    const response = await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/raw`);
+                    const text = await response.text();
+                    if(!response.ok) return alert(text);
+
+                    const rawHtml = document.createElement('div');
+                    rawHtml.classList.add('wiki-raw');
+                    rawHtml.innerText = text;
+
+                    comment.rawHtml = rawHtml.outerHTML;
+                }
+
+                comment.seeRaw = !comment.seeRaw;
+                comment.forceShow = true;
+            },
+            async hide() {
+                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/hide`, {
+                    method: 'POST'
+                });
+            },
+            async show() {
+                await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/show`, {
+                    method: 'POST'
+                });
+            }
+        },
+
+        threadIntersectionObserver: new IntersectionObserver(async entries => {
+            for(let entry of entries) {
+                const element = entry.target.parentElement;
+
+                if(entry.isIntersecting) {
+                    element.classList.add('comment-block-visible');
+                }
+                else {
+                    element.classList.remove('comment-block-visible');
+                }
+            }
+        }),
 
         async openQuickACLGroup({
             username = null,

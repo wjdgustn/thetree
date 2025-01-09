@@ -1,0 +1,11 @@
+@scope (#content-style) {
+    ul {
+        margin: .4em 0 .4em 1.5em;
+        padding-left: .5rem;
+    }
+
+    ul li {
+        list-style: inherit !important;
+        margin: .4em 0;
+    }
+}

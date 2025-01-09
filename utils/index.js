@@ -1,5 +1,6 @@
 const { models } = require('mongoose');
 const crypto = require('crypto');
+const { Address4, Address6 } = require('ip-address');
 
 const globalUtils = require('./global');
 const {
@@ -12,6 +13,9 @@ module.exports = {
         min = Math.ceil(min);
         max = Math.floor(max + 1);
         return Math.floor(Math.random() * (max - min)) + min;
+    },
+    onlyKeys(obj, keys = []) {
+        return Object.fromEntries(Object.entries(obj).filter(([k]) => keys.includes(k)));
     },
     withoutKeys(obj, keys = []) {
         return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
@@ -99,6 +103,12 @@ module.exports = {
         return null;
     },
     async getUserCSS(user) {
+        let ipArr;
+        if(user.ip) {
+            if(Address4.isValid(user.ip)) ipArr = new Address4(user.ip).toArray();
+            else ipArr = new Address6(user.ip).toByteArray();
+        }
+
         const aclGroups = await models.ACLGroup.find({
             userCSS: {
                 $exists: true,
@@ -109,17 +119,35 @@ module.exports = {
             aclGroup: {
                 $in: aclGroups.map(group => group.uuid)
             },
-            $or: [
+            $and: [
                 {
-                    expiresAt: {
-                        $gte: new Date()
-                    }
+                    $or: [
+                        {
+                            expiresAt: {
+                                $gte: new Date()
+                            }
+                        },
+                        {
+                            expiresAt: null
+                        }
+                    ]
                 },
                 {
-                    expiresAt: null
+                    $or: [
+                        {
+                            user: user.uuid
+                        },
+                        ...(ipArr ? [{
+                            ipMin: {
+                                $lte: ipArr
+                            },
+                            ipMax: {
+                                $gte: ipArr
+                            }
+                        }] : [])
+                    ]
                 }
-            ],
-            user: user.uuid
+            ]
         }).lean();
         if(!aclGroupItem) return '';
 
@@ -155,7 +183,9 @@ module.exports = {
     },
     userHtml(user, {
         isAdmin = false,
-        note = null
+        note = null,
+        thread = false,
+        threadAdmin = false
     } = {}) {
         const name = user?.name ?? user?.ip;
         const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
@@ -168,12 +198,20 @@ module.exports = {
         }
         if(user.type !== UserTypes.Deleted || isAdmin) data.uuid = user.uuid;
         data.type = user.type;
+        if(threadAdmin) data.threadadmin = '1';
+        if(user.permissions?.includes('admin')) data.admin = '1';
 
         for(let [key, value] of Object.entries(data))
             dataset += ` data-${key}="${value}"`;
 
+        let nameClass = '';
+        if(thread) {
+            if(threadAdmin) nameClass = ' user-text-admin';
+        }
+        else nameClass = user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : '';
+
         return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
-                ? `<a class="user-text-name${user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : ''}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
+                ? `<a class="user-text-name${nameClass}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
                 : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
     },
@@ -259,8 +297,10 @@ module.exports = {
 
         for(let obj of arr) {
             if(obj?.document) {
+                if(typeof obj.document !== 'string') continue;
+
                 if(cache[obj.document]) {
-                    obj.document = cache[obj.uuid];
+                    obj.document = cache[obj.document];
                     continue;
                 }
 
@@ -269,7 +309,7 @@ module.exports = {
                 }).lean();
                 if(obj.document) {
                     obj.document.parsedName = this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`);
-                    cache[obj.uuid] = obj.document;
+                    cache[obj.document.uuid] = obj.document;
                 }
             }
         }
@@ -278,5 +318,71 @@ module.exports = {
     },
     escapeRegExp(s) {
         return s.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    },
+    async makeACLData(req) {
+        req.permissions = req.user?.permissions ?? [];
+
+        req.permissions.unshift('any');
+
+        if(req.user?.type === UserTypes.Account) {
+            req.permissions.unshift('member');
+            if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
+                req.permissions.push('member_signup_15days_ago');
+        }
+        else req.permissions.unshift('ip');
+
+        if(req.useragent?.isBot) req.permissions.push('bot');
+
+        if(req.session.contributor) req.permissions.push('contributor');
+        else if(req.user) {
+            const contribution = await models.History.exists({
+                user: req.user.uuid
+            });
+            if(contribution) {
+                req.permissions.push('contributor');
+                req.session.contributor = true;
+                req.session.save();
+            }
+        }
+
+        req.permissions = [...new Set(req.permissions)];
+        // if(req.user) req.user.permissions = req.permissions;
+        req.displayPermissions = req.permissions.filter(a => ![
+            'any',
+            'contributor',
+            'member_signup_15days_ago'
+        ].includes(a));
+
+        req.aclData = {
+            permissions: req.permissions,
+            user: req.user,
+            ip: req.ip
+        }
+    },
+    async findThreads(arr) {
+        const cache = {};
+
+        for(let obj of arr) {
+            if(obj?.thread) {
+                if(cache[obj.thread]) {
+                    obj.thread = cache[obj.thread];
+                    continue;
+                }
+
+                obj.thread = await models.Thread.findOne({
+                    uuid: obj.thread
+                }).lean();
+                if(obj.thread) {
+                    cache[obj.thread.uuid] = obj.thread;
+                }
+            }
+        }
+
+        const threads = await this.findDocuments(arr.map(obj => obj.thread));
+        for(let i in threads) {
+            arr[i].thread = threads[i];
+        }
+
+        return arr;
     }
 }

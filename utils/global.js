@@ -66,10 +66,36 @@ module.exports = {
                 dateObj.getSeconds()
             ]).map(a => a.toString().padStart(2, '0')).join(olderThanToday ? '/' : ':');
     },
+    getTimeStr(date) {
+        const dateStr = [
+            date.getFullYear(),
+            date.getMonth() + 1,
+            date.getDate()
+        ].map(num => num.toString().padStart(2, '0')).join('-');
+
+        const timeStr = [
+            date.getHours(),
+            date.getMinutes(),
+            date.getSeconds()
+        ].map(num => num.toString().padStart(2, '0')).join(':');
+
+        return dateStr + ' ' + timeStr;
+    },
     getFullDateTag(date, type) {
-        const dateObj = dayjs.utc(date);
-        const isoStr = dateObj.toISOString();
-        const dateStr = dateObj.format('YYYY-MM-DD HH:mm:ss');
+        if(!date) return;
+
+        let dateStr = '';
+        let isoStr = '';
+        if(typeof dayjs !== 'undefined') {
+            const dateObj = dayjs.utc(date);
+            isoStr = dateObj.toISOString();
+            dateStr = dateObj.format('YYYY-MM-DD HH:mm:ss');
+        }
+        else {
+            if(typeof date === 'string') date = new Date(date);
+            isoStr = date.toISOString();
+            dateStr = this.getTimeStr(date);
+        }
 
         return `<time${type ? ` data-type="${type}"` : ''} datetime="${isoStr}">${dateStr}</time>`;
     },
@@ -93,7 +119,11 @@ module.exports = {
             blame: `r${page.data.rev} Blame`,
             wiki: page.data.rev ? `r${page.data.rev}` : '',
         }[page.viewName];
-        return text ? ` (${text})` : '';
+
+        let additionalText;
+        if(page.data.thread) additionalText = page.data.thread.topic;
+
+        return text ? ` (${text})` + (additionalText ? ` - ${additionalText}` : '') : '';
     },
     async waitUntil(promise, timeout = -1) {
         let resolved = false;

@@ -66,6 +66,9 @@ const newSchema = new Schema({
     },
     lastLoginRequest: {
         type: Date
+    },
+    lastUserDocumentDiscuss: {
+        type: Date
     }
 });
 

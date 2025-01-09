@@ -45,6 +45,8 @@ module.exports = {
 
         if(!macros[name]) return;
 
+        if(namumark.thread) return '';
+
         return await macros[name](params, namumark);
     }
 }

@@ -14,7 +14,9 @@ const {
     ACLConditionTypes,
     ACLActionTypes,
     HistoryTypes,
-    BacklinkFlags
+    BacklinkFlags,
+    ThreadStatusTypes,
+    ThreadCommentTypes
 } = require('../utils/types');
 
 const headingSyntax = require('../utils/namumark/syntax/heading');
@@ -25,6 +27,7 @@ const History = require('../schemas/history');
 const ACLModel = require('../schemas/acl');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
+const Thread = require('../schemas/thread');
 
 const ACL = require('../class/acl');
 
@@ -45,10 +48,19 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     });
 
     let rev;
-    if(dbDocument) rev = await History.findOne({
-        document: dbDocument.uuid,
-        ...(req.query.uuid ? { uuid: req.query.uuid } : {})
-    }).sort({ rev: -1 });
+    let threadExists = false;
+    if(dbDocument) {
+        rev = await History.findOne({
+            document: dbDocument.uuid,
+            ...(req.query.uuid ? { uuid: req.query.uuid } : {})
+        }).sort({ rev: -1 });
+
+        threadExists = await Thread.exists({
+            document: dbDocument.uuid,
+            status: ThreadStatusTypes.Normal,
+            deleted: false
+        });
+    }
 
     const acl = await ACL.get({ document: dbDocument }, document);
 
@@ -56,7 +68,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     const defaultData = {
         viewName: 'wiki',
         date: undefined,
-        discuss_progress: false,
+        discuss_progress: !!threadExists,
         document,
         edit_acl_message: null,
         editable: false,
@@ -380,9 +392,12 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     let rawConditionContent = req.body.conditionContent;
 
     if(conditionType === ACLConditionTypes.Perm) {
-        if(!req.body.permission) return res.status(400).send('권한 값을 입력해주세요!');
-        conditionContent = req.body.permission;
-        rawConditionContent = req.body.permission;
+        let value = req.body.permission;
+        if(!req.body.permission
+            && !req.permissions.includes('developer')) return res.status(400).send('권한 값을 입력해주세요!');
+        value ||= 'any';
+        conditionContent = value;
+        rawConditionContent = value;
     }
     else if(conditionType === ACLConditionTypes.Member) {
         const member = await User.findOne({
@@ -650,6 +665,7 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 });
 
 app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
+    const isThread = req.body.mode === 'thread';
     const content = req.body.content;
     if(typeof content !== 'string') return res.status(400).send('내용을 입력해주세요.');
 
@@ -663,15 +679,34 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     const parser = new NamumarkParser({
         document,
         dbDocument,
-        aclData: req.aclData
+        aclData: req.aclData,
+        thread: isThread
     });
-    const { html: contentHtml, categories } = await parser.parse(content);
+    let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml = '';
-    try {
+    if(!isThread) try {
         categoryHtml = await utils.renderCategory(categories);
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
     }
+
+    const isAdmin = req.permissions.includes('admin');
+    if(isThread) expressApp.render('components/commentPreview', {
+        comment: {
+            id: 1,
+            type: ThreadCommentTypes.Default,
+            userHtml: utils.userHtml(req.user, {
+                isAdmin,
+                thread: true,
+                threadAdmin: isAdmin
+            }),
+            contentHtml,
+            createdAt: new Date()
+        }
+    }, (err, html) => {
+        if(err) return res.status(500).send('댓글 미리보기 렌더 오류');
+        contentHtml = html;
+    });
 
     return res.send(categoryHtml + contentHtml);
 });
