@@ -273,7 +273,7 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         await User.updateOne({
             name: document.title
         }, {
-            lastUserDocumentDiscuss: thread.createdAt
+            lastUserDocumentDiscuss: thread.lastUpdateAt
         });
 
     res.redirect(`/thread/${thread.url}`);
