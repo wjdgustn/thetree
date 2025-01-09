@@ -95,7 +95,7 @@ const isFrontPage = docTitle === config.front_page;
     </ul>
     <div class="tabs">
         <div :class="selectedTab === 'raw' && 'selected-tab-content'">
-            <textarea class="unsaved-warn" rows="5" name="text" x-show="$store.state.page.data.thread.status === 0"></textarea>
+            <textarea id="text-input" class="unsaved-warn" rows="5" name="text" x-show="$store.state.page.data.thread.status === 0"></textarea>
             <textarea rows="5" disabled x-show="$store.state.page.data.thread.status !== 0" x-text="[, 'pause 상태입니다.', '닫힌 토론입니다.'][$store.state.page.data.thread.status]"></textarea>
         </div>
 
