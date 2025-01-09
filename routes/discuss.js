@@ -427,7 +427,7 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
 
     const status = ThreadStatusTypes[req.body.status];
 
-    if(thread.status === status) return res.status(409).send(`이미 ${req.body.status} 상태입니다.`);
+    if(thread.status === status) return res.status(409).send(`이미 ${req.body.status.toLowerCase()} 상태입니다.`);
 
     await Thread.updateOne({
         uuid: thread.uuid
