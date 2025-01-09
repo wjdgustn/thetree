@@ -12,6 +12,7 @@ const {
     ACLTypes
 } = require('../utils/types');
 
+const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const Thread = require('../schemas/thread');
 const ThreadComment = require('../schemas/threadComment');
@@ -268,6 +269,13 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         content: req.body.text
     });
 
+    if(document.namespace === '사용자')
+        await User.updateOne({
+            name: document.title
+        }, {
+            lastUserDocumentDiscuss: dbComment.createdAt
+        });
+
     res.redirect(`/thread/${thread.url}`);
 });
 
@@ -391,6 +399,13 @@ app.post('/thread/:url', async (req, res) => {
         dbComment
     });
 
+    if(document.namespace === '사용자')
+        await User.updateOne({
+            name: document.title
+        }, {
+            lastUserDocumentDiscuss: dbComment.createdAt
+        });
+
     res.status(204).end();
 });
 
@@ -421,6 +436,14 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
     });
     SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { status });
 
+    const latestComment = await ThreadComment.findOne({
+        thread: thread.uuid
+    })
+        .sort({
+            id: -1
+        })
+        .lean();
+
     const dbComment = await ThreadComment.create({
         thread: thread.uuid,
         user: req.user.uuid,
@@ -434,6 +457,18 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
         document,
         dbComment
     });
+
+    if(status === ThreadStatusTypes.Close && document.namespace === '사용자') {
+        const user = await User.findOne({
+            name: document.title
+        });
+        if(user.lastUserDocumentDiscuss <= latestComment.createdAt)
+            await User.updateOne({
+                uuid: user.uuid
+            }, {
+                lastUserDocumentDiscuss: null
+            });
+    }
 
     res.status(204).end();
 });
