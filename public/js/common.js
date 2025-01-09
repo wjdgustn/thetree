@@ -236,7 +236,6 @@ const formHandler = async e => {
 
     if(response.redirected) {
         const probModal = e.target.parentElement.parentElement.parentElement;
-        console.log(probModal);
         if(probModal.classList.contains('thetree-modal')) {
             probModal._thetree.modal.close(true);
         }
