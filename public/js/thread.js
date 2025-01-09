@@ -1,3 +1,8 @@
+function setupComment() {
+    setupUserText();
+    setupWikiHandlers();
+}
+
 document.addEventListener('thetree:pageLoad', () => {
     const data = State.page.data;
 
@@ -42,7 +47,7 @@ document.addEventListener('thetree:pageLoad', () => {
             locks.forEach(r => r());
 
             requestAnimationFrame(() => {
-                setupUserText();
+                setupComment();
             });
         }, 100);
     }
@@ -61,11 +66,11 @@ document.addEventListener('thetree:pageLoad', () => {
         if(commentIndex !== -1) data.comments[commentIndex] = comment;
         else data.comments.push(comment);
 
-        if(prevComment.contentHtml)
+        if(prevComment?.contentHtml)
             comment.contentHtml = prevComment.contentHtml;
 
         requestAnimationFrame(() => {
-            setupUserText();
+            setupComment();
         });
     });
     socket.on('updateThread', async thread => {
