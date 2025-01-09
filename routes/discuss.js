@@ -230,12 +230,8 @@ app.post('/discuss/?*', middleware.parseDocumentName,
             ignore_whitespace: true
         })
         .withMessage('본문의 값은 필수입니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return res.status(400).send({
-        fieldErrors: result.mapped()
-    });
-
     const document = req.document;
     const { namespace, title } = document;
     let dbDocument = await Document.findOne({
@@ -413,6 +409,7 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
     body('status')
         .isIn(Object.keys(ThreadStatusTypes))
         .withMessage('status의 값이 올바르지 않습니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
@@ -429,6 +426,9 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
     if(!readable) return res.error(aclMessage, 403);
 
     const status = ThreadStatusTypes[req.body.status];
+
+    if(thread.status === status) return res.status(409).send(`이미 ${req.body.status} 상태입니다.`);
+
     await Thread.updateOne({
         uuid: thread.uuid
     }, {
@@ -479,6 +479,7 @@ app.post('/admin/thread/:url/topic', middleware.permission('update_thread_topic'
             ignore_whitespace: true
         })
         .withMessage('topic의 값은 필수입니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
@@ -495,6 +496,9 @@ app.post('/admin/thread/:url/topic', middleware.permission('update_thread_topic'
     if(!readable) return res.error(aclMessage, 403);
 
     const topic = req.body.topic;
+
+    if(thread.topic === topic) return res.status(409).send('현재 주제와 동일합니다.');
+
     await Thread.updateOne({
         uuid: thread.uuid
     }, {
@@ -526,6 +530,7 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
             ignore_whitespace: true
         })
         .withMessage('document의 값은 필수입니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
@@ -547,6 +552,8 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
         namespace: targetDocument.namespace,
         title: targetDocument.title
     });
+
+    if(dbTargetDocument?.uuid === dbDocument.uuid) return res.status(409).send('현재 문서와 동일합니다.');
 
     if(!dbTargetDocument) {
         dbTargetDocument = new Document({

@@ -1,5 +1,6 @@
 const utils = require('./');
 const { UserTypes } = require('./types');
+const {validationResult} = require('express-validator');
 
 module.exports = {
     isLogin(req, res, next) {
@@ -32,6 +33,13 @@ module.exports = {
         const name = req.params[0] || req.query.doc;
         if(!name) return res.error('문서 이름이 없습니다.', 404);
         req.document = utils.parseDocumentName(name);
+        next();
+    },
+    fieldErrors: (req, res, next) => {
+        const result = validationResult(req);
+        if(!result.isEmpty()) return res.status(400).send({
+            fieldErrors: result.mapped()
+        });
         next();
     }
 }
