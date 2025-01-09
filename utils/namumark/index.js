@@ -204,7 +204,7 @@ module.exports = class NamumarkParser {
             const syntax = sortedSyntaxes[syntaxIndex];
             const nextSyntax = sortedSyntaxes[syntaxIndex + 1];
             // 각주에 들어가는 이스케이프 문자 제거해야 함, Priority.Last 문법은 이스케이프 문자 영향 안 받음(파싱 중 생성됨)
-            const isLastSyntax = syntaxIndex === sortedSyntaxes.length - 1;
+            const isLastSyntax = !sortedSyntaxes.find((a, i) => i > syntaxIndex && a.fullContent && a.fullLine);
             // if(text) {
             //     sourceText = text;
             //     text = '';
