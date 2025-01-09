@@ -37,12 +37,14 @@ module.exports = {
         }
 
         if(content === 'footnotePos') {
+            const commentPrefix = namumark.commentId ? `tc${namumark.commentId}-` : '';
+
             const footnoteValues = namumark.footnoteValues;
             const footnoteList = namumark.footnoteList;
 
             const displayFootnotes = [];
             for(let footnote of [...footnoteList]) {
-                const footnoteIndex = sourceText.indexOf(`<span id="rfn-${footnote.index}">`);
+                const footnoteIndex = sourceText.indexOf(`<span id="${commentPrefix}rfn-${footnote.index}">`);
                 if(footnoteIndex > pos) break;
 
                 displayFootnotes.push(footnoteList.shift());
@@ -57,7 +59,7 @@ module.exports = {
                 if(processedNames.includes(footnote.name)) continue;
                 processedNames.push(footnote.name);
 
-                html += `<span class="footnote-list"><span id="fn-${footnote.name}"></span>`;
+                html += `<span class="footnote-list"><span id="${commentPrefix}fn-${footnote.name}"></span>`;
 
                 const sameFootnotes = displayFootnotes.filter(a => a.name === footnote.name && a.index !== footnote.index);
                 if(sameFootnotes.length) {
@@ -67,11 +69,11 @@ module.exports = {
                     for(let i in targetFootnotes) {
                         i = parseInt(i);
                         const sameFootnote = targetFootnotes[i];
-                        html += `${i > 0 ? ' ' : ''}<a href="#rfn-${sameFootnote.index}"><sup>${footnote.index}.${i + 1}</sup></a>`;
+                        html += `${i > 0 ? ' ' : ''}<a href="#${commentPrefix}rfn-${sameFootnote.index}"><sup>${footnote.index}.${i + 1}</sup></a>`;
                     }
                 }
                 else {
-                    html += `<a href="#rfn-${footnote.index}">[${footnote.name}]</a>`;
+                    html += `<a href="#${commentPrefix}rfn-${footnote.index}">[${footnote.name}]</a>`;
                 }
 
                 html += ' ' + (footnoteValues[footnote.name] ?? '') + '</span>';

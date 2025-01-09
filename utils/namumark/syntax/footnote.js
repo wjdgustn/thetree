@@ -27,6 +27,7 @@ module.exports = {
             index
         });
 
-        return `<a class="wiki-fn-content" title="${utils.removeHtmlTags(values[name])}" href="#fn-${name}"><span id="rfn-${index}"></span>[${name}]</a>`;
+        const commentPrefix = namumark.commentId ? `tc${namumark.commentId}-` : '';
+        return `<a class="wiki-fn-content" title="${utils.removeHtmlTags(values[name])}" href="#${commentPrefix}fn-${name}"><span id="${commentPrefix}rfn-${index}"></span>[${name}]</a>`;
     }
 }

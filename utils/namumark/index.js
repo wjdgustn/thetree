@@ -131,6 +131,7 @@ module.exports = class NamumarkParser {
         if(data.req) this.req = data.req;
         if(data.includeData) this.includeData = data.includeData;
         if(data.thread) this.thread = true;
+        if(data.commentId) this.commentId = data.commentId;
     }
 
     get NamumarkParser() {

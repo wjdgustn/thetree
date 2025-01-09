@@ -88,7 +88,8 @@ const threadCommentEvent = async ({
 } = {}) => {
     const parser = new NamumarkParser({
         document,
-        thread: true
+        thread: true,
+        commentId: dbComment.id
     });
 
     const comment = await threadCommentMapper({
@@ -202,7 +203,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             parser: new NamumarkParser({
                 document,
                 dbDocument,
-                thread: true
+                thread: true,
+                commentId: c.id
             })
         })(c)));
 
@@ -356,7 +358,8 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
         parser: new NamumarkParser({
             document,
             dbDocument,
-            thread: true
+            thread: true,
+            commentId: c.id
         })
     })(c)));
 
