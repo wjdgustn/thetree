@@ -144,11 +144,19 @@ const formBackup = {};
 const formHandler = async e => {
     const form = e.currentTarget;
 
-    if(form.dataset.noFormHandler) return;
+    if(form.dataset.noFormHandler || form._thetree?.submitting) return;
 
     e.preventDefault();
 
     increaseProgress(100);
+
+    form._thetree ??= {};
+    form._thetree.submitting = true;
+
+    const submitButtons = form.querySelectorAll('button:not([type="button"]):not([disabled])');
+    for(let button of submitButtons) {
+        button.disabled = true;
+    }
 
     const data = new FormData(form);
 
@@ -171,6 +179,11 @@ const formHandler = async e => {
                 : new URLSearchParams(data).toString()
         })
     });
+
+    form._thetree.submitting = false;
+    for(let button of submitButtons) {
+        button.disabled = false;
+    }
 
     backupForm();
 
