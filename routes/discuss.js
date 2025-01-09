@@ -162,7 +162,9 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
     if(dbDocument) {
         openThreads = await Thread.find({
             document: dbDocument.uuid,
-            status: ThreadStatusTypes.Normal,
+            status: {
+                $ne: ThreadStatusTypes.Close
+            },
             deleted: false
         })
             .sort({
@@ -170,12 +172,6 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             })
             .lean();
     }
-
-    const parser = new NamumarkParser({
-        document,
-        dbDocument,
-        thread: true
-    });
 
     for(let thread of openThreads) {
         let comments = await ThreadComment.find({
@@ -199,11 +195,15 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
         comments = await utils.findUsers(comments);
         comments = await utils.findUsers(comments, 'hiddenBy');
 
-        comments = await Promise.all(comments.map(threadCommentMapper({
+        comments = await Promise.all(comments.map(c => threadCommentMapper({
             req,
             thread,
-            parser
-        })));
+            parser: new NamumarkParser({
+                document,
+                dbDocument,
+                thread: true
+            })
+        })(c)));
 
         thread.recentComments = comments;
     }
