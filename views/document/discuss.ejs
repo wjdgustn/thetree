@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="/css/views/discuss.css">
 <link rel="stylesheet" href="/css/views/thread.css">
+<script src="/js/unsavedWarn.js"></script>
 
 <h3>편집 요청</h3>
 <ul>
@@ -71,11 +72,11 @@ const isFrontPage = docTitle === config.front_page;
     <%if(req.query.doc) {%><input type="hidden" name="document" value="<%=req.query.doc%>"><%}%>
     <div class="form-block">
         <label for="topicInput">주제 :</label>
-        <input type="text" id="topicInput" name="topic">
+        <input class="unsaved-warn" type="text" id="topicInput" name="topic">
     </div>
     <div class="form-block">
         <label for="contentInput">내용 :</label>
-        <textarea name="text" id="contentInput" rows="5"></textarea>
+        <textarea class="unsaved-warn" name="text" id="contentInput" rows="5"></textarea>
     </div>
 
     <div>

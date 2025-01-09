@@ -1,20 +1,7 @@
-let textInput;
-let originalContent = '';
-
 document.addEventListener('thetree:pageLoad', () => {
-    window.beforePageLoad.push(() => {
-        if(textInput.value !== originalContent) {
-            return confirm('변경된 사항이 저장되지 않았습니다.');
-        }
-
-        return true;
-    });
-
     const previewTabButton = document.getElementById('preview-tab-button');
     const previewTabContent = document.getElementById('preview-tab-content');
-    textInput = document.getElementById('text-input');
-
-    originalContent = textInput.value;
+    const textInput = document.getElementById('text-input');
 
     previewTabButton?.addEventListener('click', async () => {
         previewTabContent.classList.add('preview-tab-loading');
