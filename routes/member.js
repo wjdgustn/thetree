@@ -18,6 +18,7 @@ const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
+const ThreadComment = require('../schemas/threadComment');
 
 const app = express.Router();
 
@@ -561,6 +562,46 @@ app.get('/contribution/:uuid/document',
             prevItem,
             nextItem,
             contributionType: 'document'
+        }
+    });
+});
+
+app.get('/contribution/:uuid/discuss',
+    param('uuid')
+        .isUUID(),
+    async (req, res, next) => {
+    if(!validationResult(req).isEmpty()) return next();
+
+    const user = await User.findOne({
+        uuid: req.params.uuid
+    });
+    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+
+    let comments = await ThreadComment.find({
+        user: req.params.uuid,
+        createdAt: {
+            $gte: Date.now() - 1000 * 60 * 60 * 24 * 30
+        }
+    })
+        .sort({
+            createdAt: -1
+        })
+        .lean();
+
+    comments = await utils.findThreads(comments);
+
+    res.renderSkin(`"${user.name || user.ip}" 기여 목록`, {
+        viewName: 'contribution_discuss',
+        contentName: 'userContribution/discuss',
+        account: {
+            uuid: user.uuid,
+            name: user.name,
+            type: user.type
+        },
+        serverData: {
+            // user,
+            comments,
+            contributionType: 'discuss'
         }
     });
 });

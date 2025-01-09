@@ -598,7 +598,6 @@ document.addEventListener('alpine:init', () => {
 
         aClickHandler,
         movePage,
-        updateTimeTag,
 
         userPopup: {
             type: 1,

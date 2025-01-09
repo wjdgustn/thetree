@@ -297,8 +297,10 @@ module.exports = {
 
         for(let obj of arr) {
             if(obj?.document) {
+                if(typeof obj.document !== 'string') continue;
+
                 if(cache[obj.document]) {
-                    obj.document = cache[obj.uuid];
+                    obj.document = cache[obj.document];
                     continue;
                 }
 
@@ -307,7 +309,7 @@ module.exports = {
                 }).lean();
                 if(obj.document) {
                     obj.document.parsedName = this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`);
-                    cache[obj.uuid] = obj.document;
+                    cache[obj.document.uuid] = obj.document;
                 }
             }
         }
@@ -356,5 +358,31 @@ module.exports = {
             user: req.user,
             ip: req.ip
         }
+    },
+    async findThreads(arr) {
+        const cache = {};
+
+        for(let obj of arr) {
+            if(obj?.thread) {
+                if(cache[obj.thread]) {
+                    obj.thread = cache[obj.thread];
+                    continue;
+                }
+
+                obj.thread = await models.Thread.findOne({
+                    uuid: obj.thread
+                }).lean();
+                if(obj.thread) {
+                    cache[obj.thread.uuid] = obj.thread;
+                }
+            }
+        }
+
+        const threads = await this.findDocuments(arr.map(obj => obj.thread));
+        for(let i in threads) {
+            arr[i].thread = threads[i];
+        }
+
+        return arr;
     }
 }

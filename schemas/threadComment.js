@@ -86,6 +86,13 @@ newSchema.pre('save', async function() {
 
 newSchema.post('save', function() {
     delete lastItem[this.id];
+
+    mongoose.models.Thread.updateOne({
+        uuid: this.thread
+    }, {
+        lastUpdateUser: this.user,
+        lastUpdateAt: this.createdAt
+    }).then();
 });
 
 const model = mongoose.model('ThreadComment', newSchema);

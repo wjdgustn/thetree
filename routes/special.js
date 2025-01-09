@@ -12,7 +12,8 @@ const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const {
     HistoryTypes,
-    ACLTypes
+    ACLTypes,
+    ThreadStatusTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -20,6 +21,7 @@ const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const BlockHistory = require('../schemas/blockHistory');
 const ACLGroup = require('../schemas/aclGroup');
+const Thread = require('../schemas/thread');
 
 const ACL = require('../class/acl');
 
@@ -52,6 +54,48 @@ app.get('/RecentChanges', async (req, res) => {
         serverData: {
             revs,
             logType: logTypeText
+        }
+    });
+});
+
+app.get('/RecentDiscuss', async (req, res) => {
+    let threads = [];
+    let editRequests = [];
+
+    const logType = req.query.logtype || 'normal_thread';
+
+    const isThread = logType.endsWith('_thread');
+
+    if(isThread) {
+        const query = {
+            status: ThreadStatusTypes.Normal
+        };
+        const sort = {
+            lastUpdateAt: -1
+        };
+
+        if(logType === 'old_thread')
+            sort.lastUpdateAt = 1;
+        else if(logType === 'pause_thread')
+            query.status = ThreadStatusTypes.Pause;
+        else if(logType === 'closed_thread')
+            query.status = ThreadStatusTypes.Close;
+
+        threads = await Thread.find(query)
+            .sort(sort)
+            .limit(100)
+            .lean();
+    }
+
+    threads = await utils.findUsers(threads, 'lastUpdateUser');
+    threads = await utils.findDocuments(threads);
+
+    res.renderSkin('최근 토론', {
+        contentName: 'special/recentDiscuss',
+        serverData: {
+            threads,
+            editRequests,
+            logType
         }
     });
 });
