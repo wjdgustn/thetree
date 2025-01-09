@@ -179,12 +179,8 @@ app.post('/aclgroup',
             if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
             return true;
         }),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return res.status(400).send({
-        fieldErrors: result.mapped()
-    });
-
     const group = req.modifiedBody.group;
 
     const newItem = {
@@ -249,12 +245,8 @@ app.post('/aclgroup/remove', middleware.permission('admin'),
             if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
             return true;
         }),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return res.status(400).send({
-        fieldErrors: result.mapped()
-    });
-
     const group = req.modifiedBody.group;
 
     const deleted = await ACLGroupItem.findOneAndDelete({
@@ -288,12 +280,8 @@ app.post('/aclgroup/group_edit', middleware.permission('developer'),
     body('name')
         .notEmpty()
         .withMessage('그룹 이름은 필수입니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return res.status(400).send({
-        fieldErrors: result.mapped()
-    });
-
     const updated = await ACLGroup.findOneAndUpdate({
         uuid: req.body.uuid
     }, {

@@ -24,6 +24,7 @@ const ACLGroup = require('../schemas/aclGroup');
 const Thread = require('../schemas/thread');
 
 const ACL = require('../class/acl');
+const middleware = require('../utils/middleware');
 
 const app = express.Router();
 
@@ -218,12 +219,8 @@ app.post('/Upload', uploadFile,
     body('log')
         .isLength({ max: 200 })
         .withMessage('요약의 값은 255글자 이하여야 합니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return res.status(400).send({
-        fieldErrors: result.mapped()
-    });
-
     if(!req.file) return res.status(400).send('파일이 업로드되지 않았습니다.');
     if(![
         'image/jpeg',

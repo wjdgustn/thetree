@@ -439,12 +439,8 @@ app.post('/member/mypage', middleware.isLogin,
             ...global.skins
         ])
         .withMessage('invalid_skin'),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return res.status(400).send({
-        fieldErrors: result.mapped()
-    });
-
     await User.updateOne({
         uuid: req.user.uuid
     }, {
