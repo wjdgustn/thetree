@@ -51,14 +51,17 @@ window.addEventListener('popstate', async e => {
 });
 
 function plainAlert(text) {
-    if(!text) return;
-
     const doc = new DOMParser().parseFromString(text, 'text/html');
     const message = doc.body.textContent;
 
     const errorAlerts = document.getElementsByClassName('thetree-error-alert');
     let hasErrorAlert = false;
     for(let alert of errorAlerts) {
+        if(!text) {
+            alert.hidden = true;
+            continue;
+        }
+
         const probModal = alert.parentElement.parentElement.parentElement.parentElement;
         if(probModal.classList.contains('thetree-modal')) {
             if(!probModal.classList.contains('thetree-modal-open')) continue;
@@ -71,7 +74,7 @@ function plainAlert(text) {
         content.innerHTML = doc.body.innerHTML;
         hasErrorAlert = true;
     }
-    if(!hasErrorAlert) alert(message);
+    if(!hasErrorAlert && text) alert(message);
 }
 
 const aClickHandler = async e => {
@@ -140,6 +143,40 @@ function restoreForm(reset = false, form = null) {
     }
 }
 
+function processFieldErrors(inputs, fieldErrors = {}) {
+    for(let input of inputs) {
+        if(!input.name) continue;
+
+        const error = fieldErrors[input.name];
+
+        let fieldError;
+        if(['DIV', 'SPAN'].includes(input.parentElement?.tagName)) {
+            fieldError = input.parentElement.querySelector(`.input-error[data-for="${input.name}"]`);
+            if(!fieldError && error) {
+                fieldError = document.createElement('p');
+                fieldError.classList.add('input-error');
+                fieldError.dataset.for = input.name;
+                input.parentElement.appendChild(fieldError);
+            }
+        }
+        else {
+            if(input.nextElementSibling?.classList?.contains('input-error')) {
+                fieldError = input.nextSibling;
+            }
+            else if(error) {
+                fieldError = document.createElement('p');
+                fieldError.classList.add('input-error');
+                input.after(fieldError);
+            }
+        }
+
+        if(fieldError) {
+            if(error) fieldError.textContent = error.msg;
+            else fieldError.remove();
+        }
+    }
+}
+
 const formBackup = {};
 const formHandler = async e => {
     const form = e.currentTarget;
@@ -187,9 +224,13 @@ const formHandler = async e => {
 
     backupForm();
 
+    const inputs = form.querySelectorAll('input, select, textarea');
+
     if(response.status === 204) {
         restoreForm(true, form);
         setProgress(100);
+        plainAlert();
+        processFieldErrors(inputs);
         return;
     }
 
@@ -206,44 +247,13 @@ const formHandler = async e => {
     }
 
     const html = await response.text();
+
     if(response.status.toString().startsWith('4')) {
         let json;
         try {
             json = JSON.parse(html);
-            if(json.fieldErrors) {
-                const inputs = form.querySelectorAll('input, select, textarea');
-                for(let input of inputs) {
-                    if(!input.name) continue;
-
-                    const error = json.fieldErrors[input.name];
-
-                    let fieldError;
-                    if(['DIV', 'SPAN'].includes(input.parentElement?.tagName)) {
-                        fieldError = input.parentElement.querySelector(`.input-error[data-for="${input.name}"]`);
-                        if(!fieldError && error) {
-                            fieldError = document.createElement('p');
-                            fieldError.classList.add('input-error');
-                            fieldError.dataset.for = input.name;
-                            input.parentElement.appendChild(fieldError);
-                        }
-                    }
-                    else {
-                        if(input.nextElementSibling?.classList?.contains('input-error')) {
-                            fieldError = input.nextSibling;
-                        }
-                        else if(error) {
-                            fieldError = document.createElement('p');
-                            fieldError.classList.add('input-error');
-                            input.after(fieldError);
-                        }
-                    }
-
-                    if(fieldError) {
-                        if(error) fieldError.textContent = error.msg;
-                        else fieldError.remove();
-                    }
-                }
-            }
+            if(json.fieldErrors)
+                processFieldErrors(inputs, json.fieldErrors);
         } catch(e) {}
 
         setProgress(100);
@@ -257,6 +267,8 @@ const formHandler = async e => {
         setupDocument();
         restoreForm();
         changeUrl(response.url);
+        plainAlert();
+        processFieldErrors(inputs);
     }
     else plainAlert(html);
 
@@ -420,6 +432,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
         setProgress(100);
         return plainAlert(html);
     }
+    else plainAlert();
 
     if(response.status === 204) return setProgress(100);
 
