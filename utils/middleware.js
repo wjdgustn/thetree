@@ -30,6 +30,9 @@ module.exports = {
         next();
     },
     parseDocumentName: (req, res, next) => {
+        const routeUrl = req.route.path.split('/').slice(0, 2).join('/') + '/';
+        if(!req.url.startsWith(routeUrl)) return next('route');
+
         const name = req.params[0] || req.query.doc;
         if(!name) return res.error('문서 이름이 없습니다.', 404);
         req.document = utils.parseDocumentName(name);
