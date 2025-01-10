@@ -73,7 +73,7 @@ app.get('/RecentDiscuss', async (req, res) => {
             deleted: false
         };
         const sort = {
-            lastUpdateAt: -1
+            lastUpdatedAt: -1
         };
 
         if(logType === 'old_thread')

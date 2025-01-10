@@ -41,7 +41,7 @@ const newSchema = new Schema({
         type: String,
         required: true
     },
-    lastUpdateAt: {
+    lastUpdatedAt: {
         type: Date,
         required: true,
         default: Date.now

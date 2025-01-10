@@ -91,7 +91,7 @@ newSchema.post('save', function() {
         uuid: this.thread
     }, {
         lastUpdateUser: this.user,
-        lastUpdateAt: this.createdAt
+        lastUpdatedAt: this.createdAt
     }).then();
 });
 
