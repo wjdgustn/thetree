@@ -9,9 +9,8 @@ document.addEventListener('thetree:pageLoad', () => {
     let scrollTimer;
     let locks = [];
     let fetchingComments = false;
-    const scrollHandler = () => {
-        if(scrollTimer != null) clearTimeout(scrollTimer);
 
+    const setScrollTimer = () => {
         scrollTimer = setTimeout(async () => {
             if(fetchingComments) await waitUntil(new Promise(resolve => {
                 locks.push(resolve);
@@ -52,6 +51,13 @@ document.addEventListener('thetree:pageLoad', () => {
         }, 100);
     }
 
+    const scrollHandler = () => {
+        if(scrollTimer != null) clearTimeout(scrollTimer);
+
+        setScrollTimer();
+    }
+
+    setScrollTimer();
     window.addEventListener('scroll', scrollHandler);
 
     const socket = io('/thread', {
