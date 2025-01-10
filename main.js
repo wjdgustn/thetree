@@ -382,7 +382,7 @@ app.use(async (req, res, next) => {
                 type: req.user?.type ?? UserTypes.IP
             },
             gravatar_url: req.user?.avatar,
-            user_document_discuss: req.user.lastUserDocumentDiscuss?.getTime() ?? null,
+            user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
             quick_block: req.permissions.includes('admin')
         }
 
