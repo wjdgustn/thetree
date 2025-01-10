@@ -145,7 +145,7 @@
         width: 8rem;
     }
 
-    form.comment-form ul {
+    form.comment-form>ul {
         border-bottom: 1px solid #ddd;
         height: 36px;
         list-style: none;
@@ -154,21 +154,21 @@
         padding-left: 0;
     }
 
-    .theseed-dark-mode form.comment-form ul {
+    .theseed-dark-mode form.comment-form>ul {
         border-color: #383b40;
     }
 
-    form.comment-form ul:before, form.comment-form ul:after {
+    form.comment-form>ul:before, form.comment-form>ul:after {
         content: " ";
         display: table;
     }
 
-    form.comment-form li {
+    form.comment-form>ul>li {
         float: left;
         margin-bottom: -1px;
     }
 
-    form.comment-form li button {
+    form.comment-form>ul>li button {
         background: none;
         border: 1px solid transparent;
         border-radius: .25rem .25rem 0 0;
@@ -178,19 +178,19 @@
         padding: .5em 1em;
     }
 
-    .theseed-dark-mode form.comment-form li button {
+    .theseed-dark-mode form.comment-form>ul>li button {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;
     }
 
-    form.comment-form li button.selected-tab {
+    form.comment-form>ul>li button.selected-tab {
         background-color: #fff;
         border-color: #ddd #ddd transparent;
         color: #55595c;
     }
 
-    .theseed-dark-mode form.comment-form li button.selected-tab {
+    .theseed-dark-mode form.comment-form>ul>li button.selected-tab {
         background-color: #383b40;
     }
 
