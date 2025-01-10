@@ -257,9 +257,7 @@ const formHandler = async e => {
 
         setProgress(100);
 
-        if(!json?.fieldErrors) return plainAlert(html);
-
-        return;
+        if(!json?.fieldErrors && !html.startsWith('<')) return plainAlert(html);
     }
 
     if(await replaceContent(html, response.headers)) {
