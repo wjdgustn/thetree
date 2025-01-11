@@ -77,7 +77,7 @@ app.get('/RecentDiscuss', async (req, res) => {
         };
 
         if(logType === 'old_thread')
-            sort.lastUpdateAt = 1;
+            sort.lastUpdatedAt = 1;
         else if(logType === 'pause_thread')
             query.status = ThreadStatusTypes.Pause;
         else if(logType === 'closed_thread')
