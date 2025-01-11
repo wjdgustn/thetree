@@ -120,7 +120,7 @@ module.exports = {
 
         const docTitle = globalUtils.doc_fulltitle(namumark.document);
 
-        const splittedContent = content.split('|');
+        const splittedContent = content.split(/(?<!\\)\|/).map(a => utils.removeBackslash(a));
 
         let link = splittedContent[0];
         let text = splittedContent.slice(1).join('|') || link;
