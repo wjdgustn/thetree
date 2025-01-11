@@ -501,6 +501,8 @@ async function replaceContent(html, headers) {
 
     const fullReload = html.includes('<!DOCTYPE html>');
     if(fullReload) {
+        if(location.pathname === '/member/mypage') return location.reload();
+
         newContent = doc.getElementById('content');
         document.body.innerHTML = doc.body.innerHTML;
         contentLoadedHandler();
