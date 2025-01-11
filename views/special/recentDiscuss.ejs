@@ -8,7 +8,11 @@
                     normal_thread: '열린 토론',
                     old_thread: '오래된 토론',
                     pause_thread: '중지된 토론',
-                    closed_thread: '닫힌 토론'
+                    closed_thread: '닫힌 토론',
+                    open_editrequest: '열린 편집 요청',
+                    accepted_editrequest: '승인된 편집 요청',
+                    closed_editrequest: '닫힌 편집 요청',
+                    old_editrequest: '오래된 편집 요청'
                 })) {%>
                 <li><a class="nav-content<%=logType === type ? ' nav-content-selected' : ''%>" href="?logtype=<%=type%>"><%=name%></a></li>
                 <%}%>
@@ -17,4 +21,4 @@
     </div>
 </div>
 
-<%-include('../components/recentDiscussList', { items: threads })%>
+<%-include('../components/recentDiscussList', { items: threads.length ? threads : editRequests, isDiscuss: threads.length })%>

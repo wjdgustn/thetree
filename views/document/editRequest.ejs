@@ -1,43 +1,60 @@
 <link rel="stylesheet" href="/css/views/editRequest.css">
 <link rel="stylesheet" href="/css/views/diff.css">
+<script src="/js/editRequest.js"></script>
 <script src="/js/preview.js"></script>
 
 <h3>
-    <%-userHtml(req.user)%>가
-    <%-getFullDateTag(new Date())%>에
+    <%-editRequest.createdUser.userHtml%>가
+    <%-getFullDateTag(editRequest.createdAt)%>에
     요청
 </h3>
 <hr>
 <div class="block">
     <label>기준 판</label>
-    r1
-    <span class="diff-text diff-add">+1</span>
+    r<%=baseRev.rev%>
+    <%
+    const diffClassList = ['diff-text'];
+
+    if(editRequest.diffLength > 0) diffClassList.push('diff-add');
+    else if(editRequest.diffLength < 0) diffClassList.push('diff-remove');
+
+    const diffHtml = `<span class="${diffClassList.join(' ')}">${editRequest.diffLength > 0 ? '+' : ''}${editRequest.diffLength ?? 0}</span>`;
+    %>
+    <%-diffHtml%>
 </div>
 <div class="block">
     <label>편집 요약</label>
-    asdf
+    <%=editRequest.log%>
 </div>
-<%#편집창 주석%>
+<%if(contentHtml) {%>
+    <%-contentHtml%>
+<%}%>
 <div class="action-block">
     <div>
-        <%if(false) {%>
+        <%if(editRequest.status === EditRequestStatusTypes.Open) {%>
             <h4>이 편집 요청을...</h4>
             <div>
-                <%-getFullDateTag(new Date())%>에 마지막으로 수정됨
+                <%-getFullDateTag(editRequest.lastUpdatedAt)%>에 마지막으로 수정됨
             </div>
             <div class="buttons-block">
-                <form method="post" action="/edit_request/url/accept">
-                    <button class="thetree-square-button action-button accept-button">Accept</button>
+                <form method="post" action="/edit_request/<%=editRequest.url%>/accept">
+                    <button class="thetree-square-button action-button accept-button" data-tooltip="<%=conflict
+                            ? '이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.'
+                            : (editable ? '이 편집 요청을 문서에 적용합니다.' : '이 문서를 편집할 수 있는 권한이 없습니다.')%>"<%=conflict || !editable ? ' disabled' : ''%>>Accept</button>
                 </form>
-                <button class="thetree-square-button action-button">Close</button>
-                <a class="thetree-square-button action-button edit-button" href="/edit_request/url/edit">Edit</a>
+                <button id="close-button" class="thetree-square-button action-button" data-tooltip="<%=selfCreated || editable ? '이 편집 요청을 닫습니다.' : '편집 요청을 닫기 위해서는 요청자 본인이거나 문서를 편집할 수 있는 권한이 있어야 합니다.'%>"<%=selfCreated || editable ? ' ' : ' disabled'%>>Close</button>
+                <%if(selfCreated) {%>
+                    <a class="thetree-square-button action-button edit-button" href="/edit_request/<%=editRequest.url%>/edit" data-tooltip="편집 요청을 수정합니다.">Edit</a>
+                <%} else {%>
+                    <button class="thetree-square-button action-button edit-button" data-tooltip="요청자 본인만 수정할 수 있습니다." disabled>Edit</button>
+                <%}%>
             </div>
-        <%} else if(false) {%>
+        <%} else if(editRequest.status === EditRequestStatusTypes.Accepted) {%>
             <h4>편집 요청이 승인되었습니다.</h4>
             <div>
-                <%-getFullDateTag(new Date())%>에
-                <%-userHtml(req.user)%>가
-                r<%=1%>
+                <%-getFullDateTag(editRequest.lastUpdatedAt)%>에
+                <%-editRequest.lastUpdateUser.userHtml%>가
+                r<%=editRequest.acceptedRev.rev%>
                 <span class="history-action">
                     <%const actions = [
                         {
@@ -56,26 +73,49 @@
                     ];
                     %>
 
-                    (<%-actions.map(a => `<a href="${doc_action_link(document, a.action, { uuid: 'asdf' || rev.uuid })}"${a.follow ? '' : ' rel="nofollow"'}>${a.text}</a>`).join(' | ')%>)
+                    (<%-actions.map(a => `<a href="${doc_action_link(document, a.action, { uuid: editRequest.acceptedRev.uuid })}"${a.follow ? '' : ' rel="nofollow"'}>${a.text}</a>`).join(' | ')%>)
                 </span>
                 으로 승인함.
             </div>
-        <%} else if(true) {%>
+        <%} else {%>
             <h4>편집 요청이 닫혔습니다.</h4>
             <div>
                 <%-getFullDateTag(new Date())%>에
-                <%-userHtml(req.user)%>가
-                편집 요청을 <%=false ? '닫고 잠갔습니다.' : '닫았습니다.'%>
+                <%-editRequest.lastUpdateUser.userHtml%>가
+                편집 요청을 <%=editRequest.status === EditRequestStatusTypes.Locked ? '닫고 잠갔습니다.' : '닫았습니다.'%>
             </div>
-            <%if(true) {%><p>사유 : <%='reason'%></p><%}%>
+            <%if(editRequest.closedReason) {%><p>사유 : <%=editRequest.closedReason%></p><%}%>
             <div class="buttons-block">
-                <form method="post" action="/edit_request/url/reopen">
-                    <button class="thetree-square-button action-button accept-button">Reopen</button>
+                <form method="post" action="/edit_request/<%=editRequest.url%>/reopen">
+                    <%
+                    let disabled = false;
+                    let tooltip = '이 편집 요청을 다시 엽니다.';
+
+                    const updateThreadStatusPerm = req.permissions.includes('update_thread_status');
+
+                    if(editRequest.status === EditRequestStatusTypes.Locked) {
+                        if(!updateThreadStatusPerm) {
+                            disabled = true;
+                            tooltip = '이 편집 요청은 잠겨있어서 다시 열 수 없습니다.';
+                        }
+                    }
+                    else {
+                        if(!selfCreated && !updateThreadStatusPerm) {
+                            disabled = true;
+                            tooltip = '편집 요청을 다시 열기 위해서는 요청자 본인이거나 권한이 있어야 합니다.';
+                        }
+                    }
+                    %>
+                    <button class="thetree-square-button action-button accept-button" data-tooltip="<%=tooltip%>"<%=disabled ? ' disabled' : ''%>>Reopen</button>
                 </form>
             </div>
         <%}%>
     </div>
 </div>
+<%if([
+    EditRequestStatusTypes.Open,
+    EditRequestStatusTypes.Closed
+].includes(editRequest.status)) {%>
 <div x-data="{ selectedTab: 'diff' }">
     <ul class="edit-request-ul">
         <li class="edit-request-li"><button type="button" :class="selectedTab === 'diff' && 'selected-tab'" @click="selectedTab = 'diff'">비교</button></li>
@@ -87,42 +127,9 @@
             <%-include('../components/diff', { name: '편집 요청 asdf', ...diff })%>
         </div>
 
-        <input type="hidden" id="text-input" value="1
-2
-3
-4
-5
-6
-7
-8
-9
-1_0
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20">
+        <input type="hidden" id="text-input" value="<%=editRequest.content%>">
         <div id="preview-tab-content" :class="selectedTab === 'preview' && 'selected-tab-content'">
             im preview
-        </div>
-    </div>
-</div>
-
-<div id="button-tooltip" x-placement="top" style="display: none;">
-    <div>
-        <div id="button-tooltip-content">
-            <div>
-                <div>이 편집 요청을 닫습니다.</div>
-            </div>
-        </div>
-        <div id="button-tooltip-arrow">
-            <div class="arrow-outer"></div>
-            <div class="arrow-inner"></div>
         </div>
     </div>
 </div>
@@ -131,7 +138,7 @@
     <div class="thetree-modal-block thetree-modal-bg"></div>
     <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
         <div class="thetree-modal-content">
-            <form method="post" action="/edit_request/asdf/close">
+            <form method="post" action="/edit_request/<%=editRequest.url%>/close">
                 <h4>편집 요청 닫기</h4>
                 <div>
                     <p>사유:</p>
@@ -149,6 +156,20 @@
                     <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+<%}%>
+<div id="button-tooltip" x-placement="top" style="display: none; opacity: 0;">
+    <div>
+        <div>
+            <div>
+                <div id="button-tooltip-content">이 편집 요청을 닫습니다.</div>
+            </div>
+        </div>
+        <div id="button-tooltip-arrow">
+            <div class="arrow-outer"></div>
+            <div class="arrow-inner"></div>
         </div>
     </div>
 </div>

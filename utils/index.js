@@ -2,6 +2,7 @@ const { models } = require('mongoose');
 const crypto = require('crypto');
 const { Address4, Address6 } = require('ip-address');
 const Diff = require('diff');
+const { generateSlug } = require('random-word-slugs');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./namumark/utils');
@@ -157,6 +158,11 @@ module.exports = {
         return aclGroup.userCSS;
     },
     async findUsers(arr, key = 'user', noCSS = false) {
+        let wasNotArr = false;
+        if(!Array.isArray(arr)) {
+            arr = [arr];
+            wasNotArr = true;
+        }
         const cache = {};
 
         for(let obj of arr) {
@@ -181,6 +187,7 @@ module.exports = {
             }
         }
 
+        if(wasNotArr) return arr[0];
         return arr;
     },
     userHtml(user, {
@@ -544,5 +551,17 @@ module.exports = {
             diffLines,
             changeAroundLines
         }
+    },
+    generateUrl() {
+        return generateSlug(4, {
+            format: 'title'
+        }).replaceAll(' ', '');
+    },
+    mergeText(oldText, newText, targetText) {
+        const patch = Diff.structuredPatch('text', 'text', oldText, newText);
+        const result = Diff.applyPatch(targetText, patch);
+        if(!result) return null;
+
+        return result;
     }
 }

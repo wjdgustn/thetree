@@ -131,6 +131,8 @@ ${enableNext ? enabledButton({
 
                 <%-rev.diffHtml%>
 
+                <%if(rev.editRequest) {%><a href="/edit_request/<%=rev.editRequest.url%>"><i>(편집 요청)</i></a><%}%>
+
                 <%-rev.userHtml%>
 
                 <%if(rev.troll) {%>

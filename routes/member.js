@@ -19,6 +19,7 @@ const History = require('../schemas/history');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
 const ThreadComment = require('../schemas/threadComment');
+const EditRequest = require('../schemas/editRequest');
 
 const app = express.Router();
 
@@ -598,6 +599,75 @@ app.get('/contribution/:uuid/discuss',
             // user,
             comments,
             contributionType: 'discuss'
+        }
+    });
+});
+
+app.get('/contribution/:uuid/edit_request',
+    param('uuid')
+        .isUUID(),
+    async (req, res, next) => {
+    if(!validationResult(req).isEmpty()) return next();
+
+    const user = await User.findOne({
+        uuid: req.params.uuid
+    });
+    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+
+    const baseQuery = {
+        createdUser: req.params.uuid
+    }
+    const query = { ...baseQuery };
+
+    const total = await EditRequest.countDocuments(query);
+
+    const pageQuery = req.query.until || req.query.from;
+    if(pageQuery) {
+        const history = await EditRequest.findOne({
+            uuid: pageQuery
+        });
+        if(history) {
+            if(req.query.until) query._id = { $gte: history._id };
+            else query._id = { $lte: history._id };
+        }
+    }
+
+    let items = await EditRequest.find(query)
+        .sort({ _id: query._id?.$gte ? 1 : -1 })
+        .limit(100)
+        .lean();
+
+    if(query._id?.$gte) items.reverse();
+
+    let prevItem;
+    let nextItem;
+    if(items?.length) {
+        prevItem = await EditRequest.findOne({
+            ...query,
+            _id: { $gt: items[0]._id }
+        }).sort({ _id: 1 });
+        nextItem = await EditRequest.findOne({
+            ...query,
+            _id: { $lt: items[items.length - 1]._id }
+        }).sort({ _id: -1 });
+
+        items = await utils.findDocuments(items);
+    }
+
+    res.renderSkin(`"${user.name || user.ip}" 기여 목록`, {
+        viewName: 'contribution_edit_request',
+        contentName: 'userContribution/editRequest',
+        account: {
+            uuid: user.uuid,
+            name: user.name,
+            type: user.type
+        },
+        serverData: {
+            items,
+            total,
+            prevItem,
+            nextItem,
+            contributionType: 'edit_request'
         }
     });
 });

@@ -490,6 +490,9 @@ document.getElementById('initScript')?.remove();
         if(item.messageType === 'plaintext') return res.status(403).send(msg);
     }
 
+    req.flash = Object.keys(req.session.flash ?? {}).length ? req.session.flash : {};
+    req.session.flash = {};
+
     next();
 });
 

@@ -7,7 +7,6 @@ const NamumarkParser = require('../utils/namumark');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
-const namumarkUtils = require('../utils/namumark/utils');
 const middleware = require('../utils/middleware');
 const {
     ACLTypes,
@@ -17,7 +16,8 @@ const {
     BacklinkFlags,
     ThreadStatusTypes,
     ThreadCommentTypes,
-    UserTypes
+    UserTypes,
+    EditRequestStatusTypes
 } = require('../utils/types');
 
 const headingSyntax = require('../utils/namumark/syntax/heading');
@@ -25,6 +25,7 @@ const headingSyntax = require('../utils/namumark/syntax/heading');
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
+const EditRequest = require('../schemas/editRequest');
 const ACLModel = require('../schemas/acl');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
@@ -60,6 +61,10 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             document: dbDocument.uuid,
             status: ThreadStatusTypes.Normal,
             deleted: false
+        });
+        threadExists ||= await EditRequest.exists({
+            document: dbDocument.uuid,
+            status: EditRequestStatusTypes.Open
         });
     }
 
@@ -591,7 +596,8 @@ app.patch('/action/acl/reorder', async (req, res) => {
 });
 
 const editAndEditRequest = async (req, res) => {
-    const isEditRequest = req.url.startsWith('/new_edit_request/');
+    const editingEditRequest = req.url.startsWith('/edit_request/');
+    const isEditRequest = editingEditRequest || req.url.startsWith('/new_edit_request/');
 
     const section = parseInt(req.query.section);
 
@@ -603,7 +609,8 @@ const editAndEditRequest = async (req, res) => {
 
     const { namespace, title } = document;
 
-    const dbDocument = await Document.findOne({
+    let dbDocument = req.dbDocument;
+    dbDocument ??= await Document.findOne({
         namespace,
         title
     });
@@ -627,10 +634,26 @@ const editAndEditRequest = async (req, res) => {
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
+    if(editingEditRequest) {
+        const editRequest = req.editRequest;
+        const baseRev = await History.findOne({
+            uuid: editRequest.baseUuid
+        }).lean();
+        const conflict = !utils.mergeText(baseRev.content, editRequest.content, rev.content);
+
+        if(conflict) req.flash.conflict = {
+            editedRev: baseRev.rev,
+            diff: utils.generateDiff(baseRev.content, editRequest.content)
+        }
+    }
+
     const docExists = rev?.content != null;
 
     let content = '';
-    if(docExists) {
+    if(editingEditRequest) {
+        content = req.editRequest.content;
+    }
+    else if(docExists) {
         content = rev.content;
         if(req.query.section) {
             const lines = content.split('\n');
@@ -655,7 +678,7 @@ const editAndEditRequest = async (req, res) => {
     }
 
     res.renderSkin(undefined, {
-        viewName: isEditRequest ? 'edit_request' : 'edit',
+        viewName: isEditRequest ? (editingEditRequest ? 'edit_edit_request' : 'edit_request') : 'edit',
         contentName: 'document/edit',
         document,
         body: {
@@ -674,6 +697,95 @@ const editAndEditRequest = async (req, res) => {
 
 app.get('/edit/?*', middleware.parseDocumentName, editAndEditRequest);
 app.get('/new_edit_request/?*', middleware.parseDocumentName, editAndEditRequest);
+app.get('/edit_request/:url/edit', async (req, res, next) => {
+    const editRequest = await EditRequest.findOne({
+        url: req.params.url
+    });
+    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if(editRequest.createdUser !== req.user.uuid) return res.error('자신의 편집 요청만 수정할 수 있습니다.', 403);
+    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error('편집 요청 상태가 올바르지 않습니다.');
+
+    req.editRequest = editRequest;
+    req.dbDocument = await Document.findOne({
+        uuid: editRequest.document
+    });
+    req.document = utils.dbDocumentToDocument(req.dbDocument);
+
+    next();
+}, editAndEditRequest);
+
+app.post('/edit_request/:url/close', async (req, res) => {
+    const lock = req.body.lock === 'Y';
+    if(lock && !req.permissions.includes('update_thread_status'))
+        return res.status(403).send('권한이 부족합니다.');
+
+    const editRequest = await EditRequest.findOne({
+        url: req.params.url
+    });
+    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if([
+        EditRequestStatusTypes.Closed,
+        EditRequestStatusTypes.Locked
+    ].includes(editRequest.status)) return res.error('편집 요청 상태가 올바르지 않습니다.');
+
+    if(editRequest.createdUser !== req.user.uuid) {
+        const dbDocument = await Document.findOne({
+            uuid: editRequest.document
+        }).lean();
+        const document = utils.dbDocumentToDocument(dbDocument);
+
+        const acl = await ACL.get({ document: dbDocument }, document);
+        const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+        if(!editable) return res.error(aclMessage, 403);
+    }
+
+    await EditRequest.updateOne({
+        uuid: editRequest.uuid
+    }, {
+        lastUpdateUser: req.user.uuid,
+        status: lock ? EditRequestStatusTypes.Locked : EditRequestStatusTypes.Closed,
+        closedReason: req.body.close_reason
+    });
+
+    res.redirect(`/edit_request/${editRequest.url}`);
+});
+
+app.post('/edit_request/:url/reopen', async (req, res) => {
+    const editRequest = await EditRequest.findOne({
+        url: req.params.url
+    });
+    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if(![
+        EditRequestStatusTypes.Closed,
+        EditRequestStatusTypes.Locked
+    ].includes(editRequest.status)) return res.error('편집 요청 상태가 올바르지 않습니다.');
+
+    const dbDocument = await Document.findOne({
+        uuid: editRequest.document
+    }).lean();
+    const document = utils.dbDocumentToDocument(dbDocument);
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const { result: editable, aclMessage } = await acl.check(ACLTypes.EditRequest, req.aclData);
+    if(!editable) return res.error(aclMessage, 403);
+
+    if(editRequest.createdUser === req.user.uuid) {
+        if(editRequest.status === EditRequestStatusTypes.Locked)
+            return res.error('이 편집 요청은 잠겨있어서 다시 열 수 없습니다.', 403);
+    }
+    else {
+        if(!req.permissions.includes('update_thread_status'))
+            return res.status(403).send('권한이 부족합니다.');
+    }
+
+    await EditRequest.updateOne({
+        uuid: editRequest.uuid
+    }, {
+        status: EditRequestStatusTypes.Open
+    });
+
+    res.redirect(`/edit_request/${editRequest.url}`);
+});
 
 app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     const isThread = req.body.mode === 'thread';
@@ -722,7 +834,10 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     return res.send(categoryHtml + contentHtml);
 });
 
-app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
+const postEditAndEditRequest = async (req, res) => {
+    const editingEditRequest = req.url.startsWith('/edit_request/');
+    const isEditRequest = editingEditRequest || req.url.startsWith('/new_edit_request/');
+
     if(req.body.agree !== 'Y') return res.status(400).send('수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
 
@@ -736,7 +851,8 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 
     const { namespace, title } = document;
 
-    let dbDocument = await Document.findOne({
+    let dbDocument = req.dbDocument;
+    dbDocument ??= await Document.findOne({
         namespace,
         title
     });
@@ -750,13 +866,22 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     const acl = await ACL.get({ document: dbDocument }, document);
-    const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+    const { result: editable, aclMessage } = await acl.check(isEditRequest ? ACLTypes.EditRequest : ACLTypes.Edit, req.aclData);
 
     if(!editable) return res.status(403).send(aclMessage);
 
     const rev = await History.findOne({
         document: dbDocument.uuid
     }).sort({ rev: -1 });
+
+    if(!editingEditRequest && isEditRequest) {
+        const checkEditRequest = await EditRequest.exists({
+            document: dbDocument.uuid,
+            createdUser: req.user.uuid,
+            status: EditRequestStatusTypes.Open
+        });
+        if(checkEditRequest) return res.status(409).send('이미 해당 문서에 편집요청이 존재합니다. 해당 편집요청을 수정하시기 바랍니다.');
+    }
 
     let editedRev = rev;
     if(req.body.baseuuid !== 'create' && rev.uuid !== req.body.baseuuid) {
@@ -768,7 +893,7 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 
     let content = req.body.text;
 
-    if(rev?.content != null && req.query.section) {
+    if(rev?.content != null && req.query.section && !editingEditRequest) {
         const newLines = [];
 
         const fullLines = editedRev.content.split('\n');
@@ -794,100 +919,196 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
 
     // TODO: automerge
     const isCreate = rev?.content == null;
-    if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid))
-        return res.status(400).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
+    if(isCreate && isEditRequest) return res.status(404).send('문서를 찾을 수 없습니다.');
+
+    if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid)) {
+        req.session.flash.conflict = {
+            editedRev: rev.rev,
+            diff: utils.generateDiff(rev.content, content)
+        }
+        return res.redirect(req.originalUrl);
+    }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
     if(namespace === '사용자' && isCreate && !title.includes('/')) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
 
-    await History.create({
-        user: req.user.uuid,
-        type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
-        document: dbDocument.uuid,
-        content,
-        log: req.body.log
-    });
+    if(isEditRequest) {
+        const editRequest = await EditRequest.findOneAndUpdate({
+            document: dbDocument.uuid,
+            createdUser: req.user.uuid,
+            status: EditRequestStatusTypes.Open
+        }, {
+            content,
+            log: req.body.log,
+            baseUuid: editedRev.uuid,
+            diffLength: content.length - editedRev.content.length
+        }, {
+            new: true,
+            upsert: true
+        });
 
-    res.redirect(globalUtils.doc_action_link(document, 'w'));
-});
+        res.redirect(`/edit_request/${editRequest.url}`);
+    }
+    else {
+        await History.create({
+            user: req.user.uuid,
+            type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
+            document: dbDocument.uuid,
+            content,
+            log: req.body.log
+        });
+
+        res.redirect(globalUtils.doc_action_link(document, 'w'));
+    }
+}
+
+app.post('/edit/?*', middleware.parseDocumentName, postEditAndEditRequest);
+app.post('/new_edit_request/?*', middleware.parseDocumentName, postEditAndEditRequest);
+app.post('/edit_request/:url/edit', async (req, res, next) => {
+    const editRequest = await EditRequest.findOne({
+        url: req.params.url
+    });
+    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if(editRequest.createdUser !== req.user.uuid) return res.error('자신의 편집 요청만 수정할 수 있습니다.', 403);
+    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error('편집 요청 상태가 올바르지 않습니다.');
+
+    req.editRequest = editRequest;
+    req.dbDocument = await Document.findOne({
+        uuid: editRequest.document
+    });
+    req.document = utils.dbDocumentToDocument(req.dbDocument);
+
+    next();
+}, postEditAndEditRequest);
 
 app.get('/edit_request/:url', async (req, res) => {
+    let editRequest = await EditRequest.findOne({
+        url: req.params.url
+    }).lean();
+    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+
+    const dbDocument = await Document.findOne({
+        uuid: editRequest.document
+    }).lean();
+    const document = utils.dbDocumentToDocument(dbDocument);
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(readAclMessage, 403);
+
+    let { result: editable } = await acl.check(ACLTypes.Edit, req.aclData);
+
+    const baseRev = await History.findOne({
+        uuid: editRequest.baseUuid
+    }).lean();
+    if(baseRev.content == null) editable = false;
+
+    let contentHtml;
+    let conflict = false;
+    if(editRequest.status === EditRequestStatusTypes.Open) {
+        const latestRev = await History.findOne({
+            document: dbDocument.uuid
+        })
+            .sort({ rev: -1 })
+            .lean();
+
+        if(latestRev?.content) {
+            const parser = new NamumarkParser({
+                document,
+                aclData: req.aclData
+            });
+            const { html } = await parser.parseEditorComment(latestRev.content);
+            contentHtml = html;
+
+            conflict = !utils.mergeText(baseRev.content, editRequest.content, latestRev.content);
+        }
+    }
+
+    editRequest = await utils.findUsers(editRequest, 'createdUser');
+    editRequest = await utils.findUsers(editRequest, 'lastUpdateUser');
+
+    const userHtmlOptions = {
+        isAdmin: req.permissions.includes('admin'),
+        note: `편집 요청 ${editRequest.url} 긴급차단`
+    }
+    editRequest.createdUser.userHtml = utils.userHtml(editRequest.createdUser, userHtmlOptions);
+    if(editRequest.lastUpdateUser)
+        editRequest.lastUpdateUser.userHtml = utils.userHtml(editRequest.lastUpdateUser, userHtmlOptions);
+
+    editRequest.acceptedRev &&= await History.findOne({
+        uuid: editRequest.acceptedRev
+    });
+
     res.renderSkin(undefined, {
         viewName: 'edit_request',
         contentName: 'document/editRequest',
-        document: {
-            namespace: '사용자',
-            title: 'hyonsu'
-        },
+        document,
         serverData: {
-            diff: {
-                changeAroundLines: 3,
-                lineDiff: [
-                    {
-                        "count": 2,
-                        "added": false,
-                        "removed": false,
-                        "value": "[목차]\n== 문법 =="
-                    },
-                    {
-                        "count": 1,
-                        "added": false,
-                        "removed": true,
-                        "value": "[[기본 문법 테스트]][* 1번 각주]"
-                    },
-                    {
-                        "count": 1,
-                        "added": true,
-                        "removed": false,
-                        "value": "[[기본 문법 테스트]][* 1번 각주 샌즈]"
-                    },
-                    {
-                        "count": 35,
-                        "added": false,
-                        "removed": false,
-                        "value": "[[텍스트 꾸미기 테스트]][*1]\n[[문단 테스트]]\n[[인덴트 테스트]]\n\n[[기본 리스트 테스트]]\n[[리스트 테스트]]\n[[리스트 테스트 2]]\n\n[*샌즈 와 샌즈!][*샌즈]\n\n[[wiki 문법 안 인용문]]\n[[wiki 문법 안 리스트]]\n[[리스트 안 표]]\n[[wiki 문법 인덴트]]\n\n[[테이블]]\n[[접기]]\n[[각주]]\n\n== 샘플 ==\n[[코스모피디아]]\n[[나무위키]]\n[[정현수]]\n[[이린]]\n[[문법 도움말]]\n[[얼불춤]]\n\n== 테스트 ==\n{{{#!folding\n샌즈}}}\n\n== 집컴 ==\n[[테이블 테스트]]\n\n[[분류:샌즈]][[분류:파피루스]][[분류:스포#blur]][[분류:분류]]"
-                    }
-                ],
-                diffLines: [
-                    {
-                        "class": "equal",
-                        "line": 1,
-                        "content": "[목차]"
-                    },
-                    {
-                        "class": "equal",
-                        "line": 2,
-                        "content": "== 문법 =="
-                    },
-                    {
-                        "class": "delete",
-                        "line": 3,
-                        "content": "[[기본 문법 테스트]][* 1번 각주]"
-                    },
-                    {
-                        "class": "insert",
-                        "line": 3,
-                        "content": "[[기본 문법 테스트]][* 1번 각주<ins class=\"diff\"> 샌즈</ins>]"
-                    },
-                    {
-                        "class": "equal",
-                        "line": 4,
-                        "content": "[[텍스트 꾸미기 테스트]][*1]"
-                    },
-                    {
-                        "class": "equal",
-                        "line": 5,
-                        "content": "[[문단 테스트]]"
-                    },
-                    {
-                        "class": "equal",
-                        "line": 6,
-                        "content": "[[인덴트 테스트]]"
-                    }
-                ]
-            }
+            contentHtml,
+            editRequest,
+            baseRev,
+            diff: utils.generateDiff(baseRev.content, editRequest.content),
+            conflict,
+            editable,
+            selfCreated: editRequest.createdUser.uuid === req.user.uuid
         }
     });
+});
+
+app.post('/edit_request/:url/accept', async (req, res) => {
+    const editRequest = await EditRequest.findOne({
+        url: req.params.url
+    });
+    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error('편집 요청 상태가 올바르지 않습니다.');
+
+    const dbDocument = await Document.findOne({
+        uuid: editRequest.document
+    }).lean();
+    const document = utils.dbDocumentToDocument(dbDocument);
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+    if(!editable) return res.error(aclMessage, 403);
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid
+    }).sort({ rev: -1 });
+
+    let content = editRequest.content;
+
+    if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
+
+    const isCreate = rev?.content == null;
+    if(isCreate) return res.status(400).send('삭제된 문서입니다.');
+
+    if(rev.uuid !== editRequest.baseUuid) {
+        const baseRev = await History.findOne({
+            uuid: editRequest.baseUuid
+        });
+
+        content = utils.mergeText(baseRev.content, editRequest.content, rev.content);
+        if(!content) return res.status(403).send('이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.');
+    }
+
+    const newRev = await History.create({
+        user: editRequest.createdUser,
+        type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
+        document: dbDocument.uuid,
+        content,
+        log: editRequest.log,
+        editRequest: editRequest.uuid
+    });
+
+    await EditRequest.updateOne({
+        uuid: editRequest.uuid
+    }, {
+        lastUpdateUser: req.user.uuid,
+        status: EditRequestStatusTypes.Accepted,
+        acceptedRev: newRev.uuid
+    });
+
+    res.redirect(`/edit_request/${editRequest.url}`);
 });
 
 app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
@@ -932,6 +1153,12 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
     revs = await utils.findUsers(revs);
     revs = await utils.findUsers(revs, 'trollBy');
     revs = await utils.findUsers(revs, 'hideLogBy');
+
+    for(let rev of revs) {
+        rev.editRequest &&= await EditRequest.findOne({
+            uuid: rev.editRequest
+        });
+    }
 
     res.renderSkin(undefined, {
         viewName: 'history',

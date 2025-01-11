@@ -160,7 +160,7 @@
         border-color: #419641 !important;
     }
 
-    a.edit-button {
+    a.edit-button, button.edit-button {
         background-color: #5bc0de;
         border-color: #5bc0de;
         color: #fff !important;

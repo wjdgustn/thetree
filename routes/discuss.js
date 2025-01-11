@@ -9,13 +9,15 @@ const middleware = require('../utils/middleware');
 const {
     ThreadStatusTypes,
     ThreadCommentTypes,
-    ACLTypes
+    ACLTypes,
+    EditRequestStatusTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const Thread = require('../schemas/thread');
 const ThreadComment = require('../schemas/threadComment');
+const EditRequest = require('../schemas/editRequest');
 
 const ACL = require('../class/acl');
 
@@ -159,8 +161,32 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             }
         });
     }
+    if(req.query.state === 'closed_edit_requests') {
+        const editRequests = await EditRequest.find({
+            document: dbDocument.uuid,
+            status: {
+                $in: [
+                    EditRequestStatusTypes.Closed,
+                    EditRequestStatusTypes.Locked
+                ]
+            }
+        })
+            .sort({
+                lastUpdatedAt: -1
+            })
+            .lean();
+        return res.renderSkin(undefined, {
+            viewName: 'edit_request_close',
+            contentName: 'document/closedEditRequest',
+            document,
+            serverData: {
+                editRequests
+            }
+        });
+    }
 
     let openThreads = [];
+    let openEditRequests = [];
     if(dbDocument) {
         openThreads = await Thread.find({
             document: dbDocument.uuid,
@@ -168,6 +194,15 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
                 $ne: ThreadStatusTypes.Close
             },
             deleted: false
+        })
+            .sort({
+                lastUpdatedAt: -1
+            })
+            .lean();
+
+        openEditRequests = await EditRequest.find({
+            document: dbDocument.uuid,
+            status: EditRequestStatusTypes.Open
         })
             .sort({
                 lastUpdatedAt: -1
@@ -216,7 +251,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
         contentName: 'document/discuss',
         document,
         serverData: {
-            openThreads
+            openThreads,
+            openEditRequests
         }
     });
 });

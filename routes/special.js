@@ -13,7 +13,8 @@ const globalUtils = require('../utils/global');
 const {
     HistoryTypes,
     ACLTypes,
-    ThreadStatusTypes
+    ThreadStatusTypes,
+    EditRequestStatusTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -22,6 +23,7 @@ const History = require('../schemas/history');
 const BlockHistory = require('../schemas/blockHistory');
 const ACLGroup = require('../schemas/aclGroup');
 const Thread = require('../schemas/thread');
+const EditRequest = require('../schemas/editRequest');
 
 const ACL = require('../class/acl');
 const middleware = require('../utils/middleware');
@@ -88,9 +90,33 @@ app.get('/RecentDiscuss', async (req, res) => {
             .limit(100)
             .lean();
     }
+    else {
+        const query = {
+            status: EditRequestStatusTypes.Open
+        };
+        const sort = {
+            lastUpdatedAt: -1
+        };
+
+        if(logType === 'old_editrequest')
+            sort.lastUpdatedAt = 1;
+        else if(logType === 'accepted_editrequest')
+            query.status = EditRequestStatusTypes.Accepted;
+        else if(logType === 'closed_editrequest')
+            query.status = { $in: [EditRequestStatusTypes.Closed, EditRequestStatusTypes.Locked] };
+
+        editRequests = await EditRequest.find(query)
+            .sort(sort)
+            .limit(100)
+            .lean();
+    }
 
     threads = await utils.findUsers(threads, 'lastUpdateUser');
     threads = await utils.findDocuments(threads);
+
+    editRequests = await utils.findUsers(editRequests, 'createdUser');
+    editRequests = await utils.findUsers(editRequests, 'lastUpdateUser');
+    editRequests = await utils.findDocuments(editRequests);
 
     res.renderSkin('최근 토론', {
         contentName: 'special/recentDiscuss',

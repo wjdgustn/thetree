@@ -4,7 +4,9 @@
 
 <h3>편집 요청</h3>
 <ul>
-    <%#<li><a href="/">편집 요청 Sans</a></li>%>
+    <%for(let editRequest of openEditRequests) {%>
+        <li><a href="/edit_request/<%=editRequest.url%>">편집 요청 <%=editRequest.url%></a></li>
+    <%}%>
 </ul>
 <p><a href="<%=doc_action_link(document, 'discuss', { state: 'closed_edit_requests' })%>">[닫힌 편집 요청 보기]</a></p>
 

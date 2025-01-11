@@ -20,8 +20,8 @@
     <%-contentHtml%>
 <%}%>
 
-<%if(conflict) {%>
-    <%-include('../components/diff', { name: `r${conflict.editedRev} vs 사용자 입력`, ...conflict.diff })%>
+<%if(req.flash.conflict) {%>
+    <%-include('../components/diff', { name: `r${req.flash.conflict.editedRev} vs 사용자 입력`, ...req.flash.conflict.diff })%>
     <span class="conflict-error">자동 병합에 실패했습니다! 수동으로 수정된 내역을 아래 텍스트 박스에 다시 입력해주세요.</span>
 <%}%>
 
@@ -50,8 +50,8 @@
 
     <%if(isEditRequest || !aclMessage) {%>
     <div class="log-block">
-        <label for="logInput" x-ref="logLabel">요약</label>
-        <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">
+        <label for="logInput" x-ref="logLabel">요약<%=req.editRequest ? ` (${req.editRequest.log.length}/255)` : ''%></label>
+        <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'" value="<%=req.editRequest?.log%>">
     </div>
 
     <label>

@@ -60,6 +60,12 @@ module.exports = {
         UpdateTopic: 2,
         UpdateDocument: 3
     },
+    EditRequestStatusTypes: {
+        Open: 0,
+        Accepted: 1,
+        Closed: 2,
+        Locked: 3
+    },
     GrantablePermissions: [
         'delete_thread',
         'admin',

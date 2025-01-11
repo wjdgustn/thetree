@@ -2,4 +2,4 @@
 <%-include('navigation')%>
 <p>최근 30일 동안의 기여 목록입니다.</p>
 <!--<pre><%=JSON.stringify(comments.filter(a=>!a.thread.document), null, 2)%></pre>-->
-<%-include('../components/recentDiscussList', { items: comments, hideUser: true })%>
+<%-include('../components/recentDiscussList', { items: comments, isDiscuss: true, hideUser: true })%>

@@ -1,12 +1,8 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const { generateSlug } = require('random-word-slugs');
 
+const utils = require('../utils');
 const { ThreadStatusTypes } = require('../utils/types');
-
-const urlGenerator = () => generateSlug(4, {
-    format: 'title'
-}).replaceAll(' ', '');
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
@@ -22,7 +18,7 @@ const newSchema = new Schema({
         required: true,
         unique: true,
         index: true,
-        default: urlGenerator
+        default: utils.generateUrl
     },
     document: {
         type: String,
