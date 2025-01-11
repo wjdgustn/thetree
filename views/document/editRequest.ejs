@@ -1,0 +1,154 @@
+<link rel="stylesheet" href="/css/views/editRequest.css">
+<link rel="stylesheet" href="/css/views/diff.css">
+<script src="/js/preview.js"></script>
+
+<h3>
+    <%-userHtml(req.user)%>가
+    <%-getFullDateTag(new Date())%>에
+    요청
+</h3>
+<hr>
+<div class="block">
+    <label>기준 판</label>
+    r1
+    <span class="diff-text diff-add">+1</span>
+</div>
+<div class="block">
+    <label>편집 요약</label>
+    asdf
+</div>
+<%#편집창 주석%>
+<div class="action-block">
+    <div>
+        <%if(false) {%>
+            <h4>이 편집 요청을...</h4>
+            <div>
+                <%-getFullDateTag(new Date())%>에 마지막으로 수정됨
+            </div>
+            <div class="buttons-block">
+                <form method="post" action="/edit_request/url/accept">
+                    <button class="thetree-square-button action-button accept-button">Accept</button>
+                </form>
+                <button class="thetree-square-button action-button">Close</button>
+                <a class="thetree-square-button action-button edit-button" href="/edit_request/url/edit">Edit</a>
+            </div>
+        <%} else if(false) {%>
+            <h4>편집 요청이 승인되었습니다.</h4>
+            <div>
+                <%-getFullDateTag(new Date())%>에
+                <%-userHtml(req.user)%>가
+                r<%=1%>
+                <span class="history-action">
+                    <%const actions = [
+                        {
+                            action: 'w',
+                            text: '보기',
+                            follow: true
+                        },
+                        {
+                            action: 'raw',
+                            text: 'RAW'
+                        },
+                        {
+                            action: 'diff',
+                            text: '비교'
+                        }
+                    ];
+                    %>
+
+                    (<%-actions.map(a => `<a href="${doc_action_link(document, a.action, { uuid: 'asdf' || rev.uuid })}"${a.follow ? '' : ' rel="nofollow"'}>${a.text}</a>`).join(' | ')%>)
+                </span>
+                으로 승인함.
+            </div>
+        <%} else if(true) {%>
+            <h4>편집 요청이 닫혔습니다.</h4>
+            <div>
+                <%-getFullDateTag(new Date())%>에
+                <%-userHtml(req.user)%>가
+                편집 요청을 <%=false ? '닫고 잠갔습니다.' : '닫았습니다.'%>
+            </div>
+            <%if(true) {%><p>사유 : <%='reason'%></p><%}%>
+            <div class="buttons-block">
+                <form method="post" action="/edit_request/url/reopen">
+                    <button class="thetree-square-button action-button accept-button">Reopen</button>
+                </form>
+            </div>
+        <%}%>
+    </div>
+</div>
+<div x-data="{ selectedTab: 'diff' }">
+    <ul class="edit-request-ul">
+        <li class="edit-request-li"><button type="button" :class="selectedTab === 'diff' && 'selected-tab'" @click="selectedTab = 'diff'">비교</button></li>
+        <li class="edit-request-li"><button id="preview-tab-button" type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button></li>
+    </ul>
+
+    <div class="tabs">
+        <div :class="selectedTab === 'diff' && 'selected-tab-content'">
+            <%-include('../components/diff', { name: '편집 요청 asdf', ...diff })%>
+        </div>
+
+        <input type="hidden" id="text-input" value="1
+2
+3
+4
+5
+6
+7
+8
+9
+1_0
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20">
+        <div id="preview-tab-content" :class="selectedTab === 'preview' && 'selected-tab-content'">
+            im preview
+        </div>
+    </div>
+</div>
+
+<div id="button-tooltip" x-placement="top" style="display: none;">
+    <div>
+        <div id="button-tooltip-content">
+            <div>
+                <div>이 편집 요청을 닫습니다.</div>
+            </div>
+        </div>
+        <div id="button-tooltip-arrow">
+            <div class="arrow-outer"></div>
+            <div class="arrow-inner"></div>
+        </div>
+    </div>
+</div>
+
+<div id="editrequest-close-modal" class="thetree-modal-block thetree-modal">
+    <div class="thetree-modal-block thetree-modal-bg"></div>
+    <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="thetree-modal-content">
+            <form method="post" action="/edit_request/asdf/close">
+                <h4>편집 요청 닫기</h4>
+                <div>
+                    <p>사유:</p>
+                    <input type="text" name="close_reason">
+                </div>
+                <%if(req.permissions.includes('update_thread_status')) {%>
+                    <div>
+                        <p>이 편집 요청을 다시 열수 없게 잠금</p>
+                        <input type="checkbox" name="lock" value="Y">
+                    </div>
+                <%}%>
+
+                <div class="modal-buttons">
+                    <button class="thetree-modal-button thetree-square-button thetree-blue-button">닫기</button>
+                    <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

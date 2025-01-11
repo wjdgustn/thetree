@@ -1,8 +1,10 @@
 const { models } = require('mongoose');
 const crypto = require('crypto');
 const { Address4, Address6 } = require('ip-address');
+const Diff = require('diff');
 
 const globalUtils = require('./global');
+const namumarkUtils = require('./namumark/utils');
 const {
     UserTypes,
     HistoryTypes
@@ -384,5 +386,163 @@ module.exports = {
         }
 
         return arr;
+    },
+    generateDiff(oldText, newText, changeAroundLines = 3) {
+        const lineDiff = Diff.diffLines(oldText || '', newText || '').map(a => ({
+            ...a,
+            value: namumarkUtils.escapeHtml(a.value.endsWith('\n') ? a.value.slice(0, -1) : a.value)
+        }));
+        let diffLines = [];
+
+        let line = 1;
+        if(lineDiff.length === 1 && !lineDiff[0].added && !lineDiff[0].removed) {
+            const diff = lineDiff[0];
+            const lines = diff.value.split('\n');
+            for(let i in lines) {
+                i = parseInt(i);
+                const content = lines[i];
+                diffLines.push({
+                    class: 'equal',
+                    line: line + i,
+                    content
+                });
+            }
+        }
+        else for(let i = 0; i < lineDiff.length; i++) {
+            const prev = lineDiff[i - 1];
+            const curr = lineDiff[i];
+            const next = lineDiff[i + 1];
+
+            if(prev) line += prev.count;
+
+            let lines = curr.value.split('\n');
+            if(!curr.added && !curr.removed) {
+                const linesLen = lines.length;
+
+                if(i !== 0) {
+                    const firstLines = lines.slice(0, changeAroundLines);
+                    for(let j in firstLines) {
+                        j = parseInt(j);
+                        content = firstLines[j];
+
+                        const lastDiffLine = diffLines[diffLines.length - 1];
+                        if(lastDiffLine.line >= line + j) continue;
+
+                        diffLines.push({
+                            class: 'equal',
+                            line: line + j,
+                            content
+                        });
+                    }
+
+                    lines = lines.slice(changeAroundLines);
+                }
+
+                if(i !== lineDiff.length - 1) {
+                    const lastLines = lines.slice(-changeAroundLines);
+                    for(let j in lastLines) {
+                        j = parseInt(j);
+                        content = lastLines[j];
+                        diffLines.push({
+                            class: 'equal',
+                            line: line + linesLen - changeAroundLines + j + (lines.length < changeAroundLines ? changeAroundLines - lines.length : 0),
+                            content
+                        });
+                    }
+                }
+            }
+            else if(curr.removed) {
+                if(next?.added) {
+                    const nextLines = next.value.split('\n');
+
+                    const currArr = [];
+                    const nextArr = [];
+
+                    let lineCompared = false;
+                    for(let j = 0; j < Math.max(lines.length, nextLines.length); j++) {
+                        const content = lines[j];
+                        const nextContent = nextLines[j];
+
+                        if(content != null && nextContent != null) {
+                            if(content === nextContent) {
+                                diffLines.push({
+                                    class: 'equal',
+                                    line: line + j,
+                                    content
+                                });
+                                continue;
+                            }
+
+                            lineCompared = true;
+
+                            const diff = Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent));
+                            let c = '';
+                            let n = '';
+                            for(let d of diff) {
+                                if(!d.added && !d.removed) {
+                                    const val = namumarkUtils.escapeHtml(d.value);
+                                    c += val;
+                                    n += val;
+                                }
+                                else if(d.added) n += `<ins class="diff">${namumarkUtils.escapeHtml(d.value)}</ins>`;
+                                else if(d.removed) c += `<del class="diff">${namumarkUtils.escapeHtml(d.value)}</del>`;
+                            }
+
+                            currArr.push({
+                                class: 'delete',
+                                line: line + j,
+                                content: c
+                            });
+                            nextArr.push({
+                                class: 'insert',
+                                line: line + j,
+                                content: n
+                            });
+                        }
+                        else if(content != null) currArr.push({
+                            class: 'delete',
+                            line: line + j,
+                            content: lineCompared ? `<del class="diff">${content}</del>` : content,
+                            nextOffset: Number(lineCompared)
+                        });
+                        else if(nextContent != null) nextArr.push({
+                            class: 'insert',
+                            line: line + j,
+                            content: lineCompared ? `<ins class="diff">${nextContent}</ins>` : nextContent,
+                            nextOffset: Number(lineCompared)
+                        });
+                    }
+
+                    diffLines.push(...currArr);
+                    diffLines.push(...nextArr);
+
+                    i++;
+                }
+                else for(let j in lines) {
+                    j = parseInt(j);
+                    content = lines[j];
+                    diffLines.push({
+                        class: 'delete',
+                        line: line + j,
+                        content
+                    });
+                }
+            }
+            else if(curr.added) for(let j in lines) {
+                j = parseInt(j);
+                content = lines[j];
+                diffLines.push({
+                    class: 'insert',
+                    line: line + j,
+                    content
+                });
+            }
+        }
+
+        return {
+            lineDiff,
+            diffLines,
+            changeAroundLines
+        }
     }
 }

@@ -590,10 +590,12 @@ app.patch('/action/acl/reorder', async (req, res) => {
     res.redirect(303, req.get('Referer'));
 });
 
-app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
+const editAndEditRequest = async (req, res) => {
+    const isEditRequest = req.url.startsWith('/new_edit_request/');
+
     const section = parseInt(req.query.section);
 
-    const invalidSection = () => res.error('섹션이 올바르지 않습니다.')
+    const invalidSection = () => res.error('섹션이 올바르지 않습니다.');
 
     if(req.query.section && (isNaN(section) || section < 1)) return invalidSection();
 
@@ -612,11 +614,13 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     if(!readable) return res.error(readAclMessage, 403);
 
     const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
-    const { result: editRequestable } = await acl.check(ACLTypes.EditRequest, req.aclData);
+    const { result: editRequestable, aclMessage: editRequestAclMessage } = await acl.check(ACLTypes.EditRequest, req.aclData);
 
-    if(!editable && editRequestable) return res.redirect(globalUtils.doc_action_link(document, 'new_edit_request', {
+    if(!isEditRequest && !editable && editRequestable) return res.redirect(globalUtils.doc_action_link(document, 'new_edit_request', {
         redirected: 1
     }));
+
+    if(isEditRequest && !editRequestable) return res.error(editRequestAclMessage, 403);
 
     let rev;
     if(dbDocument) rev = await History.findOne({
@@ -651,7 +655,7 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     res.renderSkin(undefined, {
-        viewName: 'edit',
+        viewName: isEditRequest ? 'edit_request' : 'edit',
         contentName: 'document/edit',
         document,
         body: {
@@ -660,12 +664,16 @@ app.get('/edit/?*', middleware.parseDocumentName, async (req, res) => {
             section
         },
         serverData: {
+            isEditRequest,
             aclMessage,
             content,
             contentHtml
         }
     });
-});
+}
+
+app.get('/edit/?*', middleware.parseDocumentName, editAndEditRequest);
+app.get('/new_edit_request/?*', middleware.parseDocumentName, editAndEditRequest);
 
 app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     const isThread = req.body.mode === 'thread';
@@ -801,6 +809,85 @@ app.post('/edit/?*', middleware.parseDocumentName, async (req, res) => {
     });
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
+});
+
+app.get('/edit_request/:url', async (req, res) => {
+    res.renderSkin(undefined, {
+        viewName: 'edit_request',
+        contentName: 'document/editRequest',
+        document: {
+            namespace: '사용자',
+            title: 'hyonsu'
+        },
+        serverData: {
+            diff: {
+                changeAroundLines: 3,
+                lineDiff: [
+                    {
+                        "count": 2,
+                        "added": false,
+                        "removed": false,
+                        "value": "[목차]\n== 문법 =="
+                    },
+                    {
+                        "count": 1,
+                        "added": false,
+                        "removed": true,
+                        "value": "[[기본 문법 테스트]][* 1번 각주]"
+                    },
+                    {
+                        "count": 1,
+                        "added": true,
+                        "removed": false,
+                        "value": "[[기본 문법 테스트]][* 1번 각주 샌즈]"
+                    },
+                    {
+                        "count": 35,
+                        "added": false,
+                        "removed": false,
+                        "value": "[[텍스트 꾸미기 테스트]][*1]\n[[문단 테스트]]\n[[인덴트 테스트]]\n\n[[기본 리스트 테스트]]\n[[리스트 테스트]]\n[[리스트 테스트 2]]\n\n[*샌즈 와 샌즈!][*샌즈]\n\n[[wiki 문법 안 인용문]]\n[[wiki 문법 안 리스트]]\n[[리스트 안 표]]\n[[wiki 문법 인덴트]]\n\n[[테이블]]\n[[접기]]\n[[각주]]\n\n== 샘플 ==\n[[코스모피디아]]\n[[나무위키]]\n[[정현수]]\n[[이린]]\n[[문법 도움말]]\n[[얼불춤]]\n\n== 테스트 ==\n{{{#!folding\n샌즈}}}\n\n== 집컴 ==\n[[테이블 테스트]]\n\n[[분류:샌즈]][[분류:파피루스]][[분류:스포#blur]][[분류:분류]]"
+                    }
+                ],
+                diffLines: [
+                    {
+                        "class": "equal",
+                        "line": 1,
+                        "content": "[목차]"
+                    },
+                    {
+                        "class": "equal",
+                        "line": 2,
+                        "content": "== 문법 =="
+                    },
+                    {
+                        "class": "delete",
+                        "line": 3,
+                        "content": "[[기본 문법 테스트]][* 1번 각주]"
+                    },
+                    {
+                        "class": "insert",
+                        "line": 3,
+                        "content": "[[기본 문법 테스트]][* 1번 각주<ins class=\"diff\"> 샌즈</ins>]"
+                    },
+                    {
+                        "class": "equal",
+                        "line": 4,
+                        "content": "[[텍스트 꾸미기 테스트]][*1]"
+                    },
+                    {
+                        "class": "equal",
+                        "line": 5,
+                        "content": "[[문단 테스트]]"
+                    },
+                    {
+                        "class": "equal",
+                        "line": 6,
+                        "content": "[[인덴트 테스트]]"
+                    }
+                ]
+            }
+        }
+    });
 });
 
 app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
@@ -1033,156 +1120,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    const lineDiff = Diff.diffLines(oldRev.content || '', rev.content || '').map(a => ({
-        ...a,
-        value: namumarkUtils.escapeHtml(a.value.endsWith('\n') ? a.value.slice(0, -1) : a.value)
-    }));
-    let diffLines = [];
-
-    let line = 1;
-    if(lineDiff.length === 1 && !lineDiff[0].added && !lineDiff[0].removed) {
-        const diff = lineDiff[0];
-        const lines = diff.value.split('\n');
-        for(let i in lines) {
-            i = parseInt(i);
-            const content = lines[i];
-            diffLines.push({
-                class: 'equal',
-                line: line + i,
-                content
-            });
-        }
-    }
-    else for(let i = 0; i < lineDiff.length; i++) {
-        const prev = lineDiff[i - 1];
-        const curr = lineDiff[i];
-        const next = lineDiff[i + 1];
-
-        if(prev) line += prev.count;
-
-        let lines = curr.value.split('\n');
-        if(!curr.added && !curr.removed) {
-            const linesLen = lines.length;
-
-            if(i !== 0) {
-                const firstLines = lines.slice(0, CHANGE_AROUND_LINES);
-                for(let j in firstLines) {
-                    j = parseInt(j);
-                    content = firstLines[j];
-
-                    const lastDiffLine = diffLines[diffLines.length - 1];
-                    if(lastDiffLine.line >= line + j) continue;
-
-                    diffLines.push({
-                        class: 'equal',
-                        line: line + j,
-                        content
-                    });
-                }
-
-                lines = lines.slice(CHANGE_AROUND_LINES);
-            }
-
-            if(i !== lineDiff.length - 1) {
-                const lastLines = lines.slice(-CHANGE_AROUND_LINES);
-                for(let j in lastLines) {
-                    j = parseInt(j);
-                    content = lastLines[j];
-                    diffLines.push({
-                        class: 'equal',
-                        line: line + linesLen - CHANGE_AROUND_LINES + j + (lines.length < CHANGE_AROUND_LINES ? CHANGE_AROUND_LINES - lines.length : 0),
-                        content
-                    });
-                }
-            }
-        }
-        else if(curr.removed) {
-            if(next?.added) {
-                const nextLines = next.value.split('\n');
-
-                const currArr = [];
-                const nextArr = [];
-
-                let lineCompared = false;
-                for(let j = 0; j < Math.max(lines.length, nextLines.length); j++) {
-                    const content = lines[j];
-                    const nextContent = nextLines[j];
-
-                    if(content != null && nextContent != null) {
-                        if(content === nextContent) {
-                            diffLines.push({
-                                class: 'equal',
-                                line: line + j,
-                                content
-                            });
-                            continue;
-                        }
-
-                        lineCompared = true;
-
-                        const diff = Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent));
-                        let c = '';
-                        let n = '';
-                        for(let d of diff) {
-                            if(!d.added && !d.removed) {
-                                const val = namumarkUtils.escapeHtml(d.value);
-                                c += val;
-                                n += val;
-                            }
-                            else if(d.added) n += `<ins class="diff">${namumarkUtils.escapeHtml(d.value)}</ins>`;
-                            else if(d.removed) c += `<del class="diff">${namumarkUtils.escapeHtml(d.value)}</del>`;
-                        }
-
-                        currArr.push({
-                            class: 'delete',
-                            line: line + j,
-                            content: c
-                        });
-                        nextArr.push({
-                            class: 'insert',
-                            line: line + j,
-                            content: n
-                        });
-                    }
-                    else if(content != null) currArr.push({
-                        class: 'delete',
-                        line: line + j,
-                        content: lineCompared ? `<del class="diff">${content}</del>` : content,
-                        nextOffset: Number(lineCompared)
-                    });
-                    else if(nextContent != null) nextArr.push({
-                        class: 'insert',
-                        line: line + j,
-                        content: lineCompared ? `<ins class="diff">${nextContent}</ins>` : nextContent,
-                        nextOffset: Number(lineCompared)
-                    });
-                }
-
-                diffLines.push(...currArr);
-                diffLines.push(...nextArr);
-
-                i++;
-            }
-            else for(let j in lines) {
-                j = parseInt(j);
-                content = lines[j];
-                diffLines.push({
-                    class: 'delete',
-                    line: line + j,
-                    content
-                });
-            }
-        }
-        else if(curr.added) for(let j in lines) {
-            j = parseInt(j);
-            content = lines[j];
-            diffLines.push({
-                class: 'insert',
-                line: line + j,
-                content
-            });
-        }
-    }
+    const { lineDiff, diffLines } = utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
 
     res.renderSkin(undefined, {
         contentName: 'document/diff',
@@ -1478,7 +1416,9 @@ app.post('/move/?*', middleware.parseDocumentName, async (req, res) => {
     const { result: otherResult, aclMessage: otherAclMessage } = await otherAcl.check(ACLTypes.Move, req.aclData);
     if(!otherResult) return res.error(otherAclMessage, 403);
 
-    if(otherDocument.namespace === '사용자' && !otherDocument.title.includes('/'))
+    const isUserDoc = document.namespace === '사용자' && !document.title.includes('/');
+    const otherIsUserDoc = otherDocument.namespace === '사용자' && !otherDocument.title.includes('/');
+    if(isUserDoc || otherIsUserDoc)
         return res.error('이 문서를 해당 이름 공간으로 이동할 수 없습니다.', 403);
 
     const revExists = await History.exists({

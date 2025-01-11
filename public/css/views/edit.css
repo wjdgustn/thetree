@@ -146,4 +146,11 @@
         margin-bottom: 2rem;
         width: 100px;
     }
+
+    span.conflict-error {
+        color: red;
+        font-weight: 700;
+        padding-bottom: 5px;
+        padding-top: 5px;
+    }
 }

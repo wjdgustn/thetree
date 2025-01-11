@@ -1,0 +1,51 @@
+<table>
+    <thead>
+    <tr>
+        <th></th>
+        <th></th>
+        <th class="texttitle"><%=name%></th>
+    </tr>
+    </thead>
+
+    <tbody>
+
+    <%const skipRow = `
+<tr>
+    <th>...</th>
+    <th>...</th>
+    <td class="skip"></td>
+</tr>
+    `.trim();%>
+
+    <%
+    let lastLine = 0;
+    let lastInsertLine = 0;
+    let lastDeleteLine = 0;
+    let deleteOffset = 0;
+    let insertOffset = 0;
+    %>
+    <%for(let i = 0; i < diffLines.length; i++) {%>
+        <%
+            const diff = diffLines[i];
+            const isLast = i === diffLines.length - 1;
+        %>
+        <%if(lastLine + 1 < diff.line) {%><%-skipRow%><%}%>
+
+        <tr>
+            <th><%=diff.class !== 'insert' ? diff.line + deleteOffset : ''%></th>
+            <th><%=diff.class !== 'delete' ? diff.line + insertOffset : ''%></th>
+            <td class="<%=diff.class%>"><div><%-diff.content%></div></td>
+        </tr>
+
+        <%if(isLast && diff.class === 'equal' && lineDiff[lineDiff.length - 1].count > changeAroundLines) {%><%-skipRow%><%}%>
+
+        <%
+            lastLine = diff.line;
+            if(diff.nextOffset) {
+                if(diff.class === 'delete') deleteOffset += diff.nextOffset;
+                if(diff.class === 'insert') deleteOffset -= diff.nextOffset;
+            }
+        %>
+    <%}%>
+    </tbody>
+</table>

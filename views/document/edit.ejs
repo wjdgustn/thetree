@@ -1,12 +1,28 @@
 <link rel="stylesheet" href="/css/views/edit.css">
+<link rel="stylesheet" href="/css/views/diff.css">
 <script src="/js/unsavedWarn.js"></script>
 
 <script src="/js/preview.js"></script>
 
-<%-include('../components/alert', { alert: aclMessage })%>
+<%conflict = typeof conflict === 'undefined' ? null : conflict%>
+<%-include('../components/alert', { alert: isEditRequest ? (conflict ? '편집 도중에 다른 사용자가 먼저 편집을 했습니다.' : null) : aclMessage })%>
+<%if(req.query.redirected === '1' && isEditRequest && aclMessage) {%>
+    <div class="thetree-alert">
+        <div class="thetree-alert-content">
+            <strong>[알림]</strong>
+            문서를 편집할 권한이 없기 때문에 편집 요청으로 이동되었습니다.
+            <div><%-aclMessage%></div>
+        </div>
+    </div>
+<%}%>
 
 <%if(contentHtml) {%>
     <%-contentHtml%>
+<%}%>
+
+<%if(conflict) {%>
+    <%-include('../components/diff', { name: `r${conflict.editedRev} vs 사용자 입력`, ...conflict.diff })%>
+    <span class="conflict-error">자동 병합에 실패했습니다! 수동으로 수정된 내역을 아래 텍스트 박스에 다시 입력해주세요.</span>
 <%}%>
 
 <form method="post" x-data="{ selectedTab: 'raw' }">
@@ -17,14 +33,14 @@
     <ul class="form-ul">
 <!--        <li class="form-li"><button type="button" :class="selectedTab === 'editor' && 'selected-tab'" @click="selectedTab = 'editor'">편집기</button></li>-->
         <li class="form-li"><button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button></li>
-        <%if(!aclMessage) {%>
+        <%if(isEditRequest || !aclMessage) {%>
         <li class="form-li"><button id="preview-tab-button" type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button></li>
         <%}%>
     </ul>
 
     <div class="tabs">
         <div :class="selectedTab === 'raw' && 'selected-tab-content'">
-            <textarea id="text-input" class="unsaved-warn" name="text" wrap="soft"<%=aclMessage ? ' readonly' : ''%>><%=content%></textarea>
+            <textarea id="text-input" class="unsaved-warn" name="text" wrap="soft"<%=!isEditRequest && aclMessage ? ' readonly' : ''%>><%=content%></textarea>
         </div>
 
         <div id="preview-tab-content" :class="selectedTab === 'preview' && 'selected-tab-content'">
@@ -32,7 +48,7 @@
         </div>
     </div>
 
-    <%if(!aclMessage) {%>
+    <%if(isEditRequest || !aclMessage) {%>
     <div class="log-block">
         <label for="logInput" x-ref="logLabel">요약</label>
         <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">
