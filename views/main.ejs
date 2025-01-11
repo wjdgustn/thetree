@@ -60,7 +60,7 @@
 
 <body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
 <div id="progress-bar"></div>
-<div id="app"><%-include(`../skins/${skin}/layout`, { contentHtml: contentName ? include(path.join(__dirname, `views/${contentName}`)) : contentHtml })%></div>
+<div id="app"><%-include(`../skins/${skin}/layout`, { contentHtml: typeof contentName !== 'undefined' ? include(path.join(__dirname, `views/${contentName}`)) : contentHtml })%></div>
 
 <div id="tooltip" class="popper" style="display: none;">
     <div id="tooltip-arrow" class="popper__arrow"></div>
