@@ -5,7 +5,8 @@ module.exports = {
     priority: Priority.Footnote,
     openStr: '[*',
     closeStr: ']',
-    format: async (content, namumark) => {
+    format: async (content, namumark, originalContent, i, sourceText, options) => {
+        if(options.removeFootnote) return '';
         if(content.includes('<a class="wiki-fn-content"')) return;
 
         namumark.syntaxData.index ??= 0;

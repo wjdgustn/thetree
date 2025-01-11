@@ -164,7 +164,7 @@ module.exports = class NamumarkParser {
         return await this.parse(editorLines.join('\n'));
     }
 
-    async parse(input, childParse = false, disableNoParagraph = false, cacheOptions = {}) {
+    async parse(input, childParse = false, disableNoParagraph = false, cacheOptions = {}, options = {}) {
         if((debug||true) && !childParse && !this.includeData && !this.thread) console.time(`parse "${this.document.title}"`);
 
         if(!childParse) {
@@ -213,7 +213,7 @@ module.exports = class NamumarkParser {
 
             if(childParse
                 && (
-                    syntax.priority <= Priority.Footnote
+                    (syntax.priority <= Priority.Footnote - (options.removeFootnote ? 1 : 0))
                     || syntax.priority >= Priority.Last
                 )) continue;
 
@@ -342,7 +342,7 @@ module.exports = class NamumarkParser {
                             const content = text.slice(syntax.index + syntax.openStr.length, text.length);
                             const originalContent = sourceText.slice(syntax.sourceIndex + syntax.openStr.length, i);
                             if(content) {
-                                let output = await syntax.format(content, this, originalContent, i, sourceText);
+                                let output = await syntax.format(content, this, originalContent, i, sourceText, options);
                                 if(typeof output === 'number') output = output.toString();
                                 if(output != null) text = text.slice(0, syntax.index) + output.replaceAll('\n', '');
                                 else text = text.slice(0, syntax.index) + syntax.openStr + content + syntax.closeStr;
@@ -525,7 +525,7 @@ module.exports = class NamumarkParser {
 
         // console.log(sourceText);
 
-        text = postProcess(sourceText, this, childParse, disableNoParagraph);
+        text = postProcess(sourceText, this, childParse, disableNoParagraph, options);
 
         // console.log(text);
 

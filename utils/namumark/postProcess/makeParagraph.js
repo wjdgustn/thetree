@@ -7,7 +7,7 @@ const ParagraphOpen = '<div class="wiki-paragraph">';
 const TempParagraphClose = '<paragraphClose/>';
 const ParagraphClose = '</div>';
 
-module.exports = (sourceText, namumark, childParse = false, disableNoParagraph = false) => {
+module.exports = (sourceText, namumark, childParse = false, disableNoParagraph = false, options) => {
     if(!childParse && namumark.includeData && !sourceText.includes(NoParagraphOpen))
         disableNoParagraph = true;
 
@@ -134,7 +134,7 @@ module.exports = (sourceText, namumark, childParse = false, disableNoParagraph =
         .replaceAll('<removeNewline/><newLine/>', '')
         .replaceAll('<removeNewline/>', '');
 
-    if(!childParse) text = text
+    if(!childParse || options.removeNamumarkEscape) text = text
         .replaceAll('<*', '')
         .replaceAll('*>', '');
 

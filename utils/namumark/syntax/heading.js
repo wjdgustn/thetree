@@ -1,3 +1,5 @@
+const sanitizeHtml = require('sanitize-html');
+
 const { Priority } = require('../types');
 
 const utils = require('../utils');
@@ -62,7 +64,7 @@ module.exports = {
 
         return result;
     },
-    format(content, namumark, lines) {
+    async format(content, namumark, lines) {
         const lowestLevel = namumark.syntaxData.lowestLevel ??= getLowestLevel(lines);
 
         const checkLevel = getLevel(content);
@@ -97,9 +99,23 @@ module.exports = {
         }
         const paragraphNumText = paragraphNumTextArr.join('.');
 
+        // 문단 파서 성능이 !!
+        // console.time('문단 텍스트 처리비');
+        const { html } = await namumark.parse(text, true, true, {}, {
+            removeFootnote: true,
+            removeNamumarkEscape: true
+        });
+        const sanitizedHtml = sanitizeHtml(html, {
+            allowedTags: ['a'],
+            allowedAttributes: {
+                '*': ['style'],
+                a: ['href', 'class', 'rel', 'target']
+            }
+        });
+        // console.timeEnd('문단 텍스트 처리비');
         namumark.headings.push({
             num: paragraphNumText,
-            text: utils.removeBackslash(text)
+            text: sanitizedHtml
         });
 
         return `
