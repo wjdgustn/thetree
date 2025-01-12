@@ -892,6 +892,7 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     let content = req.body.text;
+    let log = req.body.log;
 
     if(rev?.content != null && req.query.section && !editingEditRequest) {
         const newLines = [];
@@ -922,11 +923,17 @@ const postEditAndEditRequest = async (req, res) => {
     if(isCreate && isEditRequest) return res.status(404).send('문서를 찾을 수 없습니다.');
 
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid)) {
-        req.session.flash.conflict = {
-            editedRev: rev.rev,
-            diff: utils.generateDiff(rev.content, content)
+        content = utils.mergeText(editedRev.content, content, rev.content);
+        if(content) {
+            if(!isEditRequest) log ||= `자동 병합됨 (r${editedRev.rev})`;
         }
-        return res.redirect(req.originalUrl);
+        else {
+            req.session.flash.conflict = {
+                editedRev: editedRev.rev,
+                diff: utils.generateDiff(editedRev.content, req.body.text)
+            }
+            return res.redirect(req.originalUrl);
+        }
     }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
@@ -939,7 +946,7 @@ const postEditAndEditRequest = async (req, res) => {
             status: EditRequestStatusTypes.Open
         }, {
             content,
-            log: req.body.log,
+            log,
             baseUuid: editedRev.uuid,
             diffLength: content.length - editedRev.content.length
         }, {
@@ -955,7 +962,7 @@ const postEditAndEditRequest = async (req, res) => {
             type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
             document: dbDocument.uuid,
             content,
-            log: req.body.log
+            log
         });
 
         res.redirect(globalUtils.doc_action_link(document, 'w'));
