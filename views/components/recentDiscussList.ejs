@@ -41,7 +41,7 @@
             <%if(!hideUser) {%>
                 <div class="changes-value">
                     <%-userHtml(isDiscuss ? thread.lastUpdateUser : thread.createdUser, {
-                        note: `토론 ${thread.url} 긴급차단`
+                        note: `${isDiscuss ? '토론' : '편집 요청'} ${thread.url} 긴급차단`
                     })%>
                 </div>
             <%} else if(!isDiscuss) {%>
