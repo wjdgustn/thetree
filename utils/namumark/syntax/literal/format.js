@@ -73,7 +73,6 @@ module.exports = (content, namumark, check = false) => {
         else if(colorParams.length === 2) {
             const slicedColorParams = colorParams.map(colorParam => colorParam.slice(1));
 
-            // TODO: data-dark-style 구현
             if(validateHTMLColorHex(colorParams[0]) && validateHTMLColorHex(colorParams[1]))
                 return `<span style="color: ${colorParams[0]}" data-dark-style="color: ${colorParams[1]};">${paramContent}</span>`;
             else if(validateHTMLColorName(slicedColorParams[0]) && validateHTMLColorName(slicedColorParams[1]))
