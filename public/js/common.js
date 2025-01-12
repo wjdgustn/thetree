@@ -864,7 +864,7 @@ document.addEventListener('alpine:init', () => {
 
             emit('thetree:configChange');
 
-            updateTimeTag();
+            if(key === 'wiki.no_relative_date') updateTimeTag();
         },
         get currentTheme() {
             let theme = this.getLocalConfig('wiki.theme');
