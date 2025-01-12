@@ -88,8 +88,8 @@ function setupWikiHandlers() {
 
     let footnoteType = State.getLocalConfig('wiki.footnote_type');
 
-    if(footnoteType === 'tooltip') setupFootnoteTooltip();
-    else if(footnoteType === 'modal') setupFootnoteModal();
+    if(footnoteType === 'popover') setupFootnoteTooltip();
+    else if(footnoteType === 'popup') setupFootnoteModal();
 
     const oldDarkStyle = document.getElementById('darkStyle');
     if(oldDarkStyle) oldDarkStyle.remove();
