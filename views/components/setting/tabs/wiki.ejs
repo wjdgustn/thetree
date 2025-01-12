@@ -26,6 +26,30 @@
     //     defaultValue: false
     // },
     {
+        name: 'footnote_type',
+        label: '각주 표시 형식',
+        type: 'enum',
+        defaultValue: req.useragent.isMobile ? 'modal' : 'tooltip',
+        options: [
+            {
+                name: 'default',
+                label: '브라우저 기본'
+            },
+            {
+                name: 'popover',
+                label: '팝오버'
+            },
+            {
+                name: 'popup',
+                label: '팝업'
+            },
+            // {
+            //     name: 'unfold',
+            //     label: '펼침'
+            // }
+        ]
+    },
+    {
         name: 'no_relative_date',
         label: '상대 시간 표시를 사용하지 않음',
         type: 'bool',

@@ -52,9 +52,8 @@ function contentLoadedHandler() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', contentLoadedHandler);
-
 document.addEventListener('alpine:initialized', () => {
+    contentLoadedHandler();
     setupDocument();
 });
 
