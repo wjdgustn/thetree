@@ -1,38 +1,15 @@
 <link rel="stylesheet" href="/css/views/login.css">
+<%-include('../components/alert')%>
 
-<%if(typeof alert !== 'undefined') {%>
-    <%-include('../components/alert', { alert })%>
-<%}%>
-
-<%
-const fieldErrorExists = typeof fieldErrors !== 'undefined' && fieldErrors.length > 0;
-
-let focusTarget = '';
-if(fieldErrorExists) focusTarget = fieldErrors[0].path;
-
-function fieldError(name) {
-    if(!fieldErrorExists) return '';
-
-    const error = fieldErrors.find(e => e.path === name);
-    if(!error) return '';
-
-    return `<p class="input-error">${error.msg}</p>`;
-}
-%>
-
-<script src="/js/form_focus.js"></script>
-
-<form method="post" id="member-form" data-focus="<%=focusTarget%>">
+<form method="post" id="member-form">
     <div class="login-block">
         <label for="emailInput">Email</label>
         <input class="login-input" id="emailInput" name="email">
-        <%-fieldError('email')%>
     </div>
 
     <div class="login-block">
         <label for="passwordInput">Password</label>
         <input class="login-input" value="" type="password" id="passwordInput" name="password">
-        <%-fieldError('password')%>
     </div>
 
     <div class="login-block login-recover-password-block">

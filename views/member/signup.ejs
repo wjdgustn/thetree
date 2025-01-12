@@ -1,28 +1,7 @@
 <link rel="stylesheet" href="/css/views/signup.css">
+<%-include('../components/alert')%>
 
-<%if(typeof alert !== 'undefined') {%>
-    <%-include('../components/alert', { alert })%>
-<%}%>
-
-<%
-const fieldErrorExists = typeof fieldErrors !== 'undefined' && fieldErrors.length > 0;
-
-let focusTarget = '';
-if(fieldErrorExists) focusTarget = fieldErrors[0].path;
-
-function fieldError(name) {
-    if(!fieldErrorExists) return '';
-
-    const error = fieldErrors.find(e => e.path === name);
-    if(!error) return '';
-
-    return `<p class="input-error">${error.msg}</p>`;
-}
-%>
-
-<script src="/js/form_focus.js"></script>
-
-<form method="post" id="member-form" data-focus="<%=focusTarget%>">
+<form method="post" id="member-form">
     <div class="signup-block">
         <textarea class="signup-input signup-terms" readonly><%=config.terms%></textarea>
     </div>
@@ -34,14 +13,11 @@ function fieldError(name) {
         </label>
     </div>
 
-    <%-fieldError('agree')%>
 
     <div class="signup-block">
         <label for="emailInput">Email</label>
         <input class="signup-input" id="emailInput" name="email">
     </div>
-
-    <%-fieldError('email')%>
 
     <%if(config.email_whitelist.length) {%>
         <p>

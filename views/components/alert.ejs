@@ -1,5 +1,5 @@
 <div class="thetree-alert thetree-alert-danger thetree-error-alert"<%=(typeof alert === 'undefined' || !alert) ? ' hidden' : ''%>>
     <div class="thetree-alert-content">
-        <strong>[오류!]</strong>&nbsp; <span class="thetree-alert-content-text"><%-alert%></span>
+        <strong>[오류!]</strong>&nbsp; <span class="thetree-alert-content-text"><%-typeof alert !== 'undefined' ? alert : ''%></span>
     </div>
 </div>

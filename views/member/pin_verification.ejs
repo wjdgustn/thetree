@@ -1,10 +1,5 @@
 <link rel="stylesheet" href="/css/views/email_verification.css">
-
-<%if(typeof alert !== 'undefined') {%>
-    <%-include('../components/alert', { alert })%>
-<%}%>
-
-<script src="/js/form_focus.js"></script>
+<%-include('../components/alert')%>
 
 <form id="pinForm" method="post" action="/member/login/pin" data-focus="pin">
     <input type="hidden" name="autologin" value="<%=autologin%>">

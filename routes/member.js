@@ -23,13 +23,10 @@ const EditRequest = require('../schemas/editRequest');
 
 const app = express.Router();
 
-const renderSignup = (res, data = {}) => res.renderSkin('계정 만들기', {
-    ...data,
-    contentName: 'member/signup'
-});
-
 app.get('/member/signup', middleware.isLogout, (req, res) => {
-    renderSignup(res);
+    res.renderSkin('계정 만들기', {
+        contentName: 'member/signup'
+    });
 });
 
 app.post('/member/signup',
@@ -38,17 +35,11 @@ app.post('/member/signup',
         .notEmpty().withMessage('이메일의 값은 필수입니다.')
         .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.'),
     body('agree').exists().withMessage('동의의 값은 필수입니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return renderSignup(res, {
-        fieldErrors: result.array()
-    });
-
     const emailDomain = req.body.email.split('@').pop();
     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
-        return renderSignup(res, {
-            alert: '이메일 허용 목록에 있는 이메일이 아닙니다.'
-        });
+        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
 
     let ipArr;
     if(Address4.isValid(req.ip)) ipArr = new Address4(req.ip).toArray();
@@ -80,9 +71,10 @@ app.post('/member/signup',
     }).lean();
     if(aclGroupItem) {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
-        return renderSignup(res, {
-            alert: `현재 사용중인 아이피가 ACL그룹 ${aclGroup.name} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${aclGroupItem.note ?? '없음'}`
-        });
+        return res.status(403).send(`${aclGroup.aclMessage
+            ? aclGroup.aclMessage + ` (#${aclGroupItem.id})`    
+            : `현재 사용중인 아이피가 ACL그룹 ${aclGroup.name} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.`
+        }<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${aclGroupItem.note ?? '없음'}`);
     }
 
     const email = req.body.email;
@@ -94,8 +86,8 @@ app.post('/member/signup',
         if(config.use_email_verification) {
             res.renderSkin('계정 만들기', {
                 contentName: 'member/signup_email_sent',
-                email
-            });
+                serverData: { email }
+           });
 
             await mailTransporter.sendMail({
                 from: config.smtp_sender,
@@ -110,9 +102,7 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
         `.trim().replaceAll('\n', '<br>')
             });
         }
-        else renderSignup(res, {
-            alert: '이미 가입된 이메일입니다.'
-        });
+        else res.status(409).send('이미 가입된 이메일입니다.');
 
         return;
     }
@@ -120,12 +110,14 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
     const existingToken = await SignupToken.findOne({
         email
     });
-    if(config.use_email_verification && existingToken && Date.now() - existingToken.createdAt < 1000 * 60 * 10) return renderSignup(res, {
-        fieldErrors: [{
-            path: 'email',
-            msg: '해당 이메일로 이미 계정 생성 인증 메일을 보냈습니다.'
-        }]
-    });
+    if(config.use_email_verification && existingToken && Date.now() - existingToken.createdAt < 1000 * 60 * 10)
+        return res.status(409).json({
+            fieldErrors: {
+                email: {
+                    msg: '해당 이메일로 이미 계정 생성 인증 메일을 보냈습니다.'
+                }
+            }
+        });
 
     await SignupToken.deleteMany({
         email
@@ -141,7 +133,7 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
     if(config.use_email_verification) {
         res.renderSkin('계정 만들기', {
             contentName: 'member/signup_email_sent',
-            email
+            serverData: { email }
         });
 
         await mailTransporter.sendMail({
@@ -161,11 +153,6 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
     else res.redirect(signupUrl);
 });
 
-const renderFinalSignup = (res, data = {}) => res.renderSkin('계정 만들기', {
-    ...data,
-    contentName: 'member/signup_final'
-});
-
 app.get('/member/signup/:token', async (req, res) => {
     const token = await SignupToken.findOne({
         token: req.params.token
@@ -174,8 +161,11 @@ app.get('/member/signup/:token', async (req, res) => {
 
     if(token.ip !== req.ip) return res.error('보안 상의 이유로 요청한 아이피 주소와 현재 아이피 주소가 같아야 합니다.');
 
-    renderFinalSignup(res, {
-        email: token.email
+    res.renderSkin('계정 만들기', {
+        contentName: 'member/signup_final',
+        serverData: {
+            email: token.email
+        }
     });
 });
 
@@ -205,6 +195,7 @@ app.post('/member/signup/:token',
         .withMessage('비밀번호 확인의 값은 필수입니다.')
         .custom((value, { req }) => value === req.body.password)
         .withMessage('패스워드 확인이 올바르지 않습니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
     const token = await SignupToken.findOne({
         token: req.params.token
@@ -212,12 +203,6 @@ app.post('/member/signup/:token',
     if(!token
         || Date.now() - token.createdAt > 1000 * 60 * 60 * 24
         || token.ip !== req.ip) return res.status(400).send('유효하지 않은 토큰');
-
-    const result = validationResult(req);
-    if(!result.isEmpty()) return renderFinalSignup(res, {
-        email: token.email,
-        fieldErrors: result.array()
-    });
 
     const hash = await bcrypt.hash(req.body.password, 12);
     const newUser = new User({
@@ -258,18 +243,10 @@ app.post('/member/signup/:token',
     });
 });
 
-const renderLogin = (res, data = {}) => res.renderSkin('로그인', {
-    ...data,
-    contentName: 'member/login'
-});
-
-const renderPinVerification = (res, data = {}) => res.renderSkin('로그인', {
-    serverData: data,
-    contentName: 'member/pin_verification'
-});
-
 app.get('/member/login', middleware.isLogout, (req, res) => {
-    renderLogin(res);
+    res.renderSkin('로그인', {
+        contentName: 'member/login'
+    });
 });
 
 app.post('/member/login',
@@ -280,20 +257,14 @@ app.post('/member/login',
     body('password')
         .notEmpty()
         .withMessage('비밀번호의 값은 필수입니다.'),
+    middleware.fieldErrors,
     (req, res, next) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return renderLogin(res, {
-        fieldErrors: result.array()
-    });
-
     passport.authenticate('local', async (err, user, info) => {
         if(err) {
             console.error(err);
             return res.status(500).send('서버 오류');
         }
-        if(!user) return renderLogin(res, {
-            alert: info.message
-        });
+        if(!user) return res.status(400).send(info.message);
 
         let checkTrusted = await LoginHistory.findOne({
             uuid: user.uuid,
@@ -336,9 +307,12 @@ app.post('/member/login',
 
         req.session.pinUser = user.uuid;
         req.session.redirect = req.body.redirect;
-        renderPinVerification(res, {
-            user,
-            autologin: req.body.autologin
+        res.renderSkin('로그인', {
+            contentName: 'member/pin_verification',
+            serverData: {
+                user,
+                autologin: req.body.autologin
+            }
         });
 
         if(!user.totpToken) await mailTransporter.sendMail({
@@ -365,6 +339,7 @@ app.post('/member/login/pin',
         .withMessage('pin의 값은 필수입니다.')
         .isLength(6)
         .withMessage('pin의 값은 6글자여야 합니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
     const user = await User.findOne({
         uuid: req.session.pinUser,
@@ -375,23 +350,14 @@ app.post('/member/login/pin',
 
     if(!user) {
         delete req.session.pinUser;
-        return renderLogin(res);
+        return res.redirect('/member/login');
     }
-
-    const result = validationResult(req);
-    if(!result.isEmpty()) return renderPinVerification(res, {
-        user,
-        alert: result.array()[0].msg
-    });
 
     if(user.totpToken) {
 
     }
     else {
-        if(req.body.pin !== user.emailPin) return renderPinVerification(res, {
-            user,
-            alert: 'PIN이 올바르지 않습니다.'
-        });
+        if(req.body.pin !== user.emailPin) return res.status(400).send('PIN이 올바르지 않습니다.');
     }
 
     req.login(user, err => {
@@ -453,13 +419,10 @@ app.post('/member/mypage', middleware.isLogin,
     res.redirect('/member/mypage');
 });
 
-const renderChangePassword = (res, data = {}) => res.renderSkin('비밀번호 변경', {
-    ...data,
-    contentName: 'member/change_password'
-});
-
 app.get('/member/change_password', middleware.isLogin, (req, res) => {
-    renderChangePassword(res);
+    res.renderSkin('비밀번호 변경', {
+        contentName: 'member/change_password'
+    });
 });
 
 app.post('/member/change_password',
@@ -477,11 +440,8 @@ app.post('/member/change_password',
         .notEmpty().withMessage('비밀번호 확인의 값은 필수입니다.')
         .custom((value, { req }) => value === req.body.password)
         .withMessage('패스워드 확인이 올바르지 않습니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
-    const result = validationResult(req);
-    if(!result.isEmpty()) return renderChangePassword(res, {
-        fieldErrors: result.array()
-    });
 
     const hash = await bcrypt.hash(req.body.password, 12);
     await User.updateOne({

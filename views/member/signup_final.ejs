@@ -1,24 +1,6 @@
 <link rel="stylesheet" href="/css/views/signup_final.css">
 
-<%
-const fieldErrorExists = typeof fieldErrors !== 'undefined' && fieldErrors.length > 0;
-
-let focusTarget = '';
-if(fieldErrorExists) focusTarget = fieldErrors[0].path;
-
-function fieldError(name) {
-    if(!fieldErrorExists) return '';
-
-    const error = fieldErrors.find(e => e.path === name);
-    if(!error) return '';
-
-    return `<p class="input-error">${error.msg}</p>`;
-}
-%>
-
-<script src="/js/form_focus.js"></script>
-
-<form method="post" id="member-form" data-focus="<%=focusTarget%>">
+<form method="post" id="member-form">
     <div class="signup-block">
         <label for="emailInput">이메일</label>
         <input type="text" id="emailInput" name="email" readonly value="<%=email%>">
@@ -27,19 +9,16 @@ function fieldError(name) {
     <div class="signup-block">
         <label for="usernameInput">사용자 이름</label>
         <input type="text" id="usernameInput" name="username">
-        <%-fieldError('username')%>
     </div>
 
     <div class="signup-block">
         <label for="passwordInput">암호</label>
         <input type="password" id="passwordInput" name="password">
-        <%-fieldError('password')%>
     </div>
 
     <div class="signup-block">
         <label for="passwordConfirmInput">암호 확인</label>
         <input type="password" id="passwordConfirmInput" name="password_confirm">
-        <%-fieldError('password_confirm')%>
     </div>
 
     <button class="thetree-button thetree-blue-button">가입</button>

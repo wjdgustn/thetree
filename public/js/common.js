@@ -150,13 +150,18 @@ function processFieldErrors(inputs, fieldErrors = {}) {
         const error = fieldErrors[input.name];
 
         let fieldError;
-        if(['DIV', 'SPAN'].includes(input.parentElement?.tagName)) {
-            fieldError = input.parentElement.querySelector(`.input-error[data-for="${input.name}"]`);
+        if(['DIV', 'SPAN', 'LABEL'].includes(input.parentElement?.tagName)) {
+            const isLabel = input.parentElement.tagName === 'LABEL';
+            const parent = isLabel ? input.parentElement.parentElement : input.parentElement;
+            fieldError = (isLabel ? parent.parentElement : parent).querySelector(`.input-error[data-for="${input.name}"]`);
             if(!fieldError && error) {
                 fieldError = document.createElement('p');
                 fieldError.classList.add('input-error');
                 fieldError.dataset.for = input.name;
-                input.parentElement.appendChild(fieldError);
+                if(isLabel)
+                    parent.insertAdjacentElement('afterend', fieldError);
+                else
+                    parent.appendChild(fieldError);
             }
         }
         else {
@@ -257,7 +262,11 @@ const formHandler = async e => {
 
         setProgress(100);
 
-        if(!json?.fieldErrors && !html.startsWith('<')) return plainAlert(html);
+        if(!json?.fieldErrors && !html.startsWith('<')) {
+            processFieldErrors(inputs);
+            return plainAlert(html);
+        }
+        else return plainAlert();
     }
 
     if(await replaceContent(html, response.headers)) {
