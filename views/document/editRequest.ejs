@@ -124,7 +124,7 @@
 
     <div class="tabs">
         <div :class="selectedTab === 'diff' && 'selected-tab-content'">
-            <%-include('../components/diff', { name: '편집 요청 asdf', ...diff })%>
+            <%-include('../components/diff', { name: `편집 요청 ${editRequest.url}`, ...diff })%>
         </div>
 
         <input type="hidden" id="text-input" value="<%=editRequest.content%>">
