@@ -918,7 +918,6 @@ const postEditAndEditRequest = async (req, res) => {
 
     if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
 
-    // TODO: automerge
     const isCreate = rev?.content == null;
     if(isCreate && isEditRequest) return res.status(404).send('문서를 찾을 수 없습니다.');
 
