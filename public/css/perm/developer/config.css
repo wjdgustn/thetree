@@ -1,0 +1,13 @@
+#evalOutputParent {
+    width: 100%;
+    height: 200px;
+    resize: vertical;
+}
+
+.static-file {
+    width: 50%;
+}
+
+.delete-file {
+    float: right;
+}

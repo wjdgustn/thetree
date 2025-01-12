@@ -31,7 +31,7 @@ const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
-const { UserTypes, permissionMenus } = types;
+const { UserTypes, permissionMenus, GrantablePermissions, DevPermissions } = types;
 const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
@@ -139,6 +139,8 @@ SocketIO.on('new_namespace', namespace => {
     });
 });
 
+global.permTokens = Object.fromEntries([...GrantablePermissions, ...DevPermissions].map(a => [a, crypto.randomBytes(16).toString('hex')]));
+
 app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
 app.set('views', './views');
@@ -189,7 +191,12 @@ if(config.minify.js || config.minify.css) {
     minifyManager.check();
 }
 app.use((req, res, next) => {
-    if(config.minify.js && req.url.endsWith('.js')
+    if(req.url.startsWith('/js/perm') || req.url.startsWith('/css/perm')) {
+        const perm = req.url.split('/')[3];
+        if(global.permTokens[perm] !== req.query.token) return res.status(403).end();
+        next();
+    }
+    else if(config.minify.js && req.url.endsWith('.js')
         || config.minify.css && req.url.endsWith('.css'))
         express.static(`./publicMin`)(req, res, next);
     else next();

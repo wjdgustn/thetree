@@ -1,58 +1,5 @@
-<style>
-#evalOutputParent {
-    width: 100%;
-    height: 200px;
-    resize: vertical;
-}
-
-.static-file {
-    width: 50%;
-}
-
-.delete-file {
-    float: right;
-}
-</style>
-
-<script nonce="<%=cspNonce%>">
-document.addEventListener('thetree:pageLoad', () => {
-    const evalOutput = document.getElementById('evalOutput');
-    const evalContent = document.getElementById('evalContent');
-    const evalRun = document.getElementById('evalRun');
-    const dangerButtons = document.getElementsByClassName('thetree-danger-button');
-
-    evalRun.addEventListener('click', async () => {
-        if(!evalContent.value) return;
-
-        evalOutput.innerHTML = '';
-
-        const response = await fetch('/admin/config/eval', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                code: evalContent.value
-            }).toString()
-        });
-        evalOutput.innerHTML = await response.text();
-    });
-
-    evalContent.addEventListener('keydown', e => {
-        if(!e.shiftKey && e.key === 'Enter') {
-            e.preventDefault();
-            evalRun.click();
-        }
-    });
-
-    for(let button of dangerButtons) button._thetree.preHandler = e => {
-        if(!confirm('go?')) {
-            e.preventDefault();
-            return false;
-        }
-    }
-}, { once: true });
-</script>
+<link rel="stylesheet" href="/css/perm/developer/config.css?token=<%=permTokens.developer%>">
+<script src="/js/perm/developer/config.js?token=<%=permTokens.developer%>"></script>
 
 <div class="wiki-content">
     <h2 class="wiki-heading">도구</h2>
@@ -141,7 +88,8 @@ document.addEventListener('thetree:pageLoad', () => {
         </div>
 
 
-        <form method="post" action="/admin/config/disabledfeatures">
+        <form id="disabled-features-form" method="post" action="/admin/config/disabledfeatures">
+            <select id="templateSelector"></select>
             <select name="methodField">
                 <option>ALL</option>
                 <option>GET</option>
