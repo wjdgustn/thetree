@@ -63,7 +63,7 @@ module.exports = {
             const endPos = text.indexOf('@', startPos + 1);
             if(endPos === -1) break;
 
-            const htmlTagStartPos = text.lastIndexOf('<', startPos);
+            const htmlTagStartPos = text.indexOf('<', textPos);
             if(htmlTagStartPos !== -1 && htmlTagStartPos < startPos) {
                 const htmlTagEndPos = text.indexOf('>', htmlTagStartPos);
                 if(htmlTagEndPos !== -1) {
