@@ -100,3 +100,16 @@
 .theseed-dark-mode .thetree-block-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #8d101d !important;
 }
+
+.theseed-dark-mode #setting-modal .thetree-modal-close {
+    color: #fff;
+}
+
+.theseed-dark-mode #setting-modal header>ul>li {
+    color: #ddd;
+}
+
+.theseed-dark-mode .thetree-modal-content {
+    background-color: #2d2f34;
+    border-color: #2d3748;
+}

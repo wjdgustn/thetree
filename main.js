@@ -399,10 +399,6 @@ window.CONFIG = ${JSON.stringify(publicConfig)}
 window.page = ${JSON.stringify(page)}
 window.session = ${JSON.stringify(session)}
 
-window.defaultConfig = {
-    'wiki.theme': 'auto'
-}
-
 document.getElementById('initScript')?.remove();
         `.trim().replaceAll('/', '\\/') + '\n</script>';
 

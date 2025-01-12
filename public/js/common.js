@@ -1,5 +1,9 @@
 for(let key of Object.keys(globalUtils)) window[key] = globalUtils[key];
 
+window.defaultConfig = {
+    'wiki.theme': 'auto'
+}
+
 Object.defineProperty(window, 'query', {
     get() {
         return new URLSearchParams(window.location.search);
@@ -15,6 +19,9 @@ let quickBlockTarget;
 let quickBlockNote;
 let quickBlockDuration;
 
+let settingModal;
+let settingModalContent;
+
 function contentLoadedHandler() {
     content = document.getElementById('content');
     progressBar = document.getElementById('progress-bar');
@@ -26,6 +33,23 @@ function contentLoadedHandler() {
     quickBlockTarget = document.getElementById('quickblock-target');
     quickBlockNote = document.getElementById('quickblock-note');
     quickBlockDuration = document.getElementById('quickblock-duration');
+
+    settingModal = document.getElementById('setting-modal');
+    settingModalContent = document.getElementById('setting-modal-content');
+
+    const settingInputs = document.getElementsByClassName('setting-input');
+    for(let input of settingInputs) {
+        const isCheckbox = input.type === 'checkbox';
+        const value = input.dataset.default;
+        if(isCheckbox) {
+            defaultConfig[input.id] = value === 'true';
+            input.checked = State.getLocalConfig(input.id);
+        }
+        else {
+            defaultConfig[input.id] = value;
+            input.value = State.getLocalConfig(input.id);
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', contentLoadedHandler);
@@ -794,6 +818,35 @@ document.addEventListener('alpine:init', () => {
             quickBlockGroupSelect.disabled = false;
         },
 
+        settingSelectedTab: null,
+        openSettingModal() {
+            State.selectSettingTab('wiki', true);
+            settingModal._thetree.modal.open();
+        },
+        selectSettingTab(tabName, skipAnim = false) {
+            if(tabName === State.settingSelectedTab) return;
+
+            State.settingSelectedTab = tabName;
+
+            const oldTab = settingModalContent.getElementsByClassName('selected-tab-content')[0];
+            if(!skipAnim && !oldTab) return;
+
+            oldTab?.classList.remove('selected-tab-content');
+
+            const afterAnim = () => {
+                oldTab?.classList.remove('setting-tab-leave');
+
+                const tab = document.getElementById('setting-tab-' + State.settingSelectedTab);
+                tab.classList.add('selected-tab-content');
+            }
+
+            if(skipAnim) afterAnim();
+            else {
+                oldTab.classList.add('setting-tab-leave');
+                oldTab.addEventListener('transitionend', afterAnim);
+            }
+        },
+
         async init() {
             setInterval(() => this.updateSidebar(), 1000 * 30);
             await this.updateSidebar();
@@ -810,6 +863,8 @@ document.addEventListener('alpine:init', () => {
             localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig));
 
             emit('thetree:configChange');
+
+            updateTimeTag();
         },
         get currentTheme() {
             let theme = this.getLocalConfig('wiki.theme');

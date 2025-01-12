@@ -896,11 +896,11 @@ div.category-document-block div.category-document-many-content div:first-child h
     width: 100%;
 }
 
-.thetree-modal form div>input[type=checkbox] {
+#quickblock-modal form div>input[type=checkbox] {
     margin: 0;
 }
 
-.thetree-modal input, .thetree-modal select {
+#quickblock-modal input, #quickblock-modal select {
     background-color: #fff;
     background-image: none;
     border: .0625rem solid #ccc;
@@ -909,6 +909,119 @@ div.category-document-block div.category-document-many-content div:first-child h
     display: inline-block;
     font-size: .9rem;
     line-height: 1.5;
-    margin: 0 0 0 .7rem;
     padding: .25rem .5rem;
+}
+
+#setting-modal .thetree-modal-close {
+    background: 0 0;
+    border: 0;
+    color: #000;
+    cursor: pointer;
+    float: right;
+    font-size: 1.5rem !important;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0 0 0 .5rem;
+    opacity: .2;
+    overflow: visible;
+    padding: 0;
+    position: relative;
+    right: 0;
+    text-shadow: 0 1px 0 #fff;
+    text-transform: none;
+    top: 0;
+}
+
+#setting-modal h1 {
+    color: inherit;
+    font-family: inherit;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 .5rem;
+}
+
+#setting-modal-content {
+    padding: 1rem;
+}
+
+#setting-modal header {
+    border: 1px solid #ccc;
+    height: 2.6rem;
+    margin-bottom: 1.2rem;
+    padding: .3rem;
+}
+
+#setting-modal header>ul {
+    list-style: none outside none !important;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-left: 0;
+}
+
+#setting-modal header>ul>li {
+    border-radius: 0;
+    color: #000;
+    cursor: pointer;
+    display: block;
+    float: left;
+    padding: .3rem .5rem;
+    user-select: none;
+}
+
+#setting-modal header>ul>li.selected-tab {
+    background-color: #ababab;
+    color: #fff;
+}
+
+#setting-modal section>div {
+    min-height: 700px;
+}
+
+#setting-modal section>div>div {
+    margin-bottom: 15px;
+}
+
+#setting-modal section>div>div>select {
+    background-color: #fff;
+    background-image: none;
+    border: .0625rem solid #ccc;
+    color: #55595c;
+    display: block;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 16rem;
+    padding: .375rem .75rem;
+    width: 100%;
+}
+
+#setting-modal div.setting-bool>div {
+    display: block;
+    margin-bottom: .75rem;
+    padding-left: 1rem;
+    position: relative;
+}
+
+#setting-modal div.setting-bool>div>label {
+    cursor: pointer;
+    font-weight: 400;
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+}
+
+#setting-modal div.setting-bool>div>label>input {
+    color: inherit;
+    line-height: inherit;
+    font: inherit;
+    margin: .25rem 0 0 -1.25rem;
+    position: static;
+}
+
+#setting-modal section>div:not(.selected-tab-content):not(.setting-tab-leave) {
+    display: none;
+}
+
+#setting-modal section>div.setting-tab-leave {
+    transition: all .2s cubic-bezier(1,.5,.8,1);
+    opacity: 0;
+    transform: translateX(10px);
 }

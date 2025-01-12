@@ -1,0 +1,8 @@
+<div class="setting-enum">
+    <label for="<%=key%>"><%=label%></label>
+    <select id="<%=key%>" class="setting-input" data-default="<%=defaultValue%>" @change="$store.state.setLocalConfig('<%=key%>', $el.value)">
+        <%for(let option of options) {%>
+            <option value="<%=option.name%>"><%=option.label%></option>
+        <%}%>
+    </select>
+</div>

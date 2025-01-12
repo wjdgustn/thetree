@@ -1,0 +1,36 @@
+<%for(let setting of [
+    {
+        name: 'theme',
+        label: '테마',
+        type: 'enum',
+        defaultValue: 'auto',
+        options: [
+            {
+                name: 'auto',
+                label: '자동 (시스템 설정)'
+            },
+            {
+                name: 'light',
+                label: '라이트'
+            },
+            {
+                name: 'dark',
+                label: '다크'
+            }
+        ]
+    },
+    // {
+    //     name: 'hide_heading_content',
+    //     label: '문단을 기본으로 접기',
+    //     type: 'bool',
+    //     defaultValue: false
+    // },
+    {
+        name: 'no_relative_date',
+        label: '상대 시간 표시를 사용하지 않음',
+        type: 'bool',
+        defaultValue: false
+    }
+]) {%>
+    <%-getComponent(setting)%>
+<%}%>
