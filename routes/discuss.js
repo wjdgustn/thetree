@@ -143,7 +143,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
     if(!readable) return res.error(readAclMessage, 403);
 
     if(req.query.state === 'close') {
-        const threads = await Thread.find({
+        let threads = [];
+        if(dbDocument) threads = await Thread.find({
             document: dbDocument.uuid,
             status: ThreadStatusTypes.Close,
             deleted: false
@@ -162,7 +163,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
         });
     }
     if(req.query.state === 'closed_edit_requests') {
-        const editRequests = await EditRequest.find({
+        let editRequests = [];
+        if(dbDocument) editRequests = await EditRequest.find({
             document: dbDocument.uuid,
             status: {
                 $in: [
