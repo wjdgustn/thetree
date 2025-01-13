@@ -1,13 +1,15 @@
 const express = require('express');
 const { body, param, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const passport = require('passport');
 const { Address4, Address6 } = require('ip-address');
 
 const utils = require('../utils');
 const middleware = require('../utils/middleware');
 const {
-    HistoryTypes
+    HistoryTypes,
+    UserTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -20,6 +22,7 @@ const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
 const ThreadComment = require('../schemas/threadComment');
 const EditRequest = require('../schemas/editRequest');
+const Blacklist = require('../schemas/blacklist');
 
 const app = express.Router();
 
@@ -78,6 +81,17 @@ app.post('/member/signup',
     }
 
     const email = req.body.email;
+
+    const checkBlacklist = await Blacklist.exists({
+        email: crypto.createHash('sha256').update(email).digest('hex')
+    });
+    if(checkBlacklist) return res.status(403).send({
+        fieldErrors: {
+            email: {
+                msg: '재가입 대기 기간 입니다.'
+            }
+        }
+    });
 
     const checkUserExists = await User.exists({
         email
@@ -462,7 +476,7 @@ app.get('/contribution/:uuid/document',
     const user = await User.findOne({
         uuid: req.params.uuid
     });
-    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+    // if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const baseQuery = {
         user: req.params.uuid
@@ -504,13 +518,13 @@ app.get('/contribution/:uuid/document',
         revs = await utils.findDocuments(revs);
     }
 
-    res.renderSkin(`"${user.name || user.ip}" 기여 목록`, {
+    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution',
         contentName: 'userContribution/document',
         account: {
-            uuid: user.uuid,
-            name: user.name,
-            type: user.type
+            uuid: req.params.uuid,
+            name: user?.name,
+            type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
             user,
@@ -532,7 +546,7 @@ app.get('/contribution/:uuid/discuss',
     const user = await User.findOne({
         uuid: req.params.uuid
     });
-    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+    // if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
 
     let comments = await ThreadComment.find({
         user: req.params.uuid,
@@ -547,13 +561,13 @@ app.get('/contribution/:uuid/discuss',
 
     comments = await utils.findThreads(comments);
 
-    res.renderSkin(`"${user.name || user.ip}" 기여 목록`, {
+    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution_discuss',
         contentName: 'userContribution/discuss',
         account: {
-            uuid: user.uuid,
-            name: user.name,
-            type: user.type
+            uuid: req.params.uuid,
+            name: user?.name,
+            type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
             // user,
@@ -572,7 +586,7 @@ app.get('/contribution/:uuid/edit_request',
     const user = await User.findOne({
         uuid: req.params.uuid
     });
-    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+    // if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const baseQuery = {
         createdUser: req.params.uuid
@@ -614,13 +628,13 @@ app.get('/contribution/:uuid/edit_request',
         items = await utils.findDocuments(items);
     }
 
-    res.renderSkin(`"${user.name || user.ip}" 기여 목록`, {
+    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution_edit_request',
         contentName: 'userContribution/editRequest',
         account: {
-            uuid: user.uuid,
-            name: user.name,
-            type: user.type
+            uuid: req.params.uuid,
+            name: user?.name,
+            type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
             items,
@@ -629,6 +643,125 @@ app.get('/contribution/:uuid/edit_request',
             nextItem,
             contributionType: 'edit_request'
         }
+    });
+});
+
+const checkDeletable = async user => {
+    let noActivityTime = 1000 * 60 * 60 * 24;
+    let blacklistDuration = config.withdraw_save_days * 1000 * 60 * 60 * 24;
+
+    const aclGroups = await ACLGroup.find({
+        forBlock: true
+    });
+    const aclGroupItem = await ACLGroupItem.findOne({
+        aclGroup: {
+            $in: aclGroups.map(group => group.uuid)
+        },
+        $or: [
+            {
+                expiresAt: {
+                    $gte: new Date()
+                }
+            },
+            {
+                expiresAt: null
+            }
+        ],
+        user: user.uuid
+    }).lean();
+    if(aclGroupItem) {
+        noActivityTime *= 90;
+
+        if(aclGroupItem.expiresAt)
+            blacklistDuration = Math.max(blacklistDuration, aclGroupItem.expiresAt - Date.now());
+        else
+            blacklistDuration = null;
+    }
+
+    return {
+        noActivityTime,
+        blacklistDuration,
+        deletable: user.lastActivity < Date.now() - noActivityTime
+    }
+}
+
+app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
+    if(config.withdraw_save_days == null)
+        return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
+
+    const { deletable, blacklistDuration } = await checkDeletable(req.user);
+    console.log(await checkDeletable(req.user));
+
+    res.renderSkin('회원 탈퇴', {
+        contentName: 'member/withdraw',
+        serverData: {
+            blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
+            alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.'
+        }
+    });
+});
+
+app.post('/member/withdraw',
+    middleware.isLogin,
+    body('password')
+        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
+        .custom(async (value, {req}) => {
+            const result = await bcrypt.compare(value, req.user.password);
+            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
+            return true;
+        }),
+    body('pledge')
+        .notEmpty().withMessage('pledge의 값은 필수입니다.')
+        .equals(config.withdraw_pledge).withMessage('동일하게 입력해주세요.'),
+    middleware.fieldErrors,
+    async (req, res) => {
+    if(config.withdraw_save_days == null)
+        return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
+
+    const { deletable, blacklistDuration } = await checkDeletable(req.user);
+    if(!deletable) return res.status(403).send('마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.');
+
+    if(blacklistDuration == null || blacklistDuration > 0)
+        await Blacklist.create({
+            email: crypto.createHash('sha256').update(req.user.email).digest('hex'),
+            expiresAt: blacklistDuration ? new Date(Date.now() + blacklistDuration) : null
+        });
+
+    await User.deleteOne({
+        uuid: req.user.uuid
+    });
+    await AutoLoginToken.deleteMany({
+        uuid: req.user.uuid
+    });
+
+    const dbDocument = await Document.findOneAndUpdate({
+        namespace: '사용자',
+        title: req.user.name
+    }, {
+        title: `*${req.user.uuid}`
+    }, {
+        new: true
+    });
+    await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.Move,
+        document: dbDocument.uuid,
+        moveOldDoc: `사용자:${req.user.name}`,
+        moveNewDoc: `사용자:*${req.user.uuid}`
+    });
+    await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.Delete,
+        document: dbDocument.uuid,
+        content: null
+    });
+
+    req.logout(err => {
+        if(err) console.error(err);
+        req.session.fullReload = true;
+        delete req.session.contributor;
+        res.clearCookie('honoka');
+        res.redirect('/member/login');
     });
 });
 

@@ -44,6 +44,10 @@ const newSchema = new Schema({
         type: Date,
         default: Date.now
     },
+    lastActivity: {
+        type: Date,
+        default: Date.now
+    },
     permissions: {
         type: Array,
         default: []

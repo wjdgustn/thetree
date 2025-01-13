@@ -9,6 +9,8 @@
     "js": true
   },
 
+  "withdraw_save_days": null,
+
   "email_whitelist": ["example.com"],
   "use_email_verification": false,
   "smtp_sender": "TestWiki <test@example.com>",

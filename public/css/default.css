@@ -175,6 +175,10 @@ input[type=checkbox], input[type=radio] {
     padding: 0;
 }
 
+input[type=password] {
+    font-family: sans-serif;
+}
+
 address, dl, ol, ul {
     margin-bottom: 1rem;
 }

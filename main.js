@@ -497,6 +497,13 @@ document.getElementById('initScript')?.remove();
     req.session.flash = {};
 
     next();
+
+    if(req.method !== 'GET' && !req.url.startsWith('/member') && req.user.type === UserTypes.Account)
+        User.updateOne({
+            uuid: req.user.uuid
+        }, {
+            lastActivity: new Date()
+        }).then();
 });
 
 for(let f of fs.readdirSync('./routes')) {
