@@ -325,7 +325,7 @@ app.post('/Upload', uploadFile,
         }
     }
 
-    try {
+    if(!checkExists) try {
         await S3.send(new PutObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
             Key,
