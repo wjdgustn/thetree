@@ -314,11 +314,11 @@ app.post('/Upload', uploadFile,
         const dupDoc = await Document.findOne({
             uuid: checkExists.document
         });
-        const latest = await History.findOne({
-            document: checkExists.document
-        });
+        const latestRev = await History.findOne({
+            document: dupDoc.uuid
+        }).sort({ rev: -1 });
 
-        if(latest.uuid === checkExists.uuid) {
+        if(latestRev.fileKey === Key) {
             const doc = utils.dbDocumentToDocument(dupDoc);
             return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
         }
