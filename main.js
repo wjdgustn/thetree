@@ -498,7 +498,7 @@ document.getElementById('initScript')?.remove();
 
     next();
 
-    if(req.method !== 'GET' && !req.url.startsWith('/member') && req.user.type === UserTypes.Account)
+    if(req.method !== 'GET' && !req.url.startsWith('/member') && req.user?.type === UserTypes.Account)
         User.updateOne({
             uuid: req.user.uuid
         }, {

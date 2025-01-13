@@ -1056,7 +1056,7 @@ app.get('/edit_request/:url', async (req, res) => {
             diff: utils.generateDiff(baseRev.content, editRequest.content),
             conflict,
             editable,
-            selfCreated: editRequest.createdUser.uuid === req.user.uuid
+            selfCreated: editRequest.createdUser.uuid === req.user?.uuid
         }
     });
 });
