@@ -244,7 +244,7 @@ app.use(sessionMiddleware);
 SocketIO.engine.use(onlyForHandshake(sessionMiddleware));
 
 app.use(async (req, res, next) => {
-    if(!req.session.passport && req.cookies.honoka) {
+    if(!req.session?.passport && req.cookies?.honoka) {
         const token = await AutoLoginToken.findOne({
             token: req.cookies.honoka
         });
