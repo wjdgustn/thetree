@@ -127,6 +127,7 @@ module.exports = class NamumarkParser {
                 this.document = data.document;
         }
         if(data.dbDocument) this.dbDocument = data.dbDocument;
+        if(data.rev) this.rev = data.rev;
         if(data.aclData) this.aclData = data.aclData;
         if(data.req) this.req = data.req;
         if(data.includeData) this.includeData = data.includeData;

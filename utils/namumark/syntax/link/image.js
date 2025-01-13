@@ -32,24 +32,35 @@ module.exports = async (content, splittedContent, link, namumark) => {
         rev = checkCache.rev;
     }
     else {
-        const dbDocument = await Document.findOne({
-            namespace,
-            title
-        });
-        if(!dbDocument?.contentExists
-            && namumark.document.namespace !== dbDocument?.namespace
-            && namumark.document.title !== dbDocument?.title) return fallback;
+        let dbDocument;
+        let readable = false;
+        if(namespace === namumark.dbDocument?.namespace
+            && title === namumark.dbDocument?.title
+            && namumark.rev?.fileKey) {
+            dbDocument = namumark.dbDocument;
+            rev = namumark.rev;
+            readable = true;
+        }
+        else {
+            const dbOtherDocument = await Document.findOne({
+                namespace,
+                title
+            });
+            dbDocument = dbOtherDocument;
+            if(!dbDocument?.contentExists) return fallback;
 
-        const acl = await ACL.get({ document: dbDocument }, document);
+            const acl = await ACL.get({ document: dbDocument }, document);
 
-        const { result: readable } = await acl.check(ACLTypes.Read, namumark.aclData);
-        if(!readable) return fallback;
+            const { result } = await acl.check(ACLTypes.Read, namumark.aclData);
+            readable = result;
+            if(!readable) return fallback;
 
-        const dbRev = await History.findOne({
-            document: dbDocument.uuid
-        }).sort({ rev: -1 });
-        if(!dbRev?.fileKey) return fallback;
-        rev = dbRev;
+            rev = await History.findOne({
+                document: dbDocument.uuid
+            }).sort({rev: -1});
+        }
+
+        if(!rev?.fileKey) return fallback;
 
         fileDocCache.push({
             namespace: dbDocument.namespace,

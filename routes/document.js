@@ -169,12 +169,13 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     const parser = new NamumarkParser({
         document,
         dbDocument,
+        rev,
         aclData: req.aclData,
         req
     });
 
     let content = rev.content;
-    if(rev.fileKey) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
+    if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
 
     let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml;
