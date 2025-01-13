@@ -36,7 +36,9 @@ module.exports = async (content, splittedContent, link, namumark) => {
             namespace,
             title
         });
-        if(!dbDocument?.contentExists) return fallback;
+        if(!dbDocument?.contentExists
+            && namumark.document.namespace !== dbDocument?.namespace
+            && namumark.document.title !== dbDocument?.title) return fallback;
 
         const acl = await ACL.get({ document: dbDocument }, document);
 
