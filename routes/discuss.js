@@ -10,7 +10,8 @@ const {
     ThreadStatusTypes,
     ThreadCommentTypes,
     ACLTypes,
-    EditRequestStatusTypes
+    EditRequestStatusTypes,
+    UserTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -271,6 +272,7 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         })
         .withMessage('본문의 값은 필수입니다.'),
     middleware.fieldErrors,
+    middleware.captcha,
     async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
@@ -406,6 +408,8 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
 
 app.post('/thread/:url', async (req, res) => {
     if(!req.body.text.trim()) return res.status(400).send('본문의 값은 필수입니다.');
+
+    if(req.user.type !== UserTypes.Account && !await utils.middleValidateCaptcha(req, res)) return;
 
     const thread = await Thread.findOne({
         url: req.params.url,

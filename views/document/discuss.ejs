@@ -70,7 +70,7 @@ const isFrontPage = docTitle === config.front_page;
 </div>
 <%}%>
 
-<form method="post">
+<form method="post" data-captcha="1">
     <%if(req.query.doc) {%><input type="hidden" name="document" value="<%=req.query.doc%>"><%}%>
     <div class="form-block">
         <label for="topicInput">주제 :</label>
