@@ -44,5 +44,9 @@ module.exports = {
             fieldErrors: result.mapped()
         });
         next();
+    },
+    captcha: async (req, res, next) => {
+        if(!await utils.middleValidateCaptcha(req, res)) return;
+        next();
     }
 }

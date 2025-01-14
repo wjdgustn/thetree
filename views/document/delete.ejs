@@ -3,7 +3,7 @@
 <%alert = typeof alert === 'undefined' ? '' : alert;%>
 <%-include('../components/alert', { alert })%>
 
-<form method="post">
+<form method="post" data-captcha="1">
     <div class="form-block">
         <label for="logInput" x-ref="logLabel">요약</label>
         <input type="text" id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">

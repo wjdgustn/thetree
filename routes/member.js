@@ -39,6 +39,7 @@ app.post('/member/signup',
         .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.'),
     body('agree').exists().withMessage('동의의 값은 필수입니다.'),
     middleware.fieldErrors,
+    middleware.captcha,
     async (req, res) => {
     const emailDomain = req.body.email.split('@').pop();
     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
@@ -210,6 +211,7 @@ app.post('/member/signup/:token',
         .custom((value, { req }) => value === req.body.password)
         .withMessage('패스워드 확인이 올바르지 않습니다.'),
     middleware.fieldErrors,
+    middleware.captcha,
     async (req, res) => {
     const token = await SignupToken.findOne({
         token: req.params.token
@@ -272,6 +274,7 @@ app.post('/member/login',
         .notEmpty()
         .withMessage('비밀번호의 값은 필수입니다.'),
     middleware.fieldErrors,
+    middleware.captcha,
     (req, res, next) => {
     passport.authenticate('local', async (err, user, info) => {
         if(err) {
@@ -354,6 +357,7 @@ app.post('/member/login/pin',
         .isLength(6)
         .withMessage('pin의 값은 6글자여야 합니다.'),
     middleware.fieldErrors,
+    middleware.captcha,
     async (req, res) => {
     const user = await User.findOne({
         uuid: req.session.pinUser,

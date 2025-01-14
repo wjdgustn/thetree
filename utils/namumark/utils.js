@@ -2,7 +2,6 @@ const {
     validateHTMLColorHex,
     validateHTMLColorName
 } = require('validate-color');
-// const cheerio = require('cheerio');
 
 const { SelfClosingTags } = require('./types');
 

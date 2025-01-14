@@ -22,6 +22,10 @@ let quickBlockDuration;
 let settingModal;
 let settingModalContent;
 
+let captcha;
+let captchaLoaded;
+const captchaLock = [];
+
 function contentLoadedHandler() {
     content = document.getElementById('content');
     progressBar = document.getElementById('progress-bar');
@@ -213,9 +217,22 @@ const formHandler = async e => {
 
     e.preventDefault();
 
+    if(form._thetree.captcha != null) {
+        for(let { reject } of captchaLock) reject();
+
+        captcha.reset(form._thetree.captcha);
+        captcha.execute(form._thetree.captcha);
+        try {
+            await new Promise((resolve, reject) => {
+                captchaLock.push({ resolve, reject });
+            });
+        } catch(e) {
+            return;
+        }
+    }
+
     increaseProgress(100);
 
-    form._thetree ??= {};
     form._thetree.submitting = true;
 
     const submitButtons = form.querySelectorAll('button:not([type="button"]):not([disabled])');
@@ -287,6 +304,12 @@ const formHandler = async e => {
 
         if(!json?.fieldErrors && !html.startsWith('<')) {
             processFieldErrors(inputs);
+
+            if(html.includes('캡챠')) {
+                form.dataset.captcha = '1';
+                setupDocument();
+            }
+
             return plainAlert(html);
         }
         else return plainAlert();
@@ -378,6 +401,33 @@ function setupUserText() {
     }
 }
 
+let captchaOnLoadForm;
+function captchaOnLoad() {
+    captcha = ({
+        recaptcha: window.grecaptcha,
+        turnstile: window.turnstile
+    }[CONFIG.captcha.type]);
+
+    const div = document.createElement('div');
+    captchaOnLoadForm.appendChild(div);
+    captchaOnLoadForm._thetree.captcha = captcha.render(div, {
+        sitekey: CONFIG.captcha.site_key,
+        theme: State.currentTheme,
+        callback: () => {
+            for(let { resolve } of captchaLock) resolve();
+        },
+        ...{
+            recaptcha: {
+                badge: 'inline',
+                size: 'invisible'
+            },
+            turnstile: {
+                execution: 'execute'
+            }
+        }[CONFIG.captcha.type]
+    });
+}
+
 function setupDocument() {
     const aElements = document.getElementsByTagName('a');
     for(let a of aElements) {
@@ -391,6 +441,24 @@ function setupDocument() {
     for(let form of forms) {
         form.removeEventListener('submit', formHandler);
         form.addEventListener('submit', formHandler);
+
+        form._thetree ??= {};
+
+        if(CONFIG.captcha && form.dataset.captcha) {
+            captchaOnLoadForm = form;
+            if(captchaLoaded) {
+                captchaOnLoad();
+            }
+            else {
+                const script = document.createElement('script');
+                script.src = {
+                    recaptcha: 'https://www.google.com/recaptcha/api.js?render=explicit&onload=' + captchaOnLoad.name,
+                    turnstile: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=' + captchaOnLoad.name
+                }[CONFIG.captcha.type];
+                document.head.appendChild(script);
+                captchaLoaded = true;
+            }
+        }
     }
 
     updateTimeTag();

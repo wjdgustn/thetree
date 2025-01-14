@@ -679,6 +679,9 @@ const editAndEditRequest = async (req, res) => {
         contentHtml = html;
     }
 
+    const doingManyEdits = await checkDoingManyEdits(req);
+    const useCaptcha = !docExists || doingManyEdits;
+
     res.renderSkin(undefined, {
         viewName: isEditRequest ? (editingEditRequest ? 'edit_edit_request' : 'edit_request') : 'edit',
         contentName: 'document/edit',
@@ -692,7 +695,8 @@ const editAndEditRequest = async (req, res) => {
             isEditRequest,
             aclMessage,
             content,
-            contentHtml
+            contentHtml,
+            useCaptcha
         }
     });
 }
@@ -836,6 +840,26 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     return res.send(categoryHtml + contentHtml);
 });
 
+const checkDoingManyEdits = async req => {
+    if(!config.captcha.enabled || !config.captcha.edit_captcha.enabled) return false;
+
+    const recentContributionCount = await History.countDocuments({
+        user: req.user.uuid,
+        type: {
+            $in: [
+                HistoryTypes.Create,
+                HistoryTypes.Modify
+            ]
+        },
+        createdAt: {
+            $gte: new Date(Date.now() - 1000 * 60 * 60 * config.captcha.edit_captcha.hours)
+        }
+    });
+    console.log('recentContributionCount', recentContributionCount);
+
+    return recentContributionCount >= config.captcha.edit_captcha.edit_count;
+}
+
 const postEditAndEditRequest = async (req, res) => {
     const editingEditRequest = req.url.startsWith('/edit_request/');
     const isEditRequest = editingEditRequest || req.url.startsWith('/new_edit_request/');
@@ -858,6 +882,11 @@ const postEditAndEditRequest = async (req, res) => {
         namespace,
         title
     });
+
+    const isCreate = dbDocument && !dbDocument.contentExists;
+    const doingManyEdits = await checkDoingManyEdits(req);
+
+    if((isCreate || doingManyEdits) && !await utils.middleValidateCaptcha(req, res)) return;
 
     if(!dbDocument) {
         dbDocument = new Document({
@@ -920,7 +949,7 @@ const postEditAndEditRequest = async (req, res) => {
 
     if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
 
-    const isCreate = rev?.content == null;
+    // const isCreate = rev?.content == null;
     if(isCreate && isEditRequest) return res.status(404).send('문서를 찾을 수 없습니다.');
 
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid)) {
@@ -1554,7 +1583,7 @@ app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/delete/?*', middleware.parseDocumentName, async (req, res) => {
+app.post('/delete/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
     if(req.body.agree !== 'Y') return res.status(400).send('문서 삭제에 대한 안내를 확인해 주세요.');
     if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
@@ -1612,7 +1641,7 @@ app.get('/move/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/move/?*', middleware.parseDocumentName, async (req, res) => {
+app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
     if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
 

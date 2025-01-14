@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const { Address4, Address6 } = require('ip-address');
 const Diff = require('diff');
 const { generateSlug } = require('random-word-slugs');
+const axios = require('axios');
+const querysting = require('querystring');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./namumark/utils');
@@ -563,5 +565,38 @@ module.exports = {
         if(!result) return null;
 
         return result;
+    },
+    async validateCaptcha(req) {
+        if(!config.captcha.enabled || req.permissions.includes('no_force_captcha')) return true;
+
+        const response = req.body[{
+            recaptcha: 'g-recaptcha-response',
+            turnstile: 'cf-turnstile-response'
+        }[config.captcha.type]];
+        if(!response) return false;
+
+        const { data } = await axios.post({
+            recaptcha: 'https://www.google.com/recaptcha/api/siteverify',
+            turnstile: 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+        }[config.captcha.type], querysting.stringify({
+            secret: config.captcha.secret_key,
+            response,
+            remoteip: req.ip
+        }), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+
+        return data.success;
+    },
+    async middleValidateCaptcha(req, res) {
+        const result = await this.validateCaptcha(req);
+        if(!result) {
+            res.status(400).send('캡챠가 유효하지 않습니다.');
+            return false;
+        }
+
+        return true;
     }
 }

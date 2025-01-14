@@ -168,11 +168,12 @@ app.use((req, res, next) => {
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
-            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'"],
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com'],
             imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
             styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
             fontSrc: ["'self'", 'fonts.gstatic.com'],
-            frameSrc: ["'self'", 'www.youtube.com'],
+            frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
             ...(debug ? {
                 upgradeInsecureRequests: null
             } : {})
@@ -390,12 +391,23 @@ app.use(async (req, res, next) => {
             },
             gravatar_url: req.user?.avatar,
             user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
-            quick_block: req.permissions.includes('admin')
+            quick_block: req.permissions.includes('admin'),
+            ...(req.permissions.includes('no_force_captcha') ? {
+                disable_captcha: true
+            } : {})
         }
 
         const browserGlobalVarScript = `
 <script id="initScript" nonce="${res.locals.cspNonce}">
-window.CONFIG = ${JSON.stringify(publicConfig)}
+window.CONFIG = ${JSON.stringify({
+            ...publicConfig,
+            ...(config.captcha.enabled ? {
+                captcha: {
+                    type: config.captcha.type,
+                    site_key: config.captcha.site_key
+                }
+            } : {})
+        })}
 window.page = ${JSON.stringify(page)}
 window.session = ${JSON.stringify(session)}
 

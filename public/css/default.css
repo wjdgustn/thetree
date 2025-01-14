@@ -1029,3 +1029,7 @@ div.category-document-block div.category-document-many-content div:first-child h
     opacity: 0;
     transform: translateX(10px);
 }
+
+.grecaptcha-badge {
+    visibility: hidden;
+}

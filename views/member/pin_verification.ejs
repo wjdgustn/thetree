@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="/css/views/email_verification.css">
 <%-include('../components/alert')%>
 
-<form id="pinForm" method="post" action="/member/login/pin" data-focus="pin">
+<form id="pinForm" method="post" action="/member/login/pin" data-captcha="1">
     <input type="hidden" name="autologin" value="<%=autologin%>">
 
     <p>확인되지 않은 기기에서 로그인하셨습니다.<br> 이메일(<b><%=user.email%></b>)로 전송된 PIN을 입력해주세요.</p>
