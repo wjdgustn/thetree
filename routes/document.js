@@ -88,6 +88,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     if(!readable) return res.renderSkin(undefined, {
         ...defaultData,
         date: null,
+        rev: null,
+        uuid: null,
         contentHtml: `<h2>${read_acl_message}</h2>`
     });
 
