@@ -37,6 +37,9 @@ const newSchema = new Schema({
     aclGroupId: {
         type: Number
     },
+    aclGroupName: {
+        type: String
+    },
     duration: {
         type: Number
     },

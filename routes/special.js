@@ -378,11 +378,15 @@ app.get('/BlockHistory', async (req, res) => {
             const regex = {
                 $regex: new RegExp(utils.escapeRegExp(query), 'i')
             };
+            const exactRegex = {
+                $regex: new RegExp(`^${utils.escapeRegExp(query)}$`, 'i')
+            }
             baseQuery.$or = [
                 { targetUser: query },
-                { targetUsername: query },
+                { targetUsername: exactRegex },
                 { targetContent: regex },
-                { content: regex }
+                { content: regex },
+                { aclGroupName: exactRegex }
             ]
         }
     }

@@ -213,6 +213,7 @@ app.post('/aclgroup',
             targetUsername: req.modifiedBody.user.name
         }),
         aclGroup: group.uuid,
+        aclGroupName: group.name,
         aclGroupId: aclGroupItem.id,
         ...(duration > 0 ? {
             duration: duration * 1000
@@ -269,6 +270,7 @@ app.post('/aclgroup/remove', middleware.permission('admin'),
             targetUsername: targetUser.name
         }),
         aclGroup: deleted.aclGroup,
+        aclGroupName: group.name,
         aclGroupId: deleted.id,
         content: req.body.note
     });
@@ -305,6 +307,10 @@ app.get('/self_unblock', async (req, res) => {
     });
     if(!item || !req.query.id || (item.user !== req.user.uuid && item.ip !== req.ip)) return res.error('aclgroup_not_found');
 
+    const group = await ACLGroup.findOne({
+        uuid: item.aclGroup
+    });
+
     await ACLGroupItem.deleteOne({
         uuid: item.uuid
     });
@@ -319,6 +325,7 @@ app.get('/self_unblock', async (req, res) => {
             targetUsername: req.user.name
         }),
         aclGroup: item.aclGroup,
+        aclGroupName: group.name,
         aclGroupId: item.id,
         content: '확인했습니다.'
     });
