@@ -1,6 +1,5 @@
 const express = require('express');
 const { Address4, Address6 } = require('ip-address');
-const Diff = require('diff');
 const { getChoseong } = require('es-hangul');
 
 const NamumarkParser = require('../utils/namumark');
