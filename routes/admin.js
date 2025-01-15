@@ -496,7 +496,15 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
     });
 });
 
-app.post('/admin/grant', middleware.permission('grant'), async (req, res) => {
+app.post('/admin/grant',
+    middleware.permission('grant'),
+    body('hidelog')
+        .custom((value, { req }) => {
+            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            return true;
+        }),
+    middleware.fieldErrors,
+    async (req, res) => {
     const targetUser = await User.findOne({
         uuid: req.body.uuid
     });
@@ -537,16 +545,17 @@ app.post('/admin/grant', middleware.permission('grant'), async (req, res) => {
         if(!newPerm.includes(perm)) removedPerms.push(perm);
     }
 
-    if(addedPerms.length || removedPerms.length) await BlockHistory.create({
-        type: BlockHistoryTypes.Grant,
-        createdUser: req.user.uuid,
-        targetUser: targetUser.uuid,
-        targetUsername: targetUser.name,
-        content: [
-            ...addedPerms.map(a => `+${a}`),
-            ...removedPerms.map(r => `-${r}`)
-        ].join(' ')
-    });
+    if(req.body.hidelog !== 'Y' && (addedPerms.length || removedPerms.length))
+        await BlockHistory.create({
+            type: BlockHistoryTypes.Grant,
+            createdUser: req.user.uuid,
+            targetUser: targetUser.uuid,
+            targetUsername: targetUser.name,
+            content: [
+                ...addedPerms.map(a => `+${a}`),
+                ...removedPerms.map(r => `-${r}`)
+            ].join(' ')
+        });
 
     return res.reload();
 });

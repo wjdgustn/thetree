@@ -48,6 +48,12 @@
     <%}%>
 
     <div class="button-block">
+        <%if(req.permissions.includes('developer')) {%>
+            <label>
+                hidelog:
+                <input type="checkbox" name="hidelog" value="Y">
+            </label>
+        <%}%>
         <button class="thetree-square-button thetree-blue-button">확인</button>
     </div>
 </form>
