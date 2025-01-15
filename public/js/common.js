@@ -307,7 +307,7 @@ const formHandler = async e => {
 
             if(html.includes('캡챠')) {
                 form.dataset.captcha = '1';
-                setupDocument();
+                setupDocument(true);
             }
 
             return plainAlert(html);
@@ -429,7 +429,7 @@ function captchaOnLoad() {
     });
 }
 
-function setupDocument() {
+function setupDocument(forceCaptcha = false) {
     const aElements = document.getElementsByTagName('a');
     for(let a of aElements) {
         if(a.getAttribute('@click')?.includes('aClickHandler')) continue;
@@ -445,7 +445,7 @@ function setupDocument() {
 
         form._thetree ??= {};
 
-        if(CONFIG.captcha && form.dataset.captcha && !State.session.disable_captcha) {
+        if(CONFIG.captcha && form.dataset.captcha && (forceCaptcha || !State.session.disable_captcha)) {
             captchaOnLoadForm = form;
             if(captchaLoaded) {
                 captchaOnLoad();
