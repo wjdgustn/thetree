@@ -314,6 +314,9 @@ const formHandler = async e => {
         }
         else return plainAlert();
     }
+    if(response.status.toString().startsWith('5')) {
+        location.reload();
+    }
 
     if(await replaceContent(html, response.headers)) {
         setupDocument();
