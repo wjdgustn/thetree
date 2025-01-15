@@ -409,6 +409,7 @@ function captchaOnLoad() {
     }[CONFIG.captcha.type]);
 
     const div = document.createElement('div');
+    div.style.clear = 'both';
     captchaOnLoadForm.appendChild(div);
     captchaOnLoadForm._thetree.captcha = captcha.render(div, {
         sitekey: CONFIG.captcha.site_key,

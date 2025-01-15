@@ -1050,4 +1050,88 @@ app.post('/member/deactivate_otp',
     res.redirect('/member/mypage');
 });
 
+app.get('/member/recover_password', middleware.isLogout, (req, res) => {
+    if(!config.use_email_verification) return res.error('이메일 인증이 비활성화돼 있습니다.');
+
+    res.renderSkin('계정 찾기', {
+        contentName: 'member/recover_password'
+    });
+});
+
+app.post('/member/recover_password', middleware.isLogout, middleware.captcha, async (req, res) => {
+    if(!config.use_email_verification) return res.error('이메일 인증이 비활성화돼 있습니다.');
+
+    const email = req.body.email;
+    if(!email) return res.status(400).send('이메일의 값은 필수입니다.');
+
+    res.renderSkin('계정 찾기', {
+        contentName: '/member/recover_password_email_sent',
+        serverData: { email }
+    });
+
+    const newUser = await User.findOneAndUpdate({
+        email
+    }, {
+        changePasswordToken: randomstring.generate({
+            charset: 'hex',
+            length: 64
+        }),
+        lastChangePassword: Date.now()
+    }, {
+        new: true
+    });
+    if(!newUser) return;
+
+    const authUrl = `/member/recover_password/auth/${newUser.name}/${newUser.changePasswordToken}`;
+    await mailTransporter.sendMail({
+        from: config.smtp_sender,
+        to: email,
+        subject: `[${config.site_name}] ${newUser.name}님의 비밀번호 찾기 메일 입니다.`,
+        html: `
+안녕하세요. ${config.site_name}입니다.
+
+${newUser.name}님의 비밀번호 찾기 메일입니다.
+해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.
+<a href="${new URL(authUrl, config.base_url)}">[인증]</a>
+
+이 메일은 24시간동안 유효합니다.
+요청 아이피 : ${req.ip}
+        `.trim().replaceAll('\n', '<br>')
+    });
+});
+
+app.get('/member/recover_password/auth/:name/:token', (req, res) => {
+    res.renderSkin('계정 찾기', {
+        contentName: 'member/recover_password_final'
+    });
+});
+
+app.post('/member/recover_password/auth/:name/:token',
+    body('password')
+        .notEmpty()
+        .withMessage('비밀번호의 값은 필수입니다.'),
+    body('password_confirm')
+        .notEmpty()
+        .withMessage('비밀번호 확인의 값은 필수입니다.')
+        .custom((value, { req }) => value === req.body.password)
+        .withMessage('패스워드 확인이 올바르지 않습니다.'),
+    middleware.fieldErrors,
+    async (req, res) => {
+    const hash = await bcrypt.hash(req.body.password, 12);
+    const user = await User.findOneAndUpdate({
+        name: req.params.name,
+        changePasswordToken: req.params.token,
+        lastChangePassword: {
+            $gte: Date.now() - 1000 * 60 * 60 * 24
+        }
+    }, {
+        password: hash,
+        changePasswordToken: null,
+        lastChangePassword: null
+    });
+    if(!user) return res.status(400).send('인증 요청이 만료되었거나 올바르지 않습니다.');
+
+    res.redirect('/member/login');
+});
+
 module.exports = app;

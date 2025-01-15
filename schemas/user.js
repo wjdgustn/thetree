@@ -82,6 +82,12 @@ const newSchema = new Schema({
     },
     lastChangeEmail: {
         type: Date
+    },
+    changePasswordToken: {
+        type: String
+    },
+    lastChangePassword: {
+        type: Date
     }
 });
 
