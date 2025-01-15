@@ -27,7 +27,7 @@
         width: calc(100% - .7rem);
     }
 
-    form div.form-button-block {
+    form div.button-block {
         margin-top: 2rem;
         text-align: right;
     }

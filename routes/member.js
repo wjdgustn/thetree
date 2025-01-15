@@ -184,24 +184,25 @@ app.get('/member/signup/:token', async (req, res) => {
     });
 });
 
+const nameChecker = field => body(field)
+    .notEmpty()
+    .withMessage('사용자 이름의 값은 필수입니다.')
+    .isLength({ min: 3, max: 32 })
+    .withMessage('사용자 이름의 길이는 3자 이상 32자 이하입니다.')
+    .custom(value => /^[a-zA-Z0-9_]+$/.test(value))
+    .withMessage('사용자 이름은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.')
+    .custom(value => value[0].match(/[a-zA-Z]/))
+    .withMessage('사용자 이름은 영문으로 시작해야 합니다.')
+    .custom(async value => {
+        const existingUser = await User.exists({
+            name: {
+                $regex: new RegExp(`^${value}$`, 'i')
+            }
+        });
+        if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
+    });
 app.post('/member/signup/:token',
-    body('username')
-        .notEmpty()
-        .withMessage('사용자 이름의 값은 필수입니다.')
-        .isLength({ min: 3, max: 32 })
-        .withMessage('사용자 이름의 길이는 3자 이상 32자 이하입니다.')
-        .custom(value => /^[a-zA-Z0-9_]+$/.test(value))
-        .withMessage('사용자 이름은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.')
-        .custom(value => value[0].match(/[a-zA-Z]/))
-        .withMessage('사용자 이름은 영문으로 시작해야 합니다.')
-        .custom(async value => {
-            const existingUser = await User.exists({
-                name: {
-                    $regex: new RegExp(`^${value}$`, 'i')
-                }
-            });
-            if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
-        }),
+    nameChecker('username'),
     body('password')
         .notEmpty()
         .withMessage('비밀번호의 값은 필수입니다.'),
@@ -767,6 +768,41 @@ app.post('/member/withdraw',
         res.clearCookie('honoka');
         res.redirect('/member/login');
     });
+});
+
+app.get('/member/change_name', middleware.isLogin, (req, res) => {
+    res.renderSkin('이름 변경', {
+        contentName: 'member/change_name',
+        serverData: {
+            ...(Date.now() - req.user.lastNameChange < 1000 * 60 * 60 * 24 * 30 ? {
+                alert: '최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.'
+            } : {})
+        }
+    });
+});
+
+app.post('/member/change_name',
+    middleware.isLogin,
+    body('password')
+        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
+        .custom(async (value, {req}) => {
+            const result = await bcrypt.compare(value, req.user.password);
+            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
+            return true;
+        }),
+    nameChecker('name'),
+    middleware.fieldErrors,
+    async (req, res) => {
+    if(Date.now() - req.user.lastNameChange < 1000 * 60 * 60 * 24 * 30)
+        return res.status(403).send('최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.');
+
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        name: req.body.name,
+        lastNameChange: Date.now()
+    });
+    res.redirect('/member/mypage');
 });
 
 module.exports = app;
