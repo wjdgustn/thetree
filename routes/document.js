@@ -883,7 +883,7 @@ const postEditAndEditRequest = async (req, res) => {
         title
     });
 
-    const isCreate = dbDocument && !dbDocument.contentExists;
+    let isCreate = dbDocument && !dbDocument.contentExists;
     const doingManyEdits = await checkDoingManyEdits(req);
 
     if((isCreate || doingManyEdits) && !await utils.middleValidateCaptcha(req, res)) return;
@@ -949,7 +949,7 @@ const postEditAndEditRequest = async (req, res) => {
 
     if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
 
-    // const isCreate = rev?.content == null;
+    isCreate = rev?.content == null;
     if(isCreate && isEditRequest) return res.status(404).send('문서를 찾을 수 없습니다.');
 
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid)) {
