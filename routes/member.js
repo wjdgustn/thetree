@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const passport = require('passport');
 const { Address4, Address6 } = require('ip-address');
+const randomstring = require('randomstring');
 
 const utils = require('../utils');
 const middleware = require('../utils/middleware');
@@ -212,7 +213,6 @@ app.post('/member/signup/:token',
         .custom((value, { req }) => value === req.body.password)
         .withMessage('패스워드 확인이 올바르지 않습니다.'),
     middleware.fieldErrors,
-    middleware.captcha,
     async (req, res) => {
     const token = await SignupToken.findOne({
         token: req.params.token
@@ -220,6 +220,17 @@ app.post('/member/signup/:token',
     if(!token
         || Date.now() - token.createdAt > 1000 * 60 * 60 * 24
         || token.ip !== req.ip) return res.status(400).send('유효하지 않은 토큰');
+
+    const emailDupCheck = await User.exists({
+        email: token.email
+    });
+    if(!!emailDupCheck) return res.status(409).json({
+        fieldErrors: {
+            email: {
+                msg: '이메일이 이미 존재합니다.'
+            }
+        }
+    });
 
     const hash = await bcrypt.hash(req.body.password, 12);
     const newUser = new User({
@@ -803,6 +814,142 @@ app.post('/member/change_name',
         lastNameChange: Date.now()
     });
     res.redirect('/member/mypage');
+});
+
+app.get('/member/change_email', middleware.isLogin, (req, res) => {
+    const doingChangeEmail = Date.now() - req.user.lastChangeEmail < 1000 * 60 * 10;
+    res.renderSkin('이메일 변경', {
+        contentName: 'member/change_email',
+        serverData: {
+            ...(doingChangeEmail ? {
+                alert: '이메일 인증이 이미 진행 중입니다.'
+            } : {}),
+            doingChangeEmail
+        }
+    });
+});
+
+app.post('/member/change_email',
+    middleware.isLogin,
+    body('password')
+        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
+        .custom(async (value, {req}) => {
+            const result = await bcrypt.compare(value, req.user.password);
+            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
+            return true;
+        }),
+    body('email')
+        .notEmpty().withMessage('이메일의 값은 필수입니다.')
+        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .custom((value, {req}) => value !== req.user.email).withMessage('문서 내용이 같습니다.'),
+    middleware.fieldErrors,
+    async (req, res) => {
+    if(Date.now() - req.user.lastChangeEmail < 1000 * 60 * 10)
+        return res.status(409).send('이메일 인증이 이미 진행 중입니다.');
+
+    const email = req.body.email;
+
+    const emailDomain = email.split('@').pop();
+    if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
+        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
+
+    const checkBlacklist = await Blacklist.exists({
+        email: crypto.createHash('sha256').update(email).digest('hex')
+    });
+    if(checkBlacklist) return res.status(403).send({
+        fieldErrors: {
+            email: {
+                msg: '재가입 대기 기간 입니다.'
+            }
+        }
+    });
+
+    const newUser = await User.findOneAndUpdate({
+        uuid: req.user.uuid
+    }, {
+        changeEmail: req.body.email,
+        changeEmailToken: randomstring.generate({
+            charset: 'hex',
+            length: 64
+        }),
+        lastChangeEmail: Date.now()
+    }, {
+        new: true
+    });
+
+    const checkUserExists = await User.exists({
+        email
+    });
+    if(!!checkUserExists) {
+        if(config.use_email_verification) {
+            res.redirect('/member/mypage');
+
+            await mailTransporter.sendMail({
+                from: config.smtp_sender,
+                to: email,
+                subject: `[${config.site_name}] ${req.user.name}님의 이메일 변경 인증 메일 입니다.`,
+                html: `
+안녕하세요. ${config.site_name} 입니다.
+
+${req.user.name}님의 이메일 변경 인증 메일입니다.
+이 이메일로 이메일 변경을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.
+
+요청 아이피 : ${req.ip}
+    `.trim().replaceAll('\n', '<br>')
+            });
+        }
+        else res.status(409).send('이미 가입된 이메일입니다.');
+
+        return;
+    }
+
+    const authUrl = `/member/auth/${req.user.name}/${newUser.changeEmailToken}`;
+    if(config.use_email_verification) {
+        res.redirect('/member/mypage');
+
+        await mailTransporter.sendMail({
+            from: config.smtp_sender,
+            to: email,
+            subject: `[${config.site_name}] ${req.user.name}님의 이메일 변경 인증 메일 입니다.`,
+            html: `
+안녕하세요. ${config.site_name} 입니다.
+
+${req.user.name}님의 이메일 변경 인증 메일입니다.
+해당 아이디로 변경한게 맞으시면 아래 링크를 클릭해주세요.
+<a href="${new URL(authUrl, config.base_url)}">[인증]</a>
+
+이 메일은 24시간동안 유효합니다.
+요청 아이피 : ${req.ip}
+        `.trim().replaceAll('\n', '<br>')
+        });
+    }
+    else res.redirect(authUrl);
+});
+
+app.get('/member/auth/:name/:token', async (req, res) => {
+    const user = await User.findOne({
+        name: req.params.name
+    });
+    if(!user || Date.now() - user.lastChangeEmail > 1000 * 60 * 60 * 24 || user.changeEmailToken !== req.params.token)
+        return res.error('인증 요청이 만료되었거나 올바르지 않습니다.');
+
+    const emailDupCheck = await User.exists({
+        email: user.changeEmail
+    });
+    if(!!emailDupCheck) return res.error('이메일이 이미 존재합니다.', 409);
+
+    await User.updateOne({
+        uuid: user.uuid
+    }, {
+        email: user.changeEmail,
+        changeEmail: null,
+        changeEmailToken: null,
+        lastChangeEmail: null
+    });
+
+    res.renderSkin('인증 완료', {
+        contentHtml: `<strong>${user.name}</strong>님 이메일 인증이 완료되었습니다.<br><a href="/member/login">[로그인]</a> 해주세요.`
+    });
 });
 
 module.exports = app;

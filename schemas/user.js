@@ -73,6 +73,15 @@ const newSchema = new Schema({
     },
     lastUserDocumentDiscuss: {
         type: Date
+    },
+    changeEmail: {
+        type: String
+    },
+    changeEmailToken: {
+        type: String
+    },
+    lastChangeEmail: {
+        type: Date
     }
 });
 

@@ -1,0 +1,21 @@
+<link rel="stylesheet" href="/css/views/simpleForm.css">
+<%-include('../components/alert')%>
+
+<form method="post">
+    <div class="form-block">
+        <label for="passwordInput">비밀번호</label>
+        <input type="password" id="passwordInput" name="password">
+    </div>
+    <div class="form-block">
+        <label>이메일</label>
+        <p><%=req.user.email%></p>
+    </div>
+    <div class="form-block">
+        <label for="nameInput">새 이메일</label>
+        <input type="text" id="emailInput" name="email"<%=doingChangeEmail ? ' disabled' : ''%>>
+    </div>
+    <%-include('../components/emailWhitelist')%>
+    <div class="button-block">
+        <button class="thetree-square-button thetree-blue-button"<%=doingChangeEmail ? ' disabled' : ''%>>이메일 변경</button>
+    </div>
+</form>
