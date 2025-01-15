@@ -5,6 +5,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
 const multer = require('multer');
+const { body } = require('express-validator');
 
 // openNAMU migration things
 const sqlite3 = require('sqlite3').verbose();
