@@ -819,6 +819,23 @@ app.post('/member/change_name',
         name: req.body.name,
         lastNameChange: Date.now()
     });
+
+    const dbDocument = await Document.findOneAndUpdate({
+        namespace: '사용자',
+        title: req.user.name
+    }, {
+        title: req.body.name
+    }, {
+        new: true
+    });
+    await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.Move,
+        document: dbDocument.uuid,
+        moveOldDoc: `사용자:${req.user.name}`,
+        moveNewDoc: `사용자:${req.body.name}`
+    });
+
     res.redirect('/member/mypage');
 });
 
