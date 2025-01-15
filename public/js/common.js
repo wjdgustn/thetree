@@ -445,7 +445,7 @@ function setupDocument() {
 
         form._thetree ??= {};
 
-        if(CONFIG.captcha && form.dataset.captcha) {
+        if(CONFIG.captcha && form.dataset.captcha && !State.session.disable_captcha) {
             captchaOnLoadForm = form;
             if(captchaLoaded) {
                 captchaOnLoad();
