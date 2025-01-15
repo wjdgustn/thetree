@@ -1,0 +1,26 @@
+<link rel="stylesheet" href="/css/views/activate_otp.css">
+<link rel="stylesheet" href="/css/views/simpleForm.css">
+<ol>
+    <li>
+        휴대 전화에 <b>Google Authenticator</b> 앱을 설치합니다.
+        (<a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" rel="noopener" target="_blank">Android</a>
+        / <a href="https://itunes.apple.com/kr/app/google-authenticator/id388497605" rel="noopener" target="_blank">iOS</a>)
+    </li>
+    <li>
+        앱을 열고 바코드 스캔을 클릭해서 아래 QR코드를 스캔합니다.
+        <br>
+        <img src="<%=qrcode%>">
+    </li>
+    <li>
+        표시되는 코드를 아래에 입력해서 활성화 합니다.
+    </li>
+</ol>
+<form method="post">
+    <div class="form-block">
+        <label for="pinInput">PIN</label>
+        <input type="text" id="pinInput" name="pin" maxlength="6">
+    </div>
+    <div class="button-block">
+        <button class="thetree-square-button thetree-blue-button">활성화</button>
+    </div>
+</form>

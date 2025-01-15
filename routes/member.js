@@ -5,6 +5,8 @@ const crypto = require('crypto');
 const passport = require('passport');
 const { Address4, Address6 } = require('ip-address');
 const randomstring = require('randomstring');
+const { TOTP } = require('otpauth');
+const QRCode = require('qrcode');
 
 const utils = require('../utils');
 const middleware = require('../utils/middleware');
@@ -384,7 +386,11 @@ app.post('/member/login/pin',
     }
 
     if(user.totpToken) {
-
+        const totp = new TOTP({
+            secret: user.totpToken
+        });
+        const delta = totp.validate({ token: req.body.pin });
+        if(delta == null) return res.status(400).send('PIN이 올바르지 않습니다.');
     }
     else {
         if(req.body.pin !== user.emailPin) return res.status(400).send('PIN이 올바르지 않습니다.');
@@ -950,6 +956,98 @@ app.get('/member/auth/:name/:token', async (req, res) => {
     res.renderSkin('인증 완료', {
         contentHtml: `<strong>${user.name}</strong>님 이메일 인증이 완료되었습니다.<br><a href="/member/login">[로그인]</a> 해주세요.`
     });
+});
+
+app.get('/member/activate_otp', middleware.isLogin, async (req, res) => {
+    if(req.user.totpToken) return res.error('already_activated_otp');
+
+    const totp = new TOTP({
+        issuer: config.site_name,
+        label: req.user.name
+    });
+    req.session.totpToken = totp.secret.base32;
+
+    const qrcode = await QRCode.toDataURL(totp.toString());
+
+    res.renderSkin('OTP 활성화', {
+        contentName: 'member/activate_otp',
+        serverData: {
+            qrcode
+        }
+    });
+});
+
+app.post('/member/activate_otp',
+    middleware.isLogin,
+    body('pin')
+        .notEmpty().withMessage('pin의 값은 필수입니다.')
+        .isLength({
+            min: 6,
+            max: 6
+        }).withMessage('pin의 값은 6글자여야 합니다.'),
+    middleware.fieldErrors,
+    async (req, res) => {
+    if(req.user.totpToken) return res.error('already_activated_otp');
+
+    const totp = new TOTP({
+        secret: req.session.totpToken
+    });
+    const delta = totp.validate({ token: req.body.pin });
+    if(delta == null) return res.status(400).json({
+        fieldErrors: {
+            pin: {
+                msg: 'PIN이 올바르지 않습니다.'
+            }
+        }
+    });
+
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        totpToken: req.session.totpToken
+    });
+
+    res.redirect('/member/mypage');
+});
+
+app.get('/member/deactivate_otp', middleware.isLogin, (req, res) => {
+    if(!req.user.totpToken) return res.error('not_activated_otp');
+
+    res.renderSkin('OTP 비활성화', {
+        contentName: 'member/deactivate_otp'
+    });
+});
+
+app.post('/member/deactivate_otp',
+    middleware.isLogin,
+    body('pin')
+        .notEmpty().withMessage('pin의 값은 필수입니다.')
+        .isLength({
+            min: 6,
+            max: 6
+        }).withMessage('pin의 값은 6글자여야 합니다.'),
+    async (req, res) => {
+    if(!req.user.totpToken) return res.error('not_activated_otp');
+
+    const totp = new TOTP({
+        secret: req.user.totpToken
+    });
+    const delta = totp.validate({ token: req.body.pin });
+    if(delta == null) return res.status(400).json({
+        fieldErrors: {
+            pin: {
+                msg: 'PIN이 올바르지 않습니다.'
+            }
+        }
+    });
+
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        totpToken: null
+    });
+
+    res.redirect('/member/mypage');
 });
 
 module.exports = app;

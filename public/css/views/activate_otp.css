@@ -1,0 +1,12 @@
+@scope(#content-style) {
+    form {
+        width: 100%;
+    }
+
+    @media screen and (min-width: 34rem) {
+        form {
+            margin: 0 auto;
+            width: 28rem;
+        }
+    }
+}

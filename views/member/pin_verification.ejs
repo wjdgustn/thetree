@@ -1,10 +1,17 @@
 <link rel="stylesheet" href="/css/views/email_verification.css">
-    <%-include('../components/alert')%>
+<%-include('../components/alert')%>
 
 <form id="pinForm" method="post" action="/member/login/pin" data-captcha="1">
     <input type="hidden" name="autologin" value="<%=autologin%>">
 
-    <p>확인되지 않은 기기에서 로그인하셨습니다.<br> 이메일(<b><%=user.email%></b>)로 전송된 PIN을 입력해주세요.</p>
+    <p>
+        확인되지 않은 기기에서 로그인하셨습니다.<br>
+        <%if(user.totpToken) {%>
+            Google Authenticator 코드를 입력해주세요.
+        <%} else {%>
+            이메일(<b><%=user.email%></b>)로 전송된 PIN을 입력해주세요.
+        <%}%>
+    </p>
 
     <div class="pin-block">
         <label class="pin-label" for="pinInput">PIN</label>
@@ -19,5 +26,8 @@
 
     <div class="login-block">
         <button class="login-button">로그인</button>
+        <%if(user.totpToken && false) {%>
+            <button class="login-button" type="button">Webauthn Login</button>
+        <%}%>
     </div>
 </form>
