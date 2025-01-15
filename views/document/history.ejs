@@ -125,7 +125,7 @@ ${enableNext ? enabledButton({
                 <%if(rev.infoText) {%><i>(<%-rev.infoText%>)</i><%}%>
 
                 <strong>
-                    <a class="rev-text" href="#">r<%=rev.rev%></a>
+                    <a class="rev-text" href="#" @click.prevent="navigator.clipboard.writeText('<%=rev.uuid%>')">r<%=rev.rev%></a>
 
                 </strong>
 
