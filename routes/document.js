@@ -855,7 +855,6 @@ const checkDoingManyEdits = async req => {
             $gte: new Date(Date.now() - 1000 * 60 * 60 * config.captcha.edit_captcha.hours)
         }
     });
-    console.log('recentContributionCount', recentContributionCount);
 
     return recentContributionCount >= config.captcha.edit_captcha.edit_count;
 }
