@@ -219,6 +219,7 @@ const formHandler = async e => {
 
     if(form._thetree.captcha != null) {
         for(let { reject } of captchaLock) reject();
+        captchaLock.length = 0;
 
         captcha.reset(form._thetree.captcha);
         captcha.execute(form._thetree.captcha);
@@ -419,6 +420,7 @@ function captchaOnLoad() {
         theme: State.currentTheme,
         callback: () => {
             for(let { resolve } of captchaLock) resolve();
+            captchaLock.length = 0;
         },
         ...{
             recaptcha: {
