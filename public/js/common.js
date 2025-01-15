@@ -952,6 +952,8 @@ document.addEventListener('alpine:init', () => {
         cursor: -1,
         internalItems: [],
         searchAbortController: null,
+        wait: 50,
+        searchTimeout: null,
         get show() {
             return this.searchFocused && this.searchText.length > 0 && this.internalItems.length > 0;
         },
@@ -963,25 +965,29 @@ document.addEventListener('alpine:init', () => {
         focus() {
             this.searchFocused = true;
         },
-        async inputChange(e) {
-            if(this.searchText === this.lastSearchText) return;
-            this.lastSearchText = this.searchText;
+        inputChange() {
+            if(this.searchTimeout) clearTimeout(this.searchTimeout);
 
-            if(!this.searchText.length) {
-                this.internalItems = [];
-                return;
-            }
+            this.searchTimeout = setTimeout(async () => {
+                if(this.searchText === this.lastSearchText) return;
+                this.lastSearchText = this.searchText;
 
-            if(this.searchAbortController) this.searchAbortController.abort();
+                if(!this.searchText.length) {
+                    this.internalItems = [];
+                    return;
+                }
 
-            try {
-                this.searchAbortController = new AbortController();
-                const result = await fetch(`/Complete?q=${encodeURIComponent(this.searchText)}`, {
-                    signal: this.searchAbortController.signal
-                });
-                this.internalItems = await result.json();
-                this.cursor = -1;
-            } catch(e) {}
+                if(this.searchAbortController) this.searchAbortController.abort();
+
+                try {
+                    this.searchAbortController = new AbortController();
+                    const result = await fetch(`/Complete?q=${encodeURIComponent(this.searchText)}`, {
+                        signal: this.searchAbortController.signal
+                    });
+                    this.internalItems = await result.json();
+                    this.cursor = -1;
+                } catch(e) {}
+            }, this.wait);
         },
         async onClickItem(item) {
             await movePage(`/Go?q=${encodeURIComponent(item)}`);
