@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
 const multer = require('multer');
 const { body } = require('express-validator');
+const parseDuration = require('parse-duration');
 
 // openNAMU migration things
 const sqlite3 = require('sqlite3').verbose();
@@ -16,13 +17,16 @@ const sharp = require('sharp');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const utils = require('../utils');
+const globalUtils = require('../utils/global');
+const namumarkUtils = require('../utils/namumark/utils');
 const {
     GrantablePermissions,
     DevPermissions,
     UserTypes,
     HistoryTypes,
     BlockHistoryTypes,
-    ACLTypes
+    ACLTypes,
+    EditRequestStatusTypes
 } = require('../utils/types');
 const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
@@ -33,6 +37,8 @@ const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const BlockHistory = require('../schemas/blockHistory');
+const EditRequest = require('../schemas/editRequest');
+const ThreadComment = require('../schemas/threadComment');
 
 const ACL = require('../class/acl');
 
@@ -672,6 +678,187 @@ app.post('/admin/config/disabledfeatures', middleware.permission('developer'), (
     fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
 
     res.reload();
+});
+
+app.get('/admin/batch_revert', middleware.permission('batch_revert'), (req, res) => {
+    res.renderSkin('일괄 되돌리기', {
+        contentName: 'admin/batch_revert'
+    });
+});
+
+app.post('/admin/batch_revert',
+    middleware.permission('batch_revert'),
+    (req, res, next) => {
+        req.modifiedBody = {};
+        next();
+    },
+    body('uuid')
+        .notEmpty().withMessage('UUID는 필수입니다.')
+        .isUUID().withMessage('UUID 형식이 잘못되었습니다.')
+        .custom(async (value, { req }) => {
+            const user = await User.findOne({
+                uuid: value
+            });
+            if(!user || !value) throw new Error('대상을 찾을 수 없습니다.');
+
+            req.modifiedBody.user = user;
+        }),
+    body('duration')
+        .notEmpty().withMessage('기간은 필수입니다.')
+        .custom(async (value, { req }) => {
+            req.modifiedBody.duration = parseDuration(value);
+            if(!req.modifiedBody.duration) throw new Error('기간 형식이 잘못되었습니다.');
+            if(req.modifiedBody.duration > 1000 * 60 * 60 * 24) throw new Error('최대 기간은 24시간입니다.');
+        }),
+    body('reason')
+        .notEmpty().withMessage('reason의 값은 필수입니다.'),
+    body('hidelog')
+        .custom((value, { req }) => {
+            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            return true;
+        }),
+    middleware.fieldErrors,
+    async (req, res) => {
+    const date = new Date();
+    const { user, duration } = req.modifiedBody;
+    const reason = req.body.reason;
+
+    const closeEditRequests = req.body.closeEditRequests === 'Y';
+    const hideThreadComments = req.body.hideThreadComments === 'Y';
+    const revertContributions = req.body.revertContributions === 'Y';
+
+    if(!closeEditRequests && !hideThreadComments && !revertContributions)
+        return res.status(400).send('아무 작업도 선택하지 않았습니다.');
+
+    const resultText = [];
+    const failResultText = [];
+
+    if(closeEditRequests) {
+        const result = await EditRequest.updateMany({
+            createdUser: user.uuid,
+            createdAt: {
+                $gte: date - duration
+            },
+            status: {
+                $ne: EditRequestStatusTypes.Locked
+            }
+        }, {
+            lastUpdateUser: req.user.uuid,
+            status: EditRequestStatusTypes.Locked,
+            closedReason: reason,
+            lastUpdatedAt: date
+        });
+        resultText.push(`닫은 편집 요청: ${result.modifiedCount}개`);
+    }
+
+    if(hideThreadComments) {
+        const result = await ThreadComment.updateMany({
+            user: user.uuid,
+            createdAt: {
+                $gte: date - duration
+            },
+            hidden: false
+        }, {
+            hiddenBy: req.user.uuid,
+            hidden: true
+        });
+        resultText.push(`숨긴 토론 댓글: ${result.modifiedCount}개`);
+    }
+
+    if(revertContributions) {
+        const query = {
+            user: user.uuid,
+            createdAt: {
+                $gte: date - duration
+            },
+            troll: false
+        }
+        const revs = await History.find(query).sort({ createdAt: 1 }).lean();
+        const trollResult = await History.updateMany(query, {
+            troll: true,
+            trollBy: req.user.uuid
+        });
+        resultText.push(`반달 처리된 기여: ${trollResult.modifiedCount}개`);
+
+        let revertedCount = 0;
+        const documents = [...new Set(revs.map(rev => rev.document))];
+        await Promise.all(documents.map(docUuid => new Promise(async resolve => {
+            const dbDocument = await Document.findOne({
+                uuid: docUuid
+            });
+            const document = utils.dbDocumentToDocument(dbDocument);
+            const fullTitle = globalUtils.doc_fulltitle(document);
+            const fullTitleLink = `<a href="${globalUtils.doc_action_link(document, 'w')}">${namumarkUtils.escapeHtml(fullTitle)}</a>`;
+            const acl = await ACL.get({ document: dbDocument });
+
+            const firstTrollRev = revs.find(rev => rev.document === docUuid);
+            const lastNormalRev = await History.findOne({
+                document: docUuid,
+                _id: {
+                    $lt: firstTrollRev._id
+                },
+                troll: false
+            }).sort({ rev: -1 });
+
+            if(lastNormalRev) {
+                const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+                if(!result) {
+                    failResultText.push(`${fullTitleLink}: ${aclMessage}`);
+                    return resolve();
+                }
+
+                await History.create({
+                    user: req.user.uuid,
+                    type: HistoryTypes.Revert,
+                    document: docUuid,
+                    revertRev: lastNormalRev.rev,
+                    revertUuid: lastNormalRev.uuid,
+                    content: lastNormalRev.content,
+                    fileKey: lastNormalRev.fileKey,
+                    fileSize: lastNormalRev.fileSize,
+                    fileWidth: lastNormalRev.fileWidth,
+                    fileHeight: lastNormalRev.fileHeight,
+                    log: reason
+                });
+            }
+            else {
+                const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
+                if(!result) {
+                    failResultText.push(`${fullTitleLink}: ${aclMessage}`);
+                    return resolve();
+                }
+
+                await History.create({
+                    user: req.user.uuid,
+                    type: HistoryTypes.Delete,
+                    document: docUuid,
+                    content: null,
+                    log: reason
+                });
+            }
+
+            revertedCount++;
+            resolve();
+        })));
+        resultText.push(`되돌린 기여: ${revertedCount}개`);
+    }
+
+    if(failResultText.length)
+        resultText.push(`<br><span style="color: red;">${failResultText.join('<br>')}</span>`);
+
+    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+        type: BlockHistoryTypes.BatchRevert,
+        createdUser: req.user.uuid,
+        targetUser: user.uuid,
+        targetUsername: user.name || user.ip,
+        content: reason
+    });
+
+    resultText.unshift(`작업 시간: ${Date.now() - date}ms`);
+
+    res.renderSkin('일괄 되돌리기 완료', {
+        contentHtml: resultText.join('<br>')
+    });
 });
 
 module.exports = app;

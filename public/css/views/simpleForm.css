@@ -13,7 +13,7 @@
         margin-bottom: .5rem;
     }
 
-    form input,form select {
+    form input:not([type=checkbox]), form select {
         background-color: #fff;
         background-image: none;
         border: .0625rem solid #ccc;
@@ -36,7 +36,7 @@
         float: right;
     }
 
-    .theseed-dark-mode form input,.theseed-dark-mode form select {
+    .theseed-dark-mode form input, .theseed-dark-mode form select {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;

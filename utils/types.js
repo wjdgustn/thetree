@@ -47,7 +47,8 @@ module.exports = {
     BlockHistoryTypes: {
         ACLGroupAdd: 0,
         ACLGroupRemove: 1,
-        Grant: 2
+        Grant: 2,
+        BatchRevert: 3
     },
     ThreadStatusTypes: {
         Normal: 0,

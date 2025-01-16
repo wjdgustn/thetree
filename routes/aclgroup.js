@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 const { Address4, Address6 } = require('ip-address');
 
 const utils = require('../utils');

@@ -1,0 +1,44 @@
+<link rel="stylesheet" href="/css/views/simpleForm.css">
+<form method="post">
+    <div class="form-block">
+        <label for="uuidInput">UUID</label>
+        <input type="text" id="uuidInput" name="uuid">
+    </div>
+    <div class="form-block">
+        <label for="durationInput">Duration</label>
+        <input type="text" id="durationInput" name="duration" value="24h">
+    </div>
+    <div class="form-block">
+        <label for="reasonInput">Reason</label>
+        <input type="text" id="reasonInput" name="reason">
+    </div>
+    <div class="form-block">
+        <label>
+            <input type="checkbox" name="closeEditRequests" value="Y">
+            편집 요청 닫기
+        </label>
+    </div>
+    <div class="form-block">
+        <label>
+            <input type="checkbox" name="hideThreadComments" value="Y">
+            토론 댓글 숨기기
+        </label>
+    </div>
+    <div class="form-block">
+        <label>
+            <input type="checkbox" name="revertContributions" value="Y">
+            편집 되돌리기
+        </label>
+    </div>
+    <%if(req.permissions.includes('developer')) {%>
+        <div class="form-block">
+            <label>
+                <input type="checkbox" name="hidelog" value="Y">
+                hidelog
+            </label>
+        </div>
+    <%}%>
+    <div class="button-block">
+        <button class="thetree-square-button thetree-blue-button">실행</button>
+    </div>
+</form>

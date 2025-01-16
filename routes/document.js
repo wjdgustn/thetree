@@ -1338,6 +1338,10 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         revertRev: rev.rev,
         revertUuid: rev.uuid,
         content: rev.content,
+        fileKey: rev.fileKey,
+        fileSize: rev.fileSize,
+        fileWidth: rev.fileWidth,
+        fileHeight: rev.fileHeight,
         log: req.body.log
     });
 

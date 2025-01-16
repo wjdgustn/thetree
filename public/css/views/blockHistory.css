@@ -118,6 +118,10 @@
         color: #46a758;
     }
 
+    .icon-blue {
+        color: #2056b4;
+    }
+
     .icon svg {
         fill: currentColor;
     }
