@@ -823,6 +823,11 @@ app.post('/admin/batch_revert',
                 });
             }
             else {
+                if(document.namespace === '사용자' && !document.title.includes('/')) {
+                    failResultText.push(`${fullTitleLink}: disable_user_document`);
+                    return resolve();
+                }
+
                 const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
                 if(!result) {
                     failResultText.push(`${fullTitleLink}: ${aclMessage}`);
