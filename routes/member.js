@@ -262,10 +262,11 @@ app.post('/member/signup/:token',
     return req.login({
         ...newUser.toJSON(),
         avatar: utils.getGravatar(newUser.email)
-    }, err => {
+    }, { keepSessionInfo: true }, err => {
         if(err) console.error(err);
         if(!res.headersSent) {
             req.session.fullReload = true;
+            delete req.session.contributor;
             return res.renderSkin('계정 만들기', {
                 contentHtml: `<p>환영합니다! <b>${req.body.username}</b>님 계정 생성이 완료되었습니다.</p>`
             });
@@ -297,11 +298,7 @@ app.post('/member/login',
         }
         if(!user) return res.status(400).send(info.message);
 
-        let checkTrusted = await LoginHistory.findOne({
-            uuid: user.uuid,
-            ip: req.ip,
-            trusted: true
-        });
+        let trusted = req.session.trustedAccounts?.includes(user.uuid);
 
         const createLoginHistory = async () => await LoginHistory.create({
             uuid: user.uuid,
@@ -311,10 +308,10 @@ app.post('/member/login',
 
         if(!user.totpToken && !config.use_email_verification) {
             await createLoginHistory();
-            checkTrusted = true;
+            trusted = true;
         }
 
-        if(checkTrusted) {
+        if(trusted) {
             if(req.body.autologin === 'Y') {
                 const token = await AutoLoginToken.create({
                     uuid: user.uuid
@@ -327,10 +324,11 @@ app.post('/member/login',
 
             await createLoginHistory();
 
-            return req.login(user, err => {
+            return req.login(user, { keepSessionInfo: true }, err => {
                 if(err) console.error(err);
                 if(!res.headersSent) {
                     req.session.fullReload = true;
+                    delete req.session.contributor;
                     return res.redirect(req.body.redirect || '/');
                 }
             });
@@ -396,22 +394,27 @@ app.post('/member/login/pin',
         if(req.body.pin !== user.emailPin) return res.status(400).send('PIN이 올바르지 않습니다.');
     }
 
-    req.login(user, err => {
+    delete req.session.pinUser;
+    delete req.session.redirect;
+
+    if(req.body.trust) {
+        req.session.trustedAccounts ??= [];
+        req.session.trustedAccounts.push(user.uuid);
+    }
+
+    req.login(user, { keepSessionInfo: true }, err => {
         if(err) console.error(err);
         if(!res.headersSent) {
             req.session.fullReload = true;
+            delete req.session.contributor;
             return res.redirect(req.session.redirect || '/');
         }
     });
 
-    delete req.session.pinUser;
-    delete req.session.redirect;
-
     await LoginHistory.create({
         uuid: user.uuid,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        trusted: !!req.body.trust
+        userAgent: req.get('User-Agent')
     });
 });
 
@@ -420,7 +423,7 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
         uuid: req.user.uuid,
         token: req.cookies.honoka
     });
-    req.logout(err => {
+    req.logout({ keepSessionInfo: true }, err => {
         if(err) console.error(err);
         req.session.fullReload = true;
         delete req.session.contributor;
@@ -787,7 +790,7 @@ app.post('/member/withdraw',
         content: null
     });
 
-    req.logout(err => {
+    req.logout({ keepSessionInfo: true }, err => {
         if(err) console.error(err);
         req.session.fullReload = true;
         delete req.session.contributor;
