@@ -465,6 +465,7 @@ app.get('/random', async (req, res) => {
         { $match: { namespace: '문서' } },
         { $sample: { size: 1 } }
     ]);
+    if(!docs.length) return res.status(404).send('문서가 없습니다.');
     const document = utils.dbDocumentToDocument(docs[0]);
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
