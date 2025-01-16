@@ -538,11 +538,11 @@ app.get('/contribution/:uuid/document',
     let nextItem;
     if(revs?.length) {
         prevItem = await History.findOne({
-            ...query,
+            ...baseQuery,
             _id: { $gt: revs[0]._id }
         }).sort({ _id: 1 });
         nextItem = await History.findOne({
-            ...query,
+            ...baseQuery,
             _id: { $lt: revs[revs.length - 1]._id }
         }).sort({ _id: -1 });
 

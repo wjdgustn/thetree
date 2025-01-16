@@ -1,0 +1,19 @@
+<link rel="stylesheet" href="/css/views/simpleForm.css">
+<form method="post">
+    <div>
+        <label for="usernameInput">유저 이름 :</label>
+        <input style="width: 250px;" id="usernameInput" name="username" required autofocus>
+    </div>
+    <%if(req.permissions.includes('developer')) {%>
+        <div style="margin-top: 15px;">
+            <label>
+                hidelog:
+                <input type="checkbox" name="hidelog" value="Y">
+            </label>
+        </div>
+    <%}%>
+
+    <div class="button-block">
+        <button class="thetree-square-button thetree-blue-button">확인</button>
+    </div>
+</form>

@@ -18,27 +18,14 @@ const blockHistoryLink = query => `/BlockHistory?${querystring.stringify({
     ...utils.withoutKeys(req.query, [query.from ? 'until' : 'from']),
     ...query
 })}`;
-
-const enabledButton = (query, content) => `<a href="${blockHistoryLink(query)}" role="button" class="navigation-button navigation-page-button">${content}</a>`;
-const disabledButton = content => `<span role="button" class="navigation-button thetree-button-disabled navigation-page-button">${content}</span>`;
-
-const prevButtonContent = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg>
-<span>이전</span>
-`.trim();
-const nextButtonContent = `
-<span>다음</span>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg>
-`;
-
-const navigationPage = `
-${prevItem ? enabledButton({
-    until: prevItem.uuid
-}, prevButtonContent) : disabledButton(prevButtonContent)}
-${nextItem ? enabledButton({
-    from: nextItem.uuid
-}, nextButtonContent) : disabledButton(nextButtonContent)}
-`.trim();
+const navigationPage = include('../components/pageButton', {
+    prevLink: prevItem ? blockHistoryLink({
+        until: prevItem.uuid
+    }) : null,
+    nextLink: nextItem ? blockHistoryLink({
+        from: nextItem.uuid
+    }) : null
+});
 %>
 
 <div class="search-buttons-block">
@@ -96,6 +83,18 @@ ${nextItem ? enabledButton({
                 <div class="log-content">
                     <%-getFullDateTag(log.createdAt)%>
                     <span>(<%=log.content%>)</span>
+                </div>
+            </div>
+        <%} else if(log.type === BlockHistoryTypes.LoginHistory) {%>
+            <div class="item-block icon-block">
+                <span class="icon icon-purple">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"></path></svg>
+                </span>
+            </div>
+            <div class="item-block content-block">
+                <div><%-userHtml(log.createdUser)%> 사용자가 <%-userHtml(log.targetUser)%> 사용자의 로그인 기록 조회</div>
+                <div class="log-content">
+                    <%-getFullDateTag(log.createdAt)%>
                 </div>
             </div>
         <%} else {%>

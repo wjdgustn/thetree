@@ -1,0 +1,42 @@
+<%
+const link = query => `/admin/login_history/result?${querystring.stringify({
+    ...utils.withoutKeys(req.query, [query.from ? 'until' : 'from']),
+    ...query
+})}`;
+const navigationPage = include('../components/pageButton', {
+    prevLink: prevItem ? link({
+        until: prevItem._id.toString()
+    }) : null,
+    nextLink: nextItem ? link({
+        from: nextItem._id.toString()
+    }) : null
+});
+%>
+
+<p>마지막 로그인 UA : <%=latestLog.userAgent%></p>
+<p>이메일 : <%=user.email%></p>
+
+<div class="navigation-div navigation-page"><%-navigationPage%></div>
+<div class="wiki-content">
+    <div class="wiki-table-wrap">
+        <table class="wiki-table">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>IP</th>
+                <th>UA</th>
+            </tr>
+            </thead>
+            <tbody>
+            <%for(let log of logs) {%>
+                <tr style="height: 40px;">
+                    <td style="min-width: 150px;"><%-getFullDateTag(log.createdAt)%></td>
+                    <td style="min-width: 150px;"><%=log.ip%></td>
+                    <td style="max-width: 600px; white-space: nowrap; overflow-x: auto;"><%=log.userAgent%></td>
+                </tr>
+            <%}%>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="navigation-div navigation-page"><%-navigationPage%></div>

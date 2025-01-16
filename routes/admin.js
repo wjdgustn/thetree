@@ -39,6 +39,7 @@ const History = require('../schemas/history');
 const BlockHistory = require('../schemas/blockHistory');
 const EditRequest = require('../schemas/editRequest');
 const ThreadComment = require('../schemas/threadComment');
+const LoginHistory = require('../schemas/loginHistory');
 
 const ACL = require('../class/acl');
 
@@ -858,6 +859,99 @@ app.post('/admin/batch_revert',
 
     res.renderSkin('일괄 되돌리기 완료', {
         contentHtml: resultText.join('<br>')
+    });
+});
+
+app.get('/admin/login_history', middleware.permission('login_history'), async (req, res) => {
+    res.renderSkin('로그인 내역', {
+        contentName: 'admin/login_history'
+    });
+});
+
+app.post('/admin/login_history',
+    middleware.permission('login_history'),
+    body('hidelog')
+        .custom((value, { req }) => {
+            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            return true;
+        }),
+    async (req, res) => {
+    const targetUser = await User.findOne({
+        name: {
+            $regex: new RegExp(`^${utils.escapeRegExp(req.body.username)}$`, 'i')
+        }
+    });
+    if(!targetUser) return res.status(404).send('사용자 이름이 올바르지 않습니다.');
+
+    req.session.loginHistoryExpiresAt = Date.now() + 1000 * 60 * 10;
+    req.session.loginHistoryTargetUser = targetUser.uuid;
+
+    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+        type: BlockHistoryTypes.LoginHistory,
+        createdUser: req.user.uuid,
+        targetUser: targetUser.uuid,
+        targetUsername: targetUser.name
+    });
+
+    res.redirect('/admin/login_history/result');
+});
+
+app.get('/admin/login_history/result', middleware.permission('login_history'), async (req, res) => {
+    if(req.session.loginHistoryExpiresAt < Date.now()) {
+        delete req.session.loginHistoryExpiresAt;
+        delete req.session.loginHistoryTargetUser;
+    }
+
+    const uuid = req.session.loginHistoryTargetUser;
+    if(!uuid) return res.redirect('/admin/login_history');
+
+    const targetUser = await User.findOne({
+        uuid
+    });
+    const latestLog = await LoginHistory.findOne({
+        uuid
+    }).sort({ _id: -1 });
+
+    const baseQuery = { uuid };
+    const query = { ...baseQuery };
+
+    const pageQuery = req.query.until || req.query.from;
+    if(pageQuery) {
+        const objectId = new mongoose.Types.ObjectId(pageQuery);
+        if(req.query.until) query._id = {
+            $gte: objectId
+        }
+        else query._id = {
+            $lte: objectId
+        }
+    }
+
+    const logs = await LoginHistory.find(query)
+        .sort({ _id: query._id?.$gte ? 1 : -1 })
+        .limit(5)
+        .lean();
+
+    if(query._id?.$gte) logs.reverse();
+
+    let prevItem;
+    let nextItem;
+    if(logs?.length) {
+        prevItem = await LoginHistory.findOne({
+            ...baseQuery,
+            _id: { $gt: logs[0]._id }
+        }).sort({ _id: 1 });
+        nextItem = await LoginHistory.findOne({
+            ...baseQuery,
+            _id: { $lt: logs[logs.length - 1]._id }
+        }).sort({ _id: -1 });
+    }
+
+    res.renderSkin(`${targetUser?.name} 로그인 내역`, {
+        contentName: 'admin/login_history_result',
+        latestLog,
+        logs,
+        prevItem,
+        nextItem
     });
 });
 

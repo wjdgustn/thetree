@@ -122,6 +122,10 @@
         color: #2056b4;
     }
 
+    .icon-purple {
+        color: #8e4ec6;
+    }
+
     .icon svg {
         fill: currentColor;
     }

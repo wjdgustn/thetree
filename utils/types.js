@@ -48,7 +48,8 @@ module.exports = {
         ACLGroupAdd: 0,
         ACLGroupRemove: 1,
         Grant: 2,
-        BatchRevert: 3
+        BatchRevert: 3,
+        LoginHistory: 4
     },
     ThreadStatusTypes: {
         Normal: 0,
