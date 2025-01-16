@@ -147,6 +147,7 @@ document.addEventListener('thetree:pageLoad', () => {
 
         for(let aclType of aclTypes) {
             updateNavs(`#${targetVal}.${aclType}`);
+            createACLForm._thetree.submitting = false;
             createACLForm.dispatchEvent(new Event('submit'));
         }
 
