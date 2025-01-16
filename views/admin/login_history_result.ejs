@@ -14,7 +14,7 @@ const navigationPage = include('../components/pageButton', {
 %>
 
 <p>마지막 로그인 UA : <%=latestLog.userAgent%></p>
-<p>이메일 : <%=user.email%></p>
+<p>이메일 : <%=targetUser?.email%></p>
 
 <div class="navigation-div navigation-page"><%-navigationPage%></div>
 <div class="wiki-content">

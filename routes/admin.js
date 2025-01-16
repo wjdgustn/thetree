@@ -948,6 +948,7 @@ app.get('/admin/login_history/result', middleware.permission('login_history'), a
 
     res.renderSkin(`${targetUser?.name} 로그인 내역`, {
         contentName: 'admin/login_history_result',
+        targetUser,
         latestLog,
         logs,
         prevItem,
