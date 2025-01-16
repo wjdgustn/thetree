@@ -331,7 +331,7 @@ module.exports = {
         return s.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     },
     async makeACLData(req) {
-        req.permissions = req.user?.permissions ?? [];
+        req.permissions = [...(req.user?.permissions ?? [])];
 
         req.permissions.unshift('any');
 
