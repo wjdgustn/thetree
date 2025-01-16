@@ -30,7 +30,7 @@ const navigationPage = include('../components/pageButton', {
             <tbody>
             <%for(let log of logs) {%>
                 <tr style="height: 40px;">
-                    <td style="min-width: 150px;"><%-getFullDateTag(log.createdAt)%></td>
+                    <td style="min-width: 160px;"><%-getFullDateTag(log.createdAt)%></td>
                     <td style="min-width: 150px;"><%=log.ip%></td>
                     <td style="max-width: 600px; white-space: nowrap; overflow-x: auto;"><%=log.userAgent%></td>
                 </tr>
