@@ -489,6 +489,15 @@ app.post('/member/change_password',
     return res.redirect('/member/mypage');
 });
 
+app.get('/contribution/ip/:ip', async (req, res) => {
+    const user = await User.findOne({
+        ip: req.params.ip
+    });
+    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+
+    res.redirect(`/contribution/${user.uuid}/document`);
+});
+
 app.get('/contribution/:uuid/document',
     param('uuid')
         .isUUID(),
