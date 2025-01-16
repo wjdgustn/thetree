@@ -733,6 +733,7 @@ app.get('/admin/thread/:url/:id/raw', middleware.referer('/thread'), async (req,
     if(dbComment.hidden
         && !req.permissions.includes('hide_thread_comment'))
         return res.status(403).send('권한이 부족합니다.');
+    if(dbComment.type !== ThreadCommentTypes.Default) return res.status(400).send('원문을 볼 수 없는 댓글입니다.');
 
     res.send(dbComment.content);
 });
