@@ -864,6 +864,16 @@ div.category-document-block div.category-document-many-content div:first-child h
     background-color: #c1434f !important;
 }
 
+.thetree-delete-button:not(.thetree-button-disabled) {
+    background-color: #d64a58;
+    border-color: #b42e3b;
+    color: #fff !important;
+}
+
+.thetree-delete-button:not([disabled]):not(.thetree-button-disabled):hover {
+    background-color: #c1434f !important;
+}
+
 .popup-close {
     opacity: 0 !important;
     pointer-events: none;

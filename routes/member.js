@@ -9,6 +9,7 @@ const { TOTP } = require('otpauth');
 const QRCode = require('qrcode');
 
 const utils = require('../utils');
+const globalUtils = require('../utils/global');
 const middleware = require('../utils/middleware');
 const {
     HistoryTypes,
@@ -26,6 +27,7 @@ const ACLGroupItem = require('../schemas/aclGroupItem');
 const ThreadComment = require('../schemas/threadComment');
 const EditRequest = require('../schemas/editRequest');
 const Blacklist = require('../schemas/blacklist');
+const Star = require('../schemas/star');
 
 const app = express.Router();
 
@@ -1162,5 +1164,54 @@ app.post('/member/recover_password/auth/:name/:token',
 
     res.redirect('/member/login');
 });
+
+const starHandler = starred => async (req, res) => {
+    const document = req.document;
+    const dbDocument = await Document.findOne({
+        namespace: document.namespace,
+        title: document.title
+    });
+    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+
+    if(starred) {
+        try {
+            await Star.create({
+                document: dbDocument.uuid,
+                user: req.user.uuid
+            });
+        } catch(e) {
+            if(e.code === 11000) return res.error('already_starred_document', 409);
+        }
+    }
+    else {
+        const deleted = await Star.findOneAndDelete({
+            document: dbDocument.uuid,
+            user: req.user.uuid
+        });
+        if(!deleted) res.error('already_unstarred_document', 404);
+    }
+
+    const referer = new URL(req.get('Referer'));
+    if(referer.pathname.startsWith('/member/starred_documents')) res.status(204).end();
+    else res.redirect(globalUtils.doc_action_link(document, 'w'));
+}
+
+app.get('/member/starred_documents', async (req, res) => {
+    let stars = await Star.find({
+        user: req.user.uuid
+    }).lean();
+    stars = await utils.findDocuments(stars);
+    stars = stars.sort((a, b) => b.document.updatedAt - a.document.updatedAt);
+
+    res.renderSkin('내 문서함', {
+        contentName: 'member/starred_documents',
+        serverData: {
+            stars
+        }
+    });
+});
+
+app.get('/member/star/?*', middleware.isLogin, middleware.parseDocumentName, starHandler(true));
+app.get('/member/unstar/?*', middleware.isLogin, middleware.parseDocumentName, starHandler(false));
 
 module.exports = app;

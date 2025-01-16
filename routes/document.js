@@ -29,6 +29,7 @@ const ACLModel = require('../schemas/acl');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
 const Thread = require('../schemas/thread');
+const Star = require('../schemas/star');
 
 const ACL = require('../class/acl');
 
@@ -314,6 +315,14 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         });
     }
 
+    const star_count = await Star.countDocuments({
+        document: dbDocument.uuid
+    });
+    const starred = await Star.exists({
+        document: dbDocument.uuid,
+        user: req.user.uuid
+    });
+
     res.renderSkin(undefined, {
         ...defaultData,
         serverData: {
@@ -322,8 +331,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         contentHtml,
         categoryHtml,
         date: rev.createdAt.getTime(),
-        star_count: 0,
-        starred: false
+        star_count,
+        starred: !!starred
     });
 });
 

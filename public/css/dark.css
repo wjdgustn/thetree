@@ -42,8 +42,12 @@
 }
 
 .theseed-dark-mode .thetree-primary-button {
-    background-color: #1555b5;
-    border-color: #052e6d;
+    background-color: #1555b5 !important;
+    border-color: #052e6d !important;
+}
+
+.theseed-dark-mode .thetree-primary-button:not([disabled]):not(.thetree-button-disabled):hover {
+    background-color: #1e5ebd !important;
 }
 
 .theseed-dark-mode .category-list {
@@ -112,4 +116,13 @@
 .theseed-dark-mode .thetree-modal-content {
     background-color: #2d2f34;
     border-color: #2d3748;
+}
+
+.theseed-dark-mode .thetree-delete-button:not(.thetree-button-disabled) {
+    background-color: #75121c;
+    border-color: #861520;
+}
+
+.theseed-dark-mode .thetree-delete-button:not([disabled]):not(.thetree-button-disabled):hover {
+    background-color: #8d101d !important;
 }
