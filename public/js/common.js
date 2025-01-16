@@ -509,6 +509,7 @@ function changeUrl(url) {
 }
 
 let content;
+let movePageAbortController;
 async function movePage(response, pushState = true, prevUrl = null) {
     if(window.beforePageLoad.length) for(let handler of window.beforePageLoad) {
         const canMove = await handler();
@@ -525,7 +526,19 @@ async function movePage(response, pushState = true, prevUrl = null) {
         const url = new URL(response, location.origin);
         if(url.hash) anchor = url.hash;
         url.searchParams.set('f', '1');
-        response = await fetch((response.startsWith('?') ? '' : url.pathname) + url.search);
+
+        movePageAbortController?.abort();
+        movePageAbortController = new AbortController();
+        try {
+            response = await fetch((response.startsWith('?') ? '' : url.pathname) + url.search, {
+                signal: movePageAbortController.signal
+            });
+        } catch(e) {
+            if(e.name === 'AbortError') return;
+
+            console.error(e);
+            return;
+        }
     }
 
     const html = await response.text();
