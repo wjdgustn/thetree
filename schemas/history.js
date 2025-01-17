@@ -68,6 +68,9 @@ const newSchema = new Schema({
     diffLength: {
         type: Number
     },
+    contentLength: {
+        type: Number
+    },
     log: {
         type: String,
         maxLength: 255
@@ -167,6 +170,7 @@ newSchema.pre('save', async function() {
     else this.blame = last ? last.blame : [];
 
     this.redirect = this.content?.startsWith('#redirect ');
+    this.contentLength = this.content?.length || 0;
 });
 
 newSchema.post('save', function() {

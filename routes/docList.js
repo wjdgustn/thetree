@@ -55,4 +55,25 @@ app.get('/OldPages', async (req, res) => {
     });
 });
 
+const contentLengthHandler = shortest => async (req, res) => {
+    const baseQuery = {
+        namespace: '문서',
+        redirect: false,
+        content: { $exists: true },
+        latest: true
+    }
+    const serverData = await utils.pagination(req, History, baseQuery, 'document', 'contentLength', {
+        sortDirection: shortest ? 1 : -1
+    });
+    serverData.items = await utils.findDocuments(serverData.items);
+
+    res.renderSkin(`내용이 ${shortest ? '짧은' : '긴'} 문서`, {
+        contentName: 'docList/ContentLength',
+        serverData
+    });
+}
+
+app.get('/ShortestPages', contentLengthHandler(true));
+app.get('/LongestPages', contentLengthHandler(false));
+
 module.exports = app;
