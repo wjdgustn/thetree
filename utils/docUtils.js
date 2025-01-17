@@ -129,6 +129,12 @@ module.exports = {
             latest: false
         });
 
+        await mongoose.models.History.updateOne({
+            uuid: rev.uuid
+        }, {
+            namespace: dbDocument.namespace
+        });
+
         const document = utils.dbDocumentToDocument(dbDocument);
 
         const parser = new global.NamumarkParser({
