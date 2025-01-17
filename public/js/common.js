@@ -1051,7 +1051,10 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('keypress', async e => {
-    console.log(e.key);
+    if([
+        'INPUT', 'TEXTAREA'
+    ].includes(document.activeElement.tagName)) return;
+
     if(e.key === 'c') await movePage('/RecentChanges');
     if(e.key === 'd') await movePage('/RecentDiscuss');
     if(e.key === 'a') await movePage('/random');
