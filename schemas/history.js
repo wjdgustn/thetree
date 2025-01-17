@@ -9,7 +9,6 @@ const { Schema } = mongoose;
 const newSchema = new Schema({
     namespace: {
         type: String,
-        required: true,
         index: true
     },
     uuid: {
