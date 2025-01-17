@@ -1049,3 +1049,15 @@ window.addEventListener('load', () => {
         document.head.appendChild(style);
     }
 });
+
+window.addEventListener('keypress', async e => {
+    console.log(e.key);
+    if(e.key === 'c') await movePage('/RecentChanges');
+    if(e.key === 'd') await movePage('/RecentDiscuss');
+    if(e.key === 'a') await movePage('/random');
+    if(e.key === 'f') await movePage(`/w/${CONFIG.front_page}`);
+    if(e.key === 'e') {
+        const document = State.page.data.document;
+        if(document) await movePage(doc_action_link(document, 'edit'));
+    }
+});
