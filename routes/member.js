@@ -264,8 +264,15 @@ app.post('/member/signup/:token',
     return req.login({
         ...newUser.toJSON(),
         avatar: utils.getGravatar(newUser.email)
-    }, { keepSessionInfo: true }, err => {
+    }, { keepSessionInfo: true }, async err => {
         if(err) console.error(err);
+
+        await LoginHistory.create({
+            uuid: newuser.uuid,
+            ip: req.ip,
+            userAgent: req.get('User-Agent')
+        });
+
         if(!res.headersSent) {
             req.session.fullReload = true;
             delete req.session.contributor;
