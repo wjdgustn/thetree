@@ -770,27 +770,41 @@ app.post('/member/withdraw',
         uuid: req.user.uuid
     });
 
-    const dbDocument = await Document.findOneAndUpdate({
+    const userDocs = await Document.find({
         namespace: '사용자',
-        title: req.user.name
-    }, {
-        title: `*${req.user.uuid}`
-    }, {
-        new: true
+        $or: [
+            {
+                title: req.user.name
+            },
+            {
+                title: {
+                    $regex: new RegExp(`^사용자:${utils.escapeRegExp(req.user.name)}/`)
+                }
+            }
+        ]
     });
-    await History.create({
-        user: req.user.uuid,
-        type: HistoryTypes.Move,
-        document: dbDocument.uuid,
-        moveOldDoc: `사용자:${req.user.name}`,
-        moveNewDoc: `사용자:*${req.user.uuid}`
-    });
-    await History.create({
-        user: req.user.uuid,
-        type: HistoryTypes.Delete,
-        document: dbDocument.uuid,
-        content: null
-    });
+    for(let dbDocument of userDocs) {
+        const newDbDocument = await Document.updateOne({
+            uuid: dbDocument.uuid
+        }, {
+            title: dbDocument.title.replace(`${req.user.name}/`, `*${req.user.uuid}/`)
+        }, {
+            new: true
+        });
+        await History.create({
+            user: req.user.uuid,
+            type: HistoryTypes.Move,
+            document: dbDocument.uuid,
+            moveOldDoc: `사용자:${dbDocument.title}`,
+            moveNewDoc: `사용자:${newDbDocument.title}`
+        });
+        await History.create({
+            user: req.user.uuid,
+            type: HistoryTypes.Delete,
+            document: dbDocument.uuid,
+            content: null
+        });
+    }
 
     req.logout({ keepSessionInfo: true }, err => {
         if(err) console.error(err);
@@ -834,21 +848,35 @@ app.post('/member/change_name',
         lastNameChange: Date.now()
     });
 
-    const dbDocument = await Document.findOneAndUpdate({
+    const userDocs = await Document.find({
         namespace: '사용자',
-        title: req.user.name
-    }, {
-        title: req.body.name
-    }, {
-        new: true
+        $or: [
+            {
+                title: req.user.name
+            },
+            {
+                title: {
+                    $regex: new RegExp(`^사용자:${utils.escapeRegExp(req.user.name)}/`)
+                }
+            }
+        ]
     });
-    await History.create({
-        user: req.user.uuid,
-        type: HistoryTypes.Move,
-        document: dbDocument.uuid,
-        moveOldDoc: `사용자:${req.user.name}`,
-        moveNewDoc: `사용자:${req.body.name}`
-    });
+    for(let dbDocument of userDocs) {
+        const newDbDocument = await Document.updateOne({
+            uuid: dbDocument.uuid
+        }, {
+            title: dbDocument.title.replace(`${req.user.name}/`, `*${req.body.name}/`)
+        }, {
+            new: true
+        });
+        await History.create({
+            user: req.user.uuid,
+            type: HistoryTypes.Move,
+            document: dbDocument.uuid,
+            moveOldDoc: `사용자:${dbDocument.title}`,
+            moveNewDoc: `사용자:${newDbDocument.title}`
+        });
+    }
 
     res.redirect('/member/mypage');
 });
