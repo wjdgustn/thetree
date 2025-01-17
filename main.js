@@ -302,6 +302,8 @@ app.use(async (req, res, next) => {
 
     req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
+    if(req.session.ipUser?.ip !== req.ip)
+        req.session.ipUser = null;
     if(!req.session.ipUser) {
         req.session.ipUser = await User.findOne({
             ip: req.ip
