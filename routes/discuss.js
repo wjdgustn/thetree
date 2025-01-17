@@ -634,6 +634,29 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
         dbComment
     });
 
+    if(document.namespace === '사용자') {
+        const user = await User.findOne({
+            name: document.title
+        });
+        if(user.lastUserDocumentDiscuss <= dbComment.createdAt)
+            await User.updateOne({
+                uuid: user.uuid
+            }, {
+                lastUserDocumentDiscuss: null
+            });
+    }
+    if(dbTargetDocument.namespace === '사용자') {
+        const user = await User.findOne({
+            name: dbTargetDocument.title
+        });
+        if(user.lastUserDocumentDiscuss <= dbComment.createdAt)
+            await User.updateOne({
+                uuid: user.uuid
+            }, {
+                lastUserDocumentDiscuss: dbComment.createdAt
+            });
+    }
+
     res.status(204).end();
 });
 
