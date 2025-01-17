@@ -87,7 +87,7 @@ const isFrontPage = docTitle === config.front_page;
     </form>
 <%}%>
 
-<form id="comment-form" class="comment-form" method="post" action="/thread/<%=thread.url%>" x-data="{ selectedTab: 'raw' }"<%=req.user.type !== UserTypes.Account ? ' data-captcha="1"' : ''%>>
+<form id="comment-form" class="comment-form" method="post" action="/thread/<%=thread.url%>" x-data="{ selectedTab: 'raw' }"<%=req.user?.type !== UserTypes.Account ? ' data-captcha="1"' : ''%>>
     <ul>
         <li>
             <button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button>
