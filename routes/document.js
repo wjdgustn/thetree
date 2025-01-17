@@ -318,7 +318,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     const star_count = await Star.countDocuments({
         document: dbDocument.uuid
     });
-    const starred = await Star.exists({
+    let starred = false;
+    if(req.user) starred = await Star.exists({
         document: dbDocument.uuid,
         user: req.user.uuid
     });
