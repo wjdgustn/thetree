@@ -1,0 +1,12 @@
+<div class="namespace-selector-block">
+    <form id="namespaceSelector">
+        <label for="namespaceSelect">이름공간:</label>
+        <select id="namespaceSelect" name="namespace">
+            <%for(let namespace of config.namespaces) {%>
+                <option><%=namespace%></option>
+            <%}%>
+        </select>
+
+        <button class="thetree-button thetree-primary-button">제출</button>
+    </form>
+</div>

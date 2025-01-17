@@ -598,5 +598,71 @@ module.exports = {
         }
 
         return true;
+    },
+    async pagination(req, model, baseQuery, key, sortKey, {
+        limit, sortDirection, pageQuery
+    } = {}) {
+        const query = { ...baseQuery };
+        pageQuery ??= req.query.until || req.query.from;
+        if(pageQuery) {
+            const doc = await model.findOne({
+                [key]: pageQuery
+            });
+            if(doc) {
+                if(req.query.until) query[sortKey] = { $gte: doc[sortKey] };
+                else query[sortKey] = { $lte: doc[sortKey] };
+            }
+        }
+
+        sortDirection ??= -1;
+
+        let items = await model.find(query)
+            .sort({ [sortKey]: query[sortKey]?.$gte ? -sortDirection : sortDirection })
+            .limit(limit || 100)
+            .lean();
+        if(query[sortKey]?.$gte) items.reverse();
+
+        let prevItem;
+        let nextItem;
+        if(items.length) {
+            prevItem = await model.findOne({
+                ...baseQuery,
+                [sortKey]: { $gt: items[0][sortKey] }
+            })
+                .sort({ [sortKey]: -sortDirection })
+                .lean();
+            nextItem = await model.findOne({
+                ...baseQuery,
+                [sortKey]: { $lt: items[items.length - 1][sortKey] }
+            })
+                .sort({ [sortKey]: sortDirection })
+                .lean();
+        }
+
+        const link = query => `${req.path}?${querysting.stringify({
+            ...this.withoutKeys(req.query, [query.from ? 'until' : 'from']),
+            ...query
+        })}`;
+        const originalPageButton = await new Promise(async (resolve, reject) => {
+            expressApp.render('components/pageButton', {
+                prevLink: prevItem ? link({
+                    until: prevItem[key].toString()
+                }) : null,
+                nextLink: nextItem ? link({
+                    from: nextItem[key].toString()
+                }) : null
+            }, (err, html) => {
+                if(err) reject(err);
+                resolve(html);
+            });
+        });
+
+        return {
+            items,
+            prevItem,
+            nextItem,
+            pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
+            originalPageButton
+        }
     }
 }
