@@ -129,7 +129,7 @@ if(debug) instrument(SocketIO, {
 
 SocketIO.on('new_namespace', namespace => {
     namespace.use(async (socket, next) => {
-        socket.request.ip = process.env.IP_HEADER
+        socket.request.ip = (process.env.IP_HEADER && socket.handshake.headers[process.env.IP_HEADER])
             ? socket.handshake.headers[process.env.IP_HEADER].split(',')[0]
             : socket.handshake.address;
 
@@ -286,7 +286,7 @@ app.get('/js/global.js', (req, res) => {
 });
 
 app.use(async (req, res, next) => {
-    if(process.env.IP_HEADER) Object.defineProperty(req, 'ip', {
+    if(process.env.IP_HEADER && req.headers[process.env.IP_HEADER]) Object.defineProperty(req, 'ip', {
         get() {
             return req.headers[process.env.IP_HEADER].split(',')[0];
         }
