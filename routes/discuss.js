@@ -358,7 +358,8 @@ app.get('/thread/:url', async (req, res) => {
             createdUser: thread.createdUser,
             status: thread.status
         },
-        hideHiddenComments: !req.permissions.includes('hide_thread_comment')
+        hideHiddenComments: true
+        // hideHiddenComments: !req.permissions.includes('hide_thread_comment')
     });
 });
 
