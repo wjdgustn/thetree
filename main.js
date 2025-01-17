@@ -129,8 +129,8 @@ if(debug) instrument(SocketIO, {
 
 SocketIO.on('new_namespace', namespace => {
     namespace.use(async (socket, next) => {
-        socket.request.ip = process.env.TRUST_PROXY === 'true'
-            ? socket.handshake.headers["x-forwarded-for"].split(",")[0]
+        socket.request.ip = process.env.IP_HEADER
+            ? socket.handshake.headers[process.env.IP_HEADER].split(',')[0]
             : socket.handshake.address;
 
         await utils.makeACLData(socket.request);
@@ -141,7 +141,7 @@ SocketIO.on('new_namespace', namespace => {
 
 global.permTokens = Object.fromEntries([...GrantablePermissions, ...DevPermissions].map(a => [a, crypto.randomBytes(16).toString('hex')]));
 
-app.set('trust proxy', process.env.TRUST_PROXY === 'true');
+// app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
 app.set('views', './views');
 app.set('view engine', 'ejs');
@@ -286,6 +286,12 @@ app.get('/js/global.js', (req, res) => {
 });
 
 app.use(async (req, res, next) => {
+    if(process.env.IP_HEADER) Object.defineProperty(req, 'ip', {
+        get() {
+            return req.headers[process.env.IP_HEADER].split(',')[0];
+        }
+    });
+
     if(!req.ip) return res.status(500).send('ip error');
     const slicedIp = req.ip.slice(7);
     if(Address4.isValid(slicedIp)) Object.defineProperty(req, 'ip', {
