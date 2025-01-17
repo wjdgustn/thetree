@@ -854,7 +854,7 @@ const checkDoingManyEdits = async req => {
     if(!config.captcha.enabled || !config.captcha.edit_captcha.enabled) return false;
 
     const recentContributionCount = await History.countDocuments({
-        user: req.user.uuid,
+        user: req.user?.uuid,
         type: {
             $in: [
                 HistoryTypes.Create,
