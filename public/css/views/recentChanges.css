@@ -72,6 +72,12 @@
         padding-top: 0;
     }
 
+    .changes-value-empty {
+        color: #888;
+        grid-column: 1 / 4;
+        text-align: center;
+    }
+
     @media screen and (max-width: 1023.98px) {
         .changes-value {
             margin: 0 !important;
