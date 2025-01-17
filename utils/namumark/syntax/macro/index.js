@@ -3,6 +3,7 @@ const fs = require('fs');
 const { Priority } = require('../../types');
 
 const macros = {};
+const threadMacros = [];
 const loadMacros = () => {
     const files = fs.readdirSync(__dirname);
     for(let file of files) {
@@ -18,6 +19,9 @@ const loadMacros = () => {
         if(macro.aliases)
             for(let alias of macro.aliases)
                 macros[alias] = macro.format;
+
+        if(macro.allowThread)
+            threadMacros.push(macroName, ...(macro.aliases ?? []));
     }
 }
 
@@ -45,7 +49,7 @@ module.exports = {
 
         if(!macros[name]) return;
 
-        if(namumark.thread) return '';
+        if(namumark.thread && !threadMacros.includes(name)) return '';
 
         return await macros[name](params, namumark);
     }
