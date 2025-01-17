@@ -20,7 +20,8 @@ app.get('/UncategorizedPages', async (req, res) => {
         categories: { $size: 0 },
         $or: [
             { backlinks: { $not: { $elemMatch: { flags: 8 } } } }
-        ]
+        ],
+        contentExists: true
     }
     const data = await utils.pagination(req, Document, baseQuery, 'uuid', 'upperTitle');
 
