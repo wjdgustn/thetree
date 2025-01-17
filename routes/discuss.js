@@ -624,7 +624,7 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
         user: req.user.uuid,
         admin: req.permissions.includes('admin'),
         type: ThreadCommentTypes.UpdateDocument,
-        content: globalUtils.doc_fulltitle(dbTargetDocument),
+        content: globalUtils.doc_fulltitle(targetDocument),
         prevContent: globalUtils.doc_fulltitle(document)
     });
     await threadCommentEvent({
