@@ -792,7 +792,14 @@ app.post('/admin/batch_revert',
             const fullTitleLink = `<a href="${globalUtils.doc_action_link(document, 'w')}">${namumarkUtils.escapeHtml(fullTitle)}</a>`;
             const acl = await ACL.get({ document: dbDocument });
 
+            const lastTrollRev = revs.findLast(rev => rev.document === docUuid);
             const firstTrollRev = revs.find(rev => rev.document === docUuid);
+
+            if(!lastTrollRev.latest) {
+                failResultText.push(`${fullTitleLink}: 이후 정상 기여 존재`);
+                return resolve();
+            }
+
             const lastNormalRev = await History.findOne({
                 document: docUuid,
                 _id: {
