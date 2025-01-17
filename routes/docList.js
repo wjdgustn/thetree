@@ -44,7 +44,7 @@ app.get('/OldPages', async (req, res) => {
         content: { $exists: true },
         latest: true
     }
-    const serverData = await utils.pagination(req, History, baseQuery, 'document', 'createdAt', {
+    const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'createdAt', {
         sortDirection: 1
     });
     serverData.items = await utils.findDocuments(serverData.items);
@@ -62,7 +62,7 @@ const contentLengthHandler = shortest => async (req, res) => {
         content: { $exists: true },
         latest: true
     }
-    const serverData = await utils.pagination(req, History, baseQuery, 'document', 'contentLength', {
+    const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'contentLength', {
         sortDirection: shortest ? 1 : -1
     });
     serverData.items = await utils.findDocuments(serverData.items);
