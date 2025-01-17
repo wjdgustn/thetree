@@ -1,3 +1,6 @@
-module.exports = _ => {
-    return '<div class="wiki-clearfix"></div>';
+module.exports = {
+    allowThread: true,
+    format() {
+        return '<div class="wiki-clearfix"></div>';
+    }
 }
