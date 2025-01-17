@@ -976,7 +976,7 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
-    if(namespace === '사용자' && isCreate && !title.includes('/')) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+    if(namespace === '사용자' && isCreate && (!title.includes('/') || title.startsWith('*'))) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
 
     if(isEditRequest) {
         const editRequest = await EditRequest.findOneAndUpdate({
@@ -1694,7 +1694,7 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
     if(!otherResult) return res.error(otherAclMessage, 403);
 
     const isUserDoc = document.namespace === '사용자' && !document.title.includes('/');
-    const otherIsUserDoc = otherDocument.namespace === '사용자' && !otherDocument.title.includes('/');
+    const otherIsUserDoc = otherDocument.namespace === '사용자' && (!otherDocument.title.includes('/') || otherDocument.title.startsWith('*'));
     if(isUserDoc || otherIsUserDoc)
         return res.error('이 문서를 해당 이름 공간으로 이동할 수 없습니다.', 403);
 
