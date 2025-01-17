@@ -47,6 +47,10 @@ document.addEventListener('thetree:pageLoad', () => {
 
             requestAnimationFrame(() => {
                 setupComment();
+
+                const visibleComments = [...document.getElementsByClassName('comment-block-visible')];
+                const firstUnfetchedComment = visibleComments.find(a => !a.dataset.fetched);
+                if(firstUnfetchedComment) setScrollTimer();
             });
         }, 100);
     }
