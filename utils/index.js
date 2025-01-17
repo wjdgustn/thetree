@@ -602,6 +602,12 @@ module.exports = {
     async pagination(req, model, baseQuery, key, sortKey, {
         limit, sortDirection, pageQuery
     } = {}) {
+        sortDirection ??= -1;
+        const $gte = sortDirection === -1 ? '$gte' : '$lte';
+        const $lte = sortDirection === -1 ? '$lte' : '$gte';
+        const $gt = sortDirection === -1 ? '$gt' : '$lt';
+        const $lt = sortDirection === -1 ? '$lt' : '$gt';
+
         const query = { ...baseQuery };
         pageQuery ??= req.query.until || req.query.from;
         if(pageQuery) {
@@ -609,31 +615,29 @@ module.exports = {
                 [key]: pageQuery
             });
             if(doc) {
-                if(req.query.until) query[sortKey] = { $gte: doc[sortKey] };
-                else query[sortKey] = { $lte: doc[sortKey] };
+                if(req.query.until) query[sortKey] = { [$gte]: doc[sortKey] };
+                else query[sortKey] = { [$lte]: doc[sortKey] };
             }
         }
 
-        sortDirection ??= -1;
-
         let items = await model.find(query)
-            .sort({ [sortKey]: query[sortKey]?.$gte ? -sortDirection : sortDirection })
+            .sort({ [sortKey]: query[sortKey]?.[$gte] ? -sortDirection : sortDirection })
             .limit(limit || 100)
             .lean();
-        if(query[sortKey]?.$gte) items.reverse();
+        if(query[sortKey]?.[$gte]) items.reverse();
 
         let prevItem;
         let nextItem;
         if(items.length) {
             prevItem = await model.findOne({
                 ...baseQuery,
-                [sortKey]: { $gt: items[0][sortKey] }
+                [sortKey]: { [$gt]: items[0][sortKey] }
             })
                 .sort({ [sortKey]: -sortDirection })
                 .lean();
             nextItem = await model.findOne({
                 ...baseQuery,
-                [sortKey]: { $lt: items[items.length - 1][sortKey] }
+                [sortKey]: { [$lt]: items[items.length - 1][sortKey] }
             })
                 .sort({ [sortKey]: sortDirection })
                 .lean();

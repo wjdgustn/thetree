@@ -1,0 +1,11 @@
+<p>편집된 지 오래된 문서의 목록입니다. (리다이렉트 제외)</p>
+<%-pageButton%>
+<ul class="list-page">
+    <%for(let item of items) {%>
+    <li>
+        <a href="<%=doc_action_link(item.document.parsedName, 'w')%>"><%=doc_fulltitle(item.document.parsedName)%></a>
+        (수정 시각:<%-getFullDateTag(item.createdAt)%>)
+    </li>
+    <%}%>
+</ul>
+<%-pageButton%>

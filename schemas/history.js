@@ -7,6 +7,11 @@ const { HistoryTypes } = require('../utils/types');
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
+    namespace: {
+        type: String,
+        required: true,
+        index: true
+    },
     uuid: {
         type: String,
         required: true,
@@ -109,6 +114,9 @@ const newSchema = new Schema({
     },
     migrated: {
         type: Boolean
+    },
+    redirect: {
+        type: Boolean
     }
 });
 
@@ -157,6 +165,8 @@ newSchema.pre('save', async function() {
         this.blame = docUtils.generateBlame(last, this);
     }
     else this.blame = last ? last.blame : [];
+
+    this.redirect = this.content?.startsWith('#redirect ');
 });
 
 newSchema.post('save', function() {
