@@ -860,16 +860,19 @@ document.addEventListener('alpine:init', () => {
         },
 
         threadIntersectionObserver: new IntersectionObserver(async entries => {
+            let hasNewVisible = false;
             for(let entry of entries) {
                 const element = entry.target.parentElement;
 
                 if(entry.isIntersecting) {
                     element.classList.add('comment-block-visible');
+                    hasNewVisible = true;
                 }
                 else {
                     element.classList.remove('comment-block-visible');
                 }
             }
+            if(hasNewVisible) window.dispatchEvent(new Event('scroll'));
         }),
 
         async openQuickACLGroup({
