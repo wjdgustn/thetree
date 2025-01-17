@@ -44,10 +44,14 @@ app.get('/OldPages', async (req, res) => {
         content: { $exists: true },
         latest: true
     }
-    const serverData = await utils.pagination(req, History, baseQuery, 'document', 'createdAt', {
-        sortDirection: 1
+    const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'createdAt', {
+        sortDirection: 1,
+        limit: 5
     });
     serverData.items = await utils.findDocuments(serverData.items);
+
+    if(serverData.prevItem) serverData.prevItem.document = await Document.findOne({ uuid: serverData.prevItem.document });
+    if(serverData.nextItem) serverData.nextItem.document = await Document.findOne({ uuid: serverData.nextItem.document });
 
     res.renderSkin('편집된 지 오래된 문서', {
         contentName: 'docList/OldPages',
@@ -62,10 +66,14 @@ const contentLengthHandler = shortest => async (req, res) => {
         content: { $exists: true },
         latest: true
     }
-    const serverData = await utils.pagination(req, History, baseQuery, 'document', 'contentLength', {
-        sortDirection: shortest ? 1 : -1
+    const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'contentLength', {
+        sortDirection: shortest ? 1 : -1,
+        limit: 5
     });
     serverData.items = await utils.findDocuments(serverData.items);
+
+    if(serverData.prevItem) serverData.prevItem.document = await Document.findOne({ uuid: serverData.prevItem.document });
+    if(serverData.nextItem) serverData.nextItem.document = await Document.findOne({ uuid: serverData.nextItem.document });
 
     res.renderSkin(`내용이 ${shortest ? '짧은' : '긴'} 문서`, {
         contentName: 'docList/ContentLength',
