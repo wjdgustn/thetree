@@ -412,6 +412,17 @@ app.post('/member/login/pin',
         req.session.trustedAccounts.push(user.uuid);
     }
 
+    if(req.body.autologin === 'Y') {
+        const token = await AutoLoginToken.create({
+            uuid: user.uuid
+        });
+        res.cookie('honoka', token.token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+            sameSite: 'lax'
+        });
+    }
+
     req.login(user, { keepSessionInfo: true }, err => {
         if(err) console.error(err);
         if(!res.headersSent) {
