@@ -1,6 +1,7 @@
 <h2>the tree</h2>
 
 <p>v1.0.0</p>
+<%if(req.permissions.includes('admin')) {%><p><%=commitDate.toLocaleString()%></p><%}%>
 <ul>
     <li>Engine: <%=commitId%></li>
     <li>Skin: <%=skinCommitId%></li>
