@@ -451,7 +451,12 @@ app.get('/BlockHistory', async (req, res) => {
 app.get('/RandomPage', async (req, res) => {
     const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
     const docs = await Document.aggregate([
-        { $match: { namespace } },
+        {
+            $match: {
+                namespace,
+                contentExists: true
+            }
+        },
         { $sample: { size: 20 } }
     ]);
 
@@ -465,7 +470,12 @@ app.get('/RandomPage', async (req, res) => {
 
 app.get('/random', async (req, res) => {
     const docs = await Document.aggregate([
-        { $match: { namespace: '문서' } },
+        {
+            $match: {
+                namespace: '문서',
+                contentExists: true
+            }
+        },
         { $sample: { size: 1 } }
     ]);
     if(!docs.length) return res.status(404).send('문서가 없습니다.');
