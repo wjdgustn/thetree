@@ -1664,6 +1664,7 @@ app.get('/move/?*', middleware.parseDocumentName, async (req, res) => {
 app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
     if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+    if(req.body.title.length > 255) return res.status(400).send('문서 이름이 올바르지 않습니다.');
 
     const document = req.document;
     const otherDocument = utils.parseDocumentName(req.body.title);
