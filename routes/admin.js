@@ -694,13 +694,13 @@ app.post('/admin/batch_revert',
         next();
     },
     body('uuid')
-        .notEmpty().withMessage('UUID는 필수입니다.')
-        .isUUID().withMessage('UUID 형식이 잘못되었습니다.')
+        .notEmpty().withMessage('uuid의 값은 필수입니다.')
+        .isUUID().withMessage('uuid의 값을 형식에 맞게 입력해주세요.')
         .custom(async (value, { req }) => {
             const user = await User.findOne({
                 uuid: value
             });
-            if(!user || !value) throw new Error('대상을 찾을 수 없습니다.');
+            if(!user || !value) throw new Error('계정을 찾을 수 없습니다.');
 
             req.modifiedBody.user = user;
         }),
