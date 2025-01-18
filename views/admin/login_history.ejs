@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="/css/views/simpleForm.css">
 <form method="post">
     <div>
-        <label for="usernameInput">유저 이름 :</label>
+        <label for="usernameInput">Username:</label>
         <input style="width: 250px;" id="usernameInput" name="username" required autofocus>
     </div>
     <%if(req.permissions.includes('developer')) {%>
