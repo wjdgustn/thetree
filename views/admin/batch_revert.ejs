@@ -54,7 +54,7 @@
                 <p>실패 작업 목록</p>
                 <ul style="color: red;">
                     <%for(let text of req.flash.batchRevertResult.failResultText) {%>
-                        <li><%=text%></li>
+                        <li><%-text%></li>
                     <%}%>
                 </ul>
             <%}%>
