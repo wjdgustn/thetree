@@ -98,7 +98,10 @@ const threadCommentEvent = async ({
     const comment = await threadCommentMapper({
         thread,
         parser,
-        user: req.user,
+        user: {
+            ...req.user,
+            userCSS: await utils.getUserCSS(req.user)
+        },
         hideUser
     })(dbComment.toJSON());
 
