@@ -10,7 +10,9 @@ module.exports = {
         let text = '';
 
         let sourceTextPos = 0;
+        let repeatCount = 0;
         while(sourceTextPos < sourceText.length) {
+            if(repeatCount++ > 100000) return '<span style="color:red">render error</span>';
             let newText = '';
             let textLength = 0;
 
