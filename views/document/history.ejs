@@ -131,7 +131,7 @@ const navigationPage = include('../components/pageButton', {
                     <%if(req.permissions.includes('hide_document_history_log') && rev.hideLog) {%>
                         <span x-data="{ show: false }">
                             <button x-show="!show" class="thetree-button thetree-changes-button" type="button" @click="show=true">내용 보기</button>
-                            <span x-show="show">(<span class="history-log">내용: <%=rev.log%></span>)</span>
+                            <span x-cloak x-show="show">(<span class="history-log">내용: <%=rev.log%></span>)</span>
                         </span>
                     <%}%>
                 <%}%>
