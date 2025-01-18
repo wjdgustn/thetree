@@ -19,9 +19,9 @@ module.exports = {
             const sharpPos = sourceText.indexOf('#', sourceTextPos);
             const openTagPos = sourceText.indexOf('<', sourceTextPos);
 
-            const isEscapeChar = sourceText.slice(sourceTextPos - 1, sourceTextPos - 1 + '&#039;'.length) !== '&#039;';
+            const isEscapeChar = sourceText.slice(sourceTextPos - 1, sourceTextPos - 1 + '&#039;'.length) === '&#039;';
 
-            if(sharpPos === sourceTextPos && isEscapeChar) {
+            if(sharpPos === sourceTextPos && !isEscapeChar) {
                 let num = '';
                 let numPos = sourceTextPos + 1;
                 while(!isNaN(sourceText[numPos])) {
@@ -33,6 +33,7 @@ module.exports = {
                     newText = `<a href="#${num}" class="wiki-self-link">#${num}</a>`;
                     textLength = num.length + 1;
                 }
+                else newText = '#';
             }
             else if(openTagPos === sourceTextPos) {
                 const closeTagPos = sourceText.indexOf('>', sourceTextPos + 1);
