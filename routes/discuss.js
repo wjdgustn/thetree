@@ -678,7 +678,8 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
     await Thread.updateOne({
         uuid: thread.uuid
     }, {
-        deleted: true
+        deleted: true,
+        deletedBy: req.user.uuid
     });
     SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { deleted: true });
 
