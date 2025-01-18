@@ -128,7 +128,7 @@ const navigationPage = include('../components/pageButton', {
                     [<%-userHtml(rev.trollBy)%> 사용자에 의해 반달로 표시됨]
                 <%} else if(rev.log) {%>
                     (<span class="history-log"><%if(rev.hideLog) {%><%-userHtml(rev.hideLogBy)%> 사용자에 의해 편집 요약 숨겨짐<%} else {%><%=rev.log%><%}%></span>)
-                    <%if(req.permissions.includes('hide_document_history_log')) {%>
+                    <%if(req.permissions.includes('hide_document_history_log') && rev.hideLog) {%>
                         <span x-data="{ show: false }">
                             <button x-show="!show" class="thetree-button thetree-changes-button" type="button" @click="show=true">내용 보기</button>
                             <span x-show="show">(<span class="history-log">내용: <%=rev.log%></span>)</span>
