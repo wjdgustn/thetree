@@ -19,7 +19,9 @@ module.exports = {
             const sharpPos = sourceText.indexOf('#', sourceTextPos);
             const openTagPos = sourceText.indexOf('<', sourceTextPos);
 
-            if(sharpPos === sourceTextPos && sourceText.slice(sourceTextPos - 1, '&#039;'.length) !== '&#039;') {
+            const isEscapeChar = sourceText.slice(sourceTextPos - 1, sourceTextPos - 1 + '&#039;'.length) !== '&#039;';
+
+            if(sharpPos === sourceTextPos && isEscapeChar) {
                 let num = '';
                 let numPos = sourceTextPos + 1;
                 while(!isNaN(sourceText[numPos])) {
@@ -43,7 +45,8 @@ module.exports = {
             }
             else {
                 const target = [sharpPos, openTagPos].filter(a => a !== -1);
-                const nextPos = target.length ? Math.min(...target) : sourceText.length;
+                let nextPos = target.length ? Math.min(...target) : sourceText.length;
+                if(isEscapeChar) nextPos++;
                 newText = sourceText.slice(sourceTextPos, nextPos);
             }
 
