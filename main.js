@@ -239,7 +239,10 @@ const sessionMiddleware = session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store
+    store,
+    cookie: {
+        sameSite: 'lax'
+    }
 });
 app.use(sessionMiddleware);
 SocketIO.engine.use(onlyForHandshake(sessionMiddleware));
