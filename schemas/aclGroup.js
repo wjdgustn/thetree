@@ -29,6 +29,11 @@ const newSchema = new Schema({
         required: true,
         default: false
     },
+    adminEditable: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     preventDelete: {
         type: Boolean,
         required: true,

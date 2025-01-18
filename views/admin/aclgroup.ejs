@@ -7,6 +7,7 @@
 <%const adminPerm = req.permissions.includes('admin');%>
 <%const aclgroupPerm = req.permissions.includes('aclgroup');%>
 <%const devPerm = req.permissions.includes('developer');%>
+<%const usable = selectedGroup.adminEditable ? adminPerm : aclgroupPerm;%>
 
 <form id="aclgroup-remove-form" method="post" action="aclgroup/group_remove">
     <input id="aclgroup-remove-group" type="hidden" name="uuid">
@@ -67,6 +68,11 @@
             <div>
                 <input id="hiddenFromPublicInput" name="hiddenFromPublic" type="checkbox" value="Y"<%=selectedGroup.hiddenFromPublic ? ' checked' : ''%>>
                 <label for="hiddenFromPublicInput">관리자 권한이 없는 경우 숨기기</label>
+            </div>
+
+            <div>
+                <input id="adminEditableInput" name="adminEditable" type="checkbox" value="Y"<%=selectedGroup.adminEditable ? ' checked' : ''%>>
+                <label for="adminEditableInput">admin 권한 보유 시 항목 추가 / 제거 가능</label>
             </div>
 
             <div>
@@ -145,7 +151,7 @@
         </div>
     <%}%>
 
-    <button class="thetree-square-button thetree-blue-button"<%=adminPerm ? '' : ' disabled'%>>추가</button>
+    <button class="thetree-square-button thetree-blue-button"<%=usable ? '' : ' disabled'%>>추가</button>
 </form>
 
 <%
@@ -205,7 +211,7 @@ const navigationPage = include('../components/pageButton', {
             <td><%-getFullDateTag(item.createdAt)%></td>
             <td><%-item.expiresAt ? getFullDateTag(item.expiresAt) : '영구'%></td>
             <td>
-                <button class="thetree-square-button thetree-danger-button delete-aclgroupitem" data-id="<%=item.id%>" data-uuid="<%=item.uuid%>"<%=adminPerm ? '' : ' disabled'%>>삭제</button>
+                <button class="thetree-square-button thetree-danger-button delete-aclgroupitem" data-id="<%=item.id%>" data-uuid="<%=item.uuid%>"<%=usable ? '' : ' disabled'%>>삭제</button>
             </td>
         </tr>
     <%} else {%>
