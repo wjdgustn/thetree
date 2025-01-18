@@ -458,66 +458,66 @@ module.exports = class NamumarkParser {
         // console.log('== 리스트 파싱 후 ==');
         // console.log(text);
         // 인덴트
-        if(false){
-            sourceText = text;
-
-            const lines = sourceText.split(NewLineTag);
-            const newLines = [];
-            let prevSpaceCount = 0;
-            for(let line of lines) {
-                let removeNoParagraph = false;
-                if(line.startsWith('<removeNoParagraph/>')) {
-                    line = line.slice('<removeNoParagraph/>'.length);
-                    removeNoParagraph = true;
-                }
-
-                const noParagraphOpen = removeNoParagraph ? '' : '<!noParagraph>';
-                const noParagraphClose = removeNoParagraph ? '' : '<!/noParagraph>';
-
-                let spaceCount = 0;
-                for(let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    if(char === '<') {
-                        const closeStr = '>';
-                        const closeIndex = line.slice(i).indexOf(closeStr);
-                        if(closeIndex !== -1) {
-                            i += closeIndex + closeStr.length - 1;
-                            continue;
-                        }
-                    }
-                    if(char !== ' ') break;
-                    spaceCount++;
-                }
-
-                line = line.trimStart();
-
-                if(spaceCount > prevSpaceCount) {
-                    line = noParagraphOpen
-                        + '<div class="wiki-indent">'.repeat(spaceCount - prevSpaceCount)
-                        + noParagraphClose
-                        + line;
-                }
-                else if(spaceCount < prevSpaceCount) {
-                    line = noParagraphOpen
-                        + '</div>'.repeat(prevSpaceCount - spaceCount)
-                        + noParagraphClose
-                        + line;
-                }
-
-                if(!newLines.length || spaceCount === prevSpaceCount) newLines.push(line);
-                else newLines[newLines.length - 1] += line;
-
-                prevSpaceCount = spaceCount;
-            }
-
-            if(prevSpaceCount > 0) {
-                newLines[newLines.length - 1] += NoParagraphOpen
-                    + '</div>'.repeat(prevSpaceCount)
-                    + NoParagraphClose;
-            }
-
-            text = newLines.join(NewLineTag);
-        }
+        // if(false){
+        //     sourceText = text;
+        //
+        //     const lines = sourceText.split(NewLineTag);
+        //     const newLines = [];
+        //     let prevSpaceCount = 0;
+        //     for(let line of lines) {
+        //         let removeNoParagraph = false;
+        //         if(line.startsWith('<removeNoParagraph/>')) {
+        //             line = line.slice('<removeNoParagraph/>'.length);
+        //             removeNoParagraph = true;
+        //         }
+        //
+        //         const noParagraphOpen = removeNoParagraph ? '' : '<!noParagraph>';
+        //         const noParagraphClose = removeNoParagraph ? '' : '<!/noParagraph>';
+        //
+        //         let spaceCount = 0;
+        //         for(let i = 0; i < line.length; i++) {
+        //             const char = line[i];
+        //             if(char === '<') {
+        //                 const closeStr = '>';
+        //                 const closeIndex = line.slice(i).indexOf(closeStr);
+        //                 if(closeIndex !== -1) {
+        //                     i += closeIndex + closeStr.length - 1;
+        //                     continue;
+        //                 }
+        //             }
+        //             if(char !== ' ') break;
+        //             spaceCount++;
+        //         }
+        //
+        //         line = line.trimStart();
+        //
+        //         if(spaceCount > prevSpaceCount) {
+        //             line = noParagraphOpen
+        //                 + '<div class="wiki-indent">'.repeat(spaceCount - prevSpaceCount)
+        //                 + noParagraphClose
+        //                 + line;
+        //         }
+        //         else if(spaceCount < prevSpaceCount) {
+        //             line = noParagraphOpen
+        //                 + '</div>'.repeat(prevSpaceCount - spaceCount)
+        //                 + noParagraphClose
+        //                 + line;
+        //         }
+        //
+        //         if(!newLines.length || spaceCount === prevSpaceCount) newLines.push(line);
+        //         else newLines[newLines.length - 1] += line;
+        //
+        //         prevSpaceCount = spaceCount;
+        //     }
+        //
+        //     if(prevSpaceCount > 0) {
+        //         newLines[newLines.length - 1] += NoParagraphOpen
+        //             + '</div>'.repeat(prevSpaceCount)
+        //             + NoParagraphClose;
+        //     }
+        //
+        //     text = newLines.join(NewLineTag);
+        // }
 
         // sourceText = text
             // .replaceAll('<newLine/>' + NoParagraphOpen, NoParagraphOpen)
