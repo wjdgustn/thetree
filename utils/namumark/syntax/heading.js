@@ -118,6 +118,13 @@ module.exports = {
             text: sanitizedHtml
         });
 
+        const editSection = namumark.thread ? '' : `
+<span class="wiki-edit-section">
+<a href="${globalUtils.doc_action_link(namumark.document, 'edit', {
+            section: sectionNum
+        })}" rel="nofollow">[편집]</a>
+</span>`.trim();
+
         return `
 <removeNewlineLater/>
 <removeNextNewline/>
@@ -126,11 +133,7 @@ module.exports = {
 <h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#toc">${paragraphNumText}.</a>
  <span :id="$el.innerText">${text}
-<span class="wiki-edit-section">
-<a href="${globalUtils.doc_action_link(namumark.document, 'edit', {
-    section: sectionNum
-})}" rel="nofollow">[편집]</a>
-</span>
+${editSection}
 </span>
 </h${level}>
 <div class="wiki-heading-content${defaultClosed ? ' wiki-heading-content-folded' : ''}">
