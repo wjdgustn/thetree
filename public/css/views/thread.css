@@ -192,6 +192,8 @@
 
     .theseed-dark-mode form.comment-form>ul>li button.selected-tab {
         background-color: #383b40;
+        border-color: #383b40;
+        color: #ddd;
     }
 
     form.comment-form div.tabs {
@@ -240,6 +242,12 @@
         background-color: #eceeef;
         cursor: not-allowed;
         opacity: 1;
+    }
+
+    .theseed-dark-mode textarea:not(#contentInput) {
+        background-color: #27292d;
+        border-color: #383b40;
+        color: #ddd;
     }
 
     .preview-tab-loading {
