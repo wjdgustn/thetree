@@ -749,7 +749,7 @@ app.post('/admin/batch_revert',
             closedReason: reason,
             lastUpdatedAt: date
         });
-        resultText.push(`닫은 편집 요청: ${result.modifiedCount}개`);
+        resultText.push(`닫힌 편집 요청 수 : ${result.modifiedCount}`);
     }
 
     if(hideThreadComments) {
@@ -763,7 +763,7 @@ app.post('/admin/batch_revert',
             hiddenBy: req.user.uuid,
             hidden: true
         });
-        resultText.push(`숨긴 토론 댓글: ${result.modifiedCount}개`);
+        resultText.push(`숨긴 토론 댓글 수 : ${result.modifiedCount}`);
     }
 
     if(revertContributions) {
@@ -779,7 +779,7 @@ app.post('/admin/batch_revert',
             troll: true,
             trollBy: req.user.uuid
         });
-        resultText.push(`반달 처리된 기여: ${trollResult.modifiedCount}개`);
+        resultText.push(`반달로 표시된 리비전 수 : ${trollResult.modifiedCount}`);
 
         let revertedCount = 0;
         const documents = [...new Set(revs.map(rev => rev.document))];
@@ -853,11 +853,8 @@ app.post('/admin/batch_revert',
             revertedCount++;
             resolve();
         })));
-        resultText.push(`되돌린 기여: ${revertedCount}개`);
+        resultText.push(`되돌린 문서 수 : ${revertedCount}`);
     }
-
-    if(failResultText.length)
-        resultText.push(`<br><span style="color: red;">${failResultText.join('<br>')}</span>`);
 
     if(req.body.hidelog !== 'Y') await BlockHistory.create({
         type: BlockHistoryTypes.BatchRevert,
@@ -867,11 +864,13 @@ app.post('/admin/batch_revert',
         content: reason
     });
 
-    resultText.unshift(`작업 시간: ${Date.now() - date}ms`);
+    resultText.unshift(`작업 시간 : ${Date.now() - date}ms`);
 
-    res.renderSkin('일괄 되돌리기 완료', {
-        contentHtml: resultText.join('<br>')
-    });
+    req.session.flash.batchRevertResult = {
+        resultText,
+        failResultText
+    }
+    res.redirect('/admin/batch_revert');
 });
 
 app.get('/admin/login_history', middleware.permission('login_history'), async (req, res) => {

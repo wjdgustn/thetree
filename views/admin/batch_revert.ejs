@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="/css/views/simpleForm.css">
-<form method="post">
+<form id="batch-revert-form" method="post">
     <div class="form-block">
         <label for="uuidInput">UUID</label>
         <input type="text" id="uuidInput" name="uuid">
@@ -41,4 +41,27 @@
     <div class="button-block">
         <button class="thetree-square-button thetree-blue-button">실행</button>
     </div>
+    <%if(req.flash.batchRevertResult) {%>
+        <div>
+            <p>작업 결과</p>
+            <ul>
+                <%for(let text of req.flash.batchRevertResult.resultText) {%>
+                    <li><%=text%></li>
+                <%}%>
+            </ul>
+
+            <%if(req.flash.batchRevertResult.failResultText.length) {%>
+                <p>실패 작업 목록</p>
+                <ul style="color: red;">
+                    <%for(let text of req.flash.batchRevertResult.failResultText) {%>
+                        <li><%=text%></li>
+                    <%}%>
+                </ul>
+            <%}%>
+
+            <div>
+                <a class="thetree-square-button" href="/admin/batch_revert">확인</a>
+            </div>
+        </div>
+    <%}%>
 </form>
