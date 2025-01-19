@@ -35,7 +35,7 @@ module.exports = {
             '\\'
         ];
 
-        if(typeof specialChars === 'undefined') specialChars = '?&=+$#'.split('');
+        if(typeof specialChars === 'undefined') specialChars = '?&=+$#%'.split('');
 
         const title = this.doc_fulltitle(document);
         let str;
