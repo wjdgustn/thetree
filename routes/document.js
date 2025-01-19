@@ -468,12 +468,23 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
         newACL.actionContent = req.body.actionContent;
     }
 
-    /*const aclExists = await ACLModel.exists({
+    const existsCheck = {
         type: aclType,
         conditionType,
         conditionContent
+    }
+    let aclExists;
+    if(target === 'document') {
+        if(dbDocument) aclExists = await ACLModel.exists({
+            ...existsCheck,
+            document: dbDocument.uuid
+        });
+    }
+    else aclExists = await ACLModel.exists({
+        ...existsCheck,
+        namespace
     });
-    if(aclExists) return res.status(409).send('acl_already_exists');*/
+    if(aclExists) return res.status(409).send('acl_already_exists');
 
     if(target === 'document') {
         if(!dbDocument) {
