@@ -13,7 +13,7 @@ const checkDefaultData = {
 }
 
 module.exports = class ACL {
-    static async get(filter = {}, document = null) {
+    static async get(filter = {}, document = null, noOtherNS = false) {
         if(typeof filter.document?.uuid === 'string') {
             if(document == null) document = filter.document;
             filter.document = filter.document.uuid;
@@ -52,17 +52,17 @@ module.exports = class ACL {
                 });
             }
 
-            if(rule.actionType === ACLActionTypes.GotoOtherNS) {
+            if(rule.actionType === ACLActionTypes.GotoOtherNS && !noOtherNS) {
                 rule.otherNamespaceACL = await this.get({
                     namespace: rule.actionContent
-                }, document);
+                }, document, true);
             }
         }
 
-        return new this(rules, document, namespaceACL);
+        return new this(rules, document, namespaceACL, noOtherNS);
     }
 
-    constructor(rules = [], document = null, namespaceACL = null) {
+    constructor(rules = [], document = null, namespaceACL = null, noOtherNS = false) {
         this.aclTypes = [...Array(Object.keys(ACLTypes).length)].map(_ => []);
 
         for(let rule of rules) {
@@ -75,6 +75,8 @@ module.exports = class ACL {
         }
 
         if(namespaceACL) this.namespaceACL = namespaceACL;
+
+        this.noOtherNS = noOtherNS;
     }
 
     static aclTypeToString(aclType = ACLTypes.None) {
@@ -195,7 +197,7 @@ module.exports = class ACL {
 
         const allowedRules = [];
         for(let rule of rules) {
-            if(rule.actionType === ACLActionTypes.GotoOtherNS && !otherNSResults[rule.actionContent]) {
+            if(rule.actionType === ACLActionTypes.GotoOtherNS && !otherNSResults[rule.actionContent] && !this.noOtherNS) {
                 otherNSResults[rule.actionContent] = await rule.otherNamespaceACL.check(aclType, data, true);
             }
 
@@ -204,7 +206,7 @@ module.exports = class ACL {
                 ...(nsResult?.result ? [ACLActionTypes.GotoNS] : [])
             ].includes(rule.actionType)) allowedRules.push(rule);
             else if(rule.actionType === ACLActionTypes.GotoOtherNS
-                && otherNSResults[rule.actionContent].result) allowedRules.push(rule);
+                && otherNSResults[rule.actionContent]?.result) allowedRules.push(rule);
 
             const { action, aclGroupItem } = await this.testRule(rule, data);
 
@@ -231,7 +233,10 @@ module.exports = class ACL {
                 }
             }
             else if(action === ACLActionTypes.GotoNS) return nsResult;
-            else if(action === ACLActionTypes.GotoOtherNS) return await rule.otherNamespaceACL.check(aclType, data, true);
+            else if(action === ACLActionTypes.GotoOtherNS) {
+                if(this.noOtherNS) return { result: false, aclMessage: '다른 이름공간 ACL 실행이 이중으로 사용되었습니다.' };
+                else return await rule.otherNamespaceACL.check(aclType, data, true);
+            }
         }
 
         if(allowedRules.length) {

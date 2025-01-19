@@ -460,10 +460,11 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     if(actionType === ACLActionTypes.GotoOtherNS) {
-        if(!req.permissions.includes('developer')) return res.status(403).send(`${req.body.actionType}는 개발자 전용입니다!`);
+        // if(!req.permissions.includes('developer')) return res.status(403).send(`${req.body.actionType}는 개발자 전용입니다!`);
 
         if(!req.body.actionContent) return res.status(400).send('이동할 이름공간을 입력하세요!');
         if(!config.namespaces.includes(req.body.actionContent)) return res.status(400).send(`${req.body.actionContent} 이름공간은 존재하지 않습니다!`);
+        if(req.body.actionContent === namespace) return res.status(400).send('같은 이름공간으로 이동할 수 없습니다.');
 
         newACL.actionContent = req.body.actionContent;
     }
