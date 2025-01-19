@@ -22,4 +22,4 @@ const newSchema = new Schema({
     }
 });
 
-module.exports = mongoose.model('LoginHistory', newSchema);
+module.exports = mongoose.model('AuditLog', newSchema);
