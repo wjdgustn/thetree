@@ -26,7 +26,8 @@ const {
     HistoryTypes,
     BlockHistoryTypes,
     ACLTypes,
-    EditRequestStatusTypes
+    EditRequestStatusTypes,
+    disabledFeaturesTemplates
 } = require('../utils/types');
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
@@ -97,8 +98,20 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
     res.send(result);
 });
 
-app.get('/admin/config/tools/:tool', middleware.permission('developer'), middleware.referer('/admin/config'), async (req, res) => {
+app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware.referer('/admin/config'), async (req, res) => {
     const tool = req.params.tool;
+
+    if(tool === 'deletedisabledfeature') {
+        const index = parseInt(req.query.index);
+        global.disabledFeatures.splice(index, 1);
+        if(global.disabledFeatures.length) fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+        else fs.rmSync('./cache/disabledFeatures.json');
+
+        return res.reload();
+    }
+
+    if(!req.permissions.includes('developer')) return res.status(403).send('권한이 부족합니다.');
+
     if(tool === 'deletestaticfile') {
         const path = req.query.path;
         if(!path) return res.status(400).send('path not provided');
@@ -412,15 +425,6 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
         });
     }
 
-    else if(tool === 'deletedisabledfeature') {
-        const index = parseInt(req.query.index);
-        global.disabledFeatures.splice(index, 1);
-        if(global.disabledFeatures.length) fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
-        else fs.rmSync('./cache/disabledFeatures.json');
-
-        res.reload();
-    }
-
     else return res.status(404).send('tool not found');
 });
 
@@ -662,7 +666,7 @@ app.post('/admin/config/migratecontribution', middleware.permission('config'), a
     return res.status(204).end();
 });
 
-app.post('/admin/config/disabledfeatures', middleware.permission('developer'), (req, res) => {
+app.post('/admin/config/disabledfeatures', middleware.permission('config'), (req, res) => {
     const {
         methodField: method,
         type,
@@ -672,6 +676,11 @@ app.post('/admin/config/disabledfeatures', middleware.permission('developer'), (
     } = req.body;
 
     if(!method || !type || !condition) return res.status(400).send('method와 type과 condition은 필수입니다.');
+
+    if(!req.permissions.includes('developer') && type === 'js') {
+        const whitelistedCodes = disabledFeaturesTemplates.filter(a => a.type === 'js').map(a => a.condition);
+        if(!whitelistedCodes.includes(condition)) return res.status(400).send('템플릿에 등록된 js 코드만 사용할 수 있습니다.');
+    }
 
     global.disabledFeatures.push({
         method,

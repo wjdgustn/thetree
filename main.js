@@ -522,8 +522,14 @@ document.getElementById('initScript')?.remove();
         if(item.type === 'js' && !eval(item.condition)) continue;
 
         const msg = item.message || '비활성화된 기능입니다.';
-        if(item.messageType === 'res.error') return res.error(msg, 403);
-        if(item.messageType === 'plaintext') return res.status(403).send(msg);
+
+        let messageType = item.messageType;
+        if(messageType === 'flexible') {
+            if(req.method === 'GET') messageType = 'res.error';
+            else messageType = 'plaintext';
+        }
+        if(messageType === 'res.error') return res.error(msg, 403);
+        if(messageType === 'plaintext') return res.status(403).send(msg);
     }
 
     req.flash = Object.keys(req.session.flash ?? {}).length ? req.session.flash : {};

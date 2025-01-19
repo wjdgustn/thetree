@@ -135,5 +135,31 @@ module.exports = {
             l: '/admin/developer',
             t: '개발자 설정'
         }]
-    }
+    },
+    disabledFeaturesTemplates: [
+        {
+            name: '빈 템플릿',
+            methodField: 'ALL',
+            type: 'string',
+            condition: '',
+            messageType: 'res.error',
+            message: ''
+        },
+        {
+            name: '문서 생성 비활성화',
+            methodField: 'POST',
+            type: 'js',
+            condition: `!req.permissions.includes('admin') && req.url.startsWith('/edit/') && req.body.baseuuid === 'create'`,
+            messageType: 'plaintext',
+            message: '새 문서 생성이 비활성화되어 있습니다.'
+        },
+        {
+            name: '읽기 전용 모드',
+            methodField: 'ALL',
+            type: 'js',
+            condition: `['/edit/','/move/','/delete/','/member/login','/member/logout'].some(a => req.url.startsWith(a)) || req.method !== 'GET'`,
+            messageType: 'flexible',
+            message: '위키가 읽기 전용 모드입니다.'
+        }
+    ]
 }

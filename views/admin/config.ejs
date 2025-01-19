@@ -1,4 +1,7 @@
 <script src="/js/perm/config/config.js?token=<%=permTokens.config%>"></script>
+<script nonce="<%=cspNonce%>">
+window.templates = <%-JSON.stringify(disabledFeaturesTemplates)%>;
+</script>
 
 <div class="wiki-content">
     <h2 class="wiki-heading">설정</h2>
@@ -78,6 +81,7 @@
             </select>
             <input name="condition" placeholder="condition" required>
             <select name="messageType">
+                <option>flexible</option>
                 <option>res.error</option>
                 <option>plaintext</option>
             </select>
