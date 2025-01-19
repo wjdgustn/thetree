@@ -10,5 +10,6 @@
 publicConfig.json
 serverConfig.json
 stringConfig.json
+devConfig.json
 
 .DS_Store
