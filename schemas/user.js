@@ -26,8 +26,7 @@ const newSchema = new Schema({
         max: Math.max(...Object.values(UserTypes))
     },
     ip: {
-        type: String,
-        index: true
+        type: String
     },
     email: {
         type: String,
@@ -37,8 +36,7 @@ const newSchema = new Schema({
         type: String
     },
     name: {
-        type: String,
-        index: true
+        type: String
     },
     lastNameChange: {
         type: Date,
