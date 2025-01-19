@@ -18,7 +18,7 @@
     <input type="hidden" name="uuid" value="<%=targetUser.uuid%>">
     <h3><%=targetUser.name%></h3>
 
-    <%for(let perm of (req.permissions.includes('config') ? AllPermissions.filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a)) : config.grant_permissions)) {%>
+    <%for(let perm of (req.permissions.includes('config') ? AllPermissions.filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a)) : AllPermissions.filter(a => config.grant_permissions.includes(a)))) {%>
         <p>
             <label for="perm_<%=perm%>"><%=perm%></label>
             <input type="checkbox" id="perm_<%=perm%>" name="<%=perm%>" value="Y"<%=targetUser.permissions.includes(perm) ? ' checked' : ''%>>

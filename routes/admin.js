@@ -530,7 +530,7 @@ app.post('/admin/grant',
 
     const grantablePermissions = req.permissions.includes('config')
         ? AllPermissions.filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
-        : config.grant_permissions;
+        : AllPermissions.filter(a => config.grant_permissions.includes(a));
 
     let newPerm = [];
     for(let perm of AllPermissions) {
