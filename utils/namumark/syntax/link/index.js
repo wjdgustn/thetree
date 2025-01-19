@@ -237,7 +237,7 @@ module.exports = {
 
                 if(link.startsWith('문서:')) link = link.slice(3);
                 if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}`;
-                else link = `/w/${link}`;
+                else link = `/w/${globalUtils.encodeSpecialChars(link)}`;
             }
 
             const document = mainUtils.parseDocumentName(utils.unescapeHtml(title));
