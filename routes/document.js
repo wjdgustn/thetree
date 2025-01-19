@@ -16,7 +16,8 @@ const {
     ThreadStatusTypes,
     ThreadCommentTypes,
     UserTypes,
-    EditRequestStatusTypes
+    EditRequestStatusTypes,
+    AuditLogTypes
 } = require('../utils/types');
 
 const headingSyntax = require('../utils/namumark/syntax/heading');
@@ -30,6 +31,7 @@ const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
 const Thread = require('../schemas/thread');
 const Star = require('../schemas/star');
+const AuditLog = require('../schemas/auditLog');
 
 const ACL = require('../class/acl');
 
@@ -490,16 +492,24 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
 
     await ACLModel.create(newACL);
 
+    const log = [
+        'insert',
+        utils.camelToSnakeCase(req.body.aclType),
+        req.body.actionType.toLowerCase(),
+        req.body.conditionType.toLowerCase() + ':' + rawConditionContent
+    ].join(',');
+
     if(dbDocument) await History.create({
         user: req.user.uuid,
         type: HistoryTypes.ACL,
         document: dbDocument.uuid,
-        log: [
-            'insert',
-            utils.camelToSnakeCase(req.body.aclType),
-            req.body.actionType.toLowerCase(),
-            req.body.conditionType.toLowerCase() + ':' + rawConditionContent
-        ].join(',')
+        log
+    });
+    else await AuditLog.create({
+        user: req.user.uuid,
+        type: AuditLogTypes.NamespaceACL,
+        target: namespace,
+        content: log
     });
 
     res.redirect(req.originalUrl);

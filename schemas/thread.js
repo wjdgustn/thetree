@@ -53,9 +53,6 @@ const newSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
-    },
-    deletedBy: {
-        type: String
     }
 });
 

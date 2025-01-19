@@ -11,7 +11,8 @@ const {
     ThreadCommentTypes,
     ACLTypes,
     EditRequestStatusTypes,
-    UserTypes
+    UserTypes,
+    AuditLogTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -19,6 +20,7 @@ const Document = require('../schemas/document');
 const Thread = require('../schemas/thread');
 const ThreadComment = require('../schemas/threadComment');
 const EditRequest = require('../schemas/editRequest');
+const AuditLog = require('../schemas/auditLog');
 
 const ACL = require('../class/acl');
 
@@ -681,8 +683,12 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
     await Thread.updateOne({
         uuid: thread.uuid
     }, {
-        deleted: true,
-        deletedBy: req.user.uuid
+        deleted: true
+    });
+    await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.DeleteThread,
+        content: thread.uuid
     });
     SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { deleted: true });
 

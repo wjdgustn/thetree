@@ -68,6 +68,10 @@ module.exports = {
         Closed: 2,
         Locked: 3
     },
+    AuditLogTypes: {
+        NamespaceACL: 0,
+        DeleteThread: 1
+    },
     GrantablePermissions: [
         'delete_thread',
         'admin',
