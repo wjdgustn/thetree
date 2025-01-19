@@ -523,7 +523,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
         content: log
     });
 
-    res.redirect(req.originalUrl);
+    res.reload();
 });
 
 app.get('/action/acl/delete', async (req, res) => {
