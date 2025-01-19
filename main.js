@@ -481,6 +481,8 @@ document.getElementById('initScript')?.remove();
             //     if(debug) console.timeEnd('minifyHtml');
             // }
 
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
             if(sendOnlyContent) {
                 const $ = cheerio.load(html);
                 res.status(status).send(browserGlobalVarScript + $('#content').html());
