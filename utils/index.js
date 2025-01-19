@@ -671,5 +671,28 @@ module.exports = {
             pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
             originalPageButton
         }
+    },
+    durationToExactString(duration, en = false) {
+        const weeks = duration / (1000 * 60 * 60 * 24 * 7);
+        const absoluteWeeks = Math.floor(weeks);
+        const w = absoluteWeeks ? (absoluteWeeks + '주 ') : '';
+
+        const days = (weeks - absoluteWeeks) * 7;
+        const absoluteDays = Math.floor(days);
+        const d = absoluteDays ? (absoluteDays + (en ? ` Day${absoluteDays > 1 ? 's' : ''} ` : '일 ')) : '';
+
+        const hours = (days - absoluteDays) * 24;
+        const absoluteHours = Math.floor(hours);
+        const h = absoluteHours ? (absoluteHours + (en ? ` Hour${absoluteHours > 1 ? 's' : ''} ` : '시간 ')) : '';
+
+        const minutes = (hours - absoluteHours) * 60;
+        const absoluteMinutes = Math.floor(minutes);
+        const m = absoluteMinutes ? (absoluteMinutes + (en ? ` Minute${absoluteMinutes > 1 ? 's' : ''} ` : '분 ')) : '';
+
+        const seconds = (minutes - absoluteMinutes) * 60;
+        const absoluteSeconds = Math.round(seconds * 1000) / 1000;
+        const s = absoluteSeconds ? (absoluteSeconds + (en ? ` Second${absoluteSeconds > 1 ? 's' : ''} ` : '초 ')) : '';
+
+        return (w + d + h + m + s).trim();
     }
 }

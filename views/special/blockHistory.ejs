@@ -42,7 +42,7 @@ const navigationPage = include('../components/pageButton', {
                 </span>
             </div>
             <div class="item-block content-block">
-                <div><%-userHtml(log.createdUser)%> 사용자가 <%-log.targetUser ? `${userHtml(log.targetUser)} 사용자를` : `${log.targetContent} IP를`%><%=log.targetUser && log.targetUser.name !== log.targetUsername ? ` (차단 당시 이름: ${log.targetUsername})` : ''%> <span class="bold"><%=log.aclGroup?.name || log.aclGroupName || log.aclGroup%></span> ACL 그룹에 <%=log.duration ? `${durationToString(log.duration, true)} 동안` : '영구적으로'%> 등록함 <span class="gray">#<%=log.aclGroupId%></span></div>
+                <div><%-userHtml(log.createdUser)%> 사용자가 <%-log.targetUser ? `${userHtml(log.targetUser)} 사용자를` : `${log.targetContent} IP를`%><%=log.targetUser && log.targetUser.name !== log.targetUsername ? ` (차단 당시 이름: ${log.targetUsername})` : ''%> <span class="bold"><%=log.aclGroup?.name || log.aclGroupName || log.aclGroup%></span> ACL 그룹에 <%=log.duration ? `${utils.durationToExactString(log.duration, true)} 동안` : '영구적으로'%> 등록함 <span class="gray">#<%=log.aclGroupId%></span></div>
                 <div class="log-content">
                     <%-getFullDateTag(log.createdAt)%>
                     <span>(<%=log.content%>)</span>
