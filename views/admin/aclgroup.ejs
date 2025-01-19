@@ -4,10 +4,14 @@
 <%alert = typeof alert === 'undefined' ? '' : alert;%>
 <%-include('../components/alert', { alert })%>
 
-<%const adminPerm = req.permissions.includes('admin');%>
-<%const aclgroupPerm = req.permissions.includes('aclgroup');%>
-<%const devPerm = req.permissions.includes('developer');%>
-<%const usable = selectedGroup.adminEditable ? adminPerm : aclgroupPerm;%>
+<%
+const hideLogPerm = req.permissions.includes('aclgroup_hidelog');
+const aclgroupPerm = req.permissions.includes('aclgroup');
+const configPerm = req.permissions.includes('config');
+
+const addable = selectedGroup?.addPerms.length ? selectedGroup?.addPerms.some(a => req.permissions.includes(a)) : aclgroupPerm;
+const removable = selectedGroup?.removePerms.length ? selectedGroup?.removePerms.some(a => req.permissions.includes(a)) : aclgroupPerm;
+%>
 
 <form id="aclgroup-remove-form" method="post" action="aclgroup/group_remove">
     <input id="aclgroup-remove-group" type="hidden" name="uuid">
@@ -20,7 +24,9 @@
         <li>
             <a href="/aclgroup?group=<%=group.name%>"<%-selectedGroup.uuid === group.uuid ? ' class="selected-group"' : ''%>>
                 <%=group.name%>
-                <%if(aclgroupPerm && !group.preventDelete) {%><button class="delete-aclgroup" data-name="<%=group.name%>" data-uuid="<%=group.uuid%>">×</button><%}%>
+                <%if(group.deleteGroupPerms.length ? group.deleteGroupPerms.some(a => req.permissions.includes(a)) : aclgroupPerm) {%>
+                    <button class="delete-aclgroup" data-name="<%=group.name%>" data-uuid="<%=group.uuid%>">×</button>
+                <%}%>
             </a>
         </li>
     <%}%>
@@ -33,7 +39,7 @@
 </ul>
 
 <%if(selectedGroup) {%>
-<%if(devPerm) {%>
+<%if(configPerm) {%>
 <div class="wiki-content" style="clear:both">
     <h4 class="wiki-heading wiki-heading-folded">그룹 설정</h4>
     <div class="wiki-heading-content wiki-heading-content-folded">
@@ -66,23 +72,28 @@
             </div>
 
             <div>
-                <input id="hiddenFromPublicInput" name="hiddenFromPublic" type="checkbox" value="Y"<%=selectedGroup.hiddenFromPublic ? ' checked' : ''%>>
-                <label for="hiddenFromPublicInput">관리자 권한이 없는 경우 숨기기</label>
-            </div>
-
-            <div>
-                <input id="adminEditableInput" name="adminEditable" type="checkbox" value="Y"<%=selectedGroup.adminEditable ? ' checked' : ''%>>
-                <label for="adminEditableInput">admin 권한 보유 시 항목 추가 / 제거 가능</label>
-            </div>
-
-            <div>
-                <input id="preventDeleteInput" name="preventDelete" type="checkbox" value="Y"<%=selectedGroup.preventDelete ? ' checked' : ''%>>
-                <label for="preventDeleteInput">그룹 삭제 방지</label>
-            </div>
-
-            <div>
                 <input id="noSignupInput" name="noSignup" type="checkbox" value="Y"<%=selectedGroup.noSignup ? ' checked' : ''%>>
                 <label for="noSignupInput">계정 만들기 차단</label>
+            </div>
+
+            <div>
+                <label for="accessPermsInput">보기 권한</label>
+                <input id="accessPermsInput" name="accessPerms" value="<%=selectedGroup.accessPerms.join(',')%>">
+            </div>
+
+            <div>
+                <label for="addPermsInput">추가 권한</label>
+                <input id="addPermsInput" name="addPerms" value="<%=selectedGroup.addPerms.join(',')%>">
+            </div>
+
+            <div>
+                <label for="removePermsInput">삭제 권한</label>
+                <input id="removePermsInput" name="removePerms" value="<%=selectedGroup.removePerms.join(',')%>">
+            </div>
+
+            <div>
+                <label for="deleteGroupPermsInput">그룹 삭제 권한</label>
+                <input id="deleteGroupPermsInput" name="deleteGroupPerms" value="<%=selectedGroup.deleteGroupPerms.join(',')%>">
             </div>
 
             <button class="thetree-square-button thetree-blue-button">적용</button>
@@ -144,14 +155,14 @@
         </span>
     </div>
 
-    <%if(devPerm) {%>
+    <%if(hideLogPerm) {%>
         <div class="form-block">
             <label for="hidelogInput">hidelog :</label>
             <input type="checkbox" id="hidelogInput" name="hidelog" value="Y">
         </div>
     <%}%>
 
-    <button class="thetree-square-button thetree-blue-button"<%=usable ? '' : ' disabled'%>>추가</button>
+    <button class="thetree-square-button thetree-blue-button"<%=addable ? '' : ' disabled'%>>추가</button>
 </form>
 
 <%
@@ -211,7 +222,7 @@ const navigationPage = include('../components/pageButton', {
             <td><%-getFullDateTag(item.createdAt)%></td>
             <td><%-item.expiresAt ? getFullDateTag(item.expiresAt) : '영구'%></td>
             <td>
-                <button class="thetree-square-button thetree-danger-button delete-aclgroupitem" data-id="<%=item.id%>" data-uuid="<%=item.uuid%>"<%=usable ? '' : ' disabled'%>>삭제</button>
+                <button class="thetree-square-button thetree-danger-button delete-aclgroupitem" data-id="<%=item.id%>" data-uuid="<%=item.uuid%>"<%=removable ? '' : ' disabled'%>>삭제</button>
             </td>
         </tr>
     <%} else {%>
@@ -245,7 +256,7 @@ const navigationPage = include('../components/pageButton', {
                     <input type="text" name="note">
                 </div>
 
-                <%if(devPerm) {%>
+                <%if(hideLogPerm) {%>
                     <div class="form-block">
                         <p>hidelog:</p>
                         <input type="checkbox" name="hidelog" value="Y">

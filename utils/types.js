@@ -72,7 +72,7 @@ module.exports = {
         NamespaceACL: 0,
         DeleteThread: 1
     },
-    GrantablePermissions: [
+    AllPermissions: [
         'delete_thread',
         'admin',
         'update_thread_status',
@@ -88,11 +88,17 @@ module.exports = {
         'hide_revision',
         'mark_troll_revision',
         'batch_revert',
-        'api_access'
-    ],
-    DevPermissions: [
+        'api_access',
         'developer',
-        'hideip'
+        'hideip',
+        'config',
+        'aclgroup_hidelog',
+        'grant_hidelog',
+        'login_history_hidelog',
+        'batch_revert_hidelog'
+    ],
+    ProtectedPermissions: [
+        'developer'
     ],
     ACLPermissions: [
         'any',

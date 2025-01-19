@@ -31,7 +31,7 @@ const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
-const { UserTypes, permissionMenus, GrantablePermissions, DevPermissions } = types;
+const { UserTypes, permissionMenus, AllPermissions } = types;
 const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
@@ -139,7 +139,7 @@ SocketIO.on('new_namespace', namespace => {
     });
 });
 
-global.permTokens = Object.fromEntries([...GrantablePermissions, ...DevPermissions].map(a => [a, crypto.randomBytes(16).toString('hex')]));
+global.permTokens = Object.fromEntries(AllPermissions.map(a => [a, crypto.randomBytes(16).toString('hex')]));
 
 // app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
@@ -354,7 +354,12 @@ app.use(async (req, res, next) => {
 
     await utils.makeACLData(req);
 
-    app.locals.isDev = req.permissions.includes('developer');
+    const isDev = req.permissions.includes('developer');
+    app.locals.isDev = isDev;
+
+    if(isDev) for(let perm of AllPermissions) {
+        if(!req.permissions.includes(perm)) req.permissions.push(perm);
+    }
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;

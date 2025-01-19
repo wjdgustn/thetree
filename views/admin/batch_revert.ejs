@@ -30,7 +30,7 @@
             편집 되돌리기
         </label>
     </div>
-    <%if(req.permissions.includes('developer')) {%>
+    <%if(req.permissions.includes('batch_revert_hidelog')) {%>
         <div class="form-block">
             <label>
                 <input type="checkbox" name="hidelog" value="Y">

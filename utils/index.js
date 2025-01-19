@@ -368,7 +368,7 @@ module.exports = {
         ].includes(a));
 
         req.aclData = {
-            permissions: req.permissions,
+            permissions: [...req.permissions],
             user: req.user,
             ip: req.ip
         }

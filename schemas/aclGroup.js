@@ -24,20 +24,25 @@ const newSchema = new Schema({
     userCSS: {
         type: String
     },
-    hiddenFromPublic: {
-        type: Boolean,
+    accessPerms: {
+        type: Array,
         required: true,
-        default: false
+        default: []
     },
-    adminEditable: {
-        type: Boolean,
+    addPerms: {
+        type: Array,
         required: true,
-        default: false
+        default: []
     },
-    preventDelete: {
-        type: Boolean,
+    removePerms: {
+        type: Array,
         required: true,
-        default: false
+        default: []
+    },
+    deleteGroupPerms: {
+        type: Array,
+        required: true,
+        default: []
     },
     aclMessage: {
         type: String

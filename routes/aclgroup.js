@@ -14,10 +14,20 @@ const BlockHistory = require('../schemas/blockHistory');
 const app = express.Router();
 
 app.get('/aclgroup', async (req, res) => {
-    let aclGroupQuery = {};
-    if(!req.permissions.includes('admin')) aclGroupQuery.hiddenFromPublic = false;
-
-    const aclGroups = await ACLGroup.find(aclGroupQuery);
+    const aclGroups = await ACLGroup.find({
+        $or: [
+            {
+                accessPerms: {
+                    $size: 0
+                }
+            },
+            {
+                accessPerms: {
+                    $in: req.permissions
+                }
+            }
+        ]
+    });
     const selectedGroup = aclGroups.find(a => a.name === req.query.group) ?? aclGroups[0];
 
     let query;
@@ -87,19 +97,22 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
 
     if(name === '차단된 사용자') {
         newGroup.forBlock = true;
-        newGroup.hiddenFromPublic = true;
-        newGroup.preventDelete = true;
         newGroup.noSignup = true;
         newGroup.userCSS = 'color: gray !important; text-decoration: line-through !important;';
-        newGroup.adminEditable = true;
+        newGroup.accessPerms = ['admin'];
+        newGroup.addPerms = ['admin'];
+        newGroup.removePerms = ['admin'];
+        newGroup.deleteGroupPerms = ['developer'];
     }
     else if(name === '로그인 허용 차단' || name.includes('통신사') || name.toLowerCase().includes('vpn')) {
         newGroup.noSignup = true;
-        newGroup.adminEditable = true;
+        newGroup.addPerms = ['admin'];
+        newGroup.removePerms = ['admin'];
     }
-    else if(name.startsWith('경고-')) {
+    else if(name.startsWith('경고')) {
         newGroup.isWarn = true;
-        newGroup.adminEditable = true;
+        newGroup.addPerms = ['admin'];
+        newGroup.removePerms = ['admin'];
     }
 
     await ACLGroup.create(newGroup);
@@ -107,12 +120,14 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
     res.redirect(`/aclgroup?group=${encodeURIComponent(name)}`);
 });
 
-app.post('/aclgroup/group_remove', middleware.permission('aclgroup'), async (req, res) => {
+app.post('/aclgroup/group_remove', async (req, res) => {
     const uuid = req.body.uuid;
     const target = await ACLGroup.findOne({ uuid });
 
     if(!target) return res.status(404).send('존재하지 않는 그룹입니다.');
-    if(target.preventDelete) return res.status(403).send('삭제할 수 없는 그룹입니다.');
+    if(target.deleteGroupPerms.length
+        ? !target.deleteGroupPerms.some(a => req.permissions.includes(a))
+        : !req.permisions.includes('aclgroup')) return res.status(403).send('권한이 부족합니다.');
 
     await ACLGroup.deleteOne({ uuid });
 
@@ -178,17 +193,16 @@ app.post('/aclgroup',
         }),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error('권한이 부족합니다.');
             return true;
         }),
     middleware.fieldErrors,
     async (req, res) => {
     const group = req.modifiedBody.group;
 
-    const hasAdmin = req.permissions.includes('admin');
-    const hasAclgroup = req.permissions.includes('aclgroup');
-    if(group.adminEditable && !hasAdmin && !hasAclgroup) return res.status(403).send('권한이 부족합니다.');
-    if(!group.adminEditable && !hasAclgroup) return res.status(403).send('권한이 부족합니다.');
+    if(group.addPerms.length
+        ? !group.addPerms.some(a => req.permissions.includes(a))
+        : !req.permissions.includes('aclgroup')) return res.status(403).send('권한이 부족합니다.');
 
     const newItem = {
         aclGroup: group.uuid,
@@ -250,17 +264,16 @@ app.post('/aclgroup/remove',
         .withMessage('note의 값은 필수입니다.'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error('권한이 부족합니다.');
             return true;
         }),
     middleware.fieldErrors,
     async (req, res) => {
     const group = req.modifiedBody.group;
 
-    const hasAdmin = req.permissions.includes('admin');
-    const hasAclgroup = req.permissions.includes('aclgroup');
-    if(group.adminEditable && !hasAdmin && !hasAclgroup) return res.status(403).send('권한이 부족합니다.');
-    if(!group.adminEditable && !hasAclgroup) return res.status(403).send('권한이 부족합니다.');
+    if(group.removePerms.length
+        ? !group.removePerms.some(a => req.permissions.includes(a))
+        : !req.permissions.includes('aclgroup')) return res.status(403).send('권한이 부족합니다.');
 
     const deleted = await ACLGroupItem.findOneAndDelete({
         uuid: req.body.uuid
@@ -290,7 +303,7 @@ app.post('/aclgroup/remove',
     res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
 });
 
-app.post('/aclgroup/group_edit', middleware.permission('developer'),
+app.post('/aclgroup/group_edit', middleware.permission('config'),
     body('name')
         .notEmpty()
         .withMessage('그룹 이름은 필수입니다.'),
@@ -304,10 +317,11 @@ app.post('/aclgroup/group_edit', middleware.permission('developer'),
         aclMessage: req.body.aclMessage,
         forBlock: req.body.forBlock === 'Y',
         isWarn: req.body.isWarn === 'Y',
-        hiddenFromPublic: req.body.hiddenFromPublic === 'Y',
-        adminEditable: req.body.adminEditable === 'Y',
-        preventDelete: req.body.preventDelete === 'Y',
-        noSignup: req.body.noSignup === 'Y'
+        noSignup: req.body.noSignup === 'Y',
+        accessPerms: req.body.accessPerms.split(',').map(a => a.trim()).filter(a => a),
+        addPerms: req.body.addPerms.split(',').map(a => a.trim()).filter(a => a),
+        removePerms: req.body.removePerms.split(',').map(a => a.trim()).filter(a => a),
+        deleteGroupPerms: req.body.deleteGroupPerms.split(',').map(a => a.trim()).filter(a => a)
     });
     if(!updated) return res.status(404).send('존재하지 않는 그룹입니다.');
 

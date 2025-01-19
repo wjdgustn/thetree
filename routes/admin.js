@@ -20,15 +20,14 @@ const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const namumarkUtils = require('../utils/namumark/utils');
 const {
-    GrantablePermissions,
-    DevPermissions,
+    AllPermissions,
+    ProtectedPermissions,
     UserTypes,
     HistoryTypes,
     BlockHistoryTypes,
     ACLTypes,
     EditRequestStatusTypes
 } = require('../utils/types');
-const AllPermissions = [...GrantablePermissions, ...DevPermissions];
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
 const docUtils = require('../utils/docUtils');
@@ -496,11 +495,7 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
 
     res.renderSkin('권한 부여', {
         contentName: 'admin/grant',
-        targetUser,
-        grantablePermissions: [
-            ...GrantablePermissions,
-            ...(req.permissions.includes('developer') ? DevPermissions : [])
-        ]
+        targetUser
     });
 });
 
@@ -508,7 +503,7 @@ app.post('/admin/grant',
     middleware.permission('grant'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('grant_hidelog')) throw new Error('권한이 부족합니다.');
             return true;
         }),
     middleware.fieldErrors,
@@ -518,10 +513,9 @@ app.post('/admin/grant',
     });
     if(!targetUser) return res.status(404).send('User not found');
 
-    const grantablePermissions = [
-        ...GrantablePermissions,
-        ...(req.permissions.includes('developer') ? DevPermissions : [])
-    ]
+    const grantablePermissions = req.permissions.includes('config')
+        ? AllPermissions.filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+        : config.grant_permissions;
 
     let newPerm = [];
     for(let perm of AllPermissions) {
@@ -715,7 +709,7 @@ app.post('/admin/batch_revert',
         .notEmpty().withMessage('reason의 값은 필수입니다.'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('batch_revert_hidelog')) throw new Error('권한이 부족합니다.');
             return true;
         }),
     middleware.fieldErrors,
@@ -883,7 +877,7 @@ app.post('/admin/login_history',
     middleware.permission('login_history'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('developer')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('login_history_hidelog')) throw new Error('권한이 부족합니다.');
             return true;
         }),
     async (req, res) => {

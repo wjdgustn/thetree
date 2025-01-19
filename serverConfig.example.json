@@ -1,15 +1,35 @@
 {
   "sitenotice": "",
   "default_skin": "liberty",
+  "embed_image": "",
 
   "namespaces": ["위키운영"],
+
+  "withdraw_save_days": null,
+
+  "grant_permissions": [
+    "delete_thread",
+    "admin",
+    "update_thread_status",
+    "nsacl",
+    "hide_thread_comment",
+    "grant",
+    "no_force_captcha",
+    "login_history",
+    "update_thread_document",
+    "update_thread_topic",
+    "aclgroup",
+    "hide_document_history_log",
+    "hide_revision",
+    "mark_troll_revision",
+    "batch_revert",
+    "api_access"
+  ],
 
   "minify": {
     "css": true,
     "js": true
   },
-
-  "withdraw_save_days": null,
 
   "captcha": {
     "enabled": false,
