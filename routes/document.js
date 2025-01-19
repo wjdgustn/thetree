@@ -518,7 +518,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     });
     else await AuditLog.create({
         user: req.user.uuid,
-        type: AuditLogTypes.NamespaceACL,
+        action: AuditLogTypes.NamespaceACL,
         target: namespace,
         content: log
     });
