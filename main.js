@@ -41,6 +41,7 @@ const ACL = require('./class/acl');
 
 global.publicConfig = {};
 global.serverConfig = {};
+global.devConfig = {};
 global.stringConfig = {};
 
 Object.defineProperty(global, 'config', {
@@ -48,6 +49,7 @@ Object.defineProperty(global, 'config', {
         return {
             ...global.publicConfig,
             ...global.serverConfig,
+            ...global.devConfig,
             ...global.stringConfig,
             namespaces: [...new Set([
                 '문서',
@@ -87,6 +89,7 @@ global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
 global.updateConfig = () => {
     global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
     global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
+    global.devConfig = JSON.parse(fs.readFileSync('./devConfig.json').toString());
     global.stringConfig = JSON.parse(fs.readFileSync('./stringConfig.json').toString());
 
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
@@ -512,7 +515,7 @@ document.getElementById('initScript')?.remove();
     }
 
     const url = req.url;
-    if(!url.startsWith('/admin/config')) for(let item of global.disabledFeatures) {
+    if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) for(let item of global.disabledFeatures) {
         if(item.method !== 'ALL' && item.method !== req.method) continue;
 
         if(item.type === 'string' && !req.url.startsWith(item.condition)) continue;

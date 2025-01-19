@@ -127,8 +127,12 @@ module.exports = {
             l: '/admin/batch_revert',
             t: '일괄 되돌리기'
         }],
-        developer: [{
+        config: [{
             l: '/admin/config',
+            t: '설정'
+        }],
+        developer: [{
+            l: '/admin/developer',
             t: '개발자 설정'
         }]
     }

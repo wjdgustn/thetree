@@ -44,7 +44,13 @@ const ACL = require('../class/acl');
 
 const app = express.Router();
 
-app.get('/admin/config', middleware.permission('developer'), (req, res) => {
+app.get('/admin/config', middleware.permission('config'), (req, res) => {
+    res.renderSkin('Config', {
+        contentName: 'admin/config'
+    });
+});
+
+app.get('/admin/developer', middleware.permission('developer'), (req, res) => {
     const customStaticFiles = [];
     const customStaticRoot = './customStatic';
     const readDir = path => {
@@ -65,7 +71,7 @@ app.get('/admin/config', middleware.permission('developer'), (req, res) => {
     readDir(customStaticRoot);
 
     res.renderSkin('개발자 설정', {
-        contentName: 'admin/config',
+        contentName: 'admin/developer',
         customStaticFiles
     });
 });
@@ -93,18 +99,7 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
 
 app.get('/admin/config/tools/:tool', middleware.permission('developer'), middleware.referer('/admin/config'), async (req, res) => {
     const tool = req.params.tool;
-    if(tool === 'getgrant') {
-        await User.updateOne({
-            uuid: req.user.uuid
-        }, {
-            $addToSet: {
-                permissions: 'grant'
-            }
-        });
-        return res.status(204).end();
-    }
-
-    else if(tool === 'deletestaticfile') {
+    if(tool === 'deletestaticfile') {
         const path = req.query.path;
         if(!path) return res.status(400).send('path not provided');
         if(path.includes('..')) return res.status(400).send('invalid path');
@@ -429,14 +424,30 @@ app.get('/admin/config/tools/:tool', middleware.permission('developer'), middlew
     else return res.status(404).send('tool not found');
 });
 
-app.post('/admin/config/configjson', middleware.permission('developer'), (req, res) => {
+app.post('/admin/config/configjson', middleware.permission('config'), (req, res) => {
     const config = req.body.config;
-    if(config.includes('/') || !config.endsWith('.json')) return res.status(400).send('Invalid config file');
+    // if(config.includes('/') || !config.endsWith('.json')) return res.status(400).send('Invalid config file');
 
+    const isDev = req.permissions.includes('developer');
+
+    const availableConfigs = [
+        'publicConfig.json',
+        'serverConfig.json'
+    ];
+    if(isDev)
+        availableConfigs.push('devConfig.json');
+
+    if(!availableConfigs.includes(config)) return res.status(400).send('Invalid config file');
+
+    let parsedJson;
     try {
-        JSON.parse(req.body.content);
+        parsedJson = JSON.parse(req.body.content);
     } catch (e) {
         return res.status(400).send('Invalid JSON');
+    }
+
+    if(config !== 'devConfig.json') for(let key in parsedJson) {
+        if(global.devConfig.hasOwnProperty(key)) return res.status(400).send(`Invalid key "${key}"`);
     }
 
     fs.writeFileSync(config, req.body.content);
@@ -444,7 +455,7 @@ app.post('/admin/config/configjson', middleware.permission('developer'), (req, r
     return res.status(204).end();
 });
 
-app.post('/admin/config/stringconfig', middleware.permission('developer'), (req, res) => {
+app.post('/admin/config/stringconfig', middleware.permission('config'), (req, res) => {
     let newObj = {};
     for(let key of Object.keys(stringConfig)) {
         newObj[key] = req.body[key] || '';
@@ -624,7 +635,7 @@ app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentN
     else return res.status(404).send('action not found');
 });
 
-app.post('/admin/config/migratecontribution', middleware.permission('developer'), async (req, res) => {
+app.post('/admin/config/migratecontribution', middleware.permission('config'), async (req, res) => {
     const fromUser = await User.findOne({
         name: req.body.from
     });
@@ -652,7 +663,6 @@ app.post('/admin/config/migratecontribution', middleware.permission('developer')
 });
 
 app.post('/admin/config/disabledfeatures', middleware.permission('developer'), (req, res) => {
-    console.log(req.body);
     const {
         methodField: method,
         type,

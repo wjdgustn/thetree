@@ -1,0 +1,30 @@
+{
+  "minify": {
+    "css": true,
+    "js": true
+  },
+
+  "captcha": {
+    "enabled": false,
+    "type": "turnstile",
+    "site_key": "",
+    "secret_key": "",
+
+    "edit_captcha": {
+      "enabled": true,
+      "hours": 1,
+      "edit_count": 10
+    }
+  },
+
+  "smtp_sender": "TestWiki <test@example.com>",
+  "smtp_settings": {
+    "host": "",
+    "port": 587,
+    "secure": false,
+    "auth": {
+      "user": "",
+      "pass": ""
+    }
+  }
+}

@@ -26,34 +26,6 @@
     "api_access"
   ],
 
-  "minify": {
-    "css": true,
-    "js": true
-  },
-
-  "captcha": {
-    "enabled": false,
-    "type": "turnstile",
-    "site_key": "",
-    "secret_key": "",
-
-    "edit_captcha": {
-      "enabled": true,
-      "hours": 1,
-      "edit_count": 10
-    }
-  },
-
   "email_whitelist": ["example.com"],
-  "use_email_verification": false,
-  "smtp_sender": "TestWiki <test@example.com>",
-  "smtp_settings": {
-    "host": "",
-    "port": 587,
-    "secure": false,
-    "auth": {
-      "user": "",
-      "pass": ""
-    }
-  }
+  "use_email_verification": false
 }
