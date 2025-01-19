@@ -268,7 +268,7 @@ app.post('/member/signup/:token',
         if(err) console.error(err);
 
         await LoginHistory.create({
-            uuid: newuser.uuid,
+            uuid: newUser.uuid,
             ip: req.ip,
             userAgent: req.get('User-Agent')
         });
