@@ -580,7 +580,11 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('document의 값은 필수입니다.'),
+        .withMessage('document의 값은 필수입니다.')
+        .isLength({
+            max: 255
+        })
+        .withMessage('문서 이름이 올바르지 않습니다.'),
     middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({
