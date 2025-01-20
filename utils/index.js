@@ -4,7 +4,7 @@ const { Address4, Address6 } = require('ip-address');
 const Diff = require('diff');
 const { generateSlug } = require('random-word-slugs');
 const axios = require('axios');
-const querysting = require('querystring');
+const querystring = require('querystring');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./namumark/utils');
@@ -582,7 +582,7 @@ module.exports = {
         const { data } = await axios.post({
             recaptcha: 'https://www.google.com/recaptcha/api/siteverify',
             turnstile: 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-        }[config.captcha.type], querysting.stringify({
+        }[config.captcha.type], querystring.stringify({
             secret: config.captcha.secret_key,
             response,
             remoteip: req.ip
@@ -647,7 +647,7 @@ module.exports = {
                 .lean();
         }
 
-        const link = query => `${req.path}?${querysting.stringify({
+        const link = query => `${req.path}?${querystring.stringify({
             ...this.withoutKeys(req.query, [query.from ? 'until' : 'from']),
             ...query
         })}`;

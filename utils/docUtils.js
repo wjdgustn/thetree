@@ -91,6 +91,12 @@ module.exports = {
             if(!Array.isArray(array)) array = [array];
 
             for(let docName of array) {
+                if(flag === BacklinkFlags.Redirect) {
+                    const splittedName = docName.split('#');
+                    if(splittedName.length > 1) splittedName.pop();
+                    docName = splittedName.join('#');
+                }
+                if(!docName) continue;
                 const existing = backlinks.find(a => a.docName === docName);
                 if(existing) {
                     if(!existing.flags.includes(flag)) existing.flags.push(flag);

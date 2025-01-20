@@ -1,0 +1,30 @@
+<%-include('../components/namespaceSelector')%>
+<p>역 링크는 존재하나 아직 작성이 되지 않은 문서 목록입니다.</p>
+<p>이 페이지는 하루에 한번 업데이트 됩니다.</p>
+<%if(req.permissions.includes('developer')) {%>
+    <a href="/NeededPages/update" class="thetree-button thetree-danger-button">업데이트</a>
+<%}%>
+<%
+const link = query => `${req.path}?${querystring.stringify({
+    ...utils.withoutKeys(req.query, [query.from ? 'until' : 'from']),
+    ...query
+})}`;
+const navigationPage = include('../components/pageButton', {
+    prevLink: prevItem >= 0 ? link({
+        until: prevItem
+    }) : null,
+    nextLink: nextItem < total ? link({
+        from: nextItem
+    }) : null
+});
+%>
+<div class="navigation-div navigation-page"><%-navigationPage%></div>
+<ul class="list-page">
+    <%for(let item of items) {%>
+        <li>
+            <a href="/w/<%=item%>"><%=item%></a>
+            <a href="/backlink/<%=item%>">[역링크]</a>
+        </li>
+    <%}%>
+</ul>
+<div class="navigation-div navigation-page"><%-navigationPage%></div>

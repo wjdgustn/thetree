@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -10,6 +10,7 @@ const sharp = require('sharp');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
+const middleware = require('../utils/middleware');
 const {
     HistoryTypes,
     ACLTypes,
@@ -26,7 +27,6 @@ const Thread = require('../schemas/thread');
 const EditRequest = require('../schemas/editRequest');
 
 const ACL = require('../class/acl');
-const middleware = require('../utils/middleware');
 
 const app = express.Router();
 

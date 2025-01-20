@@ -1,7 +1,9 @@
 const express = require('express');
+const fs = require('fs');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
+const middleware = require('../utils/middleware');
 const {
 
 } = require('../utils/types');
@@ -75,5 +77,57 @@ const contentLengthHandler = shortest => async (req, res) => {
 
 app.get('/ShortestPages', contentLengthHandler(true));
 app.get('/LongestPages', contentLengthHandler(false));
+
+let neededPages = fs.existsSync('./cache/neededPages.json') ? JSON.parse(fs.readFileSync('./cache/neededPages.json').toString()) : {};
+let orphanedPages = fs.existsSync('./cache/orphanedPages.json') ? JSON.parse(fs.readFileSync('./cache/orphanedPages.json').toString()) : {};
+
+const updateNeededPages = async () => {
+    const newNeededPages = {};
+    for(let namespace of config.namespaces) newNeededPages[namespace] = [];
+
+    const allDocuments = await Document.find().lean();
+    const allBacklinks = allDocuments.flatMap(a => a.backlinks.map(b => b.docName));
+
+    for(let docName of allBacklinks) {
+        const parsedName = utils.parseDocumentName(docName);
+        const doc = allDocuments.find(a => a.namespace === parsedName.namespace && a.title === parsedName.title && a.contentExists);
+        const arr = newNeededPages[parsedName.namespace];
+        if(!doc && !arr.includes(docName)) arr.push(docName);
+    }
+
+    for(let arr of Object.values(newNeededPages)) arr.sort();
+
+    neededPages = newNeededPages;
+    fs.writeFileSync('./cache/neededPages.json', JSON.stringify(neededPages));
+}
+
+setInterval(() => {
+    updateNeededPages().then();
+}, 1000 * 60 * 60 * 24);
+
+app.get('/NeededPages', (req, res) => {
+    const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
+
+    const displayCount = 100;
+    const pageStr = req.query.from || req.query.until;
+    const skipCount = pageStr ? (req.query.from ? parseInt(req.query.from) : parseInt(req.query.until) - displayCount + 1) : 0;
+    const fullItems = (neededPages[namespace] ?? []);
+    const items = fullItems.slice(skipCount, skipCount + displayCount);
+
+    res.renderSkin('작성이 필요한 문서', {
+        contentName: 'docList/NeededPages',
+        serverData: {
+            items,
+            prevItem: skipCount - 1,
+            nextItem: skipCount + displayCount,
+            total: fullItems.length
+        }
+    });
+});
+
+app.get('/NeededPages/update', middleware.permission('developer'), middleware.referer('/NeededPages'), async (req, res) => {
+    res.status(204).end();
+    await updateNeededPages();
+});
 
 module.exports = app;
