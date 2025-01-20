@@ -127,7 +127,7 @@ app.post('/aclgroup/group_remove', async (req, res) => {
     if(!target) return res.status(404).send('존재하지 않는 그룹입니다.');
     if(target.deleteGroupPerms.length
         ? !target.deleteGroupPerms.some(a => req.permissions.includes(a))
-        : !req.permisions.includes('aclgroup')) return res.status(403).send('권한이 부족합니다.');
+        : !req.permissions.includes('aclgroup')) return res.status(403).send('권한이 부족합니다.');
 
     await ACLGroup.deleteOne({ uuid });
 
