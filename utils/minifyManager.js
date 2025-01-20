@@ -43,7 +43,8 @@ const scopedCSSPolyfill = css => {
             bracketOpen++;
 
             if(scopedOpen && !trimed.startsWith('@')) {
-                newLine = scopedContent + ' ' + newLine;
+                const selectors = trimed.split(',').map(a => a.trim());
+                newLine = selectors.map(a => scopedContent + ' ' + a).join(', ');
             }
         }
         if(trimed.startsWith('}')) {
