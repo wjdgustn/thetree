@@ -16,6 +16,52 @@ const saveCache = obj => {
     fs.writeFileSync('./cache/minifyCache.json', JSON.stringify(obj, null, 2));
 }
 
+// @scope 미지원 브라우저용 임시방편
+const scopedCSSPolyfill = css => {
+    const lines = css.replaceAll('\r', '').split('\n');
+    const newLines = [];
+
+    let scopedOpen = false;
+    let scopedContent = '';
+    let bracketOpen = 0;
+    let lineNum = 0;
+    for(let line of lines) {
+        lineNum++;
+        // console.log(`[${lineNum}] scopedOpen: ${scopedOpen} bracketOpen: ${bracketOpen} ${line}`);
+        const trimed = line.trimStart();
+        let newLine = trimed;
+        let spaceCount = line.length - trimed.length;
+        if(trimed.startsWith('@scope')) {
+            const openPos = line.indexOf('(');
+            const closePos = line.lastIndexOf(')');
+            scopedOpen = true;
+            scopedContent = line.substring(openPos + 1, closePos);
+            continue;
+        }
+
+        if(trimed.endsWith('{')) {
+            bracketOpen++;
+
+            if(scopedOpen && !trimed.startsWith('@')) {
+                newLine = scopedContent + ' ' + newLine;
+            }
+        }
+        if(trimed.startsWith('}')) {
+            if(bracketOpen) {
+                bracketOpen--;
+            }
+            else {
+                scopedOpen = false;
+                continue;
+            }
+        }
+
+        newLines.push(' '.repeat(spaceCount) + newLine);
+    }
+
+    return newLines.join('\n');
+}
+
 const JS_PATH = './public/js';
 const CSS_PATH = './public/css';
 const MIN_JS_PATH = './publicMin/js';
@@ -93,7 +139,8 @@ module.exports = {
 
         for(let i = 0; i < cssFiles.length; i++) {
             const name = cssFiles[i];
-            const code = cssContents[i];
+            let code = cssContents[i];
+            if(!name.endsWith('.min.css')) code = scopedCSSPolyfill(code);
             const result = new CleanCSS(cleanCSSOptions).minify(code);
 
             fs.writeFileSync(path.join(MIN_CSS_PATH, name), result.styles);
@@ -135,13 +182,14 @@ module.exports = {
         const codePath = path.join('./skins', decodeURIComponent(req.url));
         if(!codePath.startsWith(`skins${path.sep}`) || !fs.existsSync(codePath)) return next();
 
-        const code = fs.readFileSync(codePath).toString();
+        let code = fs.readFileSync(codePath).toString();
         const hash = crypto.createHash('sha256').update(code).digest('hex');
         const cachePath = path.join('./cache/skincss', hash + '.css');
 
         let minCode;
         if(fs.existsSync(cachePath)) minCode = fs.readFileSync(cachePath).toString();
         else {
+            code = scopedCSSPolyfill(code);
             const result = new CleanCSS(cleanCSSOptions).minify(code);
             minCode = result.styles;
 
