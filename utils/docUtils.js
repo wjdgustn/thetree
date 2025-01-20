@@ -96,7 +96,8 @@ module.exports = {
                     if(splittedName.length > 1) splittedName.pop();
                     docName = splittedName.join('#');
                 }
-                if(!docName) continue;
+                const parsedName = utils.parseDocumentName(docName);
+                if(!docName || !parsedName.title) continue;
                 const existing = backlinks.find(a => a.docName === docName);
                 if(existing) {
                     if(!existing.flags.includes(flag)) existing.flags.push(flag);
