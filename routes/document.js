@@ -560,6 +560,8 @@ app.get('/action/acl/delete', async (req, res) => {
         uuid: aclId
     });
 
+    const aclTypeStr = utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, dbACL.type));
+
     if(dbDocument) {
         const conditionType = dbACL.conditionType;
         let conditionContent = dbACL.conditionContent;
@@ -582,14 +584,14 @@ app.get('/action/acl/delete', async (req, res) => {
             document: dbDocument.uuid,
             log: [
                 'delete',
-                utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, dbACL.type)),
+                aclTypeStr,
                 utils.getKeyFromObject(ACLActionTypes, dbACL.actionType).toLowerCase(),
                 utils.getKeyFromObject(ACLConditionTypes, conditionType).toLowerCase() + ':' + conditionContent
             ].join(',')
         });
     }
 
-    res.reload();
+    res.reload(dbACL.document ? 'document' : 'namespace' + '.' + aclTypeStr);
 });
 
 app.patch('/action/acl/reorder', async (req, res) => {

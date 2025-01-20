@@ -504,7 +504,11 @@ document.getElementById('initScript')?.remove();
         status
     });
 
-    res.reload = () => res.redirect(req.get('Referrer') || '/');
+    res.reload = anchor => {
+        const url = new URL(req.get('Referrer') || config.base_url);
+        if(anchor) url.searchParams.set('anchor', anchor);
+        res.redirect(url.pathname + url.search);
+    }
 
     res.originalRedirect = res.redirect;
     res.redirect = (...args) => {
