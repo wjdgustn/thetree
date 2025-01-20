@@ -113,7 +113,7 @@
                 <label>Action :</label>
                 <div>
                     <select name="actionType" x-model="actionType" x-init="actionType = $el.value">
-                        <%for(let [key, value] of Object.entries(ACLActionTypes).slice(1, isDev ? undefined : -1)) {%>
+                        <%for(let [key, value] of Object.entries(ACLActionTypes).slice(1)) {%>
                         <option value="<%=key%>"><%=ACL.actionToString(value)%></option>
                         <%}%>
                     </select>
