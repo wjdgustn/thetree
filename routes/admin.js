@@ -98,7 +98,7 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
     res.send(result);
 });
 
-app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware.referer('/admin/config'), async (req, res) => {
+app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware.referer('/admin/'), async (req, res) => {
     const tool = req.params.tool;
 
     if(tool === 'deletedisabledfeature') {
