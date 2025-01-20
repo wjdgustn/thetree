@@ -270,7 +270,11 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('topic의 값은 필수입니다.'),
+        .withMessage('topic의 값은 필수입니다.')
+        .isLength({
+            max: 255
+        })
+        .withMessage('topic의 값은 255글자 이하여야 합니다.'),
     body('text')
         .notEmpty({
             ignore_whitespace: true
@@ -529,7 +533,11 @@ app.post('/admin/thread/:url/topic', middleware.permission('update_thread_topic'
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('topic의 값은 필수입니다.'),
+        .withMessage('topic의 값은 필수입니다.')
+        .isLength({
+            max: 255
+        })
+        .withMessage('topic의 값은 255글자 이하여야 합니다.'),
     middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({

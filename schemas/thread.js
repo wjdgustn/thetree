@@ -27,7 +27,8 @@ const newSchema = new Schema({
     },
     topic: {
         type: String,
-        required: true
+        required: true,
+        maxLength: 255
     },
     createdUser: {
         type: String,
