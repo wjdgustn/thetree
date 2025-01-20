@@ -238,22 +238,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
     else if(tool === 'resetsearchindex') {
         res.status(204).end();
-
-        await MeiliSearch.deleteIndex(process.env.MEILISEARCH_INDEX);
-        await MeiliSearch.createIndex(process.env.MEILISEARCH_INDEX);
-        global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
-        await documentIndex.updateSettings({
-            searchableAttributes: [
-                'choseong',
-                'title',
-                'content',
-                'raw'
-            ],
-            filterableAttributes: [
-                'namespace',
-                'anyoneReadable'
-            ]
-        });
+        await global.resetSearchIndex();
     }
 
     else if(tool === 'migrateopennamu') {

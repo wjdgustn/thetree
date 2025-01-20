@@ -86,6 +86,24 @@ global.MeiliSearch = new meiliSearch.MeiliSearch({
 
 global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
 
+global.resetSearchIndex = async () => {
+    await MeiliSearch.deleteIndex(process.env.MEILISEARCH_INDEX);
+    await MeiliSearch.createIndex(process.env.MEILISEARCH_INDEX);
+    global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
+    await documentIndex.updateSettings({
+        searchableAttributes: [
+            'choseong',
+            'title',
+            'content',
+            'raw'
+        ],
+        filterableAttributes: [
+            'namespace',
+            'anyoneReadable'
+        ]
+    });
+}
+
 global.updateConfig = () => {
     global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
     global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());

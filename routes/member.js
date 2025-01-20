@@ -237,11 +237,19 @@ app.post('/member/signup/:token',
     });
 
     const hash = await bcrypt.hash(req.body.password, 12);
-    const newUser = new User({
+    const newUserJson = {
         email: token.email,
         password: hash,
         name: req.body.username
-    });
+    }
+
+    const userExists = await User.exists();
+    if(!userExists) {
+        newUserJson.permissions = ['developer'];
+        await global.resetSearchIndex();
+    }
+
+    const newUser = new User(newUserJson);
     await newUser.save();
 
     await SignupToken.deleteMany({
