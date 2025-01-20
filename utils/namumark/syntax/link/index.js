@@ -142,7 +142,7 @@ module.exports = {
 
         let isCategory = false;
         let newCategory;
-        if(link.startsWith('분류:')) {
+        if(link.startsWith('분류:') && !namumark.thread) {
             isCategory = true;
 
             if(!namumark.categories.find(a => a.document === link)) {
@@ -287,7 +287,7 @@ module.exports = {
 
         const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
-        if(isCategory && !namumark.thread) {
+        if(isCategory) {
             // namumark.categoryHtmls.push(html);
             return '<removeNewline/>';
         }
