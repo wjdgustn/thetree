@@ -242,7 +242,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         await MeiliSearch.deleteIndex(process.env.MEILISEARCH_INDEX);
         await MeiliSearch.createIndex(process.env.MEILISEARCH_INDEX);
         global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
-        documentIndex.updateSettings({
+        await documentIndex.updateSettings({
             searchableAttributes: [
                 'choseong',
                 'title',
