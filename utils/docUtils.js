@@ -71,7 +71,7 @@ module.exports = {
         return this.lineArrToBlame(newLineArr);
     },
     async generateBacklink(document, rev, parseResult) {
-        if(!rev?.content) return [];
+        if(!rev?.content) return { backlinks: [], categories: [] };
 
         if(!parseResult) {
             const parser = new global.NamumarkParser({
