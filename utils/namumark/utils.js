@@ -6,13 +6,13 @@ const {
 const { SelfClosingTags } = require('./types');
 
 module.exports = {
-    escapeHtml: text => text
+    escapeHtml: text => (text ?? '')
         .replaceAll('&', "&amp;")
         .replaceAll('<', "&lt;")
         .replaceAll('>', "&gt;")
         .replaceAll(`"`, "&quot;")
         .replaceAll(`'`, "&#039;"),
-    unescapeHtml: text => text
+    unescapeHtml: text => (text ?? '')
         .replaceAll("&amp;", '&')
         .replaceAll("&lt;", '<')
         .replaceAll("&gt;", '>')

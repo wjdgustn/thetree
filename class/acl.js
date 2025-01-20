@@ -4,6 +4,7 @@ const { lookup: ipLookup } = require('ip-location-api');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
+const namumarkUtils = require('../utils/namumark/utils');
 const { UserTypes, ACLTypes, ACLConditionTypes, ACLActionTypes } = require('../utils/types');
 
 const checkDefaultData = {
@@ -161,11 +162,14 @@ module.exports = class ACL {
     }
 
     static actionToString(ruleOrActionType) {
+        const safeActionContent = namumarkUtils.escapeHtml(ruleOrActionType.actionContent);
         return {
             [ACLActionTypes.Deny]: `거부`,
             [ACLActionTypes.Allow]: `허용`,
             [ACLActionTypes.GotoNS]: `이름공간ACL 실행`,
-            [ACLActionTypes.GotoOtherNS]: `${ruleOrActionType.actionContent ?? '다른 이름공간'} ACL 실행`
+            [ACLActionTypes.GotoOtherNS]: `${ruleOrActionType.actionContent
+                ? `<a href="/acl/${safeActionContent}:#namespace.${utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, ruleOrActionType.type))}">${safeActionContent}</a>`
+                : '다른 이름공간'} ACL 실행`
         }[typeof ruleOrActionType === 'object' ? ruleOrActionType.actionType : ruleOrActionType];
     }
 

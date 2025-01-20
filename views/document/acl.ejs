@@ -62,7 +62,7 @@
                         <tr data-rule="<%=rule.uuid%>"<%=editable ? ' data-editable' : ''%>>
                             <td><%=parseInt(i) + 1%></td>
                             <td><%=ACL.ruleToConditionString(rule, false)%></td>
-                            <td><%=ACL.actionToString(rule)%></td>
+                            <td><%-ACL.actionToString(rule)%></td>
                             <td><%-rule.expiresAt ? getFullDateTag(rule.expiresAt) : '영구'%></td>
                             <td>
                                 <%if(editable) {%>
