@@ -101,9 +101,16 @@ const updateNeededPages = async () => {
     fs.writeFileSync('./cache/neededPages.json', JSON.stringify(neededPages));
 }
 
-setInterval(() => {
+const updateDailyLists = () => {
     updateNeededPages().then();
-}, 1000 * 60 * 60 * 24);
+    scheduleUpdateDailyLists();
+}
+const scheduleUpdateDailyLists = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    setTimeout(updateDailyLists, tomorrow - Date.now());
+}
 
 app.get('/NeededPages', (req, res) => {
     const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
