@@ -138,7 +138,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         });
     }
 
-    if(!req.query.noredirect && rev.content?.startsWith('#redirect ')) {
+    if(!req.query.noredirect && !req.query.from && rev.content?.startsWith('#redirect ')) {
         let anchor = undefined;
         let redirectName = rev.content.split('\n')[0].slice('#redirect '.length);
         const hashSplitted = redirectName.split('#');
