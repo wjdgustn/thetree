@@ -7,12 +7,12 @@ const { highlight } = require('highlight.js');
 const multer = require('multer');
 const { body } = require('express-validator');
 const parseDuration = require('parse-duration');
+const crypto = require('crypto');
 
 // openNAMU migration things
 const sqlite3 = require('sqlite3').verbose();
 const { Address4, Address6 } = require('ip-address');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
 const sharp = require('sharp');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
@@ -73,7 +73,10 @@ app.get('/admin/developer', middleware.permission('developer'), (req, res) => {
 
     res.renderSkin('개발자 설정', {
         contentName: 'admin/developer',
-        customStaticFiles
+        serverData: {
+            customStaticFiles,
+            fs
+        }
     });
 });
 
@@ -898,6 +901,16 @@ app.post('/admin/login_history',
     req.session.loginHistoryExpiresAt = Date.now() + 1000 * 60 * 10;
     req.session.loginHistoryTargetUser = targetUser.uuid;
 
+    const sessionId = crypto.randomBytes(32).toString('hex');
+    req.session.loginHistorySession[sessionId] = {
+        loginHistoryExpiresAt: req.session.loginHistoryExpiresAt,
+        loginHistoryTargetUser: targetUser.uuid
+    }
+
+    setTimeout(() => {
+        delete req.session.loginHistorySession[sessionId];
+    }, 1000 * 60 * 10);
+
     if(req.body.hidelog !== 'Y') await BlockHistory.create({
         type: BlockHistoryTypes.LoginHistory,
         createdUser: req.user.uuid,
@@ -905,16 +918,16 @@ app.post('/admin/login_history',
         targetUsername: targetUser.name
     });
 
-    res.redirect('/admin/login_history/result');
+    res.redirect('/admin/login_history/' + sessionId);
 });
 
-app.get('/admin/login_history/result', middleware.permission('login_history'), async (req, res) => {
-    if(req.session.loginHistoryExpiresAt < Date.now()) {
-        delete req.session.loginHistoryExpiresAt;
-        delete req.session.loginHistoryTargetUser;
+app.get('/admin/login_history/:session', middleware.permission('login_history'), async (req, res) => {
+    const session = req.session.loginHistorySession[req.params.session];
+    if(session.loginHistoryExpiresAt < Date.now()) {
+        delete req.session.loginHistorySession[req.query.sessionId];
     }
 
-    const uuid = req.session.loginHistoryTargetUser;
+    const uuid = session.loginHistoryTargetUser;
     if(!uuid) return res.redirect('/admin/login_history');
 
     const targetUser = await User.findOne({
