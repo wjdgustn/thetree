@@ -114,14 +114,13 @@ const updateOrphanedPages = async () => {
     const frontPageName = utils.parseDocumentName(config.front_page);
     const checkDocs = [allDocuments.find(a => a.namespace === frontPageName.namespace && a.title === frontPageName.title)];
     while(true) {
-        console.log('checkDocs.length:', checkDocs.length);
         const currDoc = checkDocs.shift();
         if(!currDoc) break;
         notOrphaned.push(currDoc);
 
         const links = [
             ...currDoc.backlinks.map(a => a.docName),
-            ...currDoc.categories.map(a => a.document)
+            ...currDoc.categories.map(a => `분류:${a}`)
         ];
         const parsedLinks = links.map(a => utils.parseDocumentName(a));
         const uncheckedParsedLinks = parsedLinks.filter(a => !notOrphaned.some(b => a.namespace === b.namespace && a.title === b.title));
