@@ -309,6 +309,8 @@ app.get('/js/global.js', (req, res) => {
     res.end(global.globalUtilsCache);
 });
 
+const skinFiles = {};
+
 app.use(async (req, res, next) => {
     if(process.env.IP_HEADER && req.headers[process.env.IP_HEADER]) Object.defineProperty(req, 'ip', {
         get() {
@@ -348,11 +350,17 @@ app.use(async (req, res, next) => {
 
     app.locals.rmWhitespace = true;
 
-    app.locals.fs = fs;
+    // app.locals.fs = fs;
     app.locals.path = path;
     app.locals.dayjs = dayjs;
     app.locals.colorFromUuid = colorFromUuid;
     app.locals.querystring = querystring;
+
+    app.locals.getSkinFile = filename => {
+        const files = skinFiles[skin] ??= {};
+        files[filename] ??= fs.readFileSync(`./skins/${skin}/${filename.replaceAll('..', '')}`);
+        return files[filename];
+    }
 
     for(let t in types) {
         app.locals[t] = types[t];
