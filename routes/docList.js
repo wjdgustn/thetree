@@ -95,7 +95,7 @@ const updateNeededPages = async () => {
         if(!doc && !arr.includes(docName)) arr.push(docName);
     }
 
-    for(let arr of Object.values(newNeededPages)) arr.sort();
+    for(let arr of Object.values(newNeededPages)) arr.sort(Intl.Collator('en').compare);
 
     neededPages = newNeededPages;
     fs.writeFileSync('./cache/neededPages.json', JSON.stringify(neededPages));
@@ -142,7 +142,7 @@ const updateOrphanedPages = async () => {
         newOrphanedPages[parsedName.namespace].push(globalUtils.doc_fulltitle(parsedName));
     }
 
-    for(let arr of Object.values(newOrphanedPages)) arr.sort();
+    for(let arr of Object.values(newOrphanedPages)) arr.sort(Intl.Collator('en').compare);
 
     orphanedPages = newOrphanedPages;
     fs.writeFileSync('./cache/orphanedPages.json', JSON.stringify(orphanedPages));
