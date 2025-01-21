@@ -8,6 +8,10 @@
         padding-left: 0;
     }
 
+    .theseed-dark-mode ul {
+        border-bottom: 1px solid #383b40;
+    }
+
     ul:before, ul:after {
         content: " ";
         display: table;
