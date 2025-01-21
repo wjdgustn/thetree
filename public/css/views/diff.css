@@ -1,4 +1,4 @@
-@scope(#content-style) {
+@scope(.content-style) {
     .diff-table {
         border: 1px solid #a9a9a9;
         border-collapse: collapse;

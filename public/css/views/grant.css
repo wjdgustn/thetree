@@ -1,4 +1,4 @@
-@scope (#content-style) {
+@scope(.content-style) {
     form input, form select {
         background-color: rgb(255, 255, 255);
         background-image: none;

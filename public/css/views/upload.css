@@ -1,4 +1,4 @@
-@scope (#content-style) {
+@scope(.content-style) {
     .form-block {
         margin-bottom: 15px;
         margin-top: 1rem;

@@ -1,4 +1,4 @@
-@scope (#content-style) {
+@scope(.content-style) {
     form.delete-thread-form {
         float: right;
     }

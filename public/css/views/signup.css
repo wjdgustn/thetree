@@ -1,4 +1,4 @@
-@scope (#content-style) {
+@scope(.content-style) {
     #member-form {
         max-width: 40rem;
         margin: 0 auto;

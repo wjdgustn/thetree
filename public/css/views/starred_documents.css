@@ -1,4 +1,4 @@
-@scope (#content-style) {
+@scope(.content-style) {
     .list-block {
         display: flex;
         flex-direction: column;
