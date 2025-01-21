@@ -139,6 +139,8 @@ const updateOrphanedPages = async () => {
         newOrphanedPages[parsedName.namespace].push(globalUtils.doc_fulltitle(parsedName));
     }
 
+    for(let arr of Object.values(newOrphanedPages)) arr.sort();
+
     orphanedPages = newOrphanedPages;
     fs.writeFileSync('./cache/orphanedPages.json', JSON.stringify(orphanedPages));
 }
