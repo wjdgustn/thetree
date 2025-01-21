@@ -898,19 +898,12 @@ app.post('/admin/login_history',
         && (targetUser.permissions.includes('developer') || targetUser.permissions.includes('hideip')))
         return res.status(403).send('권한이 부족합니다.');
 
-    req.session.loginHistoryExpiresAt = Date.now() + 1000 * 60 * 10;
-    req.session.loginHistoryTargetUser = targetUser.uuid;
-
     const sessionId = crypto.randomBytes(32).toString('hex');
     req.session.loginHistorySession ??= {};
     req.session.loginHistorySession[sessionId] = {
-        loginHistoryExpiresAt: req.session.loginHistoryExpiresAt,
+        loginHistoryExpiresAt: Date.now() + 1000 * 60 * 10,
         loginHistoryTargetUser: targetUser.uuid
     }
-
-    setTimeout(() => {
-        delete req.session.loginHistorySession[sessionId];
-    }, 1000 * 60 * 10);
 
     if(req.body.hidelog !== 'Y') await BlockHistory.create({
         type: BlockHistoryTypes.LoginHistory,
@@ -923,10 +916,14 @@ app.post('/admin/login_history',
 });
 
 app.get('/admin/login_history/:session', middleware.permission('login_history'), async (req, res) => {
-    const session = req.session.loginHistorySession[req.params.session];
-    if(session?.loginHistoryExpiresAt < Date.now()) {
-        delete req.session.loginHistorySession[req.query.sessionId];
+    for(let id of Object.keys(req.session.loginHistorySession)) {
+        const session = req.session.loginHistorySession[id];
+        if(session.loginHistoryExpiresAt < Date.now()) {
+            delete req.session.loginHistorySession[session];
+        }
     }
+
+    const session = req.session.loginHistorySession[req.params.session];
 
     const uuid = session?.loginHistoryTargetUser;
     if(!uuid) return res.redirect('/admin/login_history');
