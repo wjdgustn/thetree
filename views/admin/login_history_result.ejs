@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="/css/views/login_history_result.css">
 <%
 const link = query => `/admin/login_history/result?${querystring.stringify({
     ...utils.withoutKeys(req.query, [query.from ? 'until' : 'from']),
@@ -17,26 +18,22 @@ const navigationPage = include('../components/pageButton', {
 <p>이메일 : <%=targetUser?.email%></p>
 
 <div class="navigation-div navigation-page"><%-navigationPage%></div>
-<div class="wiki-content">
-    <div class="wiki-table-wrap">
-        <table class="wiki-table">
-            <thead>
-            <tr>
-                <th>Date</th>
-                <th>IP</th>
-                <th>UA</th>
-            </tr>
-            </thead>
-            <tbody>
-            <%for(let log of logs) {%>
-                <tr style="height: 40px;">
-                    <td style="min-width: 160px;"><%-getFullDateTag(log.createdAt)%></td>
-                    <td style="min-width: 150px;"><%=log.ip%></td>
-                    <td style="max-width: 600px; white-space: nowrap; overflow-x: auto;"><%=log.userAgent%></td>
-                </tr>
-            <%}%>
-            </tbody>
-        </table>
-    </div>
-</div>
+<table>
+    <thead>
+    <tr>
+        <th>DATE</th>
+        <th>IP</th>
+        <th>UA</th>
+    </tr>
+    </thead>
+    <tbody>
+    <%for(let log of logs) {%>
+        <tr>
+            <td><%-getFullDateTag(log.createdAt)%></td>
+            <td><%=log.ip%></td>
+            <td><%=log.userAgent%></td>
+        </tr>
+    <%}%>
+    </tbody>
+</table>
 <div class="navigation-div navigation-page"><%-navigationPage%></div>

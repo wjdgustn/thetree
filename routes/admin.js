@@ -902,6 +902,7 @@ app.post('/admin/login_history',
     req.session.loginHistoryTargetUser = targetUser.uuid;
 
     const sessionId = crypto.randomBytes(32).toString('hex');
+    req.session.loginHistorySession ??= {};
     req.session.loginHistorySession[sessionId] = {
         loginHistoryExpiresAt: req.session.loginHistoryExpiresAt,
         loginHistoryTargetUser: targetUser.uuid
@@ -923,11 +924,11 @@ app.post('/admin/login_history',
 
 app.get('/admin/login_history/:session', middleware.permission('login_history'), async (req, res) => {
     const session = req.session.loginHistorySession[req.params.session];
-    if(session.loginHistoryExpiresAt < Date.now()) {
+    if(session?.loginHistoryExpiresAt < Date.now()) {
         delete req.session.loginHistorySession[req.query.sessionId];
     }
 
-    const uuid = session.loginHistoryTargetUser;
+    const uuid = session?.loginHistoryTargetUser;
     if(!uuid) return res.redirect('/admin/login_history');
 
     const targetUser = await User.findOne({
