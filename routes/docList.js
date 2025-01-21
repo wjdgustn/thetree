@@ -101,6 +101,48 @@ const updateNeededPages = async () => {
     fs.writeFileSync('./cache/neededPages.json', JSON.stringify(neededPages));
 }
 
+const updateOrphanedPages = async () => {
+    const newOrphanedPages = {};
+    for(let namespace of config.namespaces) newOrphanedPages[namespace] = [];
+
+    const allDocuments = await Document.find({
+        contentExists: true,
+        ...noRedirectQuery
+    }).lean();
+    const notOrphaned = [];
+
+    const frontPageName = utils.parseDocumentName(config.front_page);
+    const checkDocs = [allDocuments.find(a => a.namespace === frontPageName.namespace && a.title === frontPageName.title)];
+    while(true) {
+        console.log('checkDocs.length:', checkDocs.length);
+        const currDoc = checkDocs.shift();
+        if(!currDoc) break;
+        notOrphaned.push(currDoc);
+
+        const links = [
+            ...currDoc.backlinks.map(a => a.docName),
+            ...currDoc.categories.map(a => a.document)
+        ];
+        const parsedLinks = links.map(a => utils.parseDocumentName(a));
+        const uncheckedParsedLinks = parsedLinks.filter(a => !notOrphaned.some(b => a.namespace === b.namespace && a.title === b.title));
+        if(!uncheckedParsedLinks.length) continue;
+
+        const newCheckDocs = uncheckedParsedLinks.map(a => allDocuments.find(b => a.namespace === b.namespace && a.title === b.title)).filter(a => a);
+        for(let doc of newCheckDocs) {
+            if(!checkDocs.includes(doc)) checkDocs.push(doc);
+        }
+    }
+
+    const orphaned = allDocuments.filter(a => !notOrphaned.includes(a));
+    for(let doc of orphaned) {
+        const parsedName = utils.dbDocumentToDocument(doc);
+        newOrphanedPages[parsedName.namespace].push(globalUtils.doc_fulltitle(parsedName));
+    }
+
+    orphanedPages = newOrphanedPages;
+    fs.writeFileSync('./cache/orphanedPages.json', JSON.stringify(orphanedPages));
+}
+
 const updateDailyLists = () => {
     updateNeededPages().then();
     scheduleUpdateDailyLists();
@@ -135,6 +177,31 @@ app.get('/NeededPages', (req, res) => {
 app.get('/NeededPages/update', middleware.permission('developer'), middleware.referer('/NeededPages'), async (req, res) => {
     res.status(204).end();
     await updateNeededPages();
+});
+
+app.get('/OrphanedPages', (req, res) => {
+    const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
+
+    const displayCount = 100;
+    const pageStr = req.query.from || req.query.until;
+    const skipCount = pageStr ? (req.query.from ? parseInt(req.query.from) : parseInt(req.query.until) - displayCount + 1) : 0;
+    const fullItems = (orphanedPages[namespace] ?? []);
+    const items = fullItems.slice(skipCount, skipCount + displayCount);
+
+    res.renderSkin('고립된 문서', {
+        contentName: 'docList/OrphanedPages',
+        serverData: {
+            items,
+            prevItem: skipCount - 1,
+            nextItem: skipCount + displayCount,
+            total: fullItems.length
+        }
+    });
+});
+
+app.get('/OrphanedPages/update', middleware.permission('developer'), middleware.referer('/OrphanedPages'), async (req, res) => {
+    res.status(204).end();
+    await updateOrphanedPages();
 });
 
 module.exports = app;
