@@ -1251,12 +1251,18 @@ const starHandler = starred => async (req, res) => {
     else res.redirect(globalUtils.doc_action_link(document, 'w'));
 }
 
-app.get('/member/starred_documents', async (req, res) => {
+app.get('/member/starred_documents', middleware.isLogin, async (req, res) => {
     let stars = await Star.find({
         user: req.user.uuid
     }).lean();
     stars = await utils.findDocuments(stars);
     stars = stars.sort((a, b) => b.document.updatedAt - a.document.updatedAt);
+
+    for(let star of stars) {
+        star.rev = await History.findOne({
+            document: star.document.uuid
+        }).sort({ rev: -1 }).lean();
+    }
 
     res.renderSkin('내 문서함', {
         contentName: 'member/starred_documents',

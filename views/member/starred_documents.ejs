@@ -11,7 +11,7 @@
                 <a href="<%=doc_action_link(star.document.parsedName, 'w')%>"><%=doc_fulltitle(star.document.parsedName)%></a>
             </div>
             <div class="list-item">
-                <%-getFullDateTag(star.document.updatedAt, 'relative')%>
+                <%-getFullDateTag(star.rev.createdAt, 'relative')%>
             </div>
             <div class="list-item" x-data="{ starred: true }">
                 <a x-show="starred" @click="starred = false" href="<%=doc_action_link(star.document.parsedName, 'member/unstar')%>" class="thetree-button thetree-changes-button thetree-delete-button" title="삭제">
