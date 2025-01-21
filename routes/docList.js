@@ -107,7 +107,10 @@ const updateOrphanedPages = async () => {
 
     const allDocuments = await Document.find({
         contentExists: true,
-        ...noRedirectQuery
+        ...noRedirectQuery,
+        namespace: {
+            $ne: '사용자'
+        }
     }).lean();
     const notOrphaned = [];
 
