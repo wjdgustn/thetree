@@ -120,11 +120,11 @@ const updateOrphanedPages = async () => {
 
         const links = [
             ...currDoc.backlinks.map(a => a.docName),
-            ...currDoc.categories.map(a => `분류:${a}`)
+            ...currDoc.categories.map(a => `분류:${a.document}`)
         ];
         if(currDoc.namespace === '분류') {
             const categoryDocs = allDocuments.filter(a => a.categories.some(b => b.document === currDoc.title));
-            links.push(...categoryDocs.map(a => `분류:${a.title}`));
+            links.push(...categoryDocs.map(a => globalUtils.doc_fulltitle(utils.dbDocumentToDocument(a))));
         }
         const parsedLinks = links.map(a => utils.parseDocumentName(a));
         const uncheckedParsedLinks = parsedLinks.filter(a => !notOrphaned.some(b => a.namespace === b.namespace && a.title === b.title));
