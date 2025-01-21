@@ -25,9 +25,9 @@ module.exports = {
     contribution_link_discuss(uuid) {
         return `/contribution/${uuid}/discuss`;
     },
-    encodeSpecialChars(str) {
+    encodeSpecialChars(str, exclude = []) {
         if(typeof specialChars === 'undefined') specialChars = '?&=+$#%'.split('');
-        return str.split('').map(a => specialChars.includes(a) ? encodeURIComponent(a) : a).join('');
+        return str.split('').map(a => specialChars.includes(a) && !exclude.includes(a) ? encodeURIComponent(a) : a).join('');
     },
     doc_action_link(document, route, query = {}) {
         if(typeof specialUrls === 'undefined') specialUrls = [
