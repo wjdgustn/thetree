@@ -385,6 +385,11 @@ function setupUserText() {
         const handler = e => {
             e.preventDefault();
 
+            if(!userPopup.classList.contains('popup-close')) {
+                State.userPopup.close();
+                return false;
+            }
+
             State.userPopup.name = userText.textContent;
             State.userPopup.uuid = userText.dataset.uuid;
             State.userPopup.type = parseInt(userText.dataset.type);
