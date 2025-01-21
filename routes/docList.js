@@ -122,6 +122,10 @@ const updateOrphanedPages = async () => {
             ...currDoc.backlinks.map(a => a.docName),
             ...currDoc.categories.map(a => `분류:${a}`)
         ];
+        if(currDoc.namespace === '분류') {
+            const categoryDocs = allDocuments.filter(a => a.categories.some(b => b.document === currDoc.title));
+            links.push(...categoryDocs.map(a => `분류:${a.title}`));
+        }
         const parsedLinks = links.map(a => utils.parseDocumentName(a));
         const uncheckedParsedLinks = parsedLinks.filter(a => !notOrphaned.some(b => a.namespace === b.namespace && a.title === b.title));
         if(!uncheckedParsedLinks.length) continue;
