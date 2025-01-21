@@ -47,7 +47,10 @@ const app = express.Router();
 
 app.get('/admin/config', middleware.permission('config'), (req, res) => {
     res.renderSkin('Config', {
-        contentName: 'admin/config'
+        contentName: 'admin/config',
+        serverData: {
+            fs
+        }
     });
 });
 
