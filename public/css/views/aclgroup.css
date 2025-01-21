@@ -26,6 +26,11 @@
         padding: .5em 1em;
     }
 
+    .theseed-dark-mode li>a, .theseed-dark-mode li>button {
+        border-color: #383b40 #383b40 transparent;
+        color: #ddd !important;
+    }
+
     li>a, li>a>button, li>button {
         background: none;
         cursor: pointer;
@@ -39,6 +44,10 @@
     li>a.selected-group, li>button.selected-group {
         background-color: #fff;
         color: #55595c;
+    }
+
+    .theseed-dark-mode li>a.selected-group, .theseed-dark-mode li>button.selected-group {
+        background-color: #27292d;
     }
 
     li>a>button {
