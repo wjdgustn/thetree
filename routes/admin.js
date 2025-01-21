@@ -919,7 +919,7 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
     for(let id of Object.keys(req.session.loginHistorySession)) {
         const session = req.session.loginHistorySession[id];
         if(session.loginHistoryExpiresAt < Date.now()) {
-            delete req.session.loginHistorySession[session];
+            delete req.session.loginHistorySession[id];
         }
     }
 
