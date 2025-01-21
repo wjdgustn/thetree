@@ -21,9 +21,10 @@ const navigationPage = include('../components/pageButton', {
 <div class="navigation-div navigation-page"><%-navigationPage%></div>
 <ul class="list-page">
     <%for(let item of items) {%>
+        <%const parsedName = utils.parseDocumentName(item);%>
         <li>
-            <a href="/w/<%=item%>"><%=item%></a>
-            <a href="/backlink/<%=item%>">[역링크]</a>
+            <a href="<%=doc_action_link(parsedName, 'w')%>"><%=doc_fulltitle(parsedName)%></a>
+            <a href="<%=doc_action_link(parsedName, 'backlink')%>">[역링크]</a>
         </li>
     <%}%>
 </ul>
