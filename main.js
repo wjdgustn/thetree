@@ -21,6 +21,8 @@ const RedisStore = require('connect-redis').default;
 const { colorFromUuid } = require('uuid-color');
 const aws = require('@aws-sdk/client-s3');
 const meiliSearch = require('meilisearch');
+const { execSync } = require('child_process');
+const axios = require('axios');
 
 global.debug = process.env.NODE_ENV === 'development';
 
@@ -115,6 +117,69 @@ global.updateConfig = () => {
     global.skins = fs.readdirSync('./skins');
 }
 updateConfig();
+
+try {
+    execSync('git --version');
+} catch(e) {
+    console.error('git not found');
+    process.exit(1);
+}
+global.versionInfo = {
+    branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(),
+    commitId: execSync('git rev-parse HEAD').toString().trim(),
+    commitDate: new Date(Number(execSync('git log -1 --format="%at"').toString().trim()) * 1000),
+    versionData: JSON.parse(fs.readFileSync('./version.json').toString()),
+    updateRequired: false
+};
+global.newVersionInfo = { ...global.versionInfo };
+global.newCommits = [];
+
+const githubAPI = axios.create({
+    baseURL: `https://api.github.com/repos/${global.versionInfo.versionData.repo}`,
+    headers: {
+        ...(config.github_api_token ? {
+            Authorization: `token ${config.github_api_token}`
+        } : {})
+    }
+});
+global.checkUpdate = async () => {
+    let newCommits;
+    let newVerionData;
+    try {
+        const { data: newCommitData } = await githubAPI.get(`/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
+        newCommits = newCommitData.commits;
+        const { data: newVersionFile } = await githubAPI.get('/contents/version.json');
+        newVerionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
+    } catch(e) {
+        console.error('failed to fetch latest version info', e);
+        return;
+    }
+    if(!newCommits.length) return;
+
+    global.newCommits = newCommits;
+    global.newVersionInfo = {
+        ...global.versionInfo,
+        commitId: newCommits[newCommits.length - 1].sha,
+        commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
+        versionData: newVerionData,
+        updateRequired: newVerionData.lastForceUpdate > Date.now(),
+        lastUpdateCheck: new Date()
+    };
+}
+
+if(config.check_update) {
+    setInterval(checkUpdate, 1000 * 60 * 60);
+    checkUpdate().then();
+}
+
+global.updateEngine = (exit = true) => {
+    try {
+        execSync('git pull --recurse-submodules');
+    } catch(e) {
+        return;
+    }
+    if(exit) process.exit(0);
+}
 
 require('./schemas')();
 

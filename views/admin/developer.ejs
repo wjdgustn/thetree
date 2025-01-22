@@ -2,6 +2,31 @@
 <script src="/js/perm/developer/developer.js?token=<%=permTokens.developer%>"></script>
 
 <div class="wiki-content">
+    <%
+    const hasUpdate = global.versionInfo.commitId !== global.newVersionInfo.commitId;
+    const unfoldUpdate = config.check_update || hasUpdate;
+    %>
+    <h2 class="wiki-heading<%=unfoldUpdate ? '' : ' wiki-heading-folded'%>">업데이트</h2>
+    <div class="wiki-heading-content<%=unfoldUpdate ? '' : ' wiki-heading-content-folded'%>">
+        <p>현재 버전: <%=global.versionInfo.versionData.version%>(<%=global.versionInfo.commitId.slice(0, 7)%>, <%=global.versionInfo.commitDate.toLocaleString()%>)</p>
+        <p>새 버전: <%=global.newVersionInfo.versionData.version%>(<%=global.newVersionInfo.commitId.slice(0, 7)%>, <%=global.newVersionInfo.commitDate.toLocaleString()%>)</p>
+        <p>마지막 업데이트 확인: <%=global.newVersionInfo.lastUpdateCheck?.toLocaleString() ?? '없음'%></p>
+        <%if(hasUpdate) {%>
+            <p>업데이트 내역:</p>
+            <ul>
+                <%for(let info of global.newCommits) {%>
+                    <li><a href="<%=info.html_url%>" target="_blank"><%=info.sha.slice(0, 7)%></a> <%=info.commit.message%> - <a href="<%=info.author.html_url%>" target="_blank"><%=info.commit.author.name%></a></li>
+                <%}%>
+            </ul>
+        <%}%>
+        <a class="thetree-button thetree-primary-button" href="/admin/config/tools/checkupdate">업데이트 확인</a>
+        <%if(hasUpdate) {%>
+            <a class="thetree-button thetree-danger-button" href="/admin/config/tools/update">업데이트</a>
+        <%} else if(!config.check_update) {%>
+            <a class="thetree-button thetree-primary-button" href="/admin/config/tools/updateskin">스킨 업데이트</a>
+        <%}%>
+    </div>
+
     <h2 class="wiki-heading">도구</h2>
     <div class="wiki-heading-content">
         <a class="thetree-button thetree-primary-button" href="/admin/config/tools/minifyjs">JS 다시 minify</a>

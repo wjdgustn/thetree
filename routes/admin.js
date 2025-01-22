@@ -416,6 +416,20 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         });
     }
 
+    else if(tool === 'checkupdate') {
+        await global.checkUpdate();
+        res.reload();
+    }
+
+    else if(tool === 'update') {
+        res.status(204).end();
+        global.update();
+    }
+
+    else if(tool === 'updateskin') {
+        global.update(false);
+    }
+
     else return res.status(404).send('tool not found');
 });
 
