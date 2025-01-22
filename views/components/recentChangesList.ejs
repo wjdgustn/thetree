@@ -39,9 +39,10 @@
             <%-getFullDateTag(rev.createdAt, 'relative')%>
         </div>
 
-        <%if((rev.log && !rev.hideLog) || rev.htmlInfoText) {%>
+        <%const hideLog = rev.troll || (rev.hideLog && !req.permissions.includes('hide_document_history_log'));%>
+        <%if((rev.log && !hideLog) || rev.htmlInfoText) {%>
         <div class="changes-value changes-value-log">
-            <%if(rev.log && !rev.hideLog) {%>
+            <%if(rev.log && !hideLog) {%>
             <span><%=rev.log%></span>
             <%}%>
             <%if(rev.htmlInfoText) {%>
