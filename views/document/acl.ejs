@@ -114,7 +114,7 @@
                 <div>
                     <select name="actionType" x-model="actionType" x-init="actionType = $el.value">
                         <%for(let [key, value] of Object.entries(ACLActionTypes).slice(1)) {%>
-                        <option value="<%=key%>"<%=key === ACLActionTypes.GotoNS ? ' selected' : ''%>><%=ACL.actionToString(value)%></option>
+                        <option value="<%=key%>"<%=value === ACLActionTypes.GotoNS ? ' selected' : ''%>><%=ACL.actionToString(value)%></option>
                         <%}%>
                     </select>
 
