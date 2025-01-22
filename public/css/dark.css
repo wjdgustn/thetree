@@ -118,6 +118,11 @@
     border-color: #2d3748;
 }
 
+.theseed-dark-mode .footnote-modal-contents button {
+    background-color: #383b40;
+    border-top: 1px solid #111;
+}
+
 .theseed-dark-mode .thetree-delete-button:not(.thetree-button-disabled) {
     background-color: #75121c;
     border-color: #861520;
