@@ -427,7 +427,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'updateskin') {
-        global.update(false);
+        global.updateEngine(false);
     }
 
     else return res.status(404).send('tool not found');
