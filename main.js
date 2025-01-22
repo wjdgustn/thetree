@@ -134,15 +134,16 @@ global.versionInfo = {
 global.newVersionInfo = { ...global.versionInfo };
 global.newCommits = [];
 
-const githubAPI = axios.create({
-    baseURL: `https://api.github.com/repos/${global.versionInfo.versionData.repo}`,
-    headers: {
-        ...(config.github_api_token ? {
-            Authorization: `token ${config.github_api_token}`
-        } : {})
-    }
-});
 global.checkUpdate = async () => {
+    const githubAPI = axios.create({
+        baseURL: `https://api.github.com/repos/${global.versionInfo.versionData.repo}`,
+        headers: {
+            ...(config.github_api_token ? {
+                Authorization: `token ${config.github_api_token}`
+            } : {})
+        }
+    });
+
     let newCommits;
     let newVerionData;
     try {
