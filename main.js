@@ -154,7 +154,10 @@ global.checkUpdate = async () => {
         console.error('failed to fetch latest version info', e);
         return;
     }
-    if(!newCommits.length) return;
+    if(!newCommits.length) {
+        global.newVersionInfo.lastUpdateCheck = new Date();
+        return;
+    }
 
     global.newCommits = newCommits;
     global.newVersionInfo = {
