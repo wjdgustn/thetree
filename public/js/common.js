@@ -568,7 +568,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
         newUrl.hash = anchor;
         newUrl.searchParams.delete('f');
 
-        location.href = response.url;
+        location.href = newUrl.toString();
     }
 
     setProgress(100);
