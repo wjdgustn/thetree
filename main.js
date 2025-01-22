@@ -169,6 +169,11 @@ global.checkUpdate = async () => {
         updateRequired: newVerionData.lastForceUpdate > Date.now(),
         lastUpdateCheck: new Date()
     };
+
+    if(global.newVersionInfo.updateRequired) {
+        console.log('force updating...');
+        global.updateEngine();
+    }
 }
 
 if(config.check_update) {
