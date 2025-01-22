@@ -1,3 +1,5 @@
+const cheerio = require('cheerio');
+
 const { Priority } = require('../../types');
 const processImage = require('./image');
 
@@ -181,17 +183,24 @@ module.exports = {
             text = splittedText.join('#');
         }
 
-        let imageDocName;
+        const imageDocNames = [];
         if(!isImage) {
             const parseResult = await namumark.parse(text, true, true);
             if(parseResult.hasNewline) return null;
             text = parseResult.html;
 
-            if(text.startsWith('<span class="wiki-image-align" ') && text.endsWith('</span>')) {
-                const startStr = 'data-doc="';
-                const docNameStart = text.indexOf(startStr) + startStr.length;
-                const docNameEnd = text.indexOf('"', docNameStart);
-                imageDocName = text.slice(docNameStart, docNameEnd);
+            if(text.startsWith('<span class="wiki-image-align" ') && text.endsWith('</span></span>')) {
+                const $ = cheerio.load(text);
+                for(let child of $('body').children()) {
+                    if(child.attribs.class !== 'wiki-image-align') {
+                        imageDocNames.length = 0;
+                        break;
+                    }
+
+                    const image = child.children[0].children[1];
+                    const docName = image.attribs['data-doc'];
+                    imageDocNames.push(docName);
+                }
             }
         }
 
@@ -215,13 +224,19 @@ module.exports = {
             link = parsedLink.href;
             title = link;
 
-            if(imageDocName) {
-                const linkRule = config.external_link_icons?.[imageDocName];
-                if(linkRule != null) {
-                    const splittedRule = linkRule.split('.').reverse().filter(a => a);
-                    const splittedUrl = parsedLink.hostname.split('.').reverse();
-                    if(splittedRule.every((a, i) => a === splittedUrl[i])) hideExternalLinkIcon = true;
+            if(imageDocNames.length) {
+                let passedCount = 0;
+                for(let docName of imageDocNames) {
+                    const linkRule = config.external_link_icons?.[docName];
+                    if(linkRule != null) {
+                        const splittedRule = linkRule.split('.').reverse().filter(a => a);
+                        const splittedUrl = parsedLink.hostname.split('.').reverse();
+                        if(splittedRule.every((a, i) => a === splittedUrl[i])) passedCount++;
+                        else break;
+                    }
+                    else break;
                 }
+                if(passedCount === imageDocNames.length) hideExternalLinkIcon = true;
             }
         }
         else {
