@@ -76,6 +76,7 @@
       "serverConfig.json",
       "publicConfig.json",
       "stringConfig.json",
+      "devConfig.json",
       "utils/namumark/syntax/"
     ]
   }
