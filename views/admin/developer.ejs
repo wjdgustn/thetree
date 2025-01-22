@@ -22,7 +22,7 @@
         <a class="thetree-button thetree-primary-button" href="/admin/config/tools/checkupdate">업데이트 확인</a>
         <%if(hasUpdate) {%>
             <a class="thetree-button thetree-danger-button" href="/admin/config/tools/update">업데이트</a>
-        <%} else if(!config.check_update) {%>
+        <%} else {%>
             <a class="thetree-button thetree-primary-button" href="/admin/config/tools/updateskin">스킨 업데이트</a>
         <%}%>
     </div>
