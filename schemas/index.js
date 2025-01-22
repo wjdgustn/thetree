@@ -26,7 +26,7 @@ module.exports = () => {
     fs.readdirSync('./schemas').forEach(file => {
         if(file !== 'index.js') {
             require(`./${file}`);
-            console.log(`${file.trim()} schema loaded.`);
+            // console.log(`${file.trim()} schema loaded.`);
         }
     });
     console.log('All schemas loaded.');
