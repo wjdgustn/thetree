@@ -159,16 +159,12 @@ app.get('/sidebar.json', async (req, res) => {
     return res.json(sidebarCache);
 });
 
-let commitId;
-let commitDate;
 global.skinCommitId = {};
 let openSourceLicense;
 app.get('/License', (req, res) => {
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
 
-    commitId ??= execSync('git rev-parse HEAD').toString().trim().slice(0, 7);
-    commitDate ??= new Date(Number(execSync('git log -1 --format="%at"').toString().trim()) * 1000);
     skinCommitId[skin] ??= execSync('git rev-parse HEAD', {
         cwd: `./skins/${skin}`
     }).toString().trim().slice(0, 7);
@@ -179,8 +175,6 @@ app.get('/License', (req, res) => {
         viewName: 'license',
         contentName: 'special/license',
         serverData: {
-            commitId,
-            commitDate,
             skinCommitId: skinCommitId[skin],
             openSourceLicense
         }

@@ -1,9 +1,9 @@
 <h2>the tree</h2>
 
-<p>v1.0.0</p>
-<%if(req.permissions.includes('admin')) {%><p><%=commitDate.toLocaleString()%></p><%}%>
+<p>v<%=global.versionInfo.versionData.version%></p>
+<%if(req.permissions.includes('admin')) {%><p><%=global.versionInfo.commitDate.toLocaleString()%></p><%}%>
 <ul>
-    <li>Engine: <%=commitId%></li>
+    <li>Engine: <%=global.versionInfo.commitId.slice(0, 7)%></li>
     <li>Skin: <%=skinCommitId%></li>
 </ul>
 
