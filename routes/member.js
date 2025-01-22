@@ -323,7 +323,7 @@ app.post('/member/login',
             userAgent: req.get('User-Agent')
         });
 
-        if(!user.totpToken && !config.use_email_verification) {
+        if((!user.totpToken && !config.use_email_verification) || user.permissions.includes('disable_two_factor_login')) {
             await createLoginHistory();
             trusted = true;
         }

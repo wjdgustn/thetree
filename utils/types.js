@@ -79,6 +79,7 @@ module.exports = {
         'nsacl',
         'hide_thread_comment',
         'grant',
+        'disable_two_factor_login',
         'no_force_captcha',
         'login_history',
         'update_thread_document',
