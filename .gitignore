@@ -4,6 +4,7 @@
 /publicMin/
 /cache/
 /opennamu_data/
+/skins/*
 
 .env
 
