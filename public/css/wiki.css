@@ -321,7 +321,7 @@
     font-weight: 700;
 }
 
-.wiki-content .wiki-link-external {
+.wiki-content .wiki-link-external, .wiki-content .wiki-link-whitelisted {
     color: #090 !important;
 }
 

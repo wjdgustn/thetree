@@ -181,10 +181,18 @@ module.exports = {
             text = splittedText.join('#');
         }
 
+        let imageDocName;
         if(!isImage) {
             const parseResult = await namumark.parse(text, true, true);
             if(parseResult.hasNewline) return null;
             text = parseResult.html;
+
+            if(text.startsWith('<span class="wiki-image-align" ') && text.endsWith('</span>')) {
+                const startStr = 'data-doc="';
+                const docNameStart = text.indexOf(startStr) + startStr.length;
+                const docNameEnd = text.indexOf('"', docNameStart);
+                imageDocName = text.slice(docNameStart, docNameEnd);
+            }
         }
 
         let parsedLink;
@@ -202,9 +210,19 @@ module.exports = {
 
         let title;
         let titleDocument;
+        let hideExternalLinkIcon = false;
         if(parsedLink) {
             link = parsedLink.href;
             title = link;
+
+            if(imageDocName) {
+                const linkRule = config.external_link_icons?.[imageDocName];
+                if(linkRule != null) {
+                    const splittedRule = linkRule.split('.').reverse().filter(a => a);
+                    const splittedUrl = parsedLink.hostname.split('.').reverse();
+                    if(splittedRule.every((a, i) => a === splittedUrl[i])) hideExternalLinkIcon = true;
+                }
+            }
         }
         else {
             if(link.startsWith('../')) {
@@ -266,7 +284,7 @@ module.exports = {
 
         if(notExist) classList.push('not-exist');
 
-        if(parsedLink) classList.push('wiki-link-external');
+        if(parsedLink) classList.push(hideExternalLinkIcon ? 'wiki-link-whitelisted' : 'wiki-link-external');
         else if(title === docTitle) classList.push('wiki-self-link');
 
         const rel = [];

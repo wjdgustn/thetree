@@ -28,5 +28,9 @@
   ],
 
   "email_whitelist": [],
-  "use_email_verification": false
+  "use_email_verification": false,
+
+  "external_link_icons": {
+    "파일:홈페이지 아이콘.svg": ""
+  }
 }
