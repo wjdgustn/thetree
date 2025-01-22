@@ -269,8 +269,8 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com'],
             imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
-            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
-            fontSrc: ["'self'", 'fonts.gstatic.com'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
+            fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
             frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
             ...(debug ? {
                 upgradeInsecureRequests: null
