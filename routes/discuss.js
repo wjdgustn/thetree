@@ -97,6 +97,13 @@ const threadCommentEvent = async ({
         commentId: dbComment.id
     });
 
+    let commentUser = req.user;
+    if(dbComment.user !== req.user.uuid) {
+        commentUser = await User.findOne({
+            uuid: dbComment.user
+        }).lean();
+    }
+
     const comment = await threadCommentMapper({
         thread,
         parser,
