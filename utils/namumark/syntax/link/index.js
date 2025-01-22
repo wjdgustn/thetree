@@ -189,10 +189,10 @@ module.exports = {
             if(parseResult.hasNewline) return null;
             text = parseResult.html;
 
-            if(text.startsWith('<span class="wiki-image-align" ') && text.endsWith('</span></span>')) {
+            if(text.startsWith('<span class="wiki-image-align') && text.endsWith('</span></span>')) {
                 const $ = cheerio.load(text);
                 for(let child of $('body').children()) {
-                    if(child.attribs.class !== 'wiki-image-align') {
+                    if(!child.attribs.class.split(' ').includes('wiki-image-align')) {
                         imageDocNames.length = 0;
                         break;
                     }
