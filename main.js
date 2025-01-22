@@ -659,6 +659,7 @@ for(let f of fs.readdirSync('./routes')) {
 app.use((req, res, next) => {
     const fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
     if(fromFetch) res.status(404).send(`not found: ${req.method} ${req.path}`);
+    else if(config.not_found_html) res.send(config.not_found_html);
     else next();
 });
 
