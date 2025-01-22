@@ -423,7 +423,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
     else if(tool === 'update') {
         res.status(204).end();
-        global.update();
+        global.updateEngine();
     }
 
     else if(tool === 'updateskin') {
