@@ -7,6 +7,9 @@ const { Priority } = require('./types');
 // const makeParagraph = require('./makeParagraph');
 const postProcess = require('./postProcess');
 
+const MAXIMUM_LENGTH = 1000000;
+const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
+
 const syntaxDefaultValues = {
     openStr: '',
     openOnlyForLineFirst: false,
@@ -168,6 +171,8 @@ module.exports = class NamumarkParser {
     async parse(input, childParse = false, disableNoParagraph = false, cacheOptions = {}, options = {}) {
         if((debug||true) && !childParse && !this.includeData && !this.thread) console.time(`parse "${this.document.title}"`);
 
+        let hasError = false;
+
         if(!childParse) {
             this.childDepth = 0;
 
@@ -198,7 +203,13 @@ module.exports = class NamumarkParser {
         // 문법 파싱
         let text = '';
         const openedSyntaxes = [];
-        for(let syntaxIndex in sortedSyntaxes) {
+        syntaxLoop: for(let syntaxIndex in sortedSyntaxes) {
+            if(sourceText.length > MAXIMUM_LENGTH) {
+                sourceText = MAXIMUM_LENGTH_HTML;
+                hasError = true;
+                break;
+            }
+
             this.syntaxDataList ??= [];
             this.syntaxDataList[this.childDepth] = {};
 
@@ -272,6 +283,12 @@ module.exports = class NamumarkParser {
 
                 if(debug && !childParse && !this.includeData && !this.thread) console.time('syntax ' + syntax.name);
                 outer: for (let i = 0; i < sourceText.length; i++) {
+                    if(sourceText.length > MAXIMUM_LENGTH) {
+                        sourceText = MAXIMUM_LENGTH_HTML;
+                        hasError = true;
+                        break syntaxLoop;
+                    }
+
                     const char = sourceText[i];
                     const prevChar = sourceText[i - 1];
                     const nextChar = sourceText[i + 1];
@@ -578,7 +595,8 @@ module.exports = class NamumarkParser {
             redirect: this.redirect,
             categories: this.categories,
             hasNewline,
-            headings: this.headings
+            headings: this.headings,
+            hasError
         }
     }
 }

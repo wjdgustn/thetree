@@ -181,7 +181,14 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     let content = rev.content;
     if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
 
-    let { html: contentHtml, categories } = await parser.parse(content);
+    let { html: contentHtml, categories, hasError } = await parser.parse(content);
+    if(hasError) return res.renderSkin(undefined, {
+        ...defaultData,
+        date: null,
+        rev: null,
+        uuid: null,
+        contentHtml
+    });
     let categoryHtml;
     try {
         categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !rev.content?.startsWith('#redirect '));
