@@ -160,7 +160,7 @@ global.checkUpdate = async () => {
         return;
     }
 
-    global.newCommits = newCommits;
+    global.newCommits = newCommits.reverse();
     global.newVersionInfo = {
         ...global.versionInfo,
         commitId: newCommits[newCommits.length - 1].sha,
