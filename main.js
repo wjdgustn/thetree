@@ -21,7 +21,7 @@ const RedisStore = require('connect-redis').default;
 const { colorFromUuid } = require('uuid-color');
 const aws = require('@aws-sdk/client-s3');
 const meiliSearch = require('meilisearch');
-const { execSync } = require('child_process');
+const { execSync, exec } = require('child_process');
 const axios = require('axios');
 
 global.debug = process.env.NODE_ENV === 'development';
@@ -178,11 +178,13 @@ if(config.check_update) {
 
 global.updateEngine = (exit = true) => {
     try {
-        execSync('git pull --recurse-submodules');
-    } catch(e) {
-        return;
-    }
-    if(exit) process.exit(0);
+        exec('git pull --recurse-submodules', (err, stdout, stderr) => {
+            if(err) console.error(err);
+            if(stdout) console.log(stdout);
+            if(stderr) console.error(stderr);
+            if(exit) process.exit(0);
+        });
+    } catch(e) {}
 }
 
 require('./schemas')();
