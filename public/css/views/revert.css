@@ -11,6 +11,11 @@
         width: 100%;
     }
 
+    .theseed-dark-mode input, .theseed-dark-mode textarea {
+        background-color: #000;
+        color: #ddd;
+    }
+
     textarea {
         height: 600px;
         overflow: auto;
