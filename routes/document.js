@@ -982,7 +982,7 @@ const postEditAndEditRequest = async (req, res) => {
         content = newLines.join('\n');
     }
     else {
-        if(content.startsWith('#넘겨주기 ')) content = content.replace('#넘겨주기 ', '#redirect');
+        if(content.startsWith('#넘겨주기 ')) content = content.replace('#넘겨주기 ', '#redirect ');
         if(content.startsWith('#redirect ')) content = content.split('\n')[0];
         if(content.startsWith('#redirect 문서:')) content = content.replace('#redirect 문서:', '#redirect ');
     }
