@@ -161,7 +161,7 @@ app.get('/sidebar.json', async (req, res) => {
 
 let commitId;
 let commitDate;
-let skinCommitId = {};
+global.skinCommitId = {};
 let openSourceLicense;
 app.get('/License', (req, res) => {
     let skin = req.user?.skin;

@@ -188,6 +188,7 @@ global.updateEngine = (exit = true) => {
             if(stdout) console.log(stdout);
             if(stderr) console.error(stderr);
             if(exit) process.exit(0);
+            else global.skinCommitId = {};
         });
     } catch(e) {}
 }
