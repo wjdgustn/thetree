@@ -324,7 +324,6 @@ app.post('/member/login',
         });
 
         if((!user.totpToken && !config.use_email_verification) || user.permissions.includes('disable_two_factor_login')) {
-            await createLoginHistory();
             trusted = true;
         }
 
