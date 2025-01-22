@@ -11,11 +11,6 @@
         width: 100%;
     }
 
-    .theseed-dark-mode input, .theseed-dark-mode textarea {
-        background-color: #000;
-        color: #ddd;
-    }
-
     textarea {
         height: 600px;
         overflow: auto;
@@ -48,6 +43,11 @@
         color: #55595c;
         padding: .25rem .5rem;
         width: 100%;
+    }
+
+    .theseed-dark-mode form input[type=text] {
+        background-color: #000;
+        color: #ddd;
     }
 
     .button-block {
