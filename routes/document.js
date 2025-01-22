@@ -1485,7 +1485,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: rev.uuid,
         serverData: {
             blame,
-            lines: rev.content.split('\n')
+            lines: rev.content?.split('\n') ?? []
         }
     });
 });
