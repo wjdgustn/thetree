@@ -1,6 +1,6 @@
 {
   "site_name": "테스트위키",
-  "front_page": "테스트위키:대문",
+  "front_page": "FrontPage",
   "theme_color": "#f85c64",
   "base_url": "http://localhost:3000",
 

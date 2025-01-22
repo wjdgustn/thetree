@@ -3,7 +3,7 @@
   "default_skin": "liberty",
   "embed_image": "",
 
-  "namespaces": ["위키운영"],
+  "namespaces": [],
 
   "withdraw_save_days": null,
 
@@ -26,6 +26,6 @@
     "api_access"
   ],
 
-  "email_whitelist": ["example.com"],
+  "email_whitelist": [],
   "use_email_verification": false
 }
