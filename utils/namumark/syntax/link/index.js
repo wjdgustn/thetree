@@ -59,6 +59,12 @@ module.exports = {
                         const docName = mainUtils.parseDocumentName(a);
                         return !linkExistsCache.some(b => b.namespace === docName.namespace && b.title === docName.title);
                     });
+                const categories = namumark.dbDocument.categories
+                    .map(a => a.document)
+                    .filter(a => {
+                        return !linkExistsCache.some(b => b.namespace === '분류' && b.title === a);
+                    })
+                    .map(a => `분류:${a}`);
                 const files = namumark.dbDocument.backlinks
                     .filter(a => a.flags.includes(BacklinkFlags.File))
                     .map(a => a.docName)
@@ -68,10 +74,11 @@ module.exports = {
                     });
 
                 const linkDocs = await bulkFindDocuments(links);
+                const categoryDocs = await bulkFindDocuments(categories);
                 let fileDocs = [];
                 if(!namumark.thread) fileDocs = await bulkFindDocuments(files);
 
-                for(let doc of linkDocs) {
+                for(let doc of [...linkDocs, ...categoryDocs]) {
                     linkExistsCache.push({
                         namespace: doc.namespace,
                         title: doc.title,
@@ -278,7 +285,6 @@ module.exports = {
             const cache = linkExistsCache.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.exists;
             else if(isImage && !namumark.thread) notExist = true;
-            else if(isCategory) notExist = false;
             else {
                 const dbDocument = await Document.findOne({
                     namespace: document.namespace,
@@ -290,9 +296,9 @@ module.exports = {
                     exists: documentExists
                 });
                 notExist = !documentExists;
-
-                if(newCategory) newCategory.notExist = notExist;
             }
+
+            if(newCategory) newCategory.notExist = notExist;
         }
 
         const classList = [];
