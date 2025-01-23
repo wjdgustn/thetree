@@ -56,6 +56,8 @@
     <style>
         [x-cloak] { display: none !important; }
     </style>
+
+    <%-config.head_html || ''%>
 </head>
 
 <body x-data :class="$store.state.currentTheme === 'dark' ? 'theseed-dark-mode' : 'theseed-white-mode'">
