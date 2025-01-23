@@ -501,7 +501,7 @@ const uploadStaticFile = multer({
     }
 }).single('file');
 app.post('/admin/config/staticfile', middleware.permission('developer'), uploadStaticFile, (req, res) => {
-    return res.redirect('/admin/config');
+    res.reload();
 });
 
 app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
