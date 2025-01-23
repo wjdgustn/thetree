@@ -42,7 +42,7 @@ module.exports = class ACL {
         }, document);
 
         for(let rule of rules) {
-            if(rule.conditionType === ACLConditionTypes.Member) {
+            if(rule.conditionType === ACLConditionTypes.User) {
                 rule.user = await models.User.findOne({
                     uuid: rule.conditionContent
                 }).lean();
@@ -112,7 +112,7 @@ module.exports = class ACL {
     static conditionToString(condition) {
         return {
             [ACLConditionTypes.Perm]: '권한',
-            [ACLConditionTypes.Member]: '사용자',
+            [ACLConditionTypes.User]: '사용자',
             [ACLConditionTypes.IP]: '아이피',
             [ACLConditionTypes.GeoIP]: 'GeoIP',
             [ACLConditionTypes.ACLGroup]: 'ACL그룹'
@@ -123,7 +123,7 @@ module.exports = class ACL {
         if(rule.conditionType === ACLConditionTypes.Perm) {
             return ACL.permissionToString(rule.conditionContent, true)
         }
-        else if(rule.conditionType === ACLConditionTypes.Member) {
+        else if(rule.conditionType === ACLConditionTypes.User) {
             return `특정 사용자`
         }
         else if(rule.conditionType === ACLConditionTypes.IP) {
@@ -150,7 +150,7 @@ module.exports = class ACL {
         if(rule.conditionType === ACLConditionTypes.Perm) {
             return `${ACL.permissionToString(rule.conditionContent, !formatPerm)}`
         }
-        else if(rule.conditionType === ACLConditionTypes.Member) {
+        else if(rule.conditionType === ACLConditionTypes.User) {
             return `user:${rule.user.name}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
@@ -293,7 +293,7 @@ module.exports = class ACL {
             if(!data.permissions) return { action: ACLActionTypes.Skip };
             if(data.permissions.includes(rule.conditionContent)) return { action };
         }
-        else if(rule.conditionType === ACLConditionTypes.Member) {
+        else if(rule.conditionType === ACLConditionTypes.User) {
             if(!rule.user) return { action: ACLActionTypes.Skip };
 
             if(data.user?.uuid === rule.user.uuid) return { action };

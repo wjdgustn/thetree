@@ -428,7 +428,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
         conditionContent = value;
         rawConditionContent = value;
     }
-    else if(conditionType === ACLConditionTypes.Member) {
+    else if(conditionType === ACLConditionTypes.User) {
         const member = await User.findOne({
             name: conditionContent
         });
@@ -572,7 +572,7 @@ app.get('/action/acl/delete', async (req, res) => {
     if(dbDocument) {
         const conditionType = dbACL.conditionType;
         let conditionContent = dbACL.conditionContent;
-        if(conditionType === ACLConditionTypes.Member) {
+        if(conditionType === ACLConditionTypes.User) {
             const member = await User.findOne({
                 uuid: dbACL.conditionContent
             });

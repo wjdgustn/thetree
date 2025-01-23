@@ -26,7 +26,7 @@ module.exports = {
     },
     ACLConditionTypes: {
         Perm: 0,
-        Member: 1,
+        User: 1,
         IP: 2,
         GeoIP: 3,
         ACLGroup: 4
