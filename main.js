@@ -522,7 +522,7 @@ app.use(async (req, res, next) => {
         const browserGlobalVarScript = `
 <script id="initScript" nonce="${res.locals.cspNonce}">
 window.CONFIG = ${JSON.stringify({
-            ...publicConfig,
+            ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
             ...(config.captcha.enabled ? {
                 captcha: {
                     type: config.captcha.type,
