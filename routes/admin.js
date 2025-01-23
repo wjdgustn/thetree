@@ -279,6 +279,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
                     console.log(utils.withoutKeys(row, ['data']));
                     let title = row.title;
+                    if(!title) continue;
 
                     if(title.startsWith('file:')) title = title.replace('file:', '파일:');
                     else if(title.startsWith('category:')) title = title.replace('category:', '분류:');
