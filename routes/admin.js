@@ -356,6 +356,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
                         const hash = crypto.createHash('sha224').update(filename).digest('hex');
                         const imgPath = path.resolve(`./opennamu_data/data/images/${hash}.${ext}`);
 
+                        console.log(`file rev 1 detected, filename: ${filename} ext: ${ext} hash: ${hash} imgPath: ${imgPath}`);
+
                         if(fs.existsSync(imgPath)) {
                             const img = fs.readFileSync(imgPath);
                             try {
@@ -387,6 +389,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
                                  log(`failed to upload file: ${imgPath}`);
                              }
                         }
+                        else log(`file not found: ${imgPath}`);
                     }
                     if(!isFile) fileInfo = {};
 
