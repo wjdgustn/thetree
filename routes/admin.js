@@ -100,9 +100,8 @@ app.post('/admin/config/eval', middleware.permission('developer'), async (req, r
         result = e.stack;
     }
 
-    result = namumarkUtils.escapeHtml(result);
-
-    if(!isStr) result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
+    if(isStr) result = namumarkUtils.escapeHtml(result);
+    else result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
     res.send(result);
 });
 
