@@ -153,6 +153,7 @@ const updateOrphanedPages = async () => {
 
 const updateDailyLists = () => {
     updateNeededPages().then();
+    updateOrphanedPages().then();
     scheduleUpdateDailyLists();
 }
 const scheduleUpdateDailyLists = () => {
@@ -161,6 +162,7 @@ const scheduleUpdateDailyLists = () => {
     tomorrow.setHours(0, 0, 0, 0);
     setTimeout(updateDailyLists, tomorrow - Date.now());
 }
+scheduleUpdateDailyLists();
 
 app.get('/NeededPages', (req, res) => {
     const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
