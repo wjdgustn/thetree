@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <%-config.head_html?.replaceAll('{cspNonce}', cspNonce) || ''%>
-
     <meta charset="UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=no">
@@ -32,6 +30,8 @@
     <title><%=siteTitle%> - <%=config.site_name%></title>
 
     <link rel="canonical" href="<%=config.base_url%><%=req.path%>">
+
+    <%-config.head_html?.replaceAll('{cspNonce}', cspNonce) || ''%>
 
     <style>
         @import "/css/ionicons.min.css";
