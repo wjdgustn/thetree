@@ -4,7 +4,7 @@
 <div class="wiki-content">
     <%
     const hasUpdate = global.versionInfo.commitId !== global.newVersionInfo.commitId;
-    const unfoldUpdate = config.check_update || hasUpdate;
+    const unfoldUpdate = config.check_update !== false || hasUpdate;
     %>
     <h2 class="wiki-heading<%=unfoldUpdate ? '' : ' wiki-heading-folded'%>">업데이트</h2>
     <div class="wiki-heading-content<%=unfoldUpdate ? '' : ' wiki-heading-content-folded'%>">

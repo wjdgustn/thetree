@@ -176,7 +176,7 @@ global.checkUpdate = async () => {
     }
 }
 
-if(config.check_update) {
+if(config.check_update !== false) {
     setInterval(checkUpdate, 1000 * 60 * 60);
     checkUpdate().then();
 }
