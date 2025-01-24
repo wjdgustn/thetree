@@ -298,6 +298,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
                         .replaceAll(`direct_input\n[[category:direct_input]]\n`, '')
                         .replaceAll(`direct_input\n[[분류:direct_input]]\n`, '');
 
+                    if(content.startsWith('#넘겨주기 ')) content.replace('#넘겨주기 ', '#redirect ');
+
                     const isIp = Address4.isValid(row.ip) || Address6.isValid(row.ip);
                     let user;
                     if(isIp) {
