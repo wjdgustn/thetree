@@ -26,5 +26,8 @@
       "user": "",
       "pass": ""
     }
-  }
+  },
+
+  "github_api_token": "",
+  "check_update": true
 }
