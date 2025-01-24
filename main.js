@@ -273,6 +273,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
             fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
             frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
+            connectSrc: ["'self'", 'www.googletagmanager.com'],
             ...(debug ? {
                 upgradeInsecureRequests: null
             } : {})
