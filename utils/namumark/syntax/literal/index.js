@@ -6,7 +6,7 @@ const utils = require('../../utils');
 
 const { Priority, AllowedLanguages } = require('../../types');
 
-const escape = str => str.replaceAll('||', '\\||');
+// const escape = str => str.replaceAll('||', '\\||');
 
 module.exports = {
     priority: Priority.Literal,
@@ -33,9 +33,9 @@ module.exports = {
                 }
             }
 
-            return `<*<pre><code>${escape(result.replaceAll('<newLine/>', '<br>'))}</code></pre>*>`;
+            return `<*<pre><code>${result.replaceAll('<newLine/>', '<br>')}</code></pre>*>`;
         }
 
-        return `<code><*${escape(originalContent)}*></code>`;
+        return `<code><*${originalContent}*></code>`;
     }
 }
