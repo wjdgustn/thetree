@@ -65,18 +65,9 @@ module.exports = {
                         return !linkExistsCache.some(b => b.namespace === '분류' && b.title === a);
                     })
                     .map(a => `분류:${a}`);
-                const files = namumark.dbDocument.backlinks
-                    .filter(a => a.flags.includes(BacklinkFlags.File))
-                    .map(a => a.docName)
-                    .filter(a => {
-                        const docName = mainUtils.parseDocumentName(a);
-                        return !fileDocCache.some(b => b.namespace === docName.namespace && b.title === docName.title);
-                    });
 
                 const linkDocs = await bulkFindDocuments(links);
                 const categoryDocs = await bulkFindDocuments(categories);
-                let fileDocs = [];
-                if(!namumark.thread) fileDocs = await bulkFindDocuments(files);
 
                 for(let doc of [...linkDocs, ...categoryDocs]) {
                     linkExistsCache.push({
@@ -85,6 +76,17 @@ module.exports = {
                         exists: doc.contentExists
                     });
                 }
+
+                const files = namumark.dbDocument.backlinks
+                    .filter(a => a.flags.includes(BacklinkFlags.File))
+                    .map(a => a.docName)
+                    .filter(a => {
+                        const docName = mainUtils.parseDocumentName(a);
+                        return !fileDocCache.some(b => b.namespace === docName.namespace && b.title === docName.title);
+                    });
+
+                let fileDocs = [];
+                if(!namumark.thread) fileDocs = await bulkFindDocuments(files);
 
                 let revs;
                 if(!namumark.thread) revs = await History.find({
@@ -127,7 +129,7 @@ module.exports = {
 
         content = utils.parseIncludeParams(content, namumark.includeData);
 
-        const docTitle = globalUtils.doc_fulltitle(namumark.document);
+        const docTitle = globalUtils.doc_fulltitle(namumark.originalDocument ?? namumark.document);
 
         const splittedContent = content.split(/(?<!\\)\|/).map(a => utils.removeBackslash(a));
 
@@ -249,7 +251,7 @@ module.exports = {
         else {
             if(link.startsWith('../')) {
                 link = link.slice(3);
-                if(namumark.document) {
+                if(docTitle) {
                     const splittedDocument = docTitle.split('/');
                     splittedDocument.pop();
                     const document = splittedDocument.join('/');

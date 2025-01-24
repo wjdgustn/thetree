@@ -77,7 +77,8 @@ module.exports = async (params, namumark) => {
         dbDocument: document.dbDocument,
         aclData: namumark.aclData,
         req: namumark.req,
-        includeData
+        includeData,
+        originalDocument: namumark.document
     });
 
     if(debug) console.time(`parse include ${docName}`);
