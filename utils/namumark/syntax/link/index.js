@@ -66,7 +66,7 @@ module.exports = {
                     })
                     .map(a => `분류:${a}`);
 
-                if(config.experimental.meilisearch_link_check) {
+                if(config.experimental?.meilisearch_link_check) {
 
                 }
                 else {
