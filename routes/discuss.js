@@ -286,7 +286,11 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('본문의 값은 필수입니다.'),
+        .withMessage('본문의 값은 필수입니다.')
+        .isLength({
+            max: 65536
+        })
+        .withMessage('본문의 값은 65536글자 이하여야 합니다.'),
     middleware.fieldErrors,
     middleware.captcha,
     async (req, res) => {
@@ -425,6 +429,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
 
 app.post('/thread/:url', async (req, res) => {
     if(!req.body.text.trim()) return res.status(400).send('본문의 값은 필수입니다.');
+    if(req.body.text.length > 65536) return res.status(400).send('본문의 값은 65536글자 이하여야 합니다.');
 
     if(req.user.type !== UserTypes.Account && !await utils.middleValidateCaptcha(req, res)) return;
 
