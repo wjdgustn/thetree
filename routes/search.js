@@ -21,6 +21,7 @@ app.get('/Complete', async (req, res) => {
 
     const filter = ['anyoneReadable = true'];
     if(document.namespaceExists) filter.push(`namespace = ${document.namespace}`);
+    else filter.push(`namespace = 문서`);
 
     const result = await documentIndex.search(document.title, {
         limit: 10,
