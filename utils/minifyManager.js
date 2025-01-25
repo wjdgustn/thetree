@@ -171,6 +171,7 @@ module.exports = {
             minCode = result.code;
 
             fs.writeFileSync(cachePath, minCode);
+            saveCache(cache);
         }
 
         res.setHeader('Content-Type', 'text/javascript');
