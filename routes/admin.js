@@ -216,18 +216,41 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool.startsWith('generatebacklink')) {
         res.status(204).end();
 
-        const documents = await Document.find()
-            .sort({
-                updatedAt: 1
-            })
-            .select('uuid')
-            .lean();
+        // const documents = await Document.find()
+        //     .sort({
+        //         updatedAt: 1
+        //     })
+        //     .select('uuid')
+        //     .lean();
 
-        const total = documents.length;
+        const total = await Document.countDocuments();
+
+        // const total = documents.length;
         console.log(`generating backlink info... total: ${total}`);
 
+        let documents = [];
+        let lastDocument;
+        let completed = 0;
+
         while(true) {
+            if(!documents.length) {
+                documents = await Document.find({
+                    updatedAt: {
+                        $gt: lastDocument?.updatedAt ?? new Date(0)
+                    }
+                })
+                    .sort({
+                        updatedAt: 1
+                    })
+                    .limit(50)
+                    .select('uuid')
+                    .lean();
+
+                console.log(`refill documents, length: ${documents.length}`);
+            }
+
             const document = documents.shift();
+            lastDocument = document;
             if(!document) break;
 
             const rev = await History.findOne({
@@ -240,7 +263,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
             await docUtils.postHistorySave(rev, !tool.endsWith('_searchonly'), !tool.endsWith('_backlinkonly'));
 
-            console.log(`generated backlink info for ${document.uuid}, ${total - documents.length}/${total}`);
+            console.log(`generated backlink info for ${document.uuid}, ${++completed}/${total}`);
         }
     }
 
