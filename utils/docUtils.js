@@ -123,8 +123,8 @@ module.exports = {
             }))
         }
     },
-    async postHistorySave(rev, backlink = true, search = true) {
-        const dbDocument = await mongoose.models.Document.findOne({
+    async postHistorySave(rev, backlink = true, search = true, dbDocument = null) {
+        dbDocument ??= await mongoose.models.Document.findOne({
             uuid: rev.document
         });
         if(!dbDocument) return;

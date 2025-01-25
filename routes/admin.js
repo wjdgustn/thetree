@@ -216,59 +216,80 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool.startsWith('generatebacklink')) {
         res.status(204).end();
 
-        // const documents = await Document.find()
-        //     .sort({
-        //         updatedAt: 1
-        //     })
-        //     .select('uuid')
-        //     .lean();
+        const documents = await Document.find()
+            .sort({
+                updatedAt: 1
+            })
+            // .select('uuid')
+            .lean();
 
-        const total = await Document.countDocuments();
+        // const total = await Document.countDocuments();
 
-        // const total = documents.length;
+        const total = documents.length;
         console.log(`generating backlink info... total: ${total}`);
 
-        let documents = [];
-        let lastDocument;
+        // let documents = [];
         let completed = 0;
 
-        while(true) {
-            if(!documents.length) {
-                documents = await Document.find({
-                    ...(lastDocument ? {
-                        _id: {
-                            $gt: lastDocument._id
-                        }
-                    } : {})
-                })
-                    .sort({
-                        _id: 1
-                    })
-                    .limit(50)
-                    .select('uuid')
-                    .lean();
+        // while(true) {
+        //     if(!documents.length) {
+        //         documents = await Document.find({
+        //             ...(lastDocument ? {
+        //                 _id: {
+        //                     $gt: lastDocument._id
+        //                 }
+        //             } : {})
+        //         })
+        //             .sort({
+        //                 _id: 1
+        //             })
+        //             .limit(50)
+        //             .select('uuid')
+        //             .lean();
+        //
+        //         lastDocument = documents[documents.length - 1];
+        //
+        //         console.log(`refill documents, length: ${documents.length}`);
+        //     }
+        //
+        //     const document = documents.shift();
+        //     if(!document) break;
+        //
+        //     const rev = await History.findOne({
+        //         document: document.uuid
+        //     }).sort({ rev: -1 }).lean();
+        //     if(!rev) {
+        //         console.log(`no rev for ${document.uuid}`);
+        //         completed++;
+        //         continue;
+        //     }
+        //
+        //     await docUtils.postHistorySave(rev, !tool.endsWith('_searchonly'), !tool.endsWith('_backlinkonly'));
+        //
+        //     console.log(`generated backlink info for ${document.uuid}, ${++completed}/${total}`);
+        // }
 
-                lastDocument = documents[documents.length - 1];
-
-                console.log(`refill documents, length: ${documents.length}`);
-            }
-
-            const document = documents.shift();
-            if(!document) break;
-
+        await Promise.all(documents.map(document => new Promise(async resolve => {
             const rev = await History.findOne({
                 document: document.uuid
             }).sort({ rev: -1 }).lean();
             if(!rev) {
                 console.log(`no rev for ${document.uuid}`);
                 completed++;
-                continue;
+                return resolve();
             }
 
-            await docUtils.postHistorySave(rev, !tool.endsWith('_searchonly'), !tool.endsWith('_backlinkonly'));
+            console.log(`processing ${document.title}`);
 
-            console.log(`generated backlink info for ${document.uuid}, ${++completed}/${total}`);
-        }
+            try {
+                await docUtils.postHistorySave(rev, !tool.endsWith('_searchonly'), !tool.endsWith('_backlinkonly'), document);
+
+                console.log(`generated backlink info for ${document.uuid}, ${++completed}/${total}`);
+            } catch(e) {
+                console.error(`failed to generate backlink info for ${document.uuid}`, e);
+            }
+            resolve();
+        })));
     }
 
     else if(tool === 'resetsearchindex') {
