@@ -962,7 +962,7 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     let editedRev = rev;
-    if(req.body.baseuuid !== 'create' && rev?.uuid !== req.body.baseuuid) {
+    if(req.body.baseuuid !== 'create' && (!rev || rev.uuid !== req.body.baseuuid)) {
         editedRev = await History.findOne({
             uuid: req.body.baseuuid
         });
