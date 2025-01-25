@@ -85,7 +85,7 @@ function plainAlert(text) {
     let hasErrorAlert = false;
     for(let alert of errorAlerts) {
         if(!text) {
-            alert.hidden = true;
+            alert.style = 'display:none';
             continue;
         }
 
@@ -97,7 +97,7 @@ function plainAlert(text) {
         const content = alert.getElementsByClassName('thetree-alert-content-text')[0];
         if(!content) continue;
 
-        alert.hidden = false;
+        alert.style = '';
         content.innerHTML = doc.body.innerHTML;
         hasErrorAlert = true;
     }
