@@ -220,6 +220,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
             .sort({
                 updatedAt: 1
             })
+            .select('uuid')
             .lean();
 
         const total = documents.length;
