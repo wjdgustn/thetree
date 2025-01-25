@@ -231,7 +231,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
             const rev = await History.findOne({
                 document: document.uuid
-            }).sort({ rev: -1 });
+            }).sort({ rev: -1 }).lean();
             if(!rev) {
                 console.log(`no rev for ${document.uuid}`);
                 continue;
