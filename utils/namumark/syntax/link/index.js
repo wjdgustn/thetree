@@ -241,11 +241,13 @@ module.exports = {
             if(imageDocNames.length) {
                 let passedCount = 0;
                 for(let docName of imageDocNames) {
-                    const linkRule = config.external_link_icons?.[docName];
-                    if(linkRule != null) {
-                        const splittedRule = linkRule.split('.').reverse().filter(a => a);
+                    let linkRules = config.external_link_icons?.[docName];
+                    if(linkRules != null) {
+                        if(!Array.isArray(linkRules)) linkRules = [linkRules];
+                        const splittedRules = linkRules.map(r => r.split('.').reverse().filter(a => a));
                         const splittedUrl = parsedLink.hostname.split('.').reverse();
-                        if(splittedRule.every((a, i) => a === splittedUrl[i])) passedCount++;
+
+                        if(splittedRules.some(rule => rule.every((a, i) => a === splittedUrl[i]))) passedCount++;
                         else break;
                     }
                     else break;
