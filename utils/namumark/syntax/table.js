@@ -93,7 +93,13 @@ module.exports = {
                         const splittedTableStr = tagStr.slice('table'.length).trimStart().split('=');
                         if(splittedTableStr.length !== 2) break;
 
-                        const [name, value] = splittedTableStr;
+                        let [name, value] = splittedTableStr;
+                        if(value.startsWith('&quot;') && value.endsWith('&quot;')) {
+                            value = value.slice(6, -6);
+                        }
+                        else if(value.startsWith('&#039;') && value.endsWith('&#039;')) {
+                            value = value.slice(6, -6);
+                        }
                         const splittedValue = value.split(',');
 
                         const [light, dark] = splittedValue;
