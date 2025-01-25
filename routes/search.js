@@ -115,6 +115,7 @@ app.get('/Search', async (req, res) => {
     res.renderSkin('검색', {
         contentName: 'search',
         serverData: {
+            query: req.query.q,
             readableNamespaces,
             hits: result.hits.map(a => a._formatted),
             totalHits: result.totalHits,

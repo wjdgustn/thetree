@@ -18,7 +18,7 @@
         <%}%>
     </select>
 
-    <input name="q" value="<%=req.query.q%>">
+    <input name="q" value="<%=query%>">
 
     <button class="thetree-square-button thetree-blue-button">검색</button>
 </form>
@@ -31,7 +31,7 @@
         </div>
 
         <div class="alert-button-block">
-            <a class="thetree-square-button" href="<%=doc_action_link(req.query.q || '', 'w')%>">'<%=req.query.q%>' 문서로 가기</a>
+            <a class="thetree-square-button" href="<%=doc_action_link(query || '', 'w')%>">'<%=query%>' 문서로 가기</a>
         </div>
 
         <div class="clear"></div>
