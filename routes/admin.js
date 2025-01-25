@@ -261,6 +261,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
             }).sort({ rev: -1 }).lean();
             if(!rev) {
                 console.log(`no rev for ${document.uuid}`);
+                completed++;
                 continue;
             }
 
