@@ -66,15 +66,20 @@ module.exports = {
                     })
                     .map(a => `분류:${a}`);
 
-                const linkDocs = await bulkFindDocuments(links);
-                const categoryDocs = await bulkFindDocuments(categories);
+                if(config.experimental.meilisearch_link_check) {
 
-                for(let doc of [...linkDocs, ...categoryDocs]) {
-                    linkExistsCache.push({
-                        namespace: doc.namespace,
-                        title: doc.title,
-                        exists: doc.contentExists
-                    });
+                }
+                else {
+                    const linkDocs = await bulkFindDocuments(links);
+                    const categoryDocs = await bulkFindDocuments(categories);
+
+                    for(let doc of [...linkDocs, ...categoryDocs]) {
+                        linkExistsCache.push({
+                            namespace: doc.namespace,
+                            title: doc.title,
+                            exists: doc.contentExists
+                        });
+                    }
                 }
 
                 const files = namumark.dbDocument.backlinks
