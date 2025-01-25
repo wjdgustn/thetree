@@ -83,7 +83,7 @@ app.get('/admin/developer', middleware.permission('developer'), (req, res) => {
     });
 });
 
-app.post('/admin/config/eval', middleware.permission('developer'), async (req, res) => {
+app.post('/admin/developer/eval', middleware.permission('developer'), async (req, res) => {
     const Models = mongoose.models;
 
     let result;
@@ -505,7 +505,7 @@ const uploadStaticFile = multer({
         fileSize: 1024 * 1024 * 50
     }
 }).single('file');
-app.post('/admin/config/staticfile', middleware.permission('developer'), uploadStaticFile, (req, res) => {
+app.post('/admin/developer/staticfile', middleware.permission('developer'), uploadStaticFile, (req, res) => {
     res.reload();
 });
 

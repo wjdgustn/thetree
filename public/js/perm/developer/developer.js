@@ -9,7 +9,7 @@ document.addEventListener('thetree:pageLoad', () => {
 
         evalOutput.innerHTML = '';
 
-        const response = await fetch('/admin/config/eval', {
+        const response = await fetch('/admin/developer/eval', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
