@@ -235,12 +235,14 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         while(true) {
             if(!documents.length) {
                 documents = await Document.find({
-                    updatedAt: {
-                        $gt: lastDocument?.updatedAt ?? new Date(0)
-                    }
+                    ...(lastDocument ? {
+                        _id: {
+                            $gt: lastDocument._id
+                        }
+                    } : {})
                 })
                     .sort({
-                        updatedAt: 1
+                        _id: 1
                     })
                     .limit(50)
                     .select('uuid')
