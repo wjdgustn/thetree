@@ -125,13 +125,15 @@ module.exports = {
         })}" rel="nofollow">[편집]</a>
 </span>`.trim();
 
+        const commentPrefix = namumark.commentId ? `tc${namumark.commentId}-` : '';
+
         return `
 <removeNewlineLater/>
 <removeNextNewline/>
 <!cursorToEnd/>
 <!noParagraph>
 <h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
-<a id="s-${paragraphNumText}" href="#toc">${paragraphNumText}.</a>
+<a id="s-${paragraphNumText}" href="#${commentPrefix}toc">${paragraphNumText}.</a>
  <span :id="$el.innerText">${text}
 ${editSection}
 </span>

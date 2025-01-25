@@ -6,6 +6,8 @@ module.exports = {
     closeStr: ']>',
     escapeOpenAndClose: false,
     format(content, namumark, _, pos, sourceText) {
+        const commentPrefix = namumark.commentId ? `tc${namumark.commentId}-` : '';
+
         if(content === 'tocPos') {
             if(!namumark.tocHtml) {
                 namumark.tocHtml = '<div class="wiki-macro-toc">';
@@ -26,7 +28,7 @@ module.exports = {
                             namumark.tocHtml += '</div>';
                     }
 
-                    namumark.tocHtml += `<span class="toc-item"><a href="#s-${heading.num}">${heading.num}</a>. ${heading.text}</span>`;
+                    namumark.tocHtml += `<span class="toc-item"><a href="#${commentPrefix}s-${heading.num}">${heading.num}</a>. ${heading.text}</span>`;
                 }
 
                 for(let i = 0; i < indentLevel + 1; i++)
@@ -37,8 +39,6 @@ module.exports = {
         }
 
         if(content === 'footnotePos') {
-            const commentPrefix = namumark.commentId ? `tc${namumark.commentId}-` : '';
-
             const footnoteValues = namumark.footnoteValues;
             const footnoteList = namumark.footnoteList;
 
