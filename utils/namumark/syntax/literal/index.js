@@ -18,6 +18,9 @@ module.exports = {
         if(Format(content, namumark, true) !== undefined) return null;
         if(await ContentChange(content, namumark, true) !== undefined) return null;
 
+        // 표 문법 이스케이프
+        originalContent = originalContent.replaceAll('||', '\\||');
+
         if(content.includes('<newLine/>')) {
             let result = originalContent;
 
