@@ -948,6 +948,7 @@ document.addEventListener('alpine:init', () => {
         async updateSidebar() {
             const result = await fetch('/sidebar.json');
             this.recent = await result.json();
+            requestAnimationFrame(() => updateTimeTag());
         },
         getLocalConfig(key) {
             return this.localConfig[key] ?? defaultConfig[key];
