@@ -246,11 +246,12 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
                     .select('uuid')
                     .lean();
 
+                lastDocument = documents[documents.length - 1];
+
                 console.log(`refill documents, length: ${documents.length}`);
             }
 
             const document = documents.shift();
-            lastDocument = document;
             if(!document) break;
 
             const rev = await History.findOne({
