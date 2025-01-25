@@ -13,21 +13,23 @@ const BlockHistory = require('../schemas/blockHistory');
 
 const app = express.Router();
 
-app.get('/aclgroup', async (req, res) => {
-    const aclGroups = await ACLGroup.find({
-        $or: [
-            {
-                accessPerms: {
-                    $size: 0
-                }
-            },
-            {
-                accessPerms: {
-                    $in: req.permissions
-                }
+const aclGroupsQuery = req => ({
+    $or: [
+        {
+            accessPerms: {
+                $size: 0
             }
-        ]
-    });
+        },
+        {
+            accessPerms: {
+                $in: req.permissions
+            }
+        }
+    ]
+});
+
+app.get('/aclgroup', async (req, res) => {
+    const aclGroups = await ACLGroup.find(aclGroupsQuery(req));
     const selectedGroup = aclGroups.find(a => a.name === req.query.group) ?? aclGroups[0];
 
     let query;
@@ -75,8 +77,8 @@ app.get('/aclgroup', async (req, res) => {
     });
 });
 
-app.get('/aclgroup/groups', middleware.permission('admin'), async (req, res) => {
-    const aclGroups = await ACLGroup.find();
+app.get('/aclgroup/groups', async (req, res) => {
+    const aclGroups = await ACLGroup.find(aclGroupsQuery(req));
     res.json(aclGroups.map(a => ({
         uuid: a.uuid,
         name: a.name
