@@ -12,6 +12,7 @@ module.exports = {
             if(!namumark.tocHtml) {
                 namumark.tocHtml = '<div class="wiki-macro-toc">';
 
+                namumark.tocContentHtml = '';
                 let indentLevel = 0;
                 for(let heading of namumark.headings) {
                     const prevIndentLevel = indentLevel;
@@ -21,15 +22,17 @@ module.exports = {
 
                     if(indentLevel > prevIndentLevel) {
                         for(let i = 0; i < indentDiff; i++)
-                            namumark.tocHtml += '<div class="toc-indent">';
+                            namumark.tocContentHtml += '<div class="toc-indent">';
                     }
                     else if(indentLevel < prevIndentLevel) {
                         for(let i = 0; i < indentDiff; i++)
-                            namumark.tocHtml += '</div>';
+                            namumark.tocContentHtml += '</div>';
                     }
 
-                    namumark.tocHtml += `<span class="toc-item"><a href="#${commentPrefix}s-${heading.num}">${heading.num}</a>. ${heading.text}</span>`;
+                    namumark.tocContentHtml += `<span class="toc-item"><a href="#${commentPrefix}s-${heading.num}">${heading.num}</a>. ${heading.text}</span>`;
                 }
+
+                namumark.tocHtml += namumark.tocContentHtml;
 
                 for(let i = 0; i < indentLevel + 1; i++)
                     namumark.tocHtml += '</div>';

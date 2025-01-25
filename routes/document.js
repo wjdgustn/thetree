@@ -181,7 +181,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     let content = rev.content;
     if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
 
-    let { html: contentHtml, categories, hasError } = await parser.parse(content);
+    let { html: contentHtml, categories, hasError, tocContentHtml } = await parser.parse(content);
     if(hasError) return res.renderSkin(undefined, {
         ...defaultData,
         date: null,
@@ -336,7 +336,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     res.renderSkin(undefined, {
         ...defaultData,
         serverData: {
-            rev
+            rev,
+            tocContentHtml
         },
         contentHtml,
         categoryHtml,

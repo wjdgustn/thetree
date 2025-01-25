@@ -597,7 +597,8 @@ module.exports = class NamumarkParser {
             categories: this.categories,
             hasNewline,
             headings: this.headings,
-            hasError
+            hasError,
+            tocContentHtml: this.tocContentHtml
         }
     }
 }
