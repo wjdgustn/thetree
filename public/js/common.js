@@ -53,6 +53,8 @@ function contentLoadedHandler() {
             defaultConfig[input.id] = value;
             input.value = State.getLocalConfig(input.id);
         }
+
+        State.localConfig[input.id] ??= defaultConfig[input.id];
     }
 }
 
