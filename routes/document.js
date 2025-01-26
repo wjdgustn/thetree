@@ -1735,7 +1735,7 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
 
     const isUserDoc = document.namespace === '사용자' && !document.title.includes('/');
     const otherIsUserDoc = otherDocument.namespace === '사용자' && (!otherDocument.title.includes('/') || otherDocument.title.startsWith('*'));
-    if(isUserDoc || otherIsUserDoc)
+    if(isUserDoc || otherIsUserDoc || (document.namespace.includes('파일') !== otherDocument.namespace.includes('파일')))
         return res.error('이 문서를 해당 이름 공간으로 이동할 수 없습니다.', 403);
 
     const revExists = await History.exists({
