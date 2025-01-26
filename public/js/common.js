@@ -375,6 +375,13 @@ function focusAnchor() {
         if(element) element.scrollIntoView();
     }
     else window.scrollTo(0, 0);
+
+    const selectedNavs = document.getElementsByClassName('nav-content-selected');
+    for(let nav of selectedNavs) {
+        // scroll to there
+        console.log(nav.parentElement.parentElement);
+        nav.parentElement.parentElement.scrollLeft = nav.parentElement.offsetLeft;
+    }
 }
 
 function setupUserText() {
@@ -552,6 +559,9 @@ async function movePage(response, pushState = true, prevUrl = null) {
         && !html.startsWith('<')) {
         setProgress(100);
         return plainAlert(html);
+    }
+    else if(response.status.toString().startsWith('5')) {
+        location.reload();
     }
     else plainAlert();
 
