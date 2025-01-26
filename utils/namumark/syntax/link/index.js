@@ -132,7 +132,7 @@ module.exports = {
             }
         }
 
-        content = utils.parseIncludeParams(content, namumark.includeData);
+        // content = utils.parseIncludeParams(content, namumark.includeData);
 
         const docTitle = globalUtils.doc_fulltitle(namumark.originalDocument ?? namumark.document);
 
