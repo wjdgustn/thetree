@@ -376,12 +376,12 @@ function focusAnchor() {
     }
     else window.scrollTo(0, 0);
 
-    const selectedNavs = document.getElementsByClassName('nav-content-selected');
-    for(let nav of selectedNavs) {
-        // scroll to there
-        console.log(nav.parentElement.parentElement);
-        nav.parentElement.parentElement.scrollLeft = nav.parentElement.offsetLeft;
-    }
+    // const selectedNavs = document.getElementsByClassName('nav-content-selected');
+    // for(let nav of selectedNavs) {
+    //     // scroll to there
+    //     console.log(nav.parentElement.parentElement);
+    //     nav.parentElement.parentElement.scrollLeft = nav.parentElement.offsetLeft;
+    // }
 }
 
 function setupUserText() {
