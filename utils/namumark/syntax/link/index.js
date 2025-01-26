@@ -182,9 +182,9 @@ module.exports = {
             const slicedLink = link.slice(1);
             const isSpecialLink = slicedLink.startsWith('파일:') || slicedLink.startsWith('분류:');
 
-            if(isSpecialLink) {
+            if(config.namespaces.some(a => slicedLink.startsWith(a + ':'))) {
                 link = slicedLink;
-                if(splittedContent.length === 1) text = text.slice(1);
+                if(isSpecialLink && splittedContent.length === 1) text = text.slice(1);
             }
         }
 
