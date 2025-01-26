@@ -14,18 +14,20 @@ const BlockHistory = require('../schemas/blockHistory');
 const app = express.Router();
 
 const aclGroupsQuery = req => ({
-    $or: [
-        {
-            accessPerms: {
-                $size: 0
+    ...(req.permissions.includes('config') ? {} : {
+        $or: [
+            {
+                accessPerms: {
+                    $size: 0
+                }
+            },
+            {
+                accessPerms: {
+                    $in: req.permissions
+                }
             }
-        },
-        {
-            accessPerms: {
-                $in: req.permissions
-            }
-        }
-    ]
+        ]
+    })
 });
 
 app.get('/aclgroup', async (req, res) => {
