@@ -362,6 +362,11 @@ app.post('/Upload', uploadFile,
 app.get('/BlockHistory', async (req, res) => {
     const baseQuery = {};
 
+    if(!req.permissions.includes('developer') || req.query.showHidden !== '1')
+        baseQuery.hideLog = {
+            $ne: true
+        }
+
     const query = req.query.query;
     if(query) {
         if(req.query.target === 'author') {

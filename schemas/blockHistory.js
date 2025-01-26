@@ -50,6 +50,11 @@ const newSchema = new Schema({
         type: Date,
         required: true,
         default: Date.now
+    },
+    hideLog: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 

@@ -227,7 +227,7 @@ app.post('/aclgroup',
         throw e;
     }
 
-    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+    await BlockHistory.create({
         type: BlockHistoryTypes.ACLGroupAdd,
         createdUser: req.user.uuid,
         ...(mode === 'ip' ? {
@@ -242,7 +242,8 @@ app.post('/aclgroup',
         ...(duration > 0 ? {
             duration: duration * 1000
         } : {}),
-        content: req.body.note
+        content: req.body.note,
+        hideLog: req.body.hidelog === 'Y'
     });
 
     res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
@@ -288,7 +289,7 @@ app.post('/aclgroup/remove',
         uuid: deleted.user
     });
 
-    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+    await BlockHistory.create({
         type: BlockHistoryTypes.ACLGroupRemove,
         createdUser: req.user.uuid,
         ...(deleted.user == null ? {
@@ -300,7 +301,8 @@ app.post('/aclgroup/remove',
         aclGroup: deleted.aclGroup,
         aclGroupName: group.name,
         aclGroupId: deleted.id,
-        content: req.body.note
+        content: req.body.note,
+        hideLog: req.body.hidelog === 'Y'
     });
 
     res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);

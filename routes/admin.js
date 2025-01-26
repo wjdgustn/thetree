@@ -623,7 +623,7 @@ app.post('/admin/grant',
         if(!newPerm.includes(perm)) removedPerms.push(perm);
     }
 
-    if(req.body.hidelog !== 'Y' && (addedPerms.length || removedPerms.length))
+    if(addedPerms.length || removedPerms.length)
         await BlockHistory.create({
             type: BlockHistoryTypes.Grant,
             createdUser: req.user.uuid,
@@ -632,7 +632,8 @@ app.post('/admin/grant',
             content: [
                 ...addedPerms.map(a => `+${a}`),
                 ...removedPerms.map(r => `-${r}`)
-            ].join(' ')
+            ].join(' '),
+            hideLog: req.body.hidelog === 'Y'
         });
 
     return res.reload();
@@ -930,12 +931,13 @@ app.post('/admin/batch_revert',
         resultText.push(`되돌린 문서 수 : ${revertedCount}`);
     }
 
-    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+    await BlockHistory.create({
         type: BlockHistoryTypes.BatchRevert,
         createdUser: req.user.uuid,
         targetUser: user.uuid,
         targetUsername: user.name || user.ip,
-        content: reason
+        content: reason,
+        hideLog: req.body.hidelog === 'Y'
     });
 
     resultText.unshift(`작업 시간 : ${Date.now() - date}ms`);
@@ -978,11 +980,12 @@ app.post('/admin/login_history',
         loginHistoryTargetUser: targetUser.uuid
     }
 
-    if(req.body.hidelog !== 'Y') await BlockHistory.create({
+    await BlockHistory.create({
         type: BlockHistoryTypes.LoginHistory,
         createdUser: req.user.uuid,
         targetUser: targetUser.uuid,
-        targetUsername: targetUser.name
+        targetUsername: targetUser.name,
+        hideLog: req.body.hidelog === 'Y'
     });
 
     res.redirect('/admin/login_history/' + sessionId);

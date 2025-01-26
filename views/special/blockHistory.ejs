@@ -1,17 +1,4 @@
 <link rel="stylesheet" href="/css/views/blockHistory.css">
-<form>
-    <select class="search-type" name="target">
-        <option value="text">내용</option>
-        <option value="author"<%=req.query.target === 'author' ? ' selected' : ''%>>실행자</option>
-    </select>
-
-    <input class="search-input" name="query" placeholder="검색" value="<%=req.query.query%>">
-
-    <div class="buttons-block">
-        <button class="thetree-button thetree-primary-button">검색</button>
-        <a href="/BlockHistory" role="button" class="thetree-button">초기화</a>
-    </div>
-</form>
 
 <%
 const blockHistoryLink = query => `/BlockHistory?${querystring.stringify({
@@ -28,8 +15,32 @@ const navigationPage = include('../components/pageButton', {
 });
 %>
 
+<form>
+    <select class="search-type" name="target">
+        <option value="text">내용</option>
+        <option value="author"<%=req.query.target === 'author' ? ' selected' : ''%>>실행자</option>
+    </select>
+
+    <input class="search-input" name="query" placeholder="검색" value="<%=req.query.query%>">
+
+    <div class="buttons-block">
+        <button class="thetree-button thetree-primary-button">검색</button>
+        <a href="/BlockHistory" role="button" class="thetree-button">초기화</a>
+    </div>
+
+    <%if(req.permissions.includes('developer')) {%>
+        <label>
+            <input type="checkbox" @change="$store.state.movePage('<%=blockHistoryLink({ showHidden: req.query.showHidden === '1' ? '0' : '1' })%>')"<%=req.query.showHidden === '1' ? ' checked' : ''%>>
+            비공개 내역 보기
+        </label>
+    <%}%>
+</form>
+
 <div class="search-buttons-block">
-    <div class="navigation-div navigation-page"><%-navigationPage%></div>
+    <div class="navigation-div navigation-page">
+        <%-navigationPage%>
+
+    </div>
 </div>
 
 <ul>
