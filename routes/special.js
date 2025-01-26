@@ -269,6 +269,9 @@ app.post('/Upload', uploadFile,
     const document = utils.parseDocumentName(req.body.document);
     const { namespace, title } = document;
 
+    const { ext } = path.parse(req.file.originalname);
+    if(!title.endsWith(ext)) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext.slice(1)})`);
+
     let dbDocument = await Document.findOne({
         namespace,
         title
@@ -301,7 +304,6 @@ app.post('/Upload', uploadFile,
     } catch(e) {}
 
     const hash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
-    const { ext } = path.parse(req.file.originalname);
     const Key = 'i/' + hash + ext;
 
     const checkExists = await History.findOne({
