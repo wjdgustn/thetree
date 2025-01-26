@@ -63,13 +63,20 @@ module.exports = {
             if(endPos === -1) break;
 
             const htmlTagStartPos = text.indexOf('<', textPos);
-            if(htmlTagStartPos !== -1 && htmlTagStartPos < startPos) {
+            if(htmlTagStartPos !== -1 && htmlTagStartPos < endPos) {
                 const htmlTagEndPos = text.indexOf('>', htmlTagStartPos);
                 if(htmlTagEndPos !== -1) {
                     newText += text.slice(textPos, htmlTagEndPos + 1);
                     textPos = htmlTagEndPos + 1;
                     continue;
                 }
+            }
+
+            const newLinePos = text.indexOf('<newLine/>', startPos);
+            if(newLinePos !== -1 && newLinePos < endPos) {
+                newText += text.slice(textPos, newLinePos + '<newLine/>'.length);
+                textPos = newLinePos + '<newLine/>'.length;
+                continue;
             }
 
             newText += text.slice(textPos, startPos);
