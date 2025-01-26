@@ -37,6 +37,11 @@
         width: 20rem;
     }
 
+    .theseed-dark-mode .search-type, .theseed-dark-mode .search-input {
+        background-color: #282829;
+        border-color: #484848;
+    }
+
     .search-buttons-block {
         display: flex;
         gap: .5rem;
