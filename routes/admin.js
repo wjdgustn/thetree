@@ -8,6 +8,7 @@ const multer = require('multer');
 const { body } = require('express-validator');
 const parseDuration = require('parse-duration');
 const crypto = require('crypto');
+const { exec } = require('child_process');
 
 // openNAMU migration things
 const sqlite3 = require('sqlite3').verbose();
@@ -482,8 +483,26 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         global.updateEngine();
     }
 
-    else if(tool === 'updateskin') {
+    else if(tool === 'updatesubmodule') {
+        res.status(204).end();
         global.updateEngine(false);
+    }
+
+    else if(tool === 'updateskin') {
+        res.status(204).end();
+        for(let skin of global.skins) {
+            const checkGit = fs.existsSync(`./skins/${skin}/.git`);
+            if(!checkGit) continue;
+
+            exec('git pull', {
+                cwd: `./skins/${skin}`
+            }, (err, stdout, stderr) => {
+                if(err) console.error(err);
+                if(stdout) console.log(stdout);
+                if(stderr) console.error(stderr);
+                delete global.skinCommitId[skin];
+            });
+        }
     }
 
     else return res.status(404).send('tool not found');
