@@ -1,7 +1,7 @@
 <h2>the tree</h2>
 
 <p>v<%=global.versionInfo.versionData.version%></p>
-<%if(req.permissions.includes('admin')) {%><p><%=global.versionInfo.commitDate.toLocaleString()%></p><%}%>
+<p>엔진 업데이트: <%-getFullDateTag(global.versionInfo.commitDate)%> (<%-getFullDateTag(global.versionInfo.commitDate, 'relative')%>)</p>
 <ul>
     <li>Engine: <%=global.versionInfo.commitId.slice(0, 7)%></li>
     <li>Skin: <%=skinCommitId%></li>
