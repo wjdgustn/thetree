@@ -929,6 +929,11 @@ app.post('/admin/batch_revert',
                     return resolve();
                 }
 
+                if(lastTrollRev.type === HistoryTypes.Delete) {
+                    failResultText.push(`${fullTitleLink}: 되돌릴 기여 없음`);
+                    return resolve();
+                }
+
                 const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
                 if(!result) {
                     failResultText.push(`${fullTitleLink}: ${aclMessage}`);
