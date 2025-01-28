@@ -5,7 +5,7 @@
 
   "namespaces": [],
 
-  "withdraw_save_days": null,
+  "withdraw_save_days": 0,
 
   "grant_permissions": [
     "delete_thread",
