@@ -1,7 +1,7 @@
 for(let key of Object.keys(globalUtils)) window[key] = globalUtils[key];
 
 window.defaultConfig = {
-    'wiki.theme': 'auto'
+    'wiki.theme': window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 Object.defineProperty(window, 'query', {
@@ -46,15 +46,15 @@ function contentLoadedHandler() {
         const isCheckbox = input.type === 'checkbox';
         const value = input.dataset.default;
         if(isCheckbox) {
-            defaultConfig[input.id] = value === 'true';
+            defaultConfig[input.id] ??= value === 'true';
             input.checked = State.getLocalConfig(input.id);
         }
         else {
-            defaultConfig[input.id] = value;
+            defaultConfig[input.id] ??= value;
             input.value = State.getLocalConfig(input.id);
         }
 
-        State.localConfig[input.id] ??= defaultConfig[input.id];
+        State.localConfig[input.id] = defaultConfig[input.id];
     }
 }
 
@@ -756,6 +756,8 @@ window.addEventListener('beforeunload', e => {
     }
 });
 
+const getLocalConfig = key => (window.State ? State.localConfig : localConfig)[key] ?? defaultConfig[key];
+
 const localConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
 document.addEventListener('alpine:init', () => {
     Alpine.store('state', {
@@ -981,9 +983,7 @@ document.addEventListener('alpine:init', () => {
             if(key === 'wiki.no_relative_date') updateTimeTag();
         },
         get currentTheme() {
-            let theme = this.getLocalConfig('wiki.theme');
-            if(theme === 'auto') theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            return theme;
+            return this.getLocalConfig('wiki.theme');
         }
     });
     window.State = Alpine.store('state');
