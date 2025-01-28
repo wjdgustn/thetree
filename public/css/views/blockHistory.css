@@ -92,6 +92,10 @@
         padding: .6rem .75rem 0;
     }
 
+    .hidden-item>.content-block>div:first-child:before {
+        content: "(비공개) ";
+    }
+
     li:last-child {
         border-bottom: 1px solid #e0e0e0;
         margin: 0;

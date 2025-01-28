@@ -45,7 +45,7 @@ const navigationPage = include('../components/pageButton', {
 
 <ul>
     <%for(let log of logs) {%>
-        <li>
+        <li<%-log.hideLog ? ` class="hidden-item"` : ''%>>
         <%if(log.type === BlockHistoryTypes.ACLGroupAdd) {%>
             <div class="item-block icon-block">
                 <span class="icon icon-green">
