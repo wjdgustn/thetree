@@ -5,7 +5,7 @@ module.exports = {
     fullLine: true,
     priority: Priority.ChildParser,
     openStr: '||',
-    async makeTable(content, namumark, fromLastLine = false, removeNewParagraph = false) {
+    async makeTable(content, namumark, fromLastLine = false) {
         const rows = namumark.syntaxData.rows ??= [];
         if(!rows.length) return null;
 
@@ -330,11 +330,11 @@ ${(await namumark.parse(value, true)).html}
 
         return table + (fromLastLine ? '' : '<newLine/>' + content);
     },
-    async format(content, namumark, lines, isLastLine, i, removeNewParagraph = false) {
+    async format(content, namumark, lines, isLastLine, i) {
         const rows = namumark.syntaxData.rows ??= [];
         const rowText = namumark.syntaxData.rowText ??= '';
 
-        const makeTable = async (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine, removeNewParagraph);
+        const makeTable = async (fromLastLine = false) => this.makeTable(content, namumark, fromLastLine);
 
         let spaceCount = 0;
         if(rowText) spaceCount = namumark.syntaxData.spaceCount;
@@ -375,7 +375,7 @@ ${(await namumark.parse(value, true)).html}
 
         return '';
     },
-    async parse(content, removeNewParagraph = false) {
+    async parse(content) {
         const fakeNamumark = {
             syntaxData: {}
         }
@@ -398,7 +398,7 @@ ${(await namumark.parse(value, true)).html}
             i = parseInt(i);
             const line = lines[i];
             const isLastLine = i === lines.length - 1;
-            let output = this.format(line, fakeNamumark, lines, isLastLine, i, removeNewParagraph);
+            let output = this.format(line, fakeNamumark, lines, isLastLine, i);
 
             let setRemoveNextNewLine = false;
             if(output === '') continue;
