@@ -25,10 +25,13 @@ const getLevel = content => {
         level++;
     }
 
+    const closeStr = ` ${defaultClosed ? '#' : ''}${'='.repeat(level)}`;
+    if(level > 6 || !content.endsWith(closeStr)) return;
+
     return {
         level,
         defaultClosed,
-        closeStr: ` ${defaultClosed ? '#' : ''}${'='.repeat(level)}`
+        closeStr
     }
 }
 
@@ -72,13 +75,8 @@ module.exports = {
 
         const {
             level,
-            defaultClosed,
-            closeStr
+            defaultClosed
         } = checkLevel;
-
-        if(level > 6) return;
-
-        if(!content.endsWith(closeStr)) return;
 
         const text = content.slice(level + 1, content.length - level - 1);
 
