@@ -342,8 +342,10 @@ const sessionMiddleware = session({
     resave: false,
     saveUninitialized: false,
     store,
+    rolling: true,
     cookie: {
-        sameSite: 'lax'
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24 * 30
     }
 });
 app.use(sessionMiddleware);
