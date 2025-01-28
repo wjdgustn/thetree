@@ -115,7 +115,8 @@
 <%if([
     EditRequestStatusTypes.Open,
     EditRequestStatusTypes.Closed
-].includes(editRequest.status)) {%>
+].includes(editRequest.status)
+        || (editRequest.status === EditRequestStatusTypes.Locked && req.permissions.includes('update_thread_status'))) {%>
 <div x-data="{ selectedTab: 'diff' }">
     <ul class="edit-request-ul">
         <li class="edit-request-li"><button type="button" :class="selectedTab === 'diff' && 'selected-tab'" @click="selectedTab = 'diff'">비교</button></li>
