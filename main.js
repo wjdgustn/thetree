@@ -23,6 +23,7 @@ const aws = require('@aws-sdk/client-s3');
 const meiliSearch = require('meilisearch');
 const { execSync, exec } = require('child_process');
 const axios = require('axios');
+const util = require('util');
 
 global.debug = process.env.NODE_ENV === 'development';
 
@@ -38,6 +39,7 @@ const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
 const AutoLoginToken = require('./schemas/autoLoginToken');
+const RequestLog = require('./schemas/requestLog');
 
 const ACL = require('./class/acl');
 
@@ -427,6 +429,16 @@ app.use(async (req, res, next) => {
 
     if(!req.user && req.session.ipUser) req.user = req.session.ipUser;
 
+    const log = new RequestLog({
+        ip: req.ip,
+        user: req.user?.uuid,
+        method: req.method,
+        url: req.originalUrl,
+        body: Object.fromEntries(Object.entries(req.body).filter(([key]) => !key.includes('password')))
+    });
+    req.requestId = log._id.toString();
+    log.save().then();
+
     app.locals.rmWhitespace = true;
 
     // app.locals.fs = fs;
@@ -581,7 +593,12 @@ document.getElementById('initScript')?.remove();
         }, async (err, html) => {
             if(err) {
                 console.error(err);
-                return res.status(500).send('스킨 렌더 오류');
+                RequestLog.updateOne({
+                    _id: req.requestId
+                }, {
+                    error: util.inspect(err, { depth: 2, maxArrayLength: 200 })
+                }).then();
+                return res.status(500).send('스킨 렌더 오류<br>요청 ID: ' + req.requestId);
             }
 
             // if(config.minify.html) {
@@ -668,7 +685,13 @@ app.use((req, res, next) => {
 app.use((err, req, res, _) => {
     console.error(`Server error from: ${req.method} ${req.originalUrl}`, err);
     if(debug || req.permissions?.includes('developer')) res.status(500).send(err.toString());
-    else res.status(500).send('서버 오류');
+    else res.status(500).send('서버 오류<br>요청 ID: ' + req.requestId);
+
+    RequestLog.updateOne({
+        _id: req.requestId
+    }, {
+        error: util.inspect(err, { depth: 2, maxArrayLength: 200 })
+    }).then();
 });
 
 const port = process.env.PORT ?? 3000;
