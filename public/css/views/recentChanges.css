@@ -59,6 +59,10 @@
         .changes-heading+.changes-line {
             border-top: 1px solid #e0e0e0;
         }
+
+        .theseed-dark-mode .changes-heading+.changes-line {
+            border-top-color: #575757;
+        }
     }
 
     .changes-value {
