@@ -76,7 +76,10 @@ window.addEventListener('popstate', async e => {
     }
 
     if(isHashChange) focusAnchor();
-    else await movePage(location.href, false, prevUrl);
+    else {
+        skipScrollToTop = true;
+        await movePage(location.href, false, prevUrl);
+    }
 });
 
 function plainAlert(text) {
@@ -365,6 +368,7 @@ function updateTimeTag() {
     }
 }
 
+let skipScrollToTop = false;
 function focusAnchor() {
     const hash = location.hash.slice(1);
     if(hash) {
@@ -376,7 +380,10 @@ function focusAnchor() {
 
         if(element) element.scrollIntoView();
     }
-    else window.scrollTo(0, 0);
+    else {
+        if(skipScrollToTop) skipScrollToTop = false;
+        else window.scrollTo(0, 0);
+    }
 
     // const selectedNavs = document.getElementsByClassName('nav-content-selected');
     // for(let nav of selectedNavs) {
