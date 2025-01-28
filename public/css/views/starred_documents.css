@@ -91,5 +91,13 @@
         .button-text {
             display: none;
         }
+
+        .list-row-head {
+            display: none;
+        }
+
+        .list-row-head + .list-row {
+            border-top: 1px solid #e0e0e0;
+        }
     }
 }
