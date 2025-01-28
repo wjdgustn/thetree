@@ -352,13 +352,21 @@ app.use(sessionMiddleware);
 SocketIO.engine.use(onlyForHandshake(sessionMiddleware));
 
 app.use(async (req, res, next) => {
-    if(!req.session?.passport && req.cookies?.honoka) {
-        const token = await AutoLoginToken.findOne({
-            token: req.cookies.honoka
-        });
-        if(token) req.session.passport = {
-            user: token.uuid
+    if(req.cookies?.honoka) {
+        if(!req.session?.passport) {
+            const token = await AutoLoginToken.findOne({
+                token: req.cookies.honoka
+            });
+            if(token) req.session.passport = {
+                user: token.uuid
+            }
         }
+
+        res.cookie('honoka', req.cookies.honoka, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+            sameSite: 'lax'
+        });
     }
 
     next();
