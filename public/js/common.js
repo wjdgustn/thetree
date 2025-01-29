@@ -978,7 +978,7 @@ document.addEventListener('alpine:init', () => {
         setLocalConfig(key, value) {
             this.localConfig[key] = value;
             userLocalConfig[key] = value;
-            localStorage.setItem('thetree_settings', JSON.stringify(this.userLocalConfig));
+            localStorage.setItem('thetree_settings', JSON.stringify(userLocalConfig));
 
             emit('thetree:configChange');
 
