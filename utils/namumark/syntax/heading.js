@@ -132,7 +132,7 @@ module.exports = {
 <!noParagraph>
 <h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#${commentPrefix}toc">${paragraphNumText}.</a>
- <span :id="$el.innerText">${text}
+ <span id="${text}">${text}
 ${editSection}
 </span>
 </h${level}>
