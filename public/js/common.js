@@ -54,7 +54,7 @@ function contentLoadedHandler() {
             input.value = State.getLocalConfig(input.id);
         }
 
-        State.localConfig[input.id] = defaultConfig[input.id];
+        State.localConfig[input.id] ??= defaultConfig[input.id];
     }
 }
 
@@ -370,7 +370,7 @@ function updateTimeTag() {
 
 let skipScrollToTop = false;
 function focusAnchor() {
-    const hash = location.hash.slice(1);
+    const hash = decodeURIComponent(location.hash.slice(1));
     if(hash) {
         let element;
         if(hash === 'toc')
@@ -758,7 +758,8 @@ window.addEventListener('beforeunload', e => {
 
 const getLocalConfig = key => (window.State ? State.localConfig : localConfig)[key] ?? defaultConfig[key];
 
-const localConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
+const userLocalConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
+const localConfig = { ...userLocalConfig };
 document.addEventListener('alpine:init', () => {
     Alpine.store('state', {
         page,
@@ -976,7 +977,8 @@ document.addEventListener('alpine:init', () => {
         },
         setLocalConfig(key, value) {
             this.localConfig[key] = value;
-            localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig));
+            userLocalConfig[key] = value;
+            localStorage.setItem('thetree_settings', JSON.stringify(this.userLocalConfig));
 
             emit('thetree:configChange');
 
