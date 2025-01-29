@@ -169,7 +169,7 @@ global.checkUpdate = async () => {
         commitId: newCommits[newCommits.length - 1].sha,
         commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
         versionData: newVerionData,
-        updateRequired: newVerionData.lastForceUpdate > Date.now(),
+        updateRequired: newVerionData.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
         lastUpdateCheck: new Date()
     };
 
