@@ -2,7 +2,7 @@ const sanitizeHtml = require('sanitize-html');
 
 const { Priority } = require('../types');
 
-const utils = require('../utils');
+const utils = require('../../');
 const globalUtils = require('../../../utils/global');
 
 const getLevel = content => {
@@ -132,7 +132,7 @@ module.exports = {
 <!noParagraph>
 <h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#${commentPrefix}toc">${paragraphNumText}.</a>
- <span id="${text}">${text}
+ <span id="${utils.removeHtmlTags(text)}">${text}
 ${editSection}
 </span>
 </h${level}>
