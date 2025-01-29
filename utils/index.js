@@ -400,8 +400,14 @@ module.exports = {
 
         return arr;
     },
-    generateDiff(oldText, newText, changeAroundLines = 3) {
-        const lineDiff = Diff.diffLines(oldText || '', newText || '').map(a => ({
+    async generateDiff(oldText, newText, changeAroundLines = 3) {
+        const lineDiffResult = await new Promise(resolve => {
+            Diff.diffLines(oldText || '', newText || '', {
+                timeout: 5000,
+                callback: resolve
+            });
+        });
+        const lineDiff = lineDiffResult.map(a => ({
             ...a,
             value: namumarkUtils.escapeHtml(a.value.endsWith('\n') ? a.value.slice(0, -1) : a.value)
         }));
@@ -488,8 +494,11 @@ module.exports = {
 
                             lineCompared = true;
 
-                            const diff = Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent), {
-                                timeout: 5000
+                            const diff = await new Promise(resolve => {
+                                Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent), {
+                                    timeout: 5000,
+                                    callback: resolve
+                                });
                             });
                             if(!diff) throw new Error('diff timeout');
                             let c = '';

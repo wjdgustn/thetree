@@ -694,7 +694,7 @@ const editAndEditRequest = async (req, res) => {
 
         if(conflict) req.flash.conflict = {
             editedRev: baseRev.rev,
-            diff: utils.generateDiff(baseRev.content, editRequest.content)
+            diff: await utils.generateDiff(baseRev.content, editRequest.content)
         }
     }
 
@@ -1008,7 +1008,7 @@ const postEditAndEditRequest = async (req, res) => {
         else {
             req.session.flash.conflict = {
                 editedRev: editedRev.rev,
-                diff: utils.generateDiff(editedRev.content, req.body.text)
+                diff: await utils.generateDiff(editedRev.content, req.body.text)
             }
             return res.redirect(req.originalUrl);
         }
@@ -1132,7 +1132,7 @@ app.get('/edit_request/:url', async (req, res) => {
             contentHtml,
             editRequest,
             baseRev,
-            diff: utils.generateDiff(baseRev.content, editRequest.content),
+            diff: await utils.generateDiff(baseRev.content, editRequest.content),
             conflict,
             editable,
             selfCreated: editRequest.createdUser.uuid === req.user?.uuid
@@ -1438,7 +1438,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     let lineDiff, diffLines;
     try {
-        const result = utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
+        const result = await utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
         lineDiff = result.lineDiff;
         diffLines = result.diffLines;
     } catch(e) {
