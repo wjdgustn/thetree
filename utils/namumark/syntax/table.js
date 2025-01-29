@@ -7,7 +7,6 @@ module.exports = {
     openStr: '||',
     async makeTable(content, namumark, fromLastLine = false) {
         const rows = namumark.syntaxData.rows ??= [];
-        console.log('content', content, 'fromLastLine', fromLastLine, rows);
         if(!rows.length) return null;
 
         const spaceCount = namumark.syntaxData.spaceCount ??= 0;
