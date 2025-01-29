@@ -14,10 +14,12 @@
         padding: .5rem .7rem;
     }
 
-    table td:last-of-type {
-        max-width: 500px;
-        white-space: nowrap;
-        overflow-x: auto;
+    @media screen and (min-width: 1023.98px) {
+        table td:last-of-type {
+            max-width: 500px;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
     }
 
     table tr:last-of-type td {
