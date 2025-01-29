@@ -1436,7 +1436,14 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    const { lineDiff, diffLines } = utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
+    let lineDiff, diffLines;
+    try {
+        const result = utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
+        lineDiff = result.lineDiff;
+        diffLines = result.diffLines;
+    } catch(e) {
+        return res.status(500).send(e.message);
+    }
 
     res.renderSkin(undefined, {
         contentName: 'document/diff',

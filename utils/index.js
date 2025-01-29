@@ -488,7 +488,10 @@ module.exports = {
 
                             lineCompared = true;
 
-                            const diff = Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent));
+                            const diff = Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent), {
+                                timeout: 5000
+                            });
+                            if(!diff) throw new Error('diff timeout');
                             let c = '';
                             let n = '';
                             for(let d of diff) {
