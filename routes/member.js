@@ -891,7 +891,7 @@ app.post('/member/change_name',
         const newDbDocument = await Document.findOneAndUpdate({
             uuid: dbDocument.uuid
         }, {
-            title: dbDocument.title.replace(`${req.user.name}`, `*${req.body.name}`)
+            title: dbDocument.title.replace(`${req.user.name}`, `${req.body.name}`)
         }, {
             new: true
         });
