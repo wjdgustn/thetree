@@ -752,7 +752,6 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
         return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
 
     const { deletable, blacklistDuration } = await checkDeletable(req.user);
-    console.log(await checkDeletable(req.user));
 
     res.renderSkin('회원 탈퇴', {
         contentName: 'member/withdraw',
