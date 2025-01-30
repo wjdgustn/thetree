@@ -27,9 +27,6 @@ const util = require('util');
 
 global.debug = process.env.NODE_ENV === 'development';
 
-const NamumarkParser = require('./utils/namumark');
-global.NamumarkParser = NamumarkParser;
-
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
@@ -196,6 +193,33 @@ global.updateEngine = (exit = true) => {
     } catch(e) {}
 }
 
+global.plugins = {
+    macro: []
+};
+global.reloadPlugins = () => {
+    for(let key in plugins) plugins[key] = [];
+
+    const loadPlugins = dir => {
+        if(!fs.existsSync(dir)) return;
+
+        const files = fs.readdirSync(dir);
+        for(let f of files) {
+            if(f.endsWith('.js')) {
+                const pluginPath = require.resolve(path.resolve(dir, f));
+                delete require.cache[pluginPath];
+                const plugin = require(pluginPath);
+                plugins[plugin.type].push(plugin);
+            }
+            else loadPlugins(path.join(dir, f));
+        }
+    }
+    loadPlugins('./plugins');
+}
+reloadPlugins();
+
+const NamumarkParser = require('./utils/namumark');
+global.NamumarkParser = NamumarkParser;
+
 require('./schemas')();
 
 if(!fs.existsSync('./cache')) fs.mkdirSync('./cache');
@@ -266,24 +290,43 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com', '*.googletagmanager.com'],
-            imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.googletagmanager.com', '*.google-analytics.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
-            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
-            fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
-            frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
-            connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com'],
-            ...(debug ? {
-                upgradeInsecureRequests: null
-            } : {})
+app.use((req, res, next) => {
+    const directives = {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com', '*.googletagmanager.com'],
+        imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.googletagmanager.com', '*.google-analytics.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
+        styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
+        fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
+        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
+        connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com'],
+        ...(debug ? {
+            upgradeInsecureRequests: null
+        } : {})
+    };
+
+    if(config.content_security_policy) for(let key of Object.keys(config.content_security_policy)) {
+        let arr = config.content_security_policy[key];
+        if(!Array.isArray(arr)) arr = [arr];
+        directives[key].push(...arr);
+    }
+
+    for(let plugin of Object.values(plugins).flat()) {
+        if(!plugin.csp) continue;
+        for(let key of Object.keys(plugin.csp)) {
+            let arr = plugin.csp[key];
+            if(!Array.isArray(arr)) arr = [arr];
+            directives[key].push(...arr);
         }
-    },
-    referrerPolicy: false,
-    strictTransportSecurity: !debug
-}));
+    }
+
+    helmet({
+        contentSecurityPolicy: {
+            directives
+        },
+        referrerPolicy: false,
+        strictTransportSecurity: !debug
+    })(req, res, next);
+});
 
 if(!debug) {
     app.use(compression());

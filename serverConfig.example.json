@@ -32,5 +32,10 @@
 
   "external_link_icons": {
     "파일:홈페이지 아이콘.svg": ""
+  },
+
+  "content_security_policy": {
+    "frameSrc": [],
+    "connectSrc": []
   }
 }
