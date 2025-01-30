@@ -47,7 +47,7 @@ module.exports = {
         const openParamIndex = content.indexOf('(');
 
         let name;
-        let params;
+        let params = '';
         if(openParamIndex === -1) name = content;
         else {
             if(!content.endsWith(')')) return;
