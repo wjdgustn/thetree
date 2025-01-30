@@ -344,6 +344,7 @@ app.get('/self_unblock', async (req, res) => {
     const group = await ACLGroup.findOne({
         uuid: item.aclGroup
     });
+    if(!group.isWarn) return res.error('해제할 수 없는 요소입니다.');
 
     await ACLGroupItem.deleteOne({
         uuid: item.uuid
