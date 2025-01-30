@@ -298,7 +298,7 @@ const formHandler = async e => {
 
     const html = await response.text();
 
-    if(response.status.toString().startsWith('4')) {
+    if(response.status.toString().startsWith('4') && !html.startsWith('<')) {
         let json;
         try {
             json = JSON.parse(html);
@@ -308,7 +308,7 @@ const formHandler = async e => {
 
         setProgress(100);
 
-        if(!json?.fieldErrors && !html.startsWith('<')) {
+        if(!json?.fieldErrors) {
             processFieldErrors(inputs);
 
             if(html.includes('캡챠')) {
