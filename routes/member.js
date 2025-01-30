@@ -813,7 +813,7 @@ app.post('/member/withdraw',
         const newDbDocument = await Document.findOneAndUpdate({
             uuid: dbDocument.uuid
         }, {
-            title: dbDocument.title.replace(`${req.user.name}/`, `*${req.user.uuid}/`)
+            title: dbDocument.title.replace(`${req.user.name}`, `*${req.user.uuid}`)
         }, {
             new: true
         });
@@ -888,10 +888,10 @@ app.post('/member/change_name',
         ]
     });
     for(let dbDocument of userDocs) {
-        const newDbDocument = await Document.updateOne({
+        const newDbDocument = await Document.findOneAndUpdate({
             uuid: dbDocument.uuid
         }, {
-            title: dbDocument.title.replace(`${req.user.name}/`, `*${req.body.name}/`)
+            title: dbDocument.title.replace(`${req.user.name}`, `*${req.body.name}`)
         }, {
             new: true
         });
