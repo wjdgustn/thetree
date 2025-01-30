@@ -903,6 +903,11 @@ app.post('/admin/batch_revert',
             }).sort({ rev: -1 });
 
             if(lastNormalRev) {
+                if(lastTrollRev.type === HistoryTypes.Revert && lastTrollRev.revertRev === lastNormalRev.rev) {
+                    failResultText.push(`${fullTitleLink}: 되돌릴 기여 동일`);
+                    return resolve();
+                }
+
                 const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
                 if(!result) {
                     failResultText.push(`${fullTitleLink}: ${aclMessage}`);
