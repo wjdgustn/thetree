@@ -7,7 +7,10 @@ module.exports = {
     openStr: '||',
     async makeTable(content, namumark, fromLastLine = false) {
         const rows = namumark.syntaxData.rows ??= [];
-        if(!rows.length) return null;
+        if(!rows.length) {
+            if(fromLastLine) return namumark.syntaxData.rowText;
+            return null;
+        }
 
         const spaceCount = namumark.syntaxData.spaceCount ??= 0;
         namumark.syntaxData.spaceCount = 0;
@@ -328,7 +331,8 @@ ${(await namumark.parse(value, true)).html}
 
         const table = `${' '.repeat(spaceCount)}<!noParagraph><div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div><!/noParagraph>`;
 
-        return table + (fromLastLine ? '' : '<newLine/>' + content);
+        const suffix = fromLastLine ? namumark.syntaxData.rowText : content;
+        return table + (suffix ? '<newLine/>' + suffix : '');
     },
     async format(content, namumark, lines, isLastLine, i) {
         const rows = namumark.syntaxData.rows ??= [];
