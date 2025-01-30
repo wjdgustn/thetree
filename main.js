@@ -308,6 +308,7 @@ app.use((req, res, next) => {
         let arr = config.content_security_policy[key];
         if(!Array.isArray(arr)) arr = [arr];
         directives[key].push(...arr);
+        directives[key] = [...new Set(directives[key])];
     }
 
     for(let plugin of Object.values(plugins).flat()) {
@@ -316,6 +317,7 @@ app.use((req, res, next) => {
             let arr = plugin.csp[key];
             if(!Array.isArray(arr)) arr = [arr];
             directives[key].push(...arr);
+            directives[key] = [...new Set(directives[key])];
         }
     }
 
