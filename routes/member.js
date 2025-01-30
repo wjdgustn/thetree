@@ -810,7 +810,7 @@ app.post('/member/withdraw',
         ]
     });
     for(let dbDocument of userDocs) {
-        const newDbDocument = await Document.updateOne({
+        const newDbDocument = await Document.findOneAndUpdate({
             uuid: dbDocument.uuid
         }, {
             title: dbDocument.title.replace(`${req.user.name}/`, `*${req.user.uuid}/`)
