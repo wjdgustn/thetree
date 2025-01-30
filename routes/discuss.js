@@ -46,7 +46,7 @@ const threadCommentMapper = ({
     if(comment.hidden) {
         hideUser ??= comment.hiddenBy;
         comment.hideUserHtml = utils.userHtml(hideUser, {
-            isAdmin: hideUser.permissions.includes('admin'),
+            isAdmin: hideUser?.permissions.includes('admin'),
             thread: true,
             threadAdmin: true
         });
