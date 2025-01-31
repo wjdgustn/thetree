@@ -1021,14 +1021,14 @@ app.post('/admin/login_history',
 });
 
 app.get('/admin/login_history/:session', middleware.permission('login_history'), async (req, res) => {
-    for(let id of Object.keys(req.session.loginHistorySession)) {
+    if(req.session.loginHistorySession) for(let id of Object.keys(req.session.loginHistorySession)) {
         const session = req.session.loginHistorySession[id];
         if(session.loginHistoryExpiresAt < Date.now()) {
             delete req.session.loginHistorySession[id];
         }
     }
 
-    const session = req.session.loginHistorySession[req.params.session];
+    const session = req.session.loginHistorySession?.[req.params.session];
 
     const uuid = session?.loginHistoryTargetUser;
     if(!uuid) return res.redirect('/admin/login_history');
