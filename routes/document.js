@@ -1384,7 +1384,7 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         user: req.user.uuid,
         type: HistoryTypes.Revert,
         document: dbDocument.uuid,
-        revertRev: rev.rev,
+        revertRev: rev.revertRev || rev.rev,
         revertUuid: rev.uuid,
         content: rev.content,
         fileKey: rev.fileKey,
