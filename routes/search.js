@@ -20,7 +20,7 @@ app.get('/Complete', async (req, res) => {
     const document = utils.parseDocumentName(req.query.q);
 
     const filter = ['anyoneReadable = true'];
-    if(document.namespaceExists) filter.push(`namespace = ${document.namespace}`);
+    if(document.namespaceExists) filter.push(`namespace = '${document.namespace}'`);
     else filter.push(`namespace = 문서`);
 
     const result = await documentIndex.search(document.title, {
@@ -70,9 +70,9 @@ app.get('/Search', async (req, res) => {
     const attributesToCrop = [];
 
     if(req.query.namespace && readableNamespaces.includes(req.query.namespace))
-        filter.push(`namespace = ${req.query.namespace}`);
+        filter.push(`namespace = '${req.query.namespace}'`);
     else
-        filter.push(readableNamespaces.map(a => `namespace = ${a}`));
+        filter.push(readableNamespaces.map(a => `namespace = '${a}'`));
 
     switch(req.query.target || 'title_content') {
         case 'title_content':
