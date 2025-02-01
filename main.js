@@ -72,7 +72,7 @@ global.disabledFeatures = fs.existsSync(disabledFeaturesPath) ? JSON.parse(fs.re
 require('dotenv').config();
 
 global.S3 = new aws.S3Client({
-    region: 'auto',
+    region: process.env.S3_REGION || 'auto',
     endpoint: process.env.S3_ENDPOINT,
     credentials: {
         accessKeyId: process.env.S3_ACCESS_KEY_ID,
