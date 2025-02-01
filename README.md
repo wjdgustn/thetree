@@ -35,7 +35,7 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
 > 이슈에 엔진과 관련되지 않은 질문 시 통보 없이 닫기 처리될 수 있습니다.
 1. git clone 명령어를 통해 엔진을 다운로드합니다.
    ```shell
-   git clone https://github.com/wjdgustn/thetree
+   git clone https://github.com/wjdgustn/thetree --recurse-submodules
    ```
    git clone을 통해 다운로드하지 않을 경우 업데이트 기능이 작동하지 않으며, git이 설치되어있지 않으면 엔진을 구동할 수 없습니다.
 1. .env.example을 .env로 복사한 뒤 내용을 채워넣습니다.
@@ -43,11 +43,6 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
 1. npm i 명령어를 통해 라이브러리를 다운로드합니다.
    ```shell
     npm i
-   ```
-1. 아래 명령어를 통해 기본 liberty 스킨을 다운로드합니다.
-   ```shell
-   git submodule init
-   git submodule update
    ```
 1. [pm2](https://www.npmjs.com/package/pm2) 등의 자동 재시작 기능이 있는 프로세스 매니저를 사용해 main.js 파일을 구동합니다.
 1. 첫 가입자에게 자동으로 소유자 권한이 부여되며, 첫 가입 시 자동으로 검색엔진 초기 설정이 진행됩니다.
