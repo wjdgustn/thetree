@@ -44,6 +44,11 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
    ```shell
     npm i
    ```
+1. 아래 명령어를 통해 기본 liberty 스킨을 다운로드합니다.
+   ```shell
+   git submodule init
+   git submodule update
+   ```
 1. [pm2](https://www.npmjs.com/package/pm2) 등의 자동 재시작 기능이 있는 프로세스 매니저를 사용해 main.js 파일을 구동합니다.
 1. 첫 가입자에게 자동으로 소유자 권한이 부여되며, 첫 가입 시 자동으로 검색엔진 초기 설정이 진행됩니다.
 
