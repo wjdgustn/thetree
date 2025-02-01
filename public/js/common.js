@@ -983,6 +983,11 @@ document.addEventListener('alpine:init', () => {
             emit('thetree:configChange');
 
             if(key === 'wiki.no_relative_date') updateTimeTag();
+
+            const input = document.getElementById(key);
+            const isCheckbox = input.type === 'checkbox';
+            if(isCheckbox) input.checked = value;
+            else input.value = value;
         },
         get currentTheme() {
             const theme = this.getLocalConfig('wiki.theme');
