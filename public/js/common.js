@@ -985,7 +985,8 @@ document.addEventListener('alpine:init', () => {
             if(key === 'wiki.no_relative_date') updateTimeTag();
         },
         get currentTheme() {
-            return this.getLocalConfig('wiki.theme');
+            const theme = this.getLocalConfig('wiki.theme');
+            return theme === 'auto' ? defaultConfig['wiki.theme'] : theme;
         }
     });
     window.State = Alpine.store('state');
