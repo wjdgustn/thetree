@@ -1483,7 +1483,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: req.query.uuid
     });
 
-    if(!req.query.uuid || !rev) res.error('해당 리비전이 존재하지 않습니다.', 404);
+    if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
