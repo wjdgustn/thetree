@@ -61,7 +61,12 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 
         threadExists = await Thread.exists({
             document: dbDocument.uuid,
-            status: ThreadStatusTypes.Normal,
+            status: {
+                $ne: ThreadStatusTypes.Close
+            },
+            lastUpdatedAt: {
+                $gte: new Date(Date.now() - 1000 * 60 * 60 * 24)
+            },
             deleted: false
         });
         threadExists ||= await EditRequest.exists({
