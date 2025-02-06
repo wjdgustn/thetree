@@ -1383,6 +1383,9 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
+    if(currentRev.content == null && namespace === '사용자' && (!title.includes('/') || title.startsWith('*')))
+        return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+
     if(rev.content === currentRev.content) return res.error('문서 내용이 같습니다.');
 
     await History.create({
