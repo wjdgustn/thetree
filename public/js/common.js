@@ -320,7 +320,7 @@ const formHandler = async e => {
         }
         else return plainAlert();
     }
-    if(response.status.toString().startsWith('5')) {
+    if(response.status.toString().startsWith('5') && html.includes('<')) {
         location.reload();
     }
 
