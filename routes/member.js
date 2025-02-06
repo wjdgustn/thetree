@@ -709,7 +709,7 @@ app.get('/contribution/:uuid/edit_request',
 });
 
 const checkDeletable = async user => {
-    let noActivityTime = 1000 * 60 * 60 * 24;
+    let noActivityTime = 1000 * 60 * 60 * (config.withdraw_last_activity_hours ?? 24);
     let blacklistDuration = config.withdraw_save_days * 1000 * 60 * 60 * 24;
 
     const aclGroups = await ACLGroup.find({
