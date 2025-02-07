@@ -1002,6 +1002,9 @@ app.post('/admin/login_history',
         && (targetUser.permissions.includes('developer') || targetUser.permissions.includes('hideip')))
         return res.status(403).send('권한이 부족합니다.');
 
+    if(config.testwiki && !req.permissions.includes('config') && targetUser.uuid !== req.user.uuid)
+        return res.status(403).send('다른 사용자의 로그인 기록을 조회할 수 없습니다.');
+
     const sessionId = crypto.randomBytes(32).toString('hex');
     req.session.loginHistorySession ??= {};
     req.session.loginHistorySession[sessionId] = {
