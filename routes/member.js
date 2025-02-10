@@ -751,13 +751,14 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
     if(config.withdraw_save_days == null)
         return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
 
-    const { deletable, blacklistDuration } = await checkDeletable(req.user);
+    const { deletable, blacklistDuration, noActivityTime } = await checkDeletable(req.user);
 
     res.renderSkin('회원 탈퇴', {
         contentName: 'member/withdraw',
         serverData: {
             blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
-            alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.'
+            alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.',
+            noActivityTime
         }
     });
 });
