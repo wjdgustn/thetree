@@ -569,7 +569,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
         setProgress(100);
         return plainAlert(html);
     }
-    else if(response.status.toString().startsWith('5')) {
+    else if(response.status.toString().startsWith('5') && html.startsWith('<')) {
         location.reload();
     }
     else plainAlert();
