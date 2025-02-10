@@ -499,14 +499,18 @@ module.exports = {
 
                             const diff = await new Promise(resolve => {
                                 Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent), {
-                                    timeout: 5000,
+                                    timeout: 1000,
                                     callback: resolve
                                 });
                             });
-                            if(!diff) throw new Error('diff timeout');
+                            // if(!diff) throw new Error('diff timeout');
                             let c = '';
                             let n = '';
-                            for(let d of diff) {
+                            if(!diff) {
+                                c += content;
+                                n += nextContent;
+                            }
+                            else for(let d of diff) {
                                 if(!d.added && !d.removed) {
                                     const val = namumarkUtils.escapeHtml(d.value);
                                     c += val;
