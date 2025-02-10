@@ -401,6 +401,9 @@ module.exports = {
         return arr;
     },
     async generateDiff(oldText, newText, changeAroundLines = 3) {
+        oldText = oldText.replaceAll('\r\n', '\n');
+        newText = newText.replaceAll('\r\n', '\n');
+
         const lineDiffResult = await new Promise(resolve => {
             Diff.diffLines(oldText || '', newText || '', {
                 timeout: 5000,
