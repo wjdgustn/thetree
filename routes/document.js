@@ -1495,7 +1495,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    if(!rev.blame) return res.error('blame 데이터를 찾을 수 없습니다.');
+    if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
     let blame = await utils.findHistories(rev.blame, req.permissions.includes('admin'));
     blame = await utils.findUsers(blame);
