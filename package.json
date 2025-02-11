@@ -64,7 +64,7 @@
   "devDependencies": {
     "@socket.io/admin-ui": "^0.5.1",
     "cross-env": "^7.0.3",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.9"
   },
   "nodemonConfig": {
     "ignore": [
