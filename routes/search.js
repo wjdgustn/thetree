@@ -115,8 +115,9 @@ app.get('/Search', async (req, res) => {
     });
 
     result.hits = result.hits.map(a => {
-        for(let key in a._formatted) {
+        for(let key of ['raw']) {
             const prevStr = a._formatted[key];
+            if(!prevStr) continue;
             a._formatted[key] = namumarkUtils.escapeHtml(prevStr);
 
             const matchesPosition = a._matchesPosition[key] ?? [];
