@@ -694,7 +694,7 @@ module.exports = {
     },
     durationToExactString(duration, en = false) {
         const weeks = duration / (1000 * 60 * 60 * 24 * 7);
-        const absoluteWeeks = Math.round(weeks);
+        const absoluteWeeks = Math.floor(weeks);
         const w = absoluteWeeks ? (absoluteWeeks + '주 ') : '';
 
         const days = (weeks - absoluteWeeks) * 7;
