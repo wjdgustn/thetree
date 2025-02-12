@@ -42,11 +42,9 @@ module.exports = {
         });
         const newLineArr = [];
         const lineArr = this.blameToLineArr(last?.blame || []);
-        console.log(lineDiff);
 
         let offset = 0;
         for(let i in lineDiff) {
-            console.log('offset:', offset);
             i = parseInt(i);
             const diff = lineDiff[i];
             const prevDiff = lineDiff[i - 1];
