@@ -64,7 +64,7 @@ module.exports = {
                 // else if(prevDiff?.removed && prevDiff.count < diff.count) {
                 //     offset += diff.count - prevDiff.count;
                 // }
-                if(prevDiff) offset += prevDiff.count;
+                if(prevDiff?.removed) offset += prevDiff.count;
             }
             else {
                 for(let i = 0; i < diff.count; i++) {
