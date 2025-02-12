@@ -1,6 +1,7 @@
 const express = require('express');
 
 const utils = require('../utils');
+const namumarkUtils = require('../utils/namumark/utils');
 const globalUtils = require('../utils/global');
 const { ACLTypes } = require('../utils/types');
 
@@ -106,10 +107,33 @@ app.get('/Search', async (req, res) => {
         attributesToRetrieve,
         attributesToSearchOn,
         attributesToHighlight: attributesToCrop,
-        highlightPreTag: '<span class="search-highlight">',
-        highlightPostTag: '</span>',
+        highlightPreTag: '',
+        highlightPostTag: '',
+        showMatchesPosition: true,
         attributesToCrop,
         cropLength: 64
+    });
+
+    result.hits = result.hits.map(a => {
+        for(let key in a._formatted) {
+            const prevStr = a._formatted[key];
+            a._formatted[key] = namumarkUtils.escapeHtml(prevStr);
+
+            const matchesPosition = a._matchesPosition[key] ?? [];
+            for(let pos of matchesPosition.reverse()) {
+                const frontPrev = prevStr.slice(0, pos.start);
+                const frontNew = namumarkUtils.escapeHtml(frontPrev);
+                const frontExtendedLen = frontNew.length - frontPrev.length;
+
+                const backPrev = prevStr.slice(pos.start + pos.length);
+                const backNew = namumarkUtils.escapeHtml(backPrev);
+                const backExtendedLen = backNew.length - backPrev.length;
+
+                a._formatted[key] = namumarkUtils.insertText(a._formatted[key], pos.start + backExtendedLen + pos.length, '</span>');
+                a._formatted[key] = namumarkUtils.insertText(a._formatted[key], pos.start + frontExtendedLen, '<span class="search-highlight">');
+            }
+        }
+        return a;
     });
 
     res.renderSkin('검색', {
