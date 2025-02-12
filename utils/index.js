@@ -694,19 +694,19 @@ module.exports = {
     },
     durationToExactString(duration, en = false) {
         const weeks = duration / (1000 * 60 * 60 * 24 * 7);
-        const absoluteWeeks = Math.floor(weeks);
+        const absoluteWeeks = Math.round(weeks);
         const w = absoluteWeeks ? (absoluteWeeks + '주 ') : '';
 
         const days = (weeks - absoluteWeeks) * 7;
-        const absoluteDays = Math.floor(days);
+        const absoluteDays = Math.round(days);
         const d = absoluteDays ? (absoluteDays + (en ? ` Day${absoluteDays > 1 ? 's' : ''} ` : '일 ')) : '';
 
         const hours = (days - absoluteDays) * 24;
-        const absoluteHours = Math.floor(hours);
+        const absoluteHours = Math.round(hours);
         const h = absoluteHours ? (absoluteHours + (en ? ` Hour${absoluteHours > 1 ? 's' : ''} ` : '시간 ')) : '';
 
         const minutes = (hours - absoluteHours) * 60;
-        const absoluteMinutes = Math.floor(minutes);
+        const absoluteMinutes = Math.round(minutes);
         const m = absoluteMinutes ? (absoluteMinutes + (en ? ` Minute${absoluteMinutes > 1 ? 's' : ''} ` : '분 ')) : '';
 
         const seconds = (minutes - absoluteMinutes) * 60;
