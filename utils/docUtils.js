@@ -42,7 +42,6 @@ module.exports = {
         });
         const newLineArr = [];
         const lineArr = this.blameToLineArr(last?.blame || []);
-        console.log(lineDiff);
 
         let offset = 0;
         for(let i in lineDiff) {
