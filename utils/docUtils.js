@@ -42,6 +42,7 @@ module.exports = {
         });
         const newLineArr = [];
         const lineArr = this.blameToLineArr(last?.blame || []);
+        console.log(lineDiff);
 
         let offset = 0;
         for(let i in lineDiff) {
@@ -58,7 +59,7 @@ module.exports = {
                 for(let i = 0; i < diff.count; i++) {
                     newLineArr.push(curr.uuid);
                 }
-                if(prevDiff?.removed && prevDiff.count === diff.count) offset += diff.count;
+                if(prevDiff?.removed && prevDiff.count <= diff.count) offset += diff.count - prevDiff.count;
             }
             else {
                 for(let i = 0; i < diff.count; i++) {
