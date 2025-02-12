@@ -170,8 +170,9 @@ global.checkUpdate = async () => {
         lastUpdateCheck: new Date()
     };
 
-    if(global.newVersionInfo.updateRequired) {
-        console.log('force updating...');
+    if(global.versioninfo.commitId !== global.newVersionInfo.commitId
+        && (global.newVersionInfo.updateRequired || config.auto_update)) {
+        console.log('auto updating...');
         global.updateEngine();
     }
 }

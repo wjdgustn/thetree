@@ -29,5 +29,6 @@
   },
 
   "github_api_token": "",
-  "check_update": true
+  "check_update": true,
+  "auto_update": false
 }
