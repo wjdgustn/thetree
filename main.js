@@ -539,6 +539,7 @@ app.use(async (req, res, next) => {
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
+    if(!global.skins.includes(skin)) skin = global.skins[0];
 
     res.renderSkin = (title, data = {}) => {
         const status = data.status || 200;
