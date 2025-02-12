@@ -127,7 +127,7 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
 
 app.post('/aclgroup/group_remove', async (req, res) => {
     const uuid = req.body.uuid;
-    const target = await ACLGroup.findOne({ uuid });
+    const target = await ACLGroup.findOne({ ...aclGroupsQuery(req), uuid });
 
     if(!target) return res.status(404).send('존재하지 않는 그룹입니다.');
     if(target.deleteGroupPerms.length
@@ -148,6 +148,7 @@ app.post('/aclgroup',
         .isUUID()
         .custom(async (value, { req }) => {
             const group = await ACLGroup.findOne({
+                ...aclGroupsQuery(req),
                 uuid: req.body.group
             });
             if(!group) throw new Error('존재하지 않는 그룹입니다.');
@@ -260,6 +261,7 @@ app.post('/aclgroup/remove',
         .isUUID()
         .custom(async (value, { req }) => {
             const group = await ACLGroup.findOne({
+                ...aclGroupsQuery(req),
                 uuid: req.body.group
             });
             if(!group) throw new Error('존재하지 않는 그룹입니다.');
