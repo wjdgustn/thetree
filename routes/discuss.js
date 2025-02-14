@@ -716,7 +716,9 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
     });
     SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { deleted: true });
 
-    res.status(204).end();
+    const referer = new URL(req.get('referer'));
+    if(referer.pathname.startsWith('/discuss/')) res.reload();
+    else res.status(204).end();
 });
 
 app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_comment'), async (req, res) => {
