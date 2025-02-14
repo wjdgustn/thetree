@@ -14,4 +14,11 @@ document.addEventListener('thetree:pageLoad', () => {
 
         return true;
     });
+
+    const confirmButtons = document.getElementsByClassName('thetree-confirm-button');
+    for(let button of confirmButtons) {
+        button.addEventListener('click', e => {
+            if(!confirm('go?')) e.preventDefault();
+        });
+    }
 }, { once: true });

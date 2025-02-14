@@ -34,7 +34,7 @@
     <div>
         <%if(req.permissions.includes('delete_thread')) {%>
             <form method="post" class="delete-thread-form" action="/admin/thread/<%=thread.url%>/delete">
-                <button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button>
+                <button class="thetree-square-button thetree-danger-button thetree-confirm-button">[ADMIN] 스레드 삭제</button>
             </form>
         <%}%>
         <h2>

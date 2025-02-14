@@ -19,7 +19,7 @@ const isFrontPage = docTitle === config.front_page;
 <%}%>
 
 <form method="post" class="delete-thread-form<%=isFrontPage ? '' : ' delete-thread-form-thread'%>" action="/admin/thread/<%=thread.url%>/delete">
-    <%if(req.permissions.includes('delete_thread')) {%><button class="thetree-square-button thetree-danger-button">[ADMIN] 스레드 삭제</button><%}%>
+    <%if(req.permissions.includes('delete_thread')) {%><button class="thetree-square-button thetree-danger-button thetree-confirm-button">[ADMIN] 스레드 삭제</button><%}%>
     <input type="checkbox" id="noDisplayHideAuthor" x-model="$store.state.page.data.hideHiddenComments">
     <label for="noDisplayHideAuthor">숨겨진 댓글 보이지 않기</label>
 </form>
