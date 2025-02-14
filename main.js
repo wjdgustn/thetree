@@ -195,7 +195,8 @@ global.updateEngine = (exit = true) => {
 }
 
 global.plugins = {
-    macro: []
+    macro: [],
+    skinData: []
 };
 global.reloadPlugins = () => {
     for(let key in plugins) plugins[key] = [];
@@ -541,7 +542,9 @@ app.use(async (req, res, next) => {
     if(!skin || skin === 'default') skin = config.default_skin;
     if(!global.skins.includes(skin)) skin = global.skins[0];
 
-    res.renderSkin = (title, data = {}) => {
+    res.renderSkin = (...args) => renderSkin(...args).then();
+
+    const renderSkin = async (title, data = {}) => {
         const status = data.status || 200;
         delete data.status;
 
@@ -633,10 +636,22 @@ document.getElementById('initScript')?.remove();
         `.replaceAll('\n', '').trim() + data.contentHtml;
         }
 
+        const pluginData = {};
+        for(let plugin of plugins.skinData) {
+            const output = await plugin.format({
+                data,
+                page,
+                session,
+                req
+            });
+            if(typeof output === 'object') Object.assign(pluginData, output);
+        }
+
         const isAdmin = req.permissions.includes('admin');
         app.render('main', {
             ...data,
             ...(data.serverData ?? {}),
+            ...pluginData,
             skin,
             page,
             session,
