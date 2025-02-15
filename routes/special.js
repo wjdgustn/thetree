@@ -485,4 +485,18 @@ app.get('/random', async (req, res) => {
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
+app.get('/opensearch.xml', (req, res) => {
+    res.setHeader('Content-Type', 'application/xml');
+    res.send(`
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>${config.site_name}</ShortName>
+  <Description>${config.site_name}</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16">${new URL('/favicon.ico', config.base_url)}</Image>
+  <Url type="text/html" method="GET" template="${new URL(`/Go?q={searchTerms}`, config.base_url)}"/>
+  <moz:SearchForm>${new URL('/', config.base_url)}</moz:SearchForm>
+</OpenSearchDescription>
+    `.trim());
+});
+
 module.exports = app;
