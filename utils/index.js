@@ -692,27 +692,49 @@ module.exports = {
             originalPageButton
         }
     },
-    durationToExactString(duration, en = false) {
-        const weeks = duration / (1000 * 60 * 60 * 24 * 7);
-        const absoluteWeeks = Math.floor(weeks);
-        const w = absoluteWeeks ? (absoluteWeeks + '주 ') : '';
+    durationToExactString(duration) {
+        const strs = [];
 
-        const days = (weeks - absoluteWeeks) * 7;
-        const absoluteDays = Math.round(days);
-        const d = absoluteDays ? (absoluteDays + (en ? ` Day${absoluteDays > 1 ? 's' : ''} ` : '일 ')) : '';
+        let weeks = 0;
+        const week = 1000 * 60 * 60 * 24 * 7;
+        while(duration >= week) {
+            duration -= week;
+            weeks++;
+        }
+        if(weeks) strs.push(`${weeks}주`);
 
-        const hours = (days - absoluteDays) * 24;
-        const absoluteHours = Math.round(hours);
-        const h = absoluteHours ? (absoluteHours + (en ? ` Hour${absoluteHours > 1 ? 's' : ''} ` : '시간 ')) : '';
+        let days = 0;
+        const day = 1000 * 60 * 60 * 24;
+        while(duration >= day) {
+            duration -= day;
+            days++;
+        }
+        if(days) strs.push(`${days}일`);
 
-        const minutes = (hours - absoluteHours) * 60;
-        const absoluteMinutes = Math.round(minutes);
-        const m = absoluteMinutes ? (absoluteMinutes + (en ? ` Minute${absoluteMinutes > 1 ? 's' : ''} ` : '분 ')) : '';
+        let hours = 0;
+        const hour = 1000 * 60 * 60;
+        while(duration >= hour) {
+            duration -= hour;
+            hours++;
+        }
+        if(hours) strs.push(`${hours}시간`);
 
-        const seconds = (minutes - absoluteMinutes) * 60;
-        const absoluteSeconds = Math.round(seconds * 1000) / 1000;
-        const s = absoluteSeconds ? (absoluteSeconds + (en ? ` Second${absoluteSeconds > 1 ? 's' : ''} ` : '초 ')) : '';
+        let minutes = 0;
+        const minute = 1000 * 60;
+        while(duration >= minute) {
+            duration -= minute;
+            minutes++;
+        }
+        if(minutes) strs.push(`${minutes}분`);
 
-        return (w + d + h + m + s).trim();
+        let seconds = 0;
+        const second = 1000;
+        while(duration >= second) {
+            duration -= second;
+            seconds++;
+        }
+        if(seconds) strs.push(`${seconds}초`);
+
+        return strs.join(' ');
     }
 }
