@@ -277,7 +277,7 @@ module.exports = class ACL {
             if(rule.conditionContent === 'any') return { action };
 
             if(data.user && rule.document && rule.conditionContent === 'document_contributor') {
-                const contribution = models.History.exists({
+                const contribution = await models.History.exists({
                     document: rule.document,
                     user: data.user.uuid
                 });
