@@ -165,7 +165,7 @@ module.exports = async (content, splittedContent, link, namumark) => {
 <span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
 <img${imgAttrib} style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
-<img class="wiki-image" width="100%" height="100%" style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
+<img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
 ${namumark.document.namespace === namespace && namumark.document.title === title 
     ? '' 
     : `<a class="wiki-image-info" href="${globalUtils.doc_action_link(document, 'w')}" rel="nofollow noopener"></a>`
