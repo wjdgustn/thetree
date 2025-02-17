@@ -19,7 +19,7 @@ module.exports = {
         if(await ContentChange(content, namumark, true) !== undefined) return null;
 
         // 표 문법 이스케이프
-        // originalContent = originalContent.replaceAll('||', '\\||');
+        originalContent = originalContent.replaceAll('||', '<removeEscape/>\\||');
 
         if(content.includes('<newLine/>')) {
             let result = originalContent;
