@@ -137,15 +137,18 @@ module.exports = async (content, splittedContent, link, namumark) => {
     const imgSpanClassList = [`wiki-image-align${options.align ? `-${options.align}` : ''}`];
     let imgSpanStyle = ``;
     let imgWrapperStyle = ``;
+    let imgAttrib = ``;
     let imgStyle = ``;
 
     if(options.width) {
         imgSpanStyle += `width:${options.width}${widthUnit};`;
-        imgWrapperStyle = `width: 100%;`
+        imgWrapperStyle += `width: 100%;`;
+        imgAttrib += ` width="100%"`;
     }
     if(options.height) {
         imgSpanStyle += `height:${options.height}${heightUnit};`;
-        imgWrapperStyle = `height: 100%;`
+        imgWrapperStyle += `height: 100%;`;
+        imgAttrib += ` height="100%"`;
     }
 
     if(options.bgcolor) imgWrapperStyle += `background-color:${options.bgcolor};`;
@@ -161,7 +164,7 @@ module.exports = async (content, splittedContent, link, namumark) => {
     return `
 <span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
-<img width="100%" height="100%" style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
+<img${imgAttrib} style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
 <img class="wiki-image" width="100%" height="100%" style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
 ${namumark.document.namespace === namespace && namumark.document.title === title 
     ? '' 
