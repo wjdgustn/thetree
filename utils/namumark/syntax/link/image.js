@@ -136,11 +136,17 @@ module.exports = async (content, splittedContent, link, namumark) => {
 
     const imgSpanClassList = [`wiki-image-align${options.align ? `-${options.align}` : ''}`];
     let imgSpanStyle = ``;
-    let imgWrapperStyle = `width: 100%; height: 100%;`;
+    let imgWrapperStyle = ``;
     let imgStyle = ``;
 
-    if(options.width) imgSpanStyle += `width:${options.width}${widthUnit};`;
-    if(options.height) imgSpanStyle += `height:${options.height}${heightUnit};`;
+    if(options.width) {
+        imgSpanStyle += `width:${options.width}${widthUnit};`;
+        imgWrapperStyle = `width: 100%;`
+    }
+    if(options.height) {
+        imgSpanStyle += `height:${options.height}${heightUnit};`;
+        imgWrapperStyle = `height: 100%;`
+    }
 
     if(options.bgcolor) imgWrapperStyle += `background-color:${options.bgcolor};`;
 
