@@ -225,7 +225,16 @@ const uploadFile = multer({
         fileSize: 1024 * 1024 * 10
     }
 }).single('file');
-app.post('/Upload', uploadFile,
+app.post('/Upload', (req, res, next) => {
+        uploadFile(req, res, err => {
+            if(err instanceof multer.MulterError)
+                return res.status(400).send(err.message);
+            else if(err)
+                return next(err);
+
+            next();
+        });
+    },
     body('document')
         .notEmpty()
         .withMessage('문서 제목을 입력해주세요.')
