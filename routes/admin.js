@@ -141,6 +141,15 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         return res.reload();
     }
 
+    else if(tool === 'removestringconfig') {
+        const newStringConfig = { ...global.stringConfig };
+        delete newStringConfig[req.query.key];
+        fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        updateConfig();
+
+        return res.reload();
+    }
+
     else if(tool === 'minifyjs') {
         minifyManager.minifyJS(true);
         return res.status(204).end();
@@ -540,13 +549,27 @@ app.post('/admin/config/configjson', middleware.permission('config'), (req, res)
 });
 
 app.post('/admin/config/stringconfig', middleware.permission('config'), (req, res) => {
-    let newObj = {};
-    for(let key of Object.keys(stringConfig)) {
-        newObj[key] = req.body[key] || '';
-    }
+    // let newObj = {};
+    // for(let key of Object.keys(stringConfig)) {
+    //     newObj[key] = req.body[key] || '';
+    // }
+    // fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    // updateConfig();
+    // return res.status(204).end();
+
+    const newObj = { ...global.stringConfig };
+    newObj[req.body.key] = req.body.value;
     fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.status(204).end();
+});
+
+app.post('/admin/config/stringconfig/add', middleware.permission('config'), (req, res) => {
+    const newObj = { ...global.stringConfig };
+    newObj[req.body.key] = '';
+    fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    updateConfig();
+    return res.reload();
 });
 
 const uploadStaticFile = multer({
