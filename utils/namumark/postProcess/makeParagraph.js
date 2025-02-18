@@ -132,13 +132,12 @@ module.exports = (sourceText, namumark, childParse = false, disableNoParagraph =
         .replaceAll('<removeNewlineLater/>', '<removeNewline/>')
         .replaceAll('<newLine/><removeNewline/>', '')
         .replaceAll('<removeNewline/><newLine/>', '')
-        .replaceAll('<removeNewline/>', '')
-
-        .replaceAll('<removeEscape/>\\', '');
+        .replaceAll('<removeNewline/>', '');
 
     if(!childParse || options.removeNamumarkEscape) text = text
         .replaceAll('<*', '')
-        .replaceAll('*>', '');
+        .replaceAll('*>', '')
+        .replaceAll('<removeEscape/>\\', '');
 
     const emptyTempParagraph = ParagraphOpen + ParagraphClose;
     if(text.startsWith(emptyTempParagraph)) text = text.slice(emptyTempParagraph.length);

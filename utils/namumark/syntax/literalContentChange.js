@@ -9,8 +9,8 @@ module.exports = {
     allowMultiline: true,
     format: async (content, namumark) => {
         // if(debug) {
-        //     delete require.cache[require.resolve('./literal/format')];
-        //     return require('./literal/format')(content, namumark);
+        //     delete require.cache[require.resolve('./literal/contentChange')];
+        //     return require('./literal/contentChange')(content, namumark);
         // }
         return ContentChange(content, namumark);
     }
