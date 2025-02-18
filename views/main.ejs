@@ -167,6 +167,13 @@
                         </span>
                     </div>
 
+                    <%if(req.permissions.includes('aclgroup_hidelog')) {%>
+                        <div class="form-block">
+                            <p>hidelog:</p>
+                            <input type="checkbox" name="hidelog" value="Y">
+                        </div>
+                    <%}%>
+
                     <div class="aclgroup-modal-buttons">
                         <button class="thetree-modal-button thetree-square-button thetree-danger-button">추가</button>
                         <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
