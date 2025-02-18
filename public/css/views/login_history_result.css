@@ -1,25 +1,20 @@
 @scope(.content-style) {
+    .table-container {
+        overflow-x: auto;
+    }
+
     table {
         background-color: transparent;
         border-collapse: collapse;
         border-spacing: 0;
         margin-bottom: 1rem;
-        max-width: 100%;
-        width: 100%;
     }
 
     table td, table th {
         border-top: 1px solid #eceeef;
         line-height: 1.5;
         padding: .5rem .7rem;
-    }
-
-    @media screen and (min-width: 1023.98px) {
-        table td:last-of-type {
-            max-width: 500px;
-            white-space: nowrap;
-            overflow-x: auto;
-        }
+        white-space: nowrap;
     }
 
     table tr:last-of-type td {

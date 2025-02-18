@@ -1059,8 +1059,7 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
 
     const logs = await LoginHistory.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
-        .limit(100)
-        .lean();
+        .limit(100);
 
     if(query._id?.$gte) logs.reverse();
 

@@ -31,12 +31,13 @@ const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
-const { UserTypes, permissionMenus, AllPermissions } = types;
+const { UserTypes, permissionMenus, AllPermissions, LoginHistoryTypes } = types;
 const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
 const AutoLoginToken = require('./schemas/autoLoginToken');
 const RequestLog = require('./schemas/requestLog');
+const LoginHistory = require('./schemas/loginHistory');
 
 const ACL = require('./class/acl');
 
@@ -495,6 +496,27 @@ app.use(async (req, res, next) => {
     });
     req.requestId = log._id.toString();
     log.save().then();
+
+    if(req.user) {
+        if(req.session.lastIp !== req.ip) {
+            req.session.lastIp = req.ip;
+            setTimeout(async () => {
+                const oldHistory = await LoginHistory.findOne({
+                    uuid: req.user.uuid,
+                    ip: req.ip,
+                    createdAt: {
+                        $gt: Date.now() - 1000 * 60 * 60
+                    }
+                });
+                if(!oldHistory) await LoginHistory.create({
+                    uuid: req.user.uuid,
+                    ip: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    type: LoginHistoryTypes.IPChange
+                });
+            }, 0);
+        }
+    }
 
     app.locals.rmWhitespace = true;
 

@@ -72,6 +72,10 @@ module.exports = {
         NamespaceACL: 0,
         DeleteThread: 1
     },
+    LoginHistoryTypes: {
+        Login: 0,
+        IPChange: 1
+    },
     AllPermissions: [
         'delete_thread',
         'admin',
