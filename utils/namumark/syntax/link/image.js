@@ -10,7 +10,10 @@ const ACL = require('../../../../class/acl');
 const { ACLTypes } = require('../../../types');
 
 module.exports = async (content, splittedContent, link, namumark) => {
-    if(!link.startsWith('파일:')) return;
+    const document = mainUtils.parseDocumentName(utils.unescapeHtml(link));
+    const { namespace, title } = document;
+
+    if(!namespace.includes('파일:')) return;
 
     const options = splittedContent.length === 1 ? {} : querystring.parse(utils.unescapeHtml(splittedContent[1]));
 
@@ -19,9 +22,6 @@ module.exports = async (content, splittedContent, link, namumark) => {
         text: link
     }
     if(namumark.thread) return fallback;
-
-    const document = mainUtils.parseDocumentName(utils.unescapeHtml(link));
-    const { namespace, title } = document;
 
     let rev;
     const fileDocCache = namumark.fileDocCache;
