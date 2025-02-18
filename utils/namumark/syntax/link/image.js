@@ -13,7 +13,7 @@ module.exports = async (content, splittedContent, link, namumark) => {
     const document = mainUtils.parseDocumentName(utils.unescapeHtml(link));
     const { namespace, title } = document;
 
-    if(!namespace.includes('파일:')) return;
+    if(!namespace.includes('파일')) return;
 
     const options = splittedContent.length === 1 ? {} : querystring.parse(utils.unescapeHtml(splittedContent[1]));
 
