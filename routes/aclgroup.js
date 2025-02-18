@@ -249,7 +249,8 @@ app.post('/aclgroup',
         hideLog: req.body.hidelog === 'Y'
     });
 
-    res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    if(req.referer?.pathname.startsWith('/aclgroup')) res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    else res.status(204).end();
 });
 
 app.post('/aclgroup/remove',

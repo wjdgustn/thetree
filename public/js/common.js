@@ -277,19 +277,25 @@ const formHandler = async e => {
 
     const inputs = form.querySelectorAll('input, select, textarea');
 
+    let probModal = e.target.parentElement.parentElement.parentElement;
+    if(!probModal.classList.contains('thetree-modal'))
+        probModal = null;
+
     if(response.status === 204) {
         restoreForm(true, form);
         setProgress(100);
         plainAlert();
         processFieldErrors(inputs);
+
+        if(probModal)
+            probModal._thetree.modal.close(true);
+
         return;
     }
 
     if(response.redirected) {
-        const probModal = e.target.parentElement.parentElement.parentElement;
-        if(probModal.classList.contains('thetree-modal')) {
+        if(probModal)
             probModal._thetree.modal.close(true);
-        }
 
         window.beforePageLoad = [];
         window.beforePopstate = null;
@@ -916,7 +922,7 @@ document.addEventListener('alpine:init', () => {
             quickBlockNote.value = note;
             quickBlockDuration.value = '0';
 
-            quickBlockModal.querySelector('.thetree-alert').hidden = true;
+            quickBlockModal.querySelector('.thetree-alert').style = 'display:none';
             quickBlockModal.querySelectorAll('.input-error').forEach(a => a.remove());
 
             quickBlockModal._thetree.modal.open();

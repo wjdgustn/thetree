@@ -465,6 +465,8 @@ app.use(async (req, res, next) => {
         }
     });
 
+    const referer = req.get('Referer');
+    req.referer = referer ? new URL(referer) : null;
     req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
     if(req.session.ipUser?.ip !== req.ip)
