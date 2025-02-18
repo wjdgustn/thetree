@@ -41,7 +41,7 @@
             <input id="logInput" name="log" @input="$refs.logLabel.innerText = $el.value.length ? `요약 (${$el.value.length}/255)` : '요약'">
         </div>
 
-        <span><%-config.editagree_text%></span>
+        <span><%-editagree_text%></span>
 
         <%if(session.account.type !== UserTypes.Account) {%>
         <div>

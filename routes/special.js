@@ -214,7 +214,8 @@ app.get('/Upload', async (req, res) => {
         contentName: 'special/upload',
         serverData: {
             licenses,
-            categories
+            categories,
+            editagree_text: config[`namespace.파일.editagree_text`] || config.editagree_text
         }
     });
 });

@@ -750,7 +750,8 @@ const editAndEditRequest = async (req, res) => {
             aclMessage,
             content,
             contentHtml,
-            useCaptcha
+            useCaptcha,
+            editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text
         }
     });
 }
