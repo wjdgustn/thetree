@@ -596,7 +596,7 @@ app.use(async (req, res, next) => {
         }
 
         if(viewName === 'wiki') {
-            data.serverData.copyright_text = config.copyright_text;
+            data.copyright_text = config.copyright_text;
             if(data.document) {
                 const nsKey = `namespace.${data.document.namespace}.copyright_text`;
                 if(config[nsKey]) data.serverData.copyright_text = config[nsKey];
