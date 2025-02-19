@@ -515,6 +515,17 @@ function setupDocument(forceCaptcha = false) {
 
     setupUserText();
 
+    const popup = document.getElementsByClassName('popup');
+    for(let p of popup) {
+        p.addEventListener('transitionend', e => {
+            if(p.classList.contains('popup-close'))
+                Object.assign(p.style, {
+                    left: '',
+                    top: ''
+                });
+        });
+    }
+
     emit('thetree:pageLoad');
 }
 
