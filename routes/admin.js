@@ -922,7 +922,14 @@ app.post('/admin/batch_revert',
                 _id: {
                     $lt: firstTrollRev._id
                 },
-                troll: false
+                troll: false,
+                type: {
+                    $in: [
+                        HistoryTypes.Create,
+                        HistoryTypes.Modify,
+                        HistoryTypes.Revert
+                    ]
+                }
             }).sort({ rev: -1 });
 
             if(lastNormalRev) {
