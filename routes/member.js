@@ -933,6 +933,7 @@ app.post('/member/change_email',
     body('email')
         .notEmpty().withMessage('이메일의 값은 필수입니다.')
         .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .normalizeEmail()
         .custom((value, {req}) => value !== req.user.email).withMessage('문서 내용이 같습니다.'),
     middleware.fieldErrors,
     async (req, res) => {
