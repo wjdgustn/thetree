@@ -140,8 +140,23 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
             }
         });
 
+    const existingIpToken = await SignupToken.findOne({
+        ip: req.ip
+    });
+    if(config.use_email_verification && existingIpToken && Date.now() - existingIpToken.createdAt < 1000 * 60 * 10)
+        return res.status(409).json({
+            fieldErrors: {
+                email: {
+                    msg: '해당 아이피에서 이미 계정 생성이 진행 중입니다.'
+                }
+            }
+        });
+
     await SignupToken.deleteMany({
         email
+    });
+    await SignupToken.deleteMany({
+        ip: req.ip
     });
 
     const newToken = new SignupToken({
