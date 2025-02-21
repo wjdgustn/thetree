@@ -1,5 +1,6 @@
 const fs = require('fs');
 
+const utils = require('../../utils');
 const { Priority } = require('../../types');
 
 const macros = {};
@@ -43,6 +44,8 @@ module.exports = {
     closeStr: `]`,
     format: async (content, namumark) => {
         // if(debug) loadMacros();
+
+        content = utils.parseIncludeParams(content, namumark.includeData);
 
         const openParamIndex = content.indexOf('(');
 
