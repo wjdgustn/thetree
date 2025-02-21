@@ -5,7 +5,11 @@
   "main": "main.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node main.js",
-    "test": "cross-env NODE_ENV=development nodemon main.js"
+    "test": "cross-env NODE_ENV=development nodemon main.js",
+    "pm2:start": "pm2 start main.js --name thetree --env production",
+    "pm2:stop": "pm2 stop thetree",
+    "pm2:restart": "pm2 restart thetree",
+    "pm2:delete": "pm2 delete thetree"
   },
   "repository": {
     "type": "git",
@@ -59,7 +63,8 @@
     "sqlite3": "^5.1.7",
     "uglify-js": "^3.19.3",
     "uuid-color": "^0.1.1",
-    "validate-color": "^2.2.4"
+    "validate-color": "^2.2.4",
+    "pm2": "^5.3.0"
   },
   "devDependencies": {
     "@socket.io/admin-ui": "^0.5.1",
