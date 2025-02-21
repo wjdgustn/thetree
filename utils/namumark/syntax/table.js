@@ -82,7 +82,7 @@ module.exports = {
                     const splittedTagStr = tagStr.split('=');
                     const [name, value] = splittedTagStr;
 
-                    const splittedValue = value?.split(',') ?? [];
+                    const splittedValue = (value || name)?.split(',') ?? [];
                     const [light, dark] = splittedValue;
 
                     if(!tagStr.startsWith('table')
@@ -255,10 +255,12 @@ module.exports = {
                         if(colKeepAll.includes(rowIndex)) break;
                         colKeepAll[rowIndex] = true;
                     }
-                    else if(utils.validateColor(tagStr)) {
+                    else if([1, 2].includes(splittedValue.length)
+                        && splittedValue.every(a => utils.validateColor(a))) {
                         if(tdStyle.includes(';background-color:')) break;
 
-                        tdStyle += `background-color:${tagStr};`;
+                        tdStyle += `background-color:${light};`;
+                        if(dark) tdDarkStyle += `background-color:${dark};`;
                     }
                     else break;
 
