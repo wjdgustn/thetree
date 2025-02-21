@@ -654,7 +654,7 @@ div.category-document-block div.category-document-many-content div:first-child h
     box-sizing: border-box;
 }
 
-@scope(.thetree-searchable-dropdown) {
+@scope(.thetree-searchable-dropdown-container) {
     .searchable-dropdown-toggle {
         appearance: none;
         background: none;
