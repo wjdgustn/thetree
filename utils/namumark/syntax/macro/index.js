@@ -23,6 +23,16 @@ const loadMacros = () => {
         if(macro.allowThread)
             threadMacros.push(macroName, ...(macro.aliases ?? []));
     }
+
+    for(let macro of plugins.macro) {
+        macros[macro.name] = macro.format;
+        if(macro.aliases)
+            for(let alias of macro.aliases)
+                macros[alias] = macro.format;
+
+        if(macro.allowThread)
+            threadMacros.push(plugin.name, ...(macro.aliases ?? []));
+    }
 }
 
 loadMacros();
@@ -37,7 +47,7 @@ module.exports = {
         const openParamIndex = content.indexOf('(');
 
         let name;
-        let params;
+        let params = '';
         if(openParamIndex === -1) name = content;
         else {
             if(!content.endsWith(')')) return;

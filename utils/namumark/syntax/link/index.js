@@ -333,7 +333,7 @@ module.exports = {
             text = text.slice(0, aPos) + text.slice(aClosePosEnd);
         }
 
-        const html = `<a href="${link}" title="${title ?? ''}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
+        const html = `<a href="${utils.escapeHtml(link)}" title="${utils.escapeHtml(title ?? '')}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
         if(isCategory) {
             // namumark.categoryHtmls.push(html);

@@ -58,7 +58,11 @@ module.exports = {
                 for(let i = 0; i < diff.count; i++) {
                     newLineArr.push(curr.uuid);
                 }
-                if(prevDiff?.removed && prevDiff.count === diff.count) offset += diff.count;
+                // if(prevDiff?.removed && prevDiff.count === diff.count) offset += diff.count;
+                // else if(prevDiff?.removed && prevDiff.count < diff.count) {
+                //     offset += diff.count - prevDiff.count;
+                // }
+                if(prevDiff?.removed) offset += prevDiff.count;
             }
             else {
                 for(let i = 0; i < diff.count; i++) {

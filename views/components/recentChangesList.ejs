@@ -19,7 +19,7 @@
         <div class="changes-value changes-value-center">
             <div class="changes-buttons">
                 <a role="button" class="thetree-button thetree-changes-button" href="<%=doc_action_link(rev.document.parsedName, 'history')%>">역사</a>
-                <%if(rev.type === HistoryTypes.Create) {%>
+                <%if(rev.rev === 1) {%>
                     <span role="button" class="thetree-button thetree-changes-button thetree-button-disabled">비교</span>
 
                 <%} else {%>

@@ -22,17 +22,23 @@ window.templates = <%-JSON.stringify(disabledFeaturesTemplates)%>;
 
         <h3 class="wiki-heading wiki-heading-folded">텍스트</h3>
         <div class="wiki-heading-content wiki-heading-content-folded">
-            <a class="thetree-button thetree-primary-button" href="/admin/config/tools/fixstringconfig">stringConfig.example.json 필드 추가</a>
+            <form method="post" action="/admin/config/stringconfig/add">
+                <input name="key" placeholder="key" required>
+                <button class="thetree-button thetree-primary-button">추가</button>
+                <a class="thetree-button thetree-primary-button" href="/admin/config/tools/fixstringconfig">stringConfig.example.json 필드 추가</a>
+            </form>
 
-            <form method="post" action="/admin/config/stringconfig">
-                <%for(let [key, value] of Object.entries(stringConfig)) {%>
+            <%for(let [key, value] of Object.entries(stringConfig)) {%>
+                <form method="post" action="/admin/config/stringconfig">
+                    <input type="hidden" name="key" value="<%=key%>">
                     <h4 class="wiki-heading wiki-heading-folded"><%=key%></h4>
                     <div class="wiki-heading-content wiki-heading-content-folded">
-                        <textarea name="<%=key%>" rows="10"><%=value%></textarea>
+                        <textarea name="value" rows="10"><%=value%></textarea>
+                        <button class="thetree-button thetree-primary-button">적용</button>
+                        <a class="thetree-button thetree-danger-button" href="/admin/config/tools/removestringconfig?key=<%=encodeURIComponent(key)%>">삭제</a>
                     </div>
-                <%}%>
-                <button class="thetree-button thetree-primary-button">적용</button>
-            </form>
+                </form>
+            <%}%>
         </div>
     </div>
 

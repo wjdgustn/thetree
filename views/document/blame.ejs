@@ -26,9 +26,10 @@
                     uuid: diff.history.revertUuid
                 })}">${infoHtml}</a>`;%>
 
-                <th rowspan="<%=remainingCount%>" style="background-color: <%=utils.increaseBrightness(colorFromUuid(diff.user.uuid), 60)%>"><a href="<%=doc_action_link(document, 'diff', {
+                <%const isRev1 = diff.history.rev === 1;%>
+                <th rowspan="<%=remainingCount%>" style="background-color: <%=utils.increaseBrightness(colorFromUuid(diff.user.uuid), 60)%>"><%if(!isRev1) {%><a href="<%=doc_action_link(document, 'diff', {
                         uuid: diff.uuid
-                    })%>">r<%=diff.history.rev%></a><br><%-userHtml(diff.user);%><%-infoHtml ? `<br>${infoHtml}` : ''%></th>
+                    })%>"><%}%>r<%=diff.history.rev%><%if(!isRev1) {%></a><%}%><br><%-userHtml(diff.user);%><%-infoHtml ? `<br>${infoHtml}` : ''%></th>
             <%}%>
             <%remainingCount--;%>
 

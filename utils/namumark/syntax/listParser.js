@@ -225,7 +225,7 @@ module.exports = {
             // 닫는 paragraph 안 지워진 문제 하드코딩
             // if(isLastLine && newLine.endsWith('</div>')) newLine = newLine.slice(0, -'</div>'.length);
 
-            if(newLines.length) newLines[newLines.length - 1] += prevLine;
+            if(newLines.length && !prevLine.startsWith('<!noParagraph>')) newLines[newLines.length - 1] += prevLine;
             else if(prevLine) newLines.push(prevLine);
             if(newLine != null) newLines.push(newLine);
         }

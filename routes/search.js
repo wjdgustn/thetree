@@ -1,6 +1,7 @@
 const express = require('express');
 
 const utils = require('../utils');
+const namumarkUtils = require('../utils/namumark/utils');
 const globalUtils = require('../utils/global');
 const { ACLTypes } = require('../utils/types');
 
@@ -20,7 +21,7 @@ app.get('/Complete', async (req, res) => {
     const document = utils.parseDocumentName(req.query.q);
 
     const filter = ['anyoneReadable = true'];
-    if(document.namespaceExists) filter.push(`namespace = ${document.namespace}`);
+    if(document.namespaceExists) filter.push(`namespace = '${document.namespace}'`);
     else filter.push(`namespace = 문서`);
 
     const result = await documentIndex.search(document.title, {
@@ -70,9 +71,9 @@ app.get('/Search', async (req, res) => {
     const attributesToCrop = [];
 
     if(req.query.namespace && readableNamespaces.includes(req.query.namespace))
-        filter.push(`namespace = ${req.query.namespace}`);
+        filter.push(`namespace = '${req.query.namespace}'`);
     else
-        filter.push(readableNamespaces.map(a => `namespace = ${a}`));
+        filter.push(readableNamespaces.map(a => `namespace = '${a}'`));
 
     switch(req.query.target || 'title_content') {
         case 'title_content':
@@ -106,10 +107,34 @@ app.get('/Search', async (req, res) => {
         attributesToRetrieve,
         attributesToSearchOn,
         attributesToHighlight: attributesToCrop,
-        highlightPreTag: '<span class="search-highlight">',
-        highlightPostTag: '</span>',
+        highlightPreTag: '',
+        highlightPostTag: '',
+        showMatchesPosition: true,
         attributesToCrop,
         cropLength: 64
+    });
+
+    result.hits = result.hits.map(a => {
+        for(let key of ['raw']) {
+            const prevStr = a._formatted[key];
+            if(!prevStr) continue;
+            a._formatted[key] = namumarkUtils.escapeHtml(prevStr);
+
+            const matchesPosition = a._matchesPosition[key] ?? [];
+            for(let pos of matchesPosition.reverse()) {
+                const frontPrev = prevStr.slice(0, pos.start);
+                const frontNew = namumarkUtils.escapeHtml(frontPrev);
+                const frontExtendedLen = frontNew.length - frontPrev.length;
+
+                const backPrev = prevStr.slice(pos.start + pos.length);
+                const backNew = namumarkUtils.escapeHtml(backPrev);
+                const backExtendedLen = backNew.length - backPrev.length;
+
+                a._formatted[key] = namumarkUtils.insertText(a._formatted[key], pos.start + backExtendedLen + pos.length, '</span>');
+                a._formatted[key] = namumarkUtils.insertText(a._formatted[key], pos.start + frontExtendedLen, '<span class="search-highlight">');
+            }
+        }
+        return a;
     });
 
     res.renderSkin('검색', {

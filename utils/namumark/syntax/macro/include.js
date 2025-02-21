@@ -1,7 +1,8 @@
 const utils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 const {
-    ACLTypes
+    ACLTypes,
+    BacklinkFlags
 } = require('../../../../utils/types');
 
 const Document = require('../../../../schemas/document');
@@ -54,6 +55,11 @@ module.exports = async (params, namumark) => {
     // if(removeNewParagraph) params = params.slice('<removeNewParagraph/>'.length);
     const removeNoParagraph = params.startsWith('<!noParagraph>');
     if(removeNoParagraph) params = params.slice('<!noParagraph>'.length);
+
+    if(!namumark.syntaxData.contentCache && namumark.dbDocument) {
+        const includes = namumark.dbDocument.backlinks.filter(a => a.flags.includes(BacklinkFlags.Include));
+        await Promise.allSettled(includes.map(a => getCachedDocument(a.docName, namumark)));
+    }
 
     params = params.split(/(?<!\\),/).map(a => a.replaceAll('\\,', ','));
 

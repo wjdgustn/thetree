@@ -21,7 +21,9 @@ const newSchema = new Schema({
     },
     ip: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
+        index: true
     },
     createdAt: {
         type: Date,

@@ -22,7 +22,7 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
 
 엔진을 위키 구동에 사용하는 것을 허가하나, 엔진 수정 및 재배포는 금지합니다.
 
-엔진을 별도로 수정하는 등 협의를 원하시면 개인적으로 연락해주시기 바랍니다.
+엔진의 플러그인 기능(매크로 추가 등 가능) 사용을 원하시거나 엔진을 별도로 수정하는 등 협의를 원하시면 개인적으로 연락해주시기 바랍니다.
 
 개발자 디스코드(빠른 확인): @hyonsu(DM을 전송할 수 없는 경우 [개인 디스코드 서버](https://discord.gg/z7pk8pWhD7) 입장)
 
@@ -35,7 +35,7 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
 > 이슈에 엔진과 관련되지 않은 질문 시 통보 없이 닫기 처리될 수 있습니다.
 1. git clone 명령어를 통해 엔진을 다운로드합니다.
    ```shell
-   git clone https://github.com/wjdgustn/thetree
+   git clone https://github.com/wjdgustn/thetree --recurse-submodules
    ```
    git clone을 통해 다운로드하지 않을 경우 업데이트 기능이 작동하지 않으며, git이 설치되어있지 않으면 엔진을 구동할 수 없습니다.
 1. .env.example을 .env로 복사한 뒤 내용을 채워넣습니다.

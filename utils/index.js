@@ -400,8 +400,17 @@ module.exports = {
 
         return arr;
     },
-    generateDiff(oldText, newText, changeAroundLines = 3) {
-        const lineDiff = Diff.diffLines(oldText || '', newText || '').map(a => ({
+    async generateDiff(oldText, newText, changeAroundLines = 3) {
+        oldText = oldText?.replaceAll('\r\n', '\n');
+        newText = newText?.replaceAll('\r\n', '\n');
+
+        const lineDiffResult = await new Promise(resolve => {
+            Diff.diffLines(oldText || '', newText || '', {
+                timeout: 5000,
+                callback: resolve
+            });
+        });
+        const lineDiff = lineDiffResult.map(a => ({
             ...a,
             value: namumarkUtils.escapeHtml(a.value.endsWith('\n') ? a.value.slice(0, -1) : a.value)
         }));
@@ -488,10 +497,20 @@ module.exports = {
 
                             lineCompared = true;
 
-                            const diff = Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent));
+                            const diff = await new Promise(resolve => {
+                                Diff.diffChars(namumarkUtils.unescapeHtml(content), namumarkUtils.unescapeHtml(nextContent), {
+                                    timeout: 1000,
+                                    callback: resolve
+                                });
+                            });
+                            // if(!diff) throw new Error('diff timeout');
                             let c = '';
                             let n = '';
-                            for(let d of diff) {
+                            if(!diff) {
+                                c += content;
+                                n += nextContent;
+                            }
+                            else for(let d of diff) {
                                 if(!d.added && !d.removed) {
                                     const val = namumarkUtils.escapeHtml(d.value);
                                     c += val;
@@ -673,27 +692,49 @@ module.exports = {
             originalPageButton
         }
     },
-    durationToExactString(duration, en = false) {
-        const weeks = duration / (1000 * 60 * 60 * 24 * 7);
-        const absoluteWeeks = Math.floor(weeks);
-        const w = absoluteWeeks ? (absoluteWeeks + '주 ') : '';
+    durationToExactString(duration) {
+        const strs = [];
 
-        const days = (weeks - absoluteWeeks) * 7;
-        const absoluteDays = Math.floor(days);
-        const d = absoluteDays ? (absoluteDays + (en ? ` Day${absoluteDays > 1 ? 's' : ''} ` : '일 ')) : '';
+        let weeks = 0;
+        const week = 1000 * 60 * 60 * 24 * 7;
+        while(duration >= week) {
+            duration -= week;
+            weeks++;
+        }
+        if(weeks) strs.push(`${weeks}주`);
 
-        const hours = (days - absoluteDays) * 24;
-        const absoluteHours = Math.floor(hours);
-        const h = absoluteHours ? (absoluteHours + (en ? ` Hour${absoluteHours > 1 ? 's' : ''} ` : '시간 ')) : '';
+        let days = 0;
+        const day = 1000 * 60 * 60 * 24;
+        while(duration >= day) {
+            duration -= day;
+            days++;
+        }
+        if(days) strs.push(`${days}일`);
 
-        const minutes = (hours - absoluteHours) * 60;
-        const absoluteMinutes = Math.floor(minutes);
-        const m = absoluteMinutes ? (absoluteMinutes + (en ? ` Minute${absoluteMinutes > 1 ? 's' : ''} ` : '분 ')) : '';
+        let hours = 0;
+        const hour = 1000 * 60 * 60;
+        while(duration >= hour) {
+            duration -= hour;
+            hours++;
+        }
+        if(hours) strs.push(`${hours}시간`);
 
-        const seconds = (minutes - absoluteMinutes) * 60;
-        const absoluteSeconds = Math.round(seconds * 1000) / 1000;
-        const s = absoluteSeconds ? (absoluteSeconds + (en ? ` Second${absoluteSeconds > 1 ? 's' : ''} ` : '초 ')) : '';
+        let minutes = 0;
+        const minute = 1000 * 60;
+        while(duration >= minute) {
+            duration -= minute;
+            minutes++;
+        }
+        if(minutes) strs.push(`${minutes}분`);
 
-        return (w + d + h + m + s).trim();
+        let seconds = 0;
+        const second = 1000;
+        while(duration >= second) {
+            duration -= second;
+            seconds++;
+        }
+        if(seconds) strs.push(`${seconds}초`);
+
+        return strs.join(' ');
     }
 }

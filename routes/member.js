@@ -41,7 +41,8 @@ app.post('/member/signup',
     middleware.isLogout,
     body('email')
         .notEmpty().withMessage('이메일의 값은 필수입니다.')
-        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.'),
+        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .normalizeEmail(),
     body('agree').exists().withMessage('동의의 값은 필수입니다.'),
     middleware.fieldErrors,
     middleware.captcha,
@@ -139,8 +140,23 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
             }
         });
 
+    const existingIpToken = await SignupToken.findOne({
+        ip: req.ip
+    });
+    if(config.use_email_verification && existingIpToken && Date.now() - existingIpToken.createdAt < 1000 * 60 * 10)
+        return res.status(409).json({
+            fieldErrors: {
+                email: {
+                    msg: '해당 아이피에서 이미 계정 생성이 진행 중입니다.'
+                }
+            }
+        });
+
     await SignupToken.deleteMany({
         email
+    });
+    await SignupToken.deleteMany({
+        ip: req.ip
     });
 
     const newToken = new SignupToken({
@@ -709,7 +725,7 @@ app.get('/contribution/:uuid/edit_request',
 });
 
 const checkDeletable = async user => {
-    let noActivityTime = 1000 * 60 * 60 * 24;
+    let noActivityTime = 1000 * 60 * 60 * (config.withdraw_last_activity_hours ?? 24);
     let blacklistDuration = config.withdraw_save_days * 1000 * 60 * 60 * 24;
 
     const aclGroups = await ACLGroup.find({
@@ -751,14 +767,14 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
     if(config.withdraw_save_days == null)
         return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
 
-    const { deletable, blacklistDuration } = await checkDeletable(req.user);
-    console.log(await checkDeletable(req.user));
+    const { deletable, blacklistDuration, noActivityTime } = await checkDeletable(req.user);
 
     res.renderSkin('회원 탈퇴', {
         contentName: 'member/withdraw',
         serverData: {
             blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
-            alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.'
+            alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.',
+            noActivityTime
         }
     });
 });
@@ -810,10 +826,10 @@ app.post('/member/withdraw',
         ]
     });
     for(let dbDocument of userDocs) {
-        const newDbDocument = await Document.updateOne({
+        const newDbDocument = await Document.findOneAndUpdate({
             uuid: dbDocument.uuid
         }, {
-            title: dbDocument.title.replace(`${req.user.name}/`, `*${req.user.uuid}/`)
+            title: dbDocument.title.replace(`${req.user.name}`, `*${req.user.uuid}`)
         }, {
             new: true
         });
@@ -888,10 +904,10 @@ app.post('/member/change_name',
         ]
     });
     for(let dbDocument of userDocs) {
-        const newDbDocument = await Document.updateOne({
+        const newDbDocument = await Document.findOneAndUpdate({
             uuid: dbDocument.uuid
         }, {
-            title: dbDocument.title.replace(`${req.user.name}/`, `*${req.body.name}/`)
+            title: dbDocument.title.replace(`${req.user.name}`, `${req.body.name}`)
         }, {
             new: true
         });
@@ -932,6 +948,7 @@ app.post('/member/change_email',
     body('email')
         .notEmpty().withMessage('이메일의 값은 필수입니다.')
         .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .normalizeEmail()
         .custom((value, {req}) => value !== req.user.email).withMessage('문서 내용이 같습니다.'),
     middleware.fieldErrors,
     async (req, res) => {

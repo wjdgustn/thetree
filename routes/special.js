@@ -214,7 +214,8 @@ app.get('/Upload', async (req, res) => {
         contentName: 'special/upload',
         serverData: {
             licenses,
-            categories
+            categories,
+            editagree_text: config[`namespace.파일.editagree_text`] || config.editagree_text
         }
     });
 });
@@ -225,7 +226,16 @@ const uploadFile = multer({
         fileSize: 1024 * 1024 * 10
     }
 }).single('file');
-app.post('/Upload', uploadFile,
+app.post('/Upload', (req, res, next) => {
+        uploadFile(req, res, err => {
+            if(err instanceof multer.MulterError)
+                return res.status(400).send(err.message);
+            else if(err)
+                return next(err);
+
+            next();
+        });
+    },
     body('document')
         .notEmpty()
         .withMessage('문서 제목을 입력해주세요.')
@@ -483,6 +493,20 @@ app.get('/random', async (req, res) => {
     const document = utils.dbDocumentToDocument(docs[0]);
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
+});
+
+app.get('/opensearch.xml', (req, res) => {
+    res.setHeader('Content-Type', 'application/xml');
+    res.send(`
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>${config.site_name}</ShortName>
+  <Description>${config.site_name}</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16">${new URL('/favicon.ico', config.base_url)}</Image>
+  <Url type="text/html" method="GET" template="${new URL(`/Go?q={searchTerms}`, config.base_url)}"/>
+  <moz:SearchForm>${new URL('/', config.base_url)}</moz:SearchForm>
+</OpenSearchDescription>
+    `.trim());
 });
 
 module.exports = app;

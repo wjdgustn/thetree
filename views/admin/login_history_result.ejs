@@ -18,22 +18,26 @@ const navigationPage = include('../components/pageButton', {
 <p>이메일 : <%=targetUser?.email%></p>
 
 <div class="navigation-div navigation-page"><%-navigationPage%></div>
-<table>
-    <thead>
-    <tr>
-        <th>DATE</th>
-        <th>IP</th>
-        <th>UA</th>
-    </tr>
-    </thead>
-    <tbody>
-    <%for(let log of logs) {%>
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>DATE</th>
+            <th>TYPE</th>
+            <th>IP</th>
+            <th>UA</th>
+        </tr>
+        </thead>
+        <tbody>
+        <%for(let log of logs) {%>
         <tr>
             <td><%-getFullDateTag(log.createdAt)%></td>
+            <td><%=utils.getKeyFromObject(LoginHistoryTypes, log.type) ?? log.type%></td>
             <td><%=log.ip%></td>
             <td><%=log.userAgent%></td>
         </tr>
-    <%}%>
-    </tbody>
-</table>
+        <%}%>
+        </tbody>
+    </table>
+</div>
 <div class="navigation-div navigation-page"><%-navigationPage%></div>

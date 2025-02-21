@@ -141,6 +141,15 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         return res.reload();
     }
 
+    else if(tool === 'removestringconfig') {
+        const newStringConfig = { ...global.stringConfig };
+        delete newStringConfig[req.query.key];
+        fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        updateConfig();
+
+        return res.reload();
+    }
+
     else if(tool === 'minifyjs') {
         minifyManager.minifyJS(true);
         return res.status(204).end();
@@ -540,13 +549,27 @@ app.post('/admin/config/configjson', middleware.permission('config'), (req, res)
 });
 
 app.post('/admin/config/stringconfig', middleware.permission('config'), (req, res) => {
-    let newObj = {};
-    for(let key of Object.keys(stringConfig)) {
-        newObj[key] = req.body[key] || '';
-    }
+    // let newObj = {};
+    // for(let key of Object.keys(stringConfig)) {
+    //     newObj[key] = req.body[key] || '';
+    // }
+    // fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    // updateConfig();
+    // return res.status(204).end();
+
+    const newObj = { ...global.stringConfig };
+    newObj[req.body.key] = req.body.value;
     fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.status(204).end();
+});
+
+app.post('/admin/config/stringconfig/add', middleware.permission('config'), (req, res) => {
+    const newObj = { ...global.stringConfig };
+    newObj[req.body.key] = '';
+    fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    updateConfig();
+    return res.reload();
 });
 
 const uploadStaticFile = multer({
@@ -899,10 +922,22 @@ app.post('/admin/batch_revert',
                 _id: {
                     $lt: firstTrollRev._id
                 },
-                troll: false
+                troll: false,
+                type: {
+                    $in: [
+                        HistoryTypes.Create,
+                        HistoryTypes.Modify,
+                        HistoryTypes.Revert
+                    ]
+                }
             }).sort({ rev: -1 });
 
             if(lastNormalRev) {
+                if(lastTrollRev.type === HistoryTypes.Revert && lastTrollRev.revertRev === lastNormalRev.rev) {
+                    failResultText.push(`${fullTitleLink}: 되돌릴 기여 동일`);
+                    return resolve();
+                }
+
                 const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
                 if(!result) {
                     failResultText.push(`${fullTitleLink}: ${aclMessage}`);
@@ -997,6 +1032,9 @@ app.post('/admin/login_history',
         && (targetUser.permissions.includes('developer') || targetUser.permissions.includes('hideip')))
         return res.status(403).send('권한이 부족합니다.');
 
+    if(config.testwiki && !req.permissions.includes('config') && targetUser.uuid !== req.user.uuid)
+        return res.status(403).send('다른 사용자의 로그인 기록을 조회할 수 없습니다.');
+
     const sessionId = crypto.randomBytes(32).toString('hex');
     req.session.loginHistorySession ??= {};
     req.session.loginHistorySession[sessionId] = {
@@ -1016,14 +1054,14 @@ app.post('/admin/login_history',
 });
 
 app.get('/admin/login_history/:session', middleware.permission('login_history'), async (req, res) => {
-    for(let id of Object.keys(req.session.loginHistorySession)) {
+    if(req.session.loginHistorySession) for(let id of Object.keys(req.session.loginHistorySession)) {
         const session = req.session.loginHistorySession[id];
         if(session.loginHistoryExpiresAt < Date.now()) {
             delete req.session.loginHistorySession[id];
         }
     }
 
-    const session = req.session.loginHistorySession[req.params.session];
+    const session = req.session.loginHistorySession?.[req.params.session];
 
     const uuid = session?.loginHistoryTargetUser;
     if(!uuid) return res.redirect('/admin/login_history');
@@ -1051,8 +1089,7 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
 
     const logs = await LoginHistory.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
-        .limit(100)
-        .lean();
+        .limit(100);
 
     if(query._id?.$gte) logs.reverse();
 

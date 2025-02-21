@@ -54,7 +54,7 @@ function contentLoadedHandler() {
             input.value = State.getLocalConfig(input.id);
         }
 
-        State.localConfig[input.id] = defaultConfig[input.id];
+        State.localConfig[input.id] ??= defaultConfig[input.id];
     }
 }
 
@@ -277,19 +277,25 @@ const formHandler = async e => {
 
     const inputs = form.querySelectorAll('input, select, textarea');
 
+    let probModal = e.target.parentElement.parentElement.parentElement;
+    if(!probModal.classList.contains('thetree-modal'))
+        probModal = null;
+
     if(response.status === 204) {
         restoreForm(true, form);
         setProgress(100);
         plainAlert();
         processFieldErrors(inputs);
+
+        if(probModal)
+            probModal._thetree.modal.close(true);
+
         return;
     }
 
     if(response.redirected) {
-        const probModal = e.target.parentElement.parentElement.parentElement;
-        if(probModal.classList.contains('thetree-modal')) {
+        if(probModal)
             probModal._thetree.modal.close(true);
-        }
 
         window.beforePageLoad = [];
         window.beforePopstate = null;
@@ -298,7 +304,7 @@ const formHandler = async e => {
 
     const html = await response.text();
 
-    if(response.status.toString().startsWith('4')) {
+    if(response.status.toString().startsWith('4') && !html.startsWith('<')) {
         let json;
         try {
             json = JSON.parse(html);
@@ -308,7 +314,7 @@ const formHandler = async e => {
 
         setProgress(100);
 
-        if(!json?.fieldErrors && !html.startsWith('<')) {
+        if(!json?.fieldErrors) {
             processFieldErrors(inputs);
 
             if(html.includes('캡챠')) {
@@ -320,7 +326,7 @@ const formHandler = async e => {
         }
         else return plainAlert();
     }
-    if(response.status.toString().startsWith('5')) {
+    if(response.status.toString().startsWith('5') && html.includes('<')) {
         location.reload();
     }
 
@@ -370,7 +376,7 @@ function updateTimeTag() {
 
 let skipScrollToTop = false;
 function focusAnchor() {
-    const hash = location.hash.slice(1);
+    const hash = decodeURIComponent(location.hash.slice(1));
     if(hash) {
         let element;
         if(hash === 'toc')
@@ -509,6 +515,17 @@ function setupDocument(forceCaptcha = false) {
 
     setupUserText();
 
+    const popup = document.getElementsByClassName('popup');
+    for(let p of popup) {
+        p.addEventListener('transitionend', e => {
+            if(p.classList.contains('popup-close'))
+                Object.assign(p.style, {
+                    left: '',
+                    top: ''
+                });
+        });
+    }
+
     emit('thetree:pageLoad');
 }
 
@@ -569,7 +586,7 @@ async function movePage(response, pushState = true, prevUrl = null) {
         setProgress(100);
         return plainAlert(html);
     }
-    else if(response.status.toString().startsWith('5')) {
+    else if(response.status.toString().startsWith('5') && html.startsWith('<')) {
         location.reload();
     }
     else plainAlert();
@@ -758,7 +775,8 @@ window.addEventListener('beforeunload', e => {
 
 const getLocalConfig = key => (window.State ? State.localConfig : localConfig)[key] ?? defaultConfig[key];
 
-const localConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
+const userLocalConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
+const localConfig = { ...userLocalConfig };
 document.addEventListener('alpine:init', () => {
     Alpine.store('state', {
         page,
@@ -915,7 +933,7 @@ document.addEventListener('alpine:init', () => {
             quickBlockNote.value = note;
             quickBlockDuration.value = '0';
 
-            quickBlockModal.querySelector('.thetree-alert').hidden = true;
+            quickBlockModal.querySelector('.thetree-alert').style = 'display:none';
             quickBlockModal.querySelectorAll('.input-error').forEach(a => a.remove());
 
             quickBlockModal._thetree.modal.open();
@@ -976,14 +994,21 @@ document.addEventListener('alpine:init', () => {
         },
         setLocalConfig(key, value) {
             this.localConfig[key] = value;
-            localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig));
+            userLocalConfig[key] = value;
+            localStorage.setItem('thetree_settings', JSON.stringify(userLocalConfig));
 
             emit('thetree:configChange');
 
             if(key === 'wiki.no_relative_date') updateTimeTag();
+
+            const input = document.getElementById(key);
+            const isCheckbox = input.type === 'checkbox';
+            if(isCheckbox) input.checked = value;
+            else input.value = value;
         },
         get currentTheme() {
-            return this.getLocalConfig('wiki.theme');
+            const theme = this.getLocalConfig('wiki.theme');
+            return theme === 'auto' ? defaultConfig['wiki.theme'] : theme;
         }
     });
     window.State = Alpine.store('state');

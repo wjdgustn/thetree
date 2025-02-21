@@ -136,7 +136,8 @@ module.exports = (sourceText, namumark, childParse = false, disableNoParagraph =
 
     if(!childParse || options.removeNamumarkEscape) text = text
         .replaceAll('<*', '')
-        .replaceAll('*>', '');
+        .replaceAll('*>', '')
+        .replaceAll('<removeEscape/>\\', '');
 
     const emptyTempParagraph = ParagraphOpen + ParagraphClose;
     if(text.startsWith(emptyTempParagraph)) text = text.slice(emptyTempParagraph.length);

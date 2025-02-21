@@ -5,6 +5,7 @@
 
   "namespaces": [],
 
+  "withdraw_last_activity_hours": 24,
   "withdraw_save_days": 0,
 
   "grant_permissions": [
@@ -32,5 +33,10 @@
 
   "external_link_icons": {
     "파일:홈페이지 아이콘.svg": ""
+  },
+
+  "content_security_policy": {
+    "frameSrc": [],
+    "connectSrc": []
   }
 }

@@ -26,11 +26,6 @@
     border-color: #383b40;
 }
 
-.theseed-dark-mode .thetree-blue-button {
-    background-color: #1555b5;
-    border-color: #052e6d;
-}
-
 .theseed-dark-mode .thetree-button {
     background-color: #282829;
     border-color: #484848;
@@ -39,6 +34,15 @@
 
 .theseed-dark-mode .thetree-button:hover:not([disabled]):not(.thetree-button-disabled) {
     background-color: #555 !important;
+}
+
+.theseed-dark-mode .thetree-blue-button {
+    background-color: #1555b5 !important;
+    border-color: #052e6d !important;
+}
+
+.theseed-dark-mode .thetree-blue-button:not([disabled]):not(.thetree-button-disabled):hover {
+    background-color: #1e5ebd !important;
 }
 
 .theseed-dark-mode .thetree-primary-button {

@@ -61,7 +61,12 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 
         threadExists = await Thread.exists({
             document: dbDocument.uuid,
-            status: ThreadStatusTypes.Normal,
+            status: {
+                $ne: ThreadStatusTypes.Close
+            },
+            lastUpdatedAt: {
+                $gte: new Date(Date.now() - 1000 * 60 * 60 * 24)
+            },
             deleted: false
         });
         threadExists ||= await EditRequest.exists({
@@ -694,7 +699,7 @@ const editAndEditRequest = async (req, res) => {
 
         if(conflict) req.flash.conflict = {
             editedRev: baseRev.rev,
-            diff: utils.generateDiff(baseRev.content, editRequest.content)
+            diff: await utils.generateDiff(baseRev.content, editRequest.content)
         }
     }
 
@@ -745,7 +750,8 @@ const editAndEditRequest = async (req, res) => {
             aclMessage,
             content,
             contentHtml,
-            useCaptcha
+            useCaptcha,
+            editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text
         }
     });
 }
@@ -1008,7 +1014,7 @@ const postEditAndEditRequest = async (req, res) => {
         else {
             req.session.flash.conflict = {
                 editedRev: editedRev.rev,
-                diff: utils.generateDiff(editedRev.content, req.body.text)
+                diff: await utils.generateDiff(editedRev.content, req.body.text)
             }
             return res.redirect(req.originalUrl);
         }
@@ -1132,7 +1138,7 @@ app.get('/edit_request/:url', async (req, res) => {
             contentHtml,
             editRequest,
             baseRev,
-            diff: utils.generateDiff(baseRev.content, editRequest.content),
+            diff: await utils.generateDiff(baseRev.content, editRequest.content),
             conflict,
             editable,
             selfCreated: editRequest.createdUser.uuid === req.user?.uuid
@@ -1378,13 +1384,16 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
+    if(currentRev.content == null && namespace === '사용자' && (!title.includes('/') || title.startsWith('*')))
+        return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+
     if(rev.content === currentRev.content) return res.error('문서 내용이 같습니다.');
 
     await History.create({
         user: req.user.uuid,
         type: HistoryTypes.Revert,
         document: dbDocument.uuid,
-        revertRev: rev.rev,
+        revertRev: rev.revertRev || rev.rev,
         revertUuid: rev.uuid,
         content: rev.content,
         fileKey: rev.fileKey,
@@ -1436,7 +1445,14 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    const { lineDiff, diffLines } = utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
+    let lineDiff, diffLines;
+    try {
+        const result = await utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
+        lineDiff = result.lineDiff;
+        diffLines = result.diffLines;
+    } catch(e) {
+        return res.status(500).send(e.message);
+    }
 
     res.renderSkin(undefined, {
         contentName: 'document/diff',
@@ -1476,11 +1492,11 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: req.query.uuid
     });
 
-    if(!req.query.uuid || !rev) res.error('해당 리비전이 존재하지 않습니다.', 404);
+    if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    if(!rev.blame) return res.error('blame 데이터를 찾을 수 없습니다.');
+    if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
     let blame = await utils.findHistories(rev.blame, req.permissions.includes('admin'));
     blame = await utils.findUsers(blame);

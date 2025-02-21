@@ -27,19 +27,17 @@ const util = require('util');
 
 global.debug = process.env.NODE_ENV === 'development';
 
-const NamumarkParser = require('./utils/namumark');
-global.NamumarkParser = NamumarkParser;
-
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
-const { UserTypes, permissionMenus, AllPermissions } = types;
+const { UserTypes, permissionMenus, AllPermissions, LoginHistoryTypes } = types;
 const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
 const AutoLoginToken = require('./schemas/autoLoginToken');
 const RequestLog = require('./schemas/requestLog');
+const LoginHistory = require('./schemas/loginHistory');
 
 const ACL = require('./class/acl');
 
@@ -75,7 +73,7 @@ global.disabledFeatures = fs.existsSync(disabledFeaturesPath) ? JSON.parse(fs.re
 require('dotenv').config();
 
 global.S3 = new aws.S3Client({
-    region: 'auto',
+    region: process.env.S3_REGION || 'auto',
     endpoint: process.env.S3_ENDPOINT,
     credentials: {
         accessKeyId: process.env.S3_ACCESS_KEY_ID,
@@ -169,12 +167,13 @@ global.checkUpdate = async () => {
         commitId: newCommits[newCommits.length - 1].sha,
         commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
         versionData: newVerionData,
-        updateRequired: newVerionData.lastForceUpdate > Date.now(),
+        updateRequired: newVerionData.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
         lastUpdateCheck: new Date()
     };
 
-    if(global.newVersionInfo.updateRequired) {
-        console.log('force updating...');
+    if(global.versionInfo.commitId !== global.newVersionInfo.commitId
+        && (global.newVersionInfo.updateRequired || config.auto_update)) {
+        console.log('auto updating...');
         global.updateEngine();
     }
 }
@@ -195,6 +194,34 @@ global.updateEngine = (exit = true) => {
         });
     } catch(e) {}
 }
+
+global.plugins = {
+    macro: [],
+    skinData: []
+};
+global.reloadPlugins = () => {
+    for(let key in plugins) plugins[key] = [];
+
+    const loadPlugins = dir => {
+        if(!fs.existsSync(dir)) return;
+
+        const files = fs.readdirSync(dir);
+        for(let f of files) {
+            if(f.endsWith('.js')) {
+                const pluginPath = require.resolve(path.resolve(dir, f));
+                delete require.cache[pluginPath];
+                const plugin = require(pluginPath);
+                plugins[plugin.type].push(plugin);
+            }
+            else loadPlugins(path.join(dir, f));
+        }
+    }
+    loadPlugins('./plugins');
+}
+reloadPlugins();
+
+const NamumarkParser = require('./utils/namumark');
+global.NamumarkParser = NamumarkParser;
 
 require('./schemas')();
 
@@ -266,24 +293,45 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com', '*.googletagmanager.com'],
-            imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.googletagmanager.com', '*.google-analytics.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
-            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
-            fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
-            frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
-            connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com'],
-            ...(debug ? {
-                upgradeInsecureRequests: null
-            } : {})
+app.use((req, res, next) => {
+    const directives = {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com', '*.googletagmanager.com'],
+        imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.googletagmanager.com', '*.google-analytics.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
+        styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
+        fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
+        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
+        connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com'],
+        ...(debug ? {
+            upgradeInsecureRequests: null
+        } : {})
+    };
+
+    if(config.content_security_policy) for(let key of Object.keys(config.content_security_policy)) {
+        let arr = config.content_security_policy[key];
+        if(!Array.isArray(arr)) arr = [arr];
+        directives[key].push(...arr);
+        directives[key] = [...new Set(directives[key])];
+    }
+
+    for(let plugin of Object.values(plugins).flat()) {
+        if(!plugin.csp) continue;
+        for(let key of Object.keys(plugin.csp)) {
+            let arr = plugin.csp[key];
+            if(!Array.isArray(arr)) arr = [arr];
+            directives[key].push(...arr);
+            directives[key] = [...new Set(directives[key])];
         }
-    },
-    referrerPolicy: false,
-    strictTransportSecurity: !debug
-}));
+    }
+
+    helmet({
+        contentSecurityPolicy: {
+            directives
+        },
+        referrerPolicy: false,
+        strictTransportSecurity: !debug
+    })(req, res, next);
+});
 
 if(!debug) {
     app.use(compression());
@@ -417,6 +465,8 @@ app.use(async (req, res, next) => {
         }
     });
 
+    const referer = req.get('Referer');
+    req.referer = referer ? new URL(referer) : null;
     req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
     if(req.session.ipUser?.ip !== req.ip)
@@ -448,6 +498,27 @@ app.use(async (req, res, next) => {
     });
     req.requestId = log._id.toString();
     log.save().then();
+
+    if(req.user) {
+        if(req.session.lastIp !== req.ip) {
+            req.session.lastIp = req.ip;
+            setTimeout(async () => {
+                const oldHistory = await LoginHistory.findOne({
+                    uuid: req.user.uuid,
+                    ip: req.ip,
+                    createdAt: {
+                        $gt: Date.now() - 1000 * 60 * 60
+                    }
+                });
+                if(!oldHistory) await LoginHistory.create({
+                    uuid: req.user.uuid,
+                    ip: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    type: LoginHistoryTypes.IPChange
+                });
+            }, 0);
+        }
+    }
 
     app.locals.rmWhitespace = true;
 
@@ -493,8 +564,11 @@ app.use(async (req, res, next) => {
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
+    if(!global.skins.includes(skin)) skin = global.skins[0];
 
-    res.renderSkin = (title, data = {}) => {
+    res.renderSkin = (...args) => renderSkin(...args).then();
+
+    const renderSkin = async (title, data = {}) => {
         const status = data.status || 200;
         delete data.status;
 
@@ -519,6 +593,14 @@ app.use(async (req, res, next) => {
                 'categoryHtml',
                 'serverData'
             ])
+        }
+
+        if(viewName === 'wiki') {
+            data.copyright_text = config.copyright_text;
+            if(data.document) {
+                const nsKey = `namespace.${data.document.namespace}.copyright_text`;
+                if(config[nsKey]) data.serverData.copyright_text = config[nsKey];
+            }
         }
 
         const sessionMenus = [];
@@ -586,10 +668,22 @@ document.getElementById('initScript')?.remove();
         `.replaceAll('\n', '').trim() + data.contentHtml;
         }
 
+        const pluginData = {};
+        for(let plugin of plugins.skinData) {
+            const output = await plugin.format({
+                data,
+                page,
+                session,
+                req
+            });
+            if(typeof output === 'object') Object.assign(pluginData, output);
+        }
+
         const isAdmin = req.permissions.includes('admin');
         app.render('main', {
             ...data,
             ...(data.serverData ?? {}),
+            ...pluginData,
             skin,
             page,
             session,
