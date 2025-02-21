@@ -3,7 +3,8 @@ const sanitizeHtml = require('sanitize-html');
 const { Priority } = require('../types');
 
 const utils = require('../../');
-const globalUtils = require('../../../utils/global');
+const namumarkUtils = require('../utils');
+const globalUtils = require('../../global');
 
 const getLevel = content => {
     if(!content.startsWith('=') || !content.includes(' ')) return;
@@ -118,9 +119,9 @@ module.exports = {
 
         const editSection = namumark.thread ? '' : `
 <span class="wiki-edit-section">
-<a href="${globalUtils.doc_action_link(namumark.document, 'edit', {
+<a href="${namumarkUtils.escapeHtml(globalUtils.doc_action_link(namumark.document, 'edit', {
             section: sectionNum
-        })}" rel="nofollow">[편집]</a>
+        }))}" rel="nofollow">[편집]</a>
 </span>`.trim();
 
         const commentPrefix = namumark.commentId ? `tc${namumark.commentId}-` : '';
