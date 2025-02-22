@@ -300,7 +300,7 @@ app.use((req, res, next) => {
         imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.googletagmanager.com', '*.google-analytics.com', '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.'), ...(debug ? ['*'] : [])],
         styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
         fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
-        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com'],
+        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com', 'embed.nicovideo.jp'],
         connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com'],
         ...(debug ? {
             upgradeInsecureRequests: null
