@@ -132,7 +132,9 @@ module.exports = (sourceText, namumark, childParse = false, disableNoParagraph =
         .replaceAll('<removeNewlineLater/>', '<removeNewline/>')
         .replaceAll('<newLine/><removeNewline/>', '')
         .replaceAll('<removeNewline/><newLine/>', '')
-        .replaceAll('<removeNewline/>', '');
+        .replaceAll('<removeNewline/>', '')
+        .replaceAll('><newLine/><removeNewlineAfterTag/>', '>')
+        .replaceAll('<removeNewlineAfterTag/>', '');
 
     if(!childParse || options.removeNamumarkEscape) text = text
         .replaceAll('<*', '')

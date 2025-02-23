@@ -94,5 +94,5 @@ module.exports = async (params, namumark) => {
     });
     if(debug) console.timeEnd(`parse include ${docName}`);
     namumark.includes.push(docName);
-    return `${contentHtml}`;
+    return `<removeNewlineAfterTag/>${contentHtml}`;
 }
