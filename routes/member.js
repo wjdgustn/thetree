@@ -764,7 +764,7 @@ const checkDeletable = async user => {
 }
 
 app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
-    if(config.withdraw_save_days == null)
+    if(config.can_withdraw === false)
         return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
 
     const { deletable, blacklistDuration, noActivityTime } = await checkDeletable(req.user);
@@ -793,7 +793,7 @@ app.post('/member/withdraw',
         .equals(config.withdraw_pledge).withMessage('동일하게 입력해주세요.'),
     middleware.fieldErrors,
     async (req, res) => {
-    if(config.withdraw_save_days == null)
+    if(config.can_withdraw === false)
         return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
 
     const { deletable, blacklistDuration } = await checkDeletable(req.user);
