@@ -24,7 +24,7 @@ module.exports = {
             if(sharpPos === sourceTextPos && !isEscapeChar) {
                 let num = '';
                 let numPos = sourceTextPos + 1;
-                while(!isNaN(sourceText[numPos])) {
+                while(sourceText[numPos].trim() && !isNaN(sourceText[numPos])) {
                     num += sourceText[numPos];
                     numPos++;
                 }
