@@ -743,7 +743,7 @@ module.exports = {
             req.get('Sec-CH-UA-Platform-Version'),
             req.get('Sec-CH-UA-Model')
         ]
-            .map(a => a.slice(1, -1))
+            .map(a => a?.slice(1, -1))
             .filter(a => a)
             .join(' ');
 
