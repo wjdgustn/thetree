@@ -203,8 +203,9 @@ module.exports = class NamumarkParser {
 
         // 문법 파싱
         let text = '';
-        const openedSyntaxes = [];
         syntaxLoop: for(let syntaxIndex in sortedSyntaxes) {
+            const openedSyntaxes = [];
+
             if(sourceText.length > MAXIMUM_LENGTH) {
                 sourceText = MAXIMUM_LENGTH_HTML;
                 hasError = true;
