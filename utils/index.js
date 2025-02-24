@@ -751,7 +751,7 @@ module.exports = {
             uuid: user.uuid,
             ip: req.ip,
             userAgent: req.get('User-Agent'),
-            device: device.join(' '),
+            device,
             ...data
         });
     }
