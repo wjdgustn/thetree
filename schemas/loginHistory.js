@@ -19,6 +19,9 @@ const newSchema = new Schema({
         type: String,
         required: true
     },
+    device: {
+        type: String
+    },
     userAgent: {
         type: String,
         required: true

@@ -515,10 +515,7 @@ app.use(async (req, res, next) => {
                         $gt: Date.now() - 1000 * 60 * 60
                     }
                 });
-                if(!oldHistory) await LoginHistory.create({
-                    uuid: req.user.uuid,
-                    ip: req.ip,
-                    userAgent: req.get('User-Agent'),
+                if(!oldHistory) await utils.createLoginHistory(req.user, req, {
                     type: LoginHistoryTypes.IPChange
                 });
             }, 0);

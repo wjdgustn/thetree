@@ -291,11 +291,7 @@ app.post('/member/signup/:token',
     }, { keepSessionInfo: true }, async err => {
         if(err) console.error(err);
 
-        await LoginHistory.create({
-            uuid: newUser.uuid,
-            ip: req.ip,
-            userAgent: req.get('User-Agent')
-        });
+        await utils.createLoginHistory(newUser, req);
 
         if(!res.headersSent) {
             req.session.fullReload = true;
@@ -333,12 +329,6 @@ app.post('/member/login',
 
         let trusted = req.session.trustedAccounts?.includes(user.uuid);
 
-        const createLoginHistory = async () => await LoginHistory.create({
-            uuid: user.uuid,
-            ip: req.ip,
-            userAgent: req.get('User-Agent')
-        });
-
         if((!user.totpToken && !config.use_email_verification) || user.permissions.includes('disable_two_factor_login')) {
             trusted = true;
         }
@@ -355,7 +345,7 @@ app.post('/member/login',
                 });
             }
 
-            await createLoginHistory();
+            await utils.createLoginHistory(user, req)
 
             return req.login(user, { keepSessionInfo: true }, err => {
                 if(err) console.error(err);
@@ -455,11 +445,7 @@ app.post('/member/login/pin',
         }
     });
 
-    await LoginHistory.create({
-        uuid: user.uuid,
-        ip: req.ip,
-        userAgent: req.get('User-Agent')
-    });
+    await utils.createLoginHistory(user, req);
 });
 
 app.get('/member/logout', middleware.isLogin, async (req, res) => {

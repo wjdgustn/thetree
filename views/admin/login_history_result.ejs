@@ -25,6 +25,7 @@ const navigationPage = include('../components/pageButton', {
             <th>DATE</th>
             <th>TYPE</th>
             <th>IP</th>
+            <th>DEVICE</th>
             <th>UA</th>
         </tr>
         </thead>
@@ -34,6 +35,7 @@ const navigationPage = include('../components/pageButton', {
             <td><%-getFullDateTag(log.createdAt)%></td>
             <td><%=utils.getKeyFromObject(LoginHistoryTypes, log.type) ?? log.type%></td>
             <td><%=log.ip%></td>
+            <td><%=log.device%></td>
             <td><%=log.userAgent%></td>
         </tr>
         <%}%>

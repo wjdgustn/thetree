@@ -736,5 +736,23 @@ module.exports = {
         if(seconds) strs.push(`${seconds}초`);
 
         return strs.join(' ');
+    },
+    async createLoginHistory(user, req, data = {}) {
+        const device = [
+            req.get('Sec-CH-UA-Platform'),
+            req.get('Sec-CH-UA-Platform-Version'),
+            req.get('Sec-CH-UA-Model')
+        ]
+            .map(a => a.slice(1, -1))
+            .filter(a => a)
+            .join(' ');
+
+        return models.LoginHistory.create({
+            uuid: user.uuid,
+            ip: req.ip,
+            userAgent: req.get('User-Agent'),
+            device: device.join(' '),
+            ...data
+        });
     }
 }
