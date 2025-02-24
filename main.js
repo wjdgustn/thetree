@@ -568,6 +568,8 @@ app.use(async (req, res, next) => {
     if(!skin || skin === 'default') skin = config.default_skin;
     if(!global.skins.includes(skin)) skin = global.skins[0];
 
+    res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
+
     res.renderSkin = (...args) => renderSkin(...args).then();
 
     const renderSkin = async (title, data = {}) => {
