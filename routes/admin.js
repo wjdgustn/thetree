@@ -1030,7 +1030,7 @@ app.post('/admin/login_history',
     if(!targetUser) return res.status(404).send('사용자 이름이 올바르지 않습니다.');
     if(!req.permissions.includes('developer')
         && (targetUser.permissions.includes('developer') || targetUser.permissions.includes('hideip')))
-        return res.status(403).send('권한이 부족합니다.');
+        return res.status(403).send('invalid_permission');
 
     if(config.testwiki && !req.permissions.includes('config') && targetUser.uuid !== req.user.uuid)
         return res.status(403).send('다른 사용자의 로그인 기록을 조회할 수 없습니다.');
