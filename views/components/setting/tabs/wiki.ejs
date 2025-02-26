@@ -29,7 +29,7 @@
         name: 'footnote_type',
         label: '각주 표시 형식',
         type: 'enum',
-        defaultValue: req.useragent.isMobile ? 'popup' : 'popover',
+        defaultValue: req.isMobile ? 'popup' : 'popover',
         options: [
             {
                 name: 'default',

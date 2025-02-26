@@ -474,6 +474,9 @@ app.use(async (req, res, next) => {
     }
     req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
+    const mobileHeader = req.get('Sec-CH-UA-Mobile');
+    req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
+
     if(req.session.ipUser?.ip !== req.ip)
         req.session.ipUser = null;
     if(!req.session.ipUser) {
