@@ -4,6 +4,12 @@ function setupComment() {
 }
 
 document.addEventListener('thetree:pageLoad', () => {
+    const form = document.getElementById('comment-form');
+    const formAlpineData = Alpine.$data(form);
+    form.addEventListener('submit', () => {
+        formAlpineData.selectedTab = 'raw';
+    });
+
     const data = State.page.data;
 
     let scrollTimer;
