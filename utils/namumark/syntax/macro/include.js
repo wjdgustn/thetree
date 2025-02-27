@@ -66,6 +66,8 @@ module.exports = async (params, namumark) => {
     const docName = params[0];
     params = params.slice(1);
 
+    namumark.includes.push(docName);
+
     const includeData = {};
     for(let param of params) {
         const splittedParam = param.split('=');
@@ -93,6 +95,5 @@ module.exports = async (params, namumark) => {
         fileDocCache: namumark.fileDocCache
     });
     if(debug) console.timeEnd(`parse include ${docName}`);
-    namumark.includes.push(docName);
     return `<removeNewlineAfterTag/>${contentHtml}`;
 }
