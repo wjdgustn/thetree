@@ -36,6 +36,8 @@
     "파일:홈페이지 아이콘.svg": ""
   },
 
+  "aclgroup_order": [],
+
   "content_security_policy": {
     "frameSrc": [],
     "connectSrc": []
