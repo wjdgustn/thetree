@@ -460,10 +460,8 @@ app.get('/BlockHistory', async (req, res) => {
 });
 
 app.get('/RandomPage', async (req, res) => {
-    const readableNamespaces = await utils.getReadableNamespaces(req.aclData);
-
-    const namespace = readableNamespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
-    const docs = await Document.aggregate([
+    const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
+    const dbDocs = await Document.aggregate([
         {
             $match: {
                 namespace,
@@ -472,12 +470,18 @@ app.get('/RandomPage', async (req, res) => {
         },
         { $sample: { size: 20 } }
     ]);
+    const docs = dbDocs.map(a => utils.dbDocumentToDocument(a));
+
+    const acl = await ACL.get({
+        namespace
+    });
+    const { result: readable } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) docs.length = 0;
 
     res.renderSkin('RandomPage', {
         contentName: 'special/randomPage',
         serverData: {
-            readableNamespaces,
-            docs: docs.map(a => utils.dbDocumentToDocument(a))
+            docs
         }
     });
 });

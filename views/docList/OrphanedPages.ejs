@@ -1,4 +1,4 @@
-<%-include('../components/namespaceSelector', { namespaces: readableNamespaces })%>
+<%-include('../components/namespaceSelector')%>
 <%const frontPage = utils.parseDocumentName(config.front_page);%>
 <p>다음은 <a href="<%=doc_action_link(frontPage, 'w')%>"><%=doc_fulltitle(frontPage)%></a>에서 링크로 도달할 수 없는 문서로, 역링크가 없거나 자기네들끼리만 링크가 되어 있는 경우입니다.</p>
 <p>이 페이지는 하루에 한번 업데이트 됩니다.</p>

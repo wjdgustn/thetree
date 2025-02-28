@@ -1,4 +1,4 @@
-<%-include('../components/namespaceSelector', { namespaces: readableNamespaces })%>
+<%-include('../components/namespaceSelector')%>
 <ul class="list-page">
     <%for(let doc of docs) {%>
         <li><a href="<%=doc_action_link(doc, 'w')%>"><%=doc_fulltitle(doc)%></a></li>

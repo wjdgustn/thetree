@@ -5,12 +5,14 @@ const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const middleware = require('../utils/middleware');
 const {
-
+    ACLTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
+
+const ACL = require('../class/acl');
 
 const app = express.Router();
 
@@ -190,8 +192,7 @@ app.get('/NeededPages/update', middleware.permission('developer'), middleware.re
 });
 
 app.get('/OrphanedPages', async (req, res) => {
-    const readableNamespaces = await utils.getReadableNamespaces(req.aclData);
-    const namespace = readableNamespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
+    const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
 
     const displayCount = 100;
     const pageStr = req.query.from || req.query.until;
@@ -199,10 +200,15 @@ app.get('/OrphanedPages', async (req, res) => {
     const fullItems = (orphanedPages[namespace] ?? []);
     const items = fullItems.slice(skipCount, skipCount + displayCount);
 
+    const acl = await ACL.get({
+        namespace
+    });
+    const { result: readable } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) items.length = 0;
+
     res.renderSkin('고립된 문서', {
         contentName: 'docList/OrphanedPages',
         serverData: {
-            readableNamespaces,
             items,
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
