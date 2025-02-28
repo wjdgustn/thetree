@@ -222,6 +222,7 @@ reloadPlugins();
 
 const NamumarkParser = require('./utils/namumark');
 global.NamumarkParser = NamumarkParser;
+global.ACLClass = ACL;
 
 require('./schemas')();
 
