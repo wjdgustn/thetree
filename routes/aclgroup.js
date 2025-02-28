@@ -33,7 +33,7 @@ const aclGroupsQuery = req => ({
 app.get('/aclgroup', async (req, res) => {
     const rawAclGroups = await ACLGroup.find(aclGroupsQuery(req));
     const aclGroups = [...new Set([
-        ...config.aclgroup_order.map(a => rawAclGroups.find(b => b.name === a)),
+        ...(config.aclgroup_order ?? []).map(a => rawAclGroups.find(b => b.name === a)).filter(a => a),
         ...rawAclGroups
     ])];
     const selectedGroup = aclGroups.find(a => a.name === req.query.group) ?? aclGroups[0];
