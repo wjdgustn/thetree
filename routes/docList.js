@@ -189,8 +189,9 @@ app.get('/NeededPages/update', middleware.permission('developer'), middleware.re
     await updateNeededPages();
 });
 
-app.get('/OrphanedPages', (req, res) => {
-    const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
+app.get('/OrphanedPages', async (req, res) => {
+    const readableNamespaces = await utils.getReadableNamespaces(req.aclData);
+    const namespace = readableNamespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
 
     const displayCount = 100;
     const pageStr = req.query.from || req.query.until;
@@ -201,6 +202,7 @@ app.get('/OrphanedPages', (req, res) => {
     res.renderSkin('고립된 문서', {
         contentName: 'docList/OrphanedPages',
         serverData: {
+            readableNamespaces,
             items,
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
