@@ -55,14 +55,7 @@ app.get('/Go', async (req, res) => {
 app.get('/Search', async (req, res) => {
     if(!req.query.q) return res.error('검색어가 없습니다.');
 
-    const readableNamespaces = [];
-    for(let namespace of config.namespaces) {
-        const acl = await ACL.get({
-            namespace
-        });
-        const { result: readable } = await acl.check(ACLTypes.Read, req.aclData);
-        if(readable) readableNamespaces.push(namespace);
-    }
+    const readableNamespaces = await utils.getReadableNamespaces(req.aclData);
     if(!readableNamespaces.length) return res.error('읽을 수 있는 이름공간이 없습니다.');
 
     const filter = [];

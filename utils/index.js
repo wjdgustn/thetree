@@ -10,8 +10,9 @@ const globalUtils = require('./global');
 const namumarkUtils = require('./namumark/utils');
 const {
     UserTypes,
-    HistoryTypes
+    HistoryTypes, ACLTypes
 } = require('./types');
+const ACL = require('../class/acl');
 
 module.exports = {
     getRandomInt(min, max) {
@@ -754,5 +755,16 @@ module.exports = {
             device,
             ...data
         });
+    },
+    async getReadableNamespaces(aclData) {
+        const readableNamespaces = [];
+        for(let namespace of config.namespaces) {
+            const acl = await ACL.get({
+                namespace
+            });
+            const { result: readable } = await acl.check(ACLTypes.Read, aclData);
+            if(readable) readableNamespaces.push(namespace);
+        }
+        return readableNamespaces;
     }
 }

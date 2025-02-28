@@ -460,7 +460,9 @@ app.get('/BlockHistory', async (req, res) => {
 });
 
 app.get('/RandomPage', async (req, res) => {
-    const namespace = config.namespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
+    const readableNamespaces = await utils.getReadableNamespaces(req.aclData);
+
+    const namespace = readableNamespaces.includes(req.query.namespace) ? req.query.namespace : '문서';
     const docs = await Document.aggregate([
         {
             $match: {
@@ -474,6 +476,7 @@ app.get('/RandomPage', async (req, res) => {
     res.renderSkin('RandomPage', {
         contentName: 'special/randomPage',
         serverData: {
+            readableNamespaces,
             docs: docs.map(a => utils.dbDocumentToDocument(a))
         }
     });
