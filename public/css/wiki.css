@@ -377,6 +377,15 @@
     padding-bottom: 5px;
 }
 
+.theseed-dark-mode .wiki-content h1.wiki-heading,
+.theseed-dark-mode .wiki-content h2.wiki-heading,
+.theseed-dark-mode .wiki-content h3.wiki-heading,
+.theseed-dark-mode .wiki-content h4.wiki-heading,
+.theseed-dark-mode .wiki-content h5.wiki-heading,
+.theseed-dark-mode .wiki-content h6.wiki-heading {
+    border-bottom-color: #383b40;
+}
+
 .wiki-content .wiki-heading:before {
     color: #666;
     content: "";
@@ -413,6 +422,10 @@
     box-sizing: content-box;
     height: 0;
     margin: .5em 0;
+}
+
+.theseed-dark-mode .wiki-content hr {
+    border-top-color: #383b40;
 }
 
 .wiki-content .wiki-indent {
@@ -561,6 +574,10 @@
     display: inline-block;
     margin-left: 5px;
     padding: 12px 20px 18px 0;
+}
+
+.theseed-dark-mode .wiki-content .wiki-macro-toc {
+    border-color: #383b40;
 }
 
 .wiki-content .wiki-macro-toc:before {
