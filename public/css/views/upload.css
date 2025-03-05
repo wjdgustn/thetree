@@ -21,7 +21,7 @@
         width: 100%;
     }
 
-    .theseed-dark-mode form input, .theseed-dark-mode form select, .theseed-dark-mode form textarea {
+    .theseed-dark-mode form input:not(.searchable-dropdown-search), .theseed-dark-mode form select, .theseed-dark-mode form textarea {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;

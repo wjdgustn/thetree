@@ -87,6 +87,10 @@
     color: #ddd;
 }
 
+.theseed-dark-mode .searchable-dropdown-arrow {
+    fill: #ddd;
+}
+
 .theseed-dark-mode #userpopup {
     background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
     border-color: #484848;
