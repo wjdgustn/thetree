@@ -139,3 +139,16 @@
 .theseed-dark-mode .thetree-delete-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #8d101d !important;
 }
+
+.theseed-dark-mode .nav-block-content-ul:not(.nav-no-border)>* {
+    border-bottom-color: #575757;
+    border-top-color: #575757;
+}
+
+.theseed-dark-mode .nav-block-content-ul:not(.nav-no-border)>:first-of-type {
+    border-left-color: #575757;
+}
+
+.theseed-dark-mode .nav-block-content-ul:not(.nav-no-border)>:last-of-type {
+    border-right-color: #575757;
+}
