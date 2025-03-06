@@ -46,7 +46,7 @@
 
     <div class="menu-block">
         <label for="passwordInput">API Token</label>
-        <button class="thetree-square-button thetree-danger-button" type="button">발급</button>
+        <button class="thetree-square-button thetree-danger-button" type="button" @click="document.getElementById('token-modal')._thetree.modal.open()">발급</button>
     </div>
 
     <div class="button-block">
@@ -54,3 +54,38 @@
         <button class="thetree-square-button thetree-blue-button">변경</button>
     </div>
 </form>
+
+<div id="token-modal" class="thetree-modal-block thetree-modal">
+    <div class="thetree-modal-block thetree-modal-bg"></div>
+    <div class="thetree-modal-block thetree-modal-container" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="thetree-modal-content">
+            <form method="post" action="/member/generate_api_token">
+                <h4>API Token 발급</h4>
+                <%-include('../components/alert', { alert: '' })%>
+
+                <div class="token-modal-form">
+                    <div>
+                        <p>비밀번호:</p>
+                        <input type="password" name="password">
+                    </div>
+
+                    <div class="modal-buttons">
+                        <button class="thetree-modal-button thetree-square-button thetree-danger-button">생성</button><!--
+                 --><button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">취소</button>
+                    </div>
+                </div>
+                <div id="token-page" class="thetree-modal-hide-on-close" style="display: none">
+                    <p>토큰:</p>
+                    <input id="token-input" readonly value="sanstv" @click="$el.setSelectionRange(0, $el.value.length)">
+                    <ul>
+                        <li>발급된 토큰은 이 창을 닫으면 다시 확인할 수 없습니다.</li>
+                        <li>토큰은 비밀번호와 같이 취급해주세요.</li>
+                    </ul>
+                    <div class="modal-buttons">
+                        <button type="button" class="thetree-modal-button thetree-square-button thetree-modal-close">닫기</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

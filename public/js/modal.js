@@ -4,7 +4,7 @@ document.addEventListener('thetree:pageLoad', () => {
         // const bg = modal.getElementsByClassName('thetree-modal-bg')[0];
         const container = modal.getElementsByClassName('thetree-modal-container')[0];
         const content = modal.getElementsByClassName('thetree-modal-content')[0];
-        const closeButton = modal.getElementsByClassName('thetree-modal-close')[0];
+        const closeButtons = modal.getElementsByClassName('thetree-modal-close');
 
         const modalProps = modal._thetree.modal;
 
@@ -32,6 +32,9 @@ document.addEventListener('thetree:pageLoad', () => {
             modal.addEventListener('transitionend', () => {
                 modal.classList.remove('thetree-modal-display');
                 modal.classList.remove('thetree-modal-noanim');
+
+                const hideOnCloseElems = modal.getElementsByClassName('thetree-modal-hide-on-close');
+                for(let elem of hideOnCloseElems) elem.style.display = 'none';
             }, { once: true });
 
             if(skipAnim) modal.dispatchEvent(new Event('transitionend'));
@@ -39,7 +42,7 @@ document.addEventListener('thetree:pageLoad', () => {
 
         container.addEventListener('click', () => modalProps.close());
         content.addEventListener('click', e => e.stopPropagation());
-        closeButton.addEventListener('click', () => modalProps.close());
+        [...closeButtons].forEach(a => a.addEventListener('click', () => modalProps.close()));
 
         modalProps.initialized = true;
     }

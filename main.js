@@ -372,6 +372,9 @@ app.use(express.urlencoded({
     extended: true,
     limit: '10mb'
 }));
+app.use(express.json({
+    limit: '10mb'
+}));
 
 let store;
 if(process.env.USE_REDIS === 'true') {
@@ -784,7 +787,8 @@ document.getElementById('initScript')?.remove();
 });
 
 for(let f of fs.readdirSync('./routes')) {
-    app.use(require(`./routes/${f}`));
+    const route = require(`./routes/${f}`);
+    app.use(route.router ?? route);
 }
 
 app.use((req, res, next) => {

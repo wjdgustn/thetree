@@ -46,6 +46,15 @@ module.exports = {
         });
         next();
     },
+    singleFieldError: (req, res, next) => {
+        const result = validationResult(req);
+        if(!result.isEmpty()) {
+            const msg = result.array()[0].msg;
+            if(req.isAPI) return res.error(msg);
+            else return res.status(400).send(msg);
+        }
+        next();
+    },
     captcha: async (req, res, next) => {
         if(!await utils.middleValidateCaptcha(req, res)) return;
         next();

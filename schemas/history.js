@@ -119,6 +119,11 @@ const newSchema = new Schema({
     },
     redirect: {
         type: Boolean
+    },
+    api: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 

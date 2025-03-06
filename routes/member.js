@@ -488,6 +488,33 @@ app.post('/member/mypage', middleware.isLogin,
     res.redirect('/member/mypage');
 });
 
+app.post('/member/generate_api_token',
+    middleware.isLogin,
+    body('password')
+        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
+        .custom(async (value, {req}) => {
+            const result = await bcrypt.compare(value, req.user.password);
+            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
+            return true;
+        }),
+    middleware.singleFieldError,
+    async (req, res) => {
+    const apiToken = crypto.randomBytes(128).toString('base64');
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        apiToken
+    });
+
+    res.json({
+        type: 'js',
+        script: `
+document.getElementById('token-input').value = '${apiToken}';
+document.getElementById('token-page').style.display = '';
+        `.trim()
+    });
+});
+
 app.get('/member/change_password', middleware.isLogin, (req, res) => {
     res.renderSkin('비밀번호 변경', {
         contentName: 'member/change_password'
