@@ -203,7 +203,7 @@ module.exports = class NamumarkParser {
 
         // 문법 파싱
         let text = '';
-        syntaxLoop: for(let syntaxIndex in sortedSyntaxes) {
+        if(this.childDepth < 10) syntaxLoop: for(let syntaxIndex in sortedSyntaxes) {
             const openedSyntaxes = [];
 
             if(sourceText.length > MAXIMUM_LENGTH) {
