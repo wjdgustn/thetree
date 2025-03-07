@@ -1,16 +1,22 @@
 const express = require('express');
 const { body } = require('express-validator');
-const crypto = require('crypto');
 
 const middleware = require('../utils/middleware');
 
+const utils = require('../utils');
+const globalUtils = require('../utils/global');
+const {
+    BacklinkFlags
+} = require('../utils/types');
 const {
     editAndEditRequest,
-    postEditAndEditRequest
+    postEditAndEditRequest,
+    getBacklinks
 } = require('./document');
 
 const User = require('../schemas/user');
 const EditToken = require('../schemas/editToken');
+const Document = require('../schemas/document');
 
 const app = express.Router();
 
@@ -115,4 +121,22 @@ app.post('/api/edit/?*',
     });
 });
 
+app.get('/api/backlink/?*', middleware.parseDocumentName, async (req, res) => {
+    if(req.document.namespace === '분류' && false) {
+
+    }
+    else {
+        const finalData = await apiWrapper(getBacklinks)(req, res);
+        const data = finalData.serverData;
+        res.json({
+            namespaces: data.namespaceCounts,
+            backlinks: data.backlinks.map(a => ({
+                document: globalUtils.doc_fulltitle(utils.dbDocumentToDocument(a)),
+                flags: a.flags.map(a => utils.getKeyFromObject(BacklinkFlags, a).toLowerCase()).join(',')
+            })),
+            to: data.prevItem?.title,
+            from: data.nextItem?.title
+        });
+    }
+});
 module.exports = app;

@@ -34,7 +34,6 @@ const Star = require('../schemas/star');
 const AuditLog = require('../schemas/auditLog');
 
 const ACL = require('../class/acl');
-const {router} = require("express/lib/application");
 
 const app = express.Router();
 
@@ -1524,7 +1523,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
+const getBacklinks = async (req, res) => {
     const document = req.document;
     const docName = globalUtils.doc_fulltitle(document);
 
@@ -1635,7 +1634,10 @@ app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
             nextItem
         }
     });
-});
+}
+module.exports.getBacklinks = getBacklinks;
+
+app.get('/backlink/?*', middleware.parseDocumentName, getBacklinks);
 
 app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
