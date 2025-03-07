@@ -234,6 +234,7 @@ module.exports = {
         let title;
         let titleDocument;
         let hideExternalLinkIcon = false;
+        let hasHash = false;
         if(parsedLink) {
             link = parsedLink.href;
             title = link;
@@ -273,6 +274,7 @@ module.exports = {
             if(link.startsWith('#')) {
                 title = docTitle;
                 notExist = false;
+                hasHash = true;
             }
             else {
                 const splittedLink = link.split('#');
@@ -281,6 +283,7 @@ module.exports = {
                     const front = splittedLink.join('#').replaceAll('#', '%23');
                     link = `${front}#${hash}`;
                     title = front;
+                    hasHash = true;
                 }
                 else title = link;
 
@@ -315,7 +318,7 @@ module.exports = {
         if(notExist) classList.push('not-exist');
 
         if(parsedLink) classList.push(hideExternalLinkIcon ? 'wiki-link-whitelisted' : 'wiki-link-external');
-        else if(title === docTitle) classList.push('wiki-self-link');
+        else if(title === docTitle && !hasHash) classList.push('wiki-self-link');
 
         const rel = [];
 
