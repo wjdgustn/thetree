@@ -92,6 +92,10 @@
         padding: .6rem .75rem 0;
     }
 
+    .theseed-dark-mode li {
+        border-top-color: #434343;
+    }
+
     .hidden-item>.content-block>div:first-child:before {
         content: "(비공개) ";
     }
