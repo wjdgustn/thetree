@@ -69,6 +69,10 @@
     color: var(--dark-text-color, var(--text-color, #e0e0e0));
 }
 
+.theseed-dark-mode .navigation-button:not(.thetree-button-disabled):hover {
+    background-color: #555;
+}
+
 .theseed-dark-mode .thetree-button-disabled {
     background-color: #373737;
     border-color: #424242;
