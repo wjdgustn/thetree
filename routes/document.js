@@ -678,6 +678,8 @@ const editAndEditRequest = async (req, res) => {
     if(!readable) return res.error(readAclMessage, 403);
 
     const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+    if(req.isAPI && !editable) return res.error(aclMessage, 403);
+
     const { result: editRequestable, aclMessage: editRequestAclMessage } = await acl.check(ACLTypes.EditRequest, req.aclData);
 
     if(!isEditRequest && !editable && editRequestable) return res.redirect(globalUtils.doc_action_link(document, 'new_edit_request', {
@@ -756,6 +758,7 @@ const editAndEditRequest = async (req, res) => {
         }
     });
 }
+module.exports.editAndEditRequest = editAndEditRequest;
 
 app.get('/edit/?*', middleware.parseDocumentName, editAndEditRequest);
 app.get('/new_edit_request/?*', middleware.parseDocumentName, editAndEditRequest);
@@ -941,7 +944,7 @@ const postEditAndEditRequest = async (req, res) => {
     let isCreate = dbDocument && !dbDocument.contentExists;
     const doingManyEdits = await checkDoingManyEdits(req);
 
-    if((isCreate || doingManyEdits) && !await utils.middleValidateCaptcha(req, res)) return;
+    if(!req.isAPI && (isCreate || doingManyEdits) && !await utils.middleValidateCaptcha(req, res)) return;
 
     if(!dbDocument) {
         dbDocument = new Document({
@@ -1013,6 +1016,8 @@ const postEditAndEditRequest = async (req, res) => {
             if(!isEditRequest) log ||= `자동 병합됨 (r${editedRev.rev})`;
         }
         else {
+            if(req.isAPI) return res.status(409).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
+
             req.session.flash.conflict = {
                 editedRev: editedRev.rev,
                 diff: await utils.generateDiff(editedRev.content, req.body.text)
@@ -1042,17 +1047,20 @@ const postEditAndEditRequest = async (req, res) => {
         res.redirect(`/edit_request/${editRequest.url}`);
     }
     else {
-        await History.create({
+        const rev = await History.create({
             user: req.user.uuid,
             type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
             document: dbDocument.uuid,
             content,
-            log
+            log,
+            api: req.isAPI
         });
 
-        res.redirect(globalUtils.doc_action_link(document, 'w'));
+        if(req.isAPI) res.sendData({ rev });
+        else res.redirect(globalUtils.doc_action_link(document, 'w'));
     }
 }
+module.exports.postEditAndEditRequest = postEditAndEditRequest;
 
 app.post('/edit/?*', middleware.parseDocumentName, postEditAndEditRequest);
 app.post('/new_edit_request/?*', middleware.parseDocumentName, postEditAndEditRequest);
@@ -1515,7 +1523,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
+const getBacklinks = async (req, res) => {
     const document = req.document;
     const docName = globalUtils.doc_fulltitle(document);
 
@@ -1626,7 +1634,10 @@ app.get('/backlink/?*', middleware.parseDocumentName, async (req, res) => {
             nextItem
         }
     });
-});
+}
+module.exports.getBacklinks = getBacklinks;
+
+app.get('/backlink/?*', middleware.parseDocumentName, getBacklinks);
 
 app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
@@ -1823,4 +1834,4 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
     res.redirect(globalUtils.doc_action_link(otherDocument, 'w'));
 });
 
-module.exports = app;
+module.exports.router = app;

@@ -8,6 +8,9 @@
     %>
     <h2 class="wiki-heading<%=unfoldUpdate ? '' : ' wiki-heading-folded'%>">업데이트</h2>
     <div class="wiki-heading-content<%=unfoldUpdate ? '' : ' wiki-heading-content-folded'%>">
+        <%if(global.versionInfo.branch !== 'master') {%>
+            <p>브랜치: <%=global.versionInfo.branch%></p>
+        <%}%>
         <p>현재 버전: <%=global.versionInfo.versionData.version%>(<%=global.versionInfo.commitId.slice(0, 7)%>, <%-getFullDateTag(global.versionInfo.commitDate)%>)</p>
         <p>새 버전: <%=global.newVersionInfo.versionData.version%>(<%=global.newVersionInfo.commitId.slice(0, 7)%>, <%-getFullDateTag(global.newVersionInfo.commitDate)%>)</p>
         <p>마지막 업데이트 확인: <%-global.newVersionInfo.lastUpdateCheck ? `${getFullDateTag(global.newVersionInfo.lastUpdateCheck)} (${getFullDateTag(global.newVersionInfo.lastUpdateCheck, 'relative')})` : '없음'%></p>

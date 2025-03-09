@@ -150,7 +150,11 @@ global.checkUpdate = async () => {
     try {
         const { data: newCommitData } = await githubAPI.get(`/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
         newCommits = newCommitData.commits;
-        const { data: newVersionFile } = await githubAPI.get('/contents/version.json');
+        const { data: newVersionFile } = await githubAPI.get('/contents/version.json', {
+            params: {
+                ref: global.versionInfo.branch
+            }
+        });
         newVerionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
     } catch(e) {
         console.error('failed to fetch latest version info', e);
@@ -370,6 +374,9 @@ app.use('/skins', (req, res, next) => {
 
 app.use(express.urlencoded({
     extended: true,
+    limit: '10mb'
+}));
+app.use(express.json({
     limit: '10mb'
 }));
 
@@ -784,7 +791,8 @@ document.getElementById('initScript')?.remove();
 });
 
 for(let f of fs.readdirSync('./routes')) {
-    app.use(require(`./routes/${f}`));
+    const route = require(`./routes/${f}`);
+    app.use(route.router ?? route);
 }
 
 app.use((req, res, next) => {

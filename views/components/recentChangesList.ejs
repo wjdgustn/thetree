@@ -32,7 +32,7 @@
         </div>
 
         <div class="changes-value"<%=hideUser ? ' hidden' : ''%>>
-            <%if(!hideUser) {%><%-rev.userHtml%><%}%>
+            <%if(!hideUser) {%><%-rev.userHtml%><%=rev.api ? '(API)' : ''%><%}%>
         </div>
 
         <div class="changes-value">

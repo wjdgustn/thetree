@@ -274,12 +274,6 @@
         width: 100%;
     }
 
-    #editrequest-close-modal form div.modal-buttons {
-        float: right;
-        margin-bottom: 1rem;
-        margin-top: 1rem;
-    }
-
     span.history-action {
         font-size: 8pt;
     }

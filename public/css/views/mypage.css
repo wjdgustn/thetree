@@ -39,4 +39,8 @@
         border-color: #383b40;
         color: #ddd;
     }
+
+    .token-modal-form:has(+#token-page:not([style*="display: none"])) {
+        display: none;
+    }
 }

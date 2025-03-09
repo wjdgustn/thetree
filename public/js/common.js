@@ -303,14 +303,14 @@ const formHandler = async e => {
     }
 
     const html = await response.text();
+    let json;
+    try {
+        json = JSON.parse(html);
+    } catch(e) {}
 
     if(response.status.toString().startsWith('4') && !html.startsWith('<')) {
-        let json;
-        try {
-            json = JSON.parse(html);
-            if(json.fieldErrors)
-                processFieldErrors(inputs, json.fieldErrors);
-        } catch(e) {}
+        if(json?.fieldErrors)
+            processFieldErrors(inputs, json.fieldErrors);
 
         setProgress(100);
 
@@ -330,7 +330,15 @@ const formHandler = async e => {
         location.reload();
     }
 
-    if(await replaceContent(html, response.headers)) {
+    if(json?.type) {
+        if(json.type === 'js') {
+            eval(json.script);
+        }
+
+        plainAlert();
+        processFieldErrors(inputs);
+    }
+    else if(await replaceContent(html, response.headers)) {
         setupDocument();
         restoreForm();
         changeUrl(response.url);
