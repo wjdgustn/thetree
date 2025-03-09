@@ -82,6 +82,7 @@ app.get('/LongestPages', contentLengthHandler(false));
 
 let neededPages = fs.existsSync('./cache/neededPages.json') ? JSON.parse(fs.readFileSync('./cache/neededPages.json').toString()) : {};
 let orphanedPages = fs.existsSync('./cache/orphanedPages.json') ? JSON.parse(fs.readFileSync('./cache/orphanedPages.json').toString()) : {};
+let orphanedCategories = fs.existsSync('./cache/orphanedCategories.json') ? JSON.parse(fs.readFileSync('./cache/orphanedCategories.json').toString()) : [];
 
 const updateNeededPages = async () => {
     const newNeededPages = {};
@@ -153,9 +154,54 @@ const updateOrphanedPages = async () => {
     fs.writeFileSync('./cache/orphanedPages.json', JSON.stringify(orphanedPages));
 }
 
+const updateOrphanedCategories = async () => {
+    const newOrphanedCategories = [];
+
+    const allDocuments = await Document.find({
+        contentExists: true,
+        ...noRedirectQuery,
+        namespace: '분류'
+    }).lean();
+    const notOrphaned = [];
+
+    const topCategoryName = utils.parseDocumentName('분류:분류');
+    const checkDocs = [allDocuments.find(a => a.namespace === topCategoryName.namespace && a.title === topCategoryName.title)];
+    while(true) {
+        const currDoc = checkDocs.shift();
+        if(!currDoc) break;
+        notOrphaned.push(currDoc);
+
+        const links = currDoc.categories.map(a => `분류:${a.document}`);
+
+        const categoryDocs = allDocuments.filter(a => a.categories.some(b => b.document === currDoc.title));
+        links.push(...categoryDocs.map(a => globalUtils.doc_fulltitle(utils.dbDocumentToDocument(a))));
+
+        const parsedLinks = links.map(a => utils.parseDocumentName(a));
+        const uncheckedParsedLinks = parsedLinks.filter(a => !notOrphaned.some(b => a.namespace === b.namespace && a.title === b.title));
+        if(!uncheckedParsedLinks.length) continue;
+
+        const newCheckDocs = uncheckedParsedLinks.map(a => allDocuments.find(b => a.namespace === b.namespace && a.title === b.title)).filter(a => a);
+        for(let doc of newCheckDocs) {
+            if(!checkDocs.includes(doc)) checkDocs.push(doc);
+        }
+    }
+
+    const orphaned = allDocuments.filter(a => !notOrphaned.includes(a));
+    for(let doc of orphaned) {
+        const parsedName = utils.dbDocumentToDocument(doc);
+        newOrphanedCategories.push(globalUtils.doc_fulltitle(parsedName));
+    }
+
+    newOrphanedCategories.sort(Intl.Collator('en').compare);
+
+    orphanedCategories = newOrphanedCategories;
+    fs.writeFileSync('./cache/orphanedCategories.json', JSON.stringify(orphanedCategories));
+}
+
 const updateDailyLists = () => {
     updateNeededPages().then();
     updateOrphanedPages().then();
+    updateOrphanedCategories().then();
     scheduleUpdateDailyLists();
 }
 const scheduleUpdateDailyLists = () => {
@@ -220,6 +266,29 @@ app.get('/OrphanedPages', async (req, res) => {
 app.get('/OrphanedPages/update', middleware.permission('developer'), middleware.referer('/OrphanedPages'), async (req, res) => {
     res.status(204).end();
     await updateOrphanedPages();
+});
+
+app.get('/OrphanedCategories', async (req, res) => {
+    const displayCount = 100;
+    const pageStr = req.query.from || req.query.until;
+    const skipCount = pageStr ? (req.query.from ? parseInt(req.query.from) : parseInt(req.query.until) - displayCount + 1) : 0;
+    const fullItems = (orphanedCategories ?? []);
+    const items = fullItems.slice(skipCount, skipCount + displayCount);
+
+    res.renderSkin('고립된 분류', {
+        contentName: 'docList/OrphanedCategories',
+        serverData: {
+            items,
+            prevItem: skipCount - 1,
+            nextItem: skipCount + displayCount,
+            total: fullItems.length
+        }
+    });
+});
+
+app.get('/OrphanedCategories/update', middleware.permission('developer'), middleware.referer('/OrphanedCategories'), async (req, res) => {
+    res.status(204).end();
+    await updateOrphanedCategories();
 });
 
 module.exports = app;
