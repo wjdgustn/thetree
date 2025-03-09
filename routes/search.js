@@ -39,11 +39,17 @@ app.get('/Go', async (req, res) => {
     if(!req.query.q) return res.error('검색어가 없습니다.');
 
     const document = utils.parseDocumentName(req.query.q);
+    const upperTitle = document.title.toUpperCase();
+    const noSpaceUpperTitle = upperTitle.replaceAll(' ', '');
     const docs = await Document.find({
+        contentExists: true,
         namespace: document.namespace,
-        upperTitle: document.title.toUpperCase()
+        noSpaceUpperTitle
     });
-    const dbDocument = docs.find(a => a.title === document.title) || docs[0];
+    const dbDocument = docs.find(a => a.title === document.title)
+        || docs.find(a => a.upperTitle === upperTitle)
+        || docs.find(a => a.noSpaceUpperTitle === noSpaceUpperTitle)
+        || docs[0];
     if(!dbDocument) return res.redirect(`/Search?q=${encodeURIComponent(req.query.q)}`);
 
     res.redirect(globalUtils.doc_action_link({

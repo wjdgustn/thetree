@@ -25,6 +25,10 @@ const newSchema = new Schema({
         type: String,
         index: true
     },
+    noSpaceUpperTitle: {
+        type: String,
+        index: true
+    },
     contentExists: {
         type: Boolean,
         required: true,
@@ -70,6 +74,7 @@ newSchema.index({ namespace: 1, title: 1 }, { unique: true });
 const validate = (doc, oldDoc) => {
     if(doc.title) {
         doc.upperTitle = doc.title.toUpperCase();
+        doc.noSpaceUpperTitle = doc.upperTitle.replaceAll(' ', '');
 
         const namespace = doc.namespace || oldDoc?.namespace;
         if(namespace === '틀'
