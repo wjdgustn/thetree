@@ -66,7 +66,7 @@ const isFrontPage = docTitle === config.front_page;
         [ADMIN] 스레드 상태 변경
         <select name="status">
             <%for(let [name, value] of Object.entries(ThreadStatusTypes)) {%>
-                <option value="<%=name%>"<%=thread.status === value ? ' selected' : ''%>><%=name.toLowerCase()%></option>
+                <option value="<%=name%>" x-show="$store.state.page.data.thread.status !== <%=value%>"<%=(thread.status === ThreadStatusTypes.Normal && value === ThreadStatusTypes.Close) ? ' selected' : ''%>><%=name.toLowerCase()%></option>
             <%}%>
         </select>
         <button class="thetree-square-button">변경</button>
