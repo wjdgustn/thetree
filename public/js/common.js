@@ -519,7 +519,8 @@ function setupDocument(forceCaptcha = false) {
         if(isPlugin) element._thetree = {
             editor: {
                 getValue() {},
-                setValue(value) {}
+                setValue(value) {},
+                onLoad() {}
             }
         }
         else element._thetree = {
