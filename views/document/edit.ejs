@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="/css/views/edit.css">
 <link rel="stylesheet" href="/css/views/diff.css">
+<script src="/js/edit.js"></script>
 <script src="/js/unsavedWarn.js"></script>
-
 <script src="/js/preview.js"></script>
 
 <%conflict = typeof conflict === 'undefined' ? null : conflict%>
@@ -25,25 +25,43 @@
     <span class="conflict-error">자동 병합에 실패했습니다! 수동으로 수정된 내역을 아래 텍스트 박스에 다시 입력해주세요.</span>
 <%}%>
 
-<form method="post" x-data="{ selectedTab: 'raw' }"<%=useCaptcha ? ' data-captcha="1"' : ''%>>
+<form id="edit-form" method="post" x-data="{ selectedTab: 'raw' }"<%=useCaptcha ? ' data-captcha="1"' : ''%>>
     <%for(let [key, value] of Object.entries(body).filter(([_, v]) => !!v)) {%>
         <input type="hidden" name="<%=key%>" value="<%=value%>">
     <%}%>
 
     <ul class="form-ul">
-<!--        <li class="form-li"><button type="button" :class="selectedTab === 'editor' && 'selected-tab'" @click="selectedTab = 'editor'">편집기</button></li>-->
-        <li class="form-li"><button type="button" :class="selectedTab === 'raw' && 'selected-tab'" @click="selectedTab = 'raw'">RAW 편집</button></li>
+        <%if(isEditRequest || !aclMessage) for(let plugin of global.plugins.editor) {%>
+            <%const tabName = `plugin-${plugin.name}`;%>
+            <li class="form-li"><button type="button" class="tab-button" data-tab="<%=tabName%>" :class="selectedTab === $el.dataset.tab && 'selected-tab'" @click="selectedTab = $el.dataset.tab"><%=plugin.tabName%></button></li>
+        <%}%>
+        <li class="form-li"><button type="button" class="tab-button" data-tab="raw" :class="selectedTab === $el.dataset.tab && 'selected-tab'" @click="selectedTab = $el.dataset.tab">RAW 편집</button></li>
         <%if(isEditRequest || !aclMessage) {%>
-        <li class="form-li"><button id="preview-tab-button" type="button" :class="selectedTab === 'preview' && 'selected-tab'" @click="selectedTab = 'preview'">미리보기</button></li>
+        <li class="form-li"><button id="preview-tab-button" class="tab-button" type="button" data-tab="preview" :class="selectedTab === $el.dataset.tab && 'selected-tab'" @click="selectedTab = $el.dataset.tab">미리보기</button></li>
+
+        <li class="form-li editor-buttons">
+            <%for(let plugin of global.plugins.editor) {%>
+                <%if(!plugin.buttons?.length) continue;%>
+                <div x-show="selectedTab === 'plugin-<%=plugin.name%>'">
+                    <%for(let button of plugin.buttons) {%><div><button type="button" data-name="<%=button.name%>" class="plugin-<%=plugin.name%>-button"><%=button.label%></button></div><%}%>
+                </div>
+            <%}%>
+        </li>
         <%}%>
     </ul>
 
     <div class="tabs">
-        <div :class="selectedTab === 'raw' && 'selected-tab-content'">
+        <%for(let plugin of global.plugins.editor) {%>
+            <div id="plugin-<%=plugin.name%>-tab" class="plugin-tab" data-tab="plugin-<%=plugin.name%>" :class="selectedTab === $el.dataset.tab && 'selected-tab-content'">
+                <%-include(path.join(global.pluginPaths[plugin.name], 'editor'), { plugin })%>
+            </div>
+        <%}%>
+
+        <div data-tab="raw" :class="selectedTab === $el.dataset.tab && 'selected-tab-content'">
             <textarea id="text-input" class="unsaved-warn" name="text" wrap="soft"<%=!isEditRequest && aclMessage ? ' readonly' : ''%>><%=content%></textarea>
         </div>
 
-        <div id="preview-tab-content" :class="selectedTab === 'preview' && 'selected-tab-content'">
+        <div id="preview-tab-content" data-tab="preview" :class="selectedTab === $el.dataset.tab && 'selected-tab-content'">
             im preview
         </div>
     </div>

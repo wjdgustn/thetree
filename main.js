@@ -201,10 +201,15 @@ global.updateEngine = (exit = true) => {
 
 global.plugins = {
     macro: [],
-    skinData: []
+    skinData: [],
+    editor: []
 };
+global.pluginPaths = {};
+const pluginStaticPaths = [];
 global.reloadPlugins = () => {
     for(let key in plugins) plugins[key] = [];
+    global.pluginPaths = {};
+    pluginStaticPaths.length = 0;
 
     const loadPlugins = dir => {
         if(!fs.existsSync(dir)) return;
@@ -215,12 +220,30 @@ global.reloadPlugins = () => {
                 const pluginPath = require.resolve(path.resolve(dir, f));
                 delete require.cache[pluginPath];
                 const plugin = require(pluginPath);
+
+                if(!plugin.name) {
+                    const pluginName = dir.split(path.sep).pop();
+                    plugin.name = pluginName;
+                }
+
                 plugins[plugin.type].push(plugin);
+
+                if(plugin.name) pluginPaths[plugin.name] = path.resolve(dir);
             }
-            else loadPlugins(path.join(dir, f));
+            else if(f === 'public') {
+                if(dir.split(path.sep).length !== 2) continue;
+
+                const folder = path.join(dir, f);
+                const pluginName = dir.split(path.sep).pop();
+                pluginStaticPaths.push({
+                    pluginName,
+                    middleware: express.static(folder)
+                });
+            }
+            else if(!f.includes('.')) loadPlugins(path.join(dir, f));
         }
     }
-    loadPlugins('./plugins');
+    loadPlugins('plugins');
 }
 reloadPlugins();
 
@@ -370,6 +393,13 @@ app.use('/skins', (req, res, next) => {
     if(config.minify.css && filename.endsWith('.css')) return minifyManager.handleSkinCSS(filename, req, res, next);
 
     skinsStatic(req, res, next);
+});
+
+app.use('/plugins/:pluginName', (req, res, next) => {
+    const plugin = pluginStaticPaths.find(a => a.pluginName === req.params.pluginName);
+    if(!plugin) return next();
+
+    plugin.middleware(req, res, next);
 });
 
 app.use(express.urlencoded({

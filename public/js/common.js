@@ -510,15 +510,23 @@ function setupDocument(forceCaptcha = false) {
 
     const allElements = document.getElementsByTagName('*');
     for(let element of allElements) {
-        if(typeof element.className !== 'string'
-            || !element.className.includes('thetree')) continue;
+        const isThetreeComponent = (typeof element.className) === 'string'
+            && element.className.includes('thetree');
+        const isPlugin = element.id.startsWith('plugin-');
+        if(!isThetreeComponent && !isPlugin) continue;
         if(element._thetree) continue;
 
-        element._thetree = {
+        if(isPlugin) element._thetree = {
+            editor: {
+                getValue() {},
+                setValue(value) {}
+            }
+        }
+        else element._thetree = {
             modal: {},
             dropdown: {},
             preHandler: null
-        };
+        }
     }
 
     setupUserText();

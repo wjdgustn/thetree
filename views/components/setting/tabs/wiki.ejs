@@ -1,3 +1,17 @@
+<%
+const editModes = [];
+for(let plugin of global.plugins.editor) {
+    editModes.push({
+        name: `plugin-${plugin.name}`,
+        label: plugin.tabName
+    });
+}
+editModes.push({
+    name: 'raw',
+    label: 'RAW 편집'
+});
+%>
+
 <%for(let setting of [
     {
         name: 'theme',
@@ -48,6 +62,13 @@
             //     label: '펼침'
             // }
         ]
+    },
+    {
+        name: 'default_edit_mode',
+        label: '기본 편집 모드',
+        type: 'enum',
+        defaultValue: req.isMobile ? 'raw' : editModes[0].name,
+        options: editModes
     },
     {
         name: 'no_relative_date',

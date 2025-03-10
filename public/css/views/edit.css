@@ -17,6 +17,14 @@
         margin-bottom: -1px;
     }
 
+    form .editor-buttons {
+        float: right;
+    }
+
+    form .editor-buttons>div>div {
+        display: inline-block;
+    }
+
     form li + li {
         margin-left: .2rem;
     }
