@@ -17,8 +17,10 @@ document.addEventListener('thetree:pageLoad', () => {
         setEditorValues(textInput.value);
 
         const currTab = document.getElementsByClassName('selected-tab-content')[0];
-        currTab._thetree.editor.onLoad();
-        currTab._thetree.editor.loaded = true;
+        if(currTab._thetree?.editor) {
+            currTab._thetree.editor.onLoad();
+            currTab._thetree.editor.loaded = true;
+        }
     });
 
     for(let button of tabButtons) {
@@ -32,8 +34,10 @@ document.addEventListener('thetree:pageLoad', () => {
 
             requestAnimationFrame(() => {
                 const currTab = document.getElementsByClassName('selected-tab-content')[0];
-                if(!currTab._thetree.editor.loaded) currTab._thetree.editor.onLoad();
-                currTab._thetree.editor.loaded = true;
+                if(currTab._thetree.editor) {
+                    if(!currTab._thetree.editor.loaded) currTab._thetree.editor.onLoad();
+                    currTab._thetree.editor.loaded = true;
+                }
             });
         }, {
             capture: true
