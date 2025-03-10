@@ -37,6 +37,9 @@
     .signup-terms {
         height: 30rem;
         scrollbar-width: thin;
+        white-space: break-spaces;
+        resize: vertical;
+        margin: 0;
     }
 
     .signup-agree-label {
