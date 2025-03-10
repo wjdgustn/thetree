@@ -30,14 +30,21 @@ document.addEventListener('thetree:pageLoad', () => {
         });
     }
 
-    form.addEventListener('submit', () => {
+    const updateTextInput = () => {
         const currTab = document.getElementsByClassName('selected-tab-content')[0];
         const tabName = currTab.dataset.tab;
         if(!tabName.startsWith('plugin-')) return;
 
         const value = currTab._thetree.editor.getValue();
         textInput.value = value;
-    }, {
+    }
+
+    form.addEventListener('submit', updateTextInput, {
         capture: true
+    });
+
+    window.beforePageLoad.push(() => {
+        updateTextInput();
+        return true;
     });
 }, { once: true });
