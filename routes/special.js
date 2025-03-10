@@ -383,9 +383,16 @@ app.get('/BlockHistory', async (req, res) => {
             if(query.includes('-')) baseQuery.createdUser = query;
             else {
                 const checkUser = await User.findOne({
-                    name: query
+                    $or: [
+                        {
+                            name: query
+                        },
+                        {
+                            ip: query
+                        }
+                    ]
                 });
-                if(checkUser) baseQuery.createdUser = checkUser.uuid;
+                baseQuery.createdUser = checkUser?.uuid;
             }
         }
         else {
