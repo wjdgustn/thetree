@@ -5,7 +5,7 @@
 /cache/
 /opennamu_data/
 /skins/*
-/plugins/
+/plugins/*
 
 .env
 
