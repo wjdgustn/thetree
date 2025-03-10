@@ -240,7 +240,11 @@ global.reloadPlugins = () => {
                     middleware: express.static(folder)
                 });
             }
-            else if(!f.includes('.')) loadPlugins(path.join(dir, f));
+            else if(!f.includes('.')) {
+                const nextPath = path.join(dir, f);
+                const isDir = fs.lstatSync(nextPath).isDirectory();
+                if(isDir) loadPlugins(nextPath);
+            }
         }
     }
     loadPlugins('plugins');
