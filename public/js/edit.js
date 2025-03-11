@@ -1,11 +1,8 @@
 document.addEventListener('thetree:pageLoad', () => {
     const form = document.getElementById('edit-form');
-    const formAlpineData = Alpine.$data(form);
     const textInput = document.getElementById('text-input');
     const pluginTabs = [...document.getElementsByClassName('plugin-tab')];
     const tabButtons = [...document.getElementsByClassName('tab-button')];
-
-    formAlpineData.selectedTab = State.getLocalConfig('wiki.default_edit_mode');
 
     const setEditorValues = value => {
         for(let tab of pluginTabs) {

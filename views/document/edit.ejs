@@ -25,7 +25,7 @@
     <span class="conflict-error">자동 병합에 실패했습니다! 수동으로 수정된 내역을 아래 텍스트 박스에 다시 입력해주세요.</span>
 <%}%>
 
-<form id="edit-form" method="post" x-data="{ selectedTab: null }"<%=useCaptcha ? ' data-captcha="1"' : ''%>>
+<form id="edit-form" method="post" x-data="{ selectedTab: $store.state.getLocalConfig('wiki.default_edit_mode') }"<%=useCaptcha ? ' data-captcha="1"' : ''%>>
     <%for(let [key, value] of Object.entries(body).filter(([_, v]) => !!v)) {%>
         <input type="hidden" name="<%=key%>" value="<%=value%>">
     <%}%>
