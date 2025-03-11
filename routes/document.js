@@ -1732,7 +1732,7 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
     if(document.namespace.includes('파일')) {
         const ext = document.title.split('.').pop();
         const newExt = otherDocument.title.split('.').pop();
-        if(ext !== newExt) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext.slice(1)})`);
+        if(ext !== newExt) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext})`);
     }
 
     const isSwap = req.body.mode === 'swap';
