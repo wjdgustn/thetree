@@ -272,11 +272,12 @@ app.post('/member/signup/:token',
         email: token.email
     });
 
-    const dbDocument = new Document({
+    const docJson = {
         namespace: '사용자',
         title: newUser.name
-    });
-    await dbDocument.save();
+    }
+    let dbDocument = await Document.findOne(docJson);
+    dbDocument ??= await Document.create(docJson);
 
     await History.create({
         user: newUser.uuid,
