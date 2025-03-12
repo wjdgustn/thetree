@@ -229,7 +229,9 @@ module.exports = class NamumarkParser {
                 && (
                     (syntax.priority <= Priority.Footnote - (options.removeFootnote ? 1 : 0))
                     || syntax.priority >= Priority.Last
-                )) continue;
+                )
+                // Priority.Div는 childParse에서 실행돼야 함
+                && syntax.priority !== Priority.Div) continue;
 
             if(syntax.fullContent) {
                 text = await syntax.format(sourceText, this);
