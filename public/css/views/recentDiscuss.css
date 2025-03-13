@@ -18,14 +18,6 @@
         grid-template-columns: 1fr 13rem;
     }
 
-    @media screen and (max-width: 1023.98px) {
-        .changes-line {
-            gap: .1rem;
-            grid-template-columns: none;
-            padding: .5rem;
-        }
-    }
-
     .changes-heading {
         border-bottom-width: 2px;
         font-weight: 600;
@@ -71,6 +63,12 @@
     }
 
     @media screen and (max-width: 1023.98px) {
+        .changes-line {
+            gap: .1rem;
+            grid-template-columns: none !important;
+            padding: .5rem;
+        }
+
         .changes-value {
             margin: 0 !important;
             padding: 0 !important;
@@ -80,7 +78,7 @@
             font-size: 1.05rem;
         }
 
-        .changes-value:nth-child(3) {
+        .changes-value:nth-child(2) {
             color: #888;
             font-size: .85rem;
             order: -1;
