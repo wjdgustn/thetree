@@ -78,7 +78,7 @@
             font-size: 1.05rem;
         }
 
-        .changes-value:nth-child(2) {
+        .changes-value:has(time) {
             color: #888;
             font-size: .85rem;
             order: -1;
