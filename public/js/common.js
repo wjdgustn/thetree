@@ -790,7 +790,11 @@ window.addEventListener('beforeunload', e => {
     }
 });
 
-const getLocalConfig = key => (window.State ? State.localConfig : localConfig)[key] ?? defaultConfig[key];
+const getLocalConfig = key => {
+    const result = (window.State ? State.localConfig : localConfig)[key] ?? defaultConfig[key];
+    if(key === 'wiki.theme' && result === 'auto') return defaultConfig[key];
+    return result;
+}
 
 const userLocalConfig = JSON.parse(localStorage.getItem('thetree_settings') ?? '{}');
 const localConfig = { ...userLocalConfig };
