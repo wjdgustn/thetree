@@ -5,6 +5,8 @@
 
   "namespaces": [],
 
+  "max_file_size": 10,
+
   "can_withdraw": true,
   "withdraw_last_activity_hours": 24,
   "withdraw_save_days": 0,

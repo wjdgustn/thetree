@@ -223,7 +223,7 @@ app.get('/Upload', async (req, res) => {
 const uploadFile = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 1024 * 1024 * 10
+        fileSize: 1024 * 1024 * (config.max_file_size || 10)
     }
 }).single('file');
 app.post('/Upload', (req, res, next) => {
