@@ -3,8 +3,8 @@ module.exports = params => {
 
     let videoId = params.shift();
 
-    let width = '640';
-    let height = '360';
+    let width = '720';
+    let height = '480';
     let start;
     let end;
     for(let param of params) {
