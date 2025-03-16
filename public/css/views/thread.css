@@ -31,7 +31,7 @@
         overflow: hidden;
     }
 
-    .theseed-dark-mode div.comment-block div.comment-block-inner {
+    .thetree-dark-mode div.comment-block div.comment-block-inner {
         background-color: #2d2f34;
         border-color: #383b40;
     }
@@ -57,7 +57,7 @@
         background: #b0d3ad;
     }
 
-    .theseed-dark-mode div.comment-block div.comment-block-user.comment-block-user-starter {
+    .thetree-dark-mode div.comment-block div.comment-block-user.comment-block-user-starter {
         background-color: #324432;
     }
 
@@ -93,7 +93,7 @@
         overflow-y: auto;
     }
 
-    .theseed-dark-mode div.comment-block div.comment-block-content {
+    .thetree-dark-mode div.comment-block div.comment-block-content {
         background: #27292d;
     }
 
@@ -101,7 +101,7 @@
         background: #fc6;
     }
 
-    .theseed-dark-mode div.comment-block div.comment-block-content.special-comment {
+    .thetree-dark-mode div.comment-block div.comment-block-content.special-comment {
         background: #54411a;
     }
 
@@ -110,7 +110,7 @@
         color: #fff;
     }
 
-    .theseed-dark-mode div.comment-block div.comment-block-content.hidden-content {
+    .thetree-dark-mode div.comment-block div.comment-block-content.hidden-content {
         background: #54411a;
     }
 
@@ -136,7 +136,7 @@
         padding-top: 1em;
     }
 
-    .theseed-dark-mode .comment-title {
+    .thetree-dark-mode .comment-title {
         border-top-color: #383b40;
     }
 
@@ -154,7 +154,7 @@
         padding-left: 0;
     }
 
-    .theseed-dark-mode form.comment-form>ul {
+    .thetree-dark-mode form.comment-form>ul {
         border-color: #383b40;
     }
 
@@ -178,7 +178,7 @@
         padding: .5em 1em;
     }
 
-    .theseed-dark-mode form.comment-form>ul>li button {
+    .thetree-dark-mode form.comment-form>ul>li button {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;
@@ -190,7 +190,7 @@
         color: #55595c;
     }
 
-    .theseed-dark-mode form.comment-form>ul>li button.selected-tab {
+    .thetree-dark-mode form.comment-form>ul>li button.selected-tab {
         background-color: #383b40;
         border-color: #383b40;
         color: #ddd;
@@ -202,7 +202,7 @@
         margin-bottom: 1em;
     }
 
-    .theseed-dark-mode form.comment-form div.tabs {
+    .thetree-dark-mode form.comment-form div.tabs {
         border-color: #383b40;
     }
 
@@ -244,7 +244,7 @@
         opacity: 1;
     }
 
-    .theseed-dark-mode textarea:not(#contentInput) {
+    .thetree-dark-mode textarea:not(#contentInput) {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;

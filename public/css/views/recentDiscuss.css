@@ -10,7 +10,7 @@
         grid-template-columns: 1fr 11rem 13rem;
     }
 
-    .theseed-dark-mode .changes-line {
+    .thetree-dark-mode .changes-line {
         border-bottom-color: #575757;
     }
 
@@ -27,7 +27,7 @@
         background-color: #fbfbfb;
     }
 
-    .theseed-dark-mode .changes-line:not(.changes-heading):hover {
+    .thetree-dark-mode .changes-line:not(.changes-heading):hover {
         background-color: #2a2a2a;
     }
 
@@ -40,7 +40,7 @@
             border-top: 1px solid #e0e0e0;
         }
 
-        .theseed-dark-mode .changes-heading+.changes-line {
+        .thetree-dark-mode .changes-heading+.changes-line {
             border-top-color: #575757;
         }
     }
@@ -100,7 +100,7 @@
         padding: 0 .75rem .5rem 1.5rem;
     }
 
-    .theseed-dark-mode .changes-value+.changes-value-log {
+    .thetree-dark-mode .changes-value+.changes-value-log {
         color: #bbb;
     }
 
@@ -141,7 +141,7 @@
         color: var(--light-text-color, var(--text-color, #212529)) !important;
     }
 
-    .theseed-dark-mode .document-link {
+    .thetree-dark-mode .document-link {
         color: var(--dark-text-color, var(--text-color, #e0e0e0)) !important;
     }
 }

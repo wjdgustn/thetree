@@ -23,7 +23,7 @@
         padding: .3rem .75rem;
     }
 
-    .theseed-dark-mode .signup-input {
+    .thetree-dark-mode .signup-input {
         background-color: #282829;
         border-color: #484848;
     }
@@ -61,7 +61,7 @@
         width: 1.15em;
     }
 
-    .theseed-dark-mode .signup-agree-input {
+    .thetree-dark-mode .signup-agree-input {
         background-color: #282829;
         border-color: #484848;
     }
@@ -79,7 +79,7 @@
         transition: box-shadow .1s linear
     }
 
-    .theseed-dark-mode .signup-agree-input:focus-visible {
+    .thetree-dark-mode .signup-agree-input:focus-visible {
         --focus-outline-color: #4e4e4e
     }
 

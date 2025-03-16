@@ -34,7 +34,7 @@
         width: calc(100% - 0.7rem);
     }
 
-    .theseed-dark-mode form select {
+    .thetree-dark-mode form select {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;

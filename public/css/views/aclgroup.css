@@ -8,7 +8,7 @@
         padding-left: 0;
     }
 
-    .theseed-dark-mode ul {
+    .thetree-dark-mode ul {
         border-bottom: 1px solid #383b40;
     }
 
@@ -30,7 +30,7 @@
         padding: .5em 1em;
     }
 
-    .theseed-dark-mode li>a, .theseed-dark-mode li>button {
+    .thetree-dark-mode li>a, .thetree-dark-mode li>button {
         border-color: #383b40 #383b40 transparent;
         color: #ddd !important;
     }
@@ -50,7 +50,7 @@
         color: #55595c;
     }
 
-    .theseed-dark-mode li>a.selected-group, .theseed-dark-mode li>button.selected-group {
+    .thetree-dark-mode li>a.selected-group, .thetree-dark-mode li>button.selected-group {
         background-color: #27292d;
     }
 
@@ -81,7 +81,7 @@
         padding: .25rem .5rem;
     }
 
-    .theseed-dark-mode input, .theseed-dark-mode select {
+    .thetree-dark-mode input, .thetree-dark-mode select {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;

@@ -41,7 +41,7 @@
         width: 100%;
     }
 
-    .theseed-dark-mode input, .theseed-dark-mode textarea {
+    .thetree-dark-mode input, .thetree-dark-mode textarea {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;
@@ -82,12 +82,12 @@
         background: #bac6f2;
     }
 
-    .theseed-dark-mode a.thread-more {
+    .thetree-dark-mode a.thread-more {
         background-color: #325a56;
         color: #ddd;
     }
 
-    .theseed-dark-mode a.thread-more:hover {
+    .thetree-dark-mode a.thread-more:hover {
         background-color: #438a83;
     }
 

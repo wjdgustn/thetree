@@ -10,7 +10,7 @@
         grid-template-columns: 1fr 13rem 3rem;
     }
 
-    .theseed-dark-mode .list-row {
+    .thetree-dark-mode .list-row {
         border-bottom-color: #575757;
     }
 
@@ -18,7 +18,7 @@
         background-color: #fbfbfb;
     }
 
-    .theseed-dark-mode .list-row:hover {
+    .thetree-dark-mode .list-row:hover {
         background-color: #2a2a2a;
     }
 

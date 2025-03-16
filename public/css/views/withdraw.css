@@ -27,7 +27,7 @@
         width: calc(100% - .7rem);
     }
 
-    .theseed-dark-mode form input {
+    .thetree-dark-mode form input {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;

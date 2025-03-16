@@ -37,7 +37,7 @@
         width: 20rem;
     }
 
-    .theseed-dark-mode .search-type, .theseed-dark-mode .search-input {
+    .thetree-dark-mode .search-type, .thetree-dark-mode .search-input {
         background-color: #282829;
         border-color: #484848;
     }
@@ -92,7 +92,7 @@
         padding: .6rem .75rem 0;
     }
 
-    .theseed-dark-mode li {
+    .thetree-dark-mode li {
         border-top-color: #434343;
     }
 

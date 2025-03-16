@@ -6,7 +6,7 @@
         white-space: pre-wrap;
     }
 
-    .theseed-dark-mode .diff-table {
+    .thetree-dark-mode .diff-table {
         border-color: #383b40;
     }
 
@@ -16,7 +16,7 @@
         font-family: Verdana;
     }
 
-    .theseed-dark-mode .diff-table thead {
+    .thetree-dark-mode .diff-table thead {
         background: #2d2f34;
         border-bottom: 1px solid #383b40;
     }
@@ -38,7 +38,7 @@
         word-break: normal;
     }
 
-    .theseed-dark-mode .diff-table tbody th {
+    .thetree-dark-mode .diff-table tbody th {
         background: #27292d;
         border: 1px solid #383b40;
         color: #8a8a8a;
@@ -55,7 +55,7 @@
         border-right-color: #bbc;
     }
 
-    .theseed-dark-mode .diff-table .skip {
+    .thetree-dark-mode .diff-table .skip {
         background-color: #2d2f34;
         border: 1px solid #383b40;
     }
@@ -69,7 +69,7 @@
         background-color: #fdd;
     }
 
-    .theseed-dark-mode .diff-table .delete {
+    .thetree-dark-mode .diff-table .delete {
         background-color: #943838;
     }
 
@@ -77,7 +77,7 @@
         background-color: #cfc;
     }
 
-    .theseed-dark-mode .diff-table .insert {
+    .thetree-dark-mode .diff-table .insert {
         background-color: #3b5a3b;
     }
 
@@ -87,7 +87,7 @@
         text-decoration: line-through;
     }
 
-    .theseed-dark-mode .diff-table del.diff {
+    .thetree-dark-mode .diff-table del.diff {
         background-color: #d05d5d;
         color: #ddd;
     }
@@ -97,7 +97,7 @@
         text-decoration: none;
     }
 
-    .theseed-dark-mode .diff-table ins.diff {
+    .thetree-dark-mode .diff-table ins.diff {
         background-color: #1c751c;
     }
 }

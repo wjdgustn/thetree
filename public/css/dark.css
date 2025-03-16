@@ -1,167 +1,167 @@
-.theseed-dark-mode .thetree-alert {
+.thetree-dark-mode .thetree-alert {
     background-color: #2a2a2a;
     border-color: #484848;
 }
 
-.theseed-dark-mode .thetree-alert-primary {
+.thetree-dark-mode .thetree-alert-primary {
     background-color: #05234f;
     border-color: #052e6d;
     color: #c0d2ee
 }
 
-.theseed-dark-mode .thetree-alert-danger {
+.thetree-dark-mode .thetree-alert-danger {
     background-color: #3d050b;
     border-color: #861520;
     color: #eec0c0;
 }
 
-.theseed-dark-mode .thetree-square-button {
+.thetree-dark-mode .thetree-square-button {
     background-color: #27292d;
     border-color: #383b40;
     color: #ddd !important;
 }
 
-.theseed-dark-mode .thetree-square-button:not([disabled]):not(.thetree-button-disabled):hover {
+.thetree-dark-mode .thetree-square-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #2d2f34;
     border-color: #383b40;
 }
 
-.theseed-dark-mode .thetree-button {
+.thetree-dark-mode .thetree-button {
     background-color: #282829;
     border-color: #484848;
     color: var(--dark-text-color, var(--text-color, #e0e0e0));
 }
 
-.theseed-dark-mode .thetree-button:hover:not([disabled]):not(.thetree-button-disabled) {
+.thetree-dark-mode .thetree-button:hover:not([disabled]):not(.thetree-button-disabled) {
     background-color: #555 !important;
 }
 
-.theseed-dark-mode .thetree-blue-button {
+.thetree-dark-mode .thetree-blue-button {
     background-color: #1555b5 !important;
     border-color: #052e6d !important;
 }
 
-.theseed-dark-mode .thetree-blue-button:not([disabled]):not(.thetree-button-disabled):hover {
+.thetree-dark-mode .thetree-blue-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #1e5ebd !important;
 }
 
-.theseed-dark-mode .thetree-primary-button {
+.thetree-dark-mode .thetree-primary-button {
     background-color: #1555b5 !important;
     border-color: #052e6d !important;
 }
 
-.theseed-dark-mode .thetree-primary-button:not([disabled]):not(.thetree-button-disabled):hover {
+.thetree-dark-mode .thetree-primary-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #1e5ebd !important;
 }
 
-.theseed-dark-mode .category-list {
+.thetree-dark-mode .category-list {
     background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
     border-color: #555;
 }
 
-.theseed-dark-mode .category-list-more {
+.thetree-dark-mode .category-list-more {
     background: linear-gradient(90deg, transparent, var(--dark-article-background-color, var(--article-background-color, #1c1d1f)), var(--dark-article-background-color, var(--article-background-color, #1c1d1f)));
 }
 
-.theseed-dark-mode .navigation-button {
+.thetree-dark-mode .navigation-button {
     background-color: #282829;
     border-color: #484848;
     color: var(--dark-text-color, var(--text-color, #e0e0e0));
 }
 
-.theseed-dark-mode .navigation-button:not(.thetree-button-disabled):hover {
+.thetree-dark-mode .navigation-button:not(.thetree-button-disabled):hover {
     background-color: #555;
 }
 
-.theseed-dark-mode .thetree-button-disabled {
+.thetree-dark-mode .thetree-button-disabled {
     background-color: #373737;
     border-color: #424242;
     color: #777 !important;
 }
 
-.theseed-dark-mode .searchable-dropdown-menu,
-.theseed-dark-mode .searchable-dropdown-toggle,
-.theseed-dark-mode .searchable-dropdown-search::placeholder {
+.thetree-dark-mode .searchable-dropdown-menu,
+.thetree-dark-mode .searchable-dropdown-toggle,
+.thetree-dark-mode .searchable-dropdown-search::placeholder {
     background: #27292d;
     color: #ddd;
 }
 
-.theseed-dark-mode .searchable-dropdown-option,
-.theseed-dark-mode .searchable-dropdown-selected {
+.thetree-dark-mode .searchable-dropdown-option,
+.thetree-dark-mode .searchable-dropdown-selected {
     color: #ddd;
 }
 
-.theseed-dark-mode .searchable-dropdown-arrow {
+.thetree-dark-mode .searchable-dropdown-arrow {
     fill: #ddd;
 }
 
-.theseed-dark-mode #userpopup {
+.thetree-dark-mode #userpopup {
     background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
     border-color: #484848;
 }
 
-.theseed-dark-mode #userpopup>div>div>hr {
+.thetree-dark-mode #userpopup>div>div>hr {
     border-color: #484848;
 }
 
-.theseed-dark-mode #userpopup>div>div>a,
-.theseed-dark-mode #userpopup>div>div>span {
+.thetree-dark-mode #userpopup>div>div>a,
+.thetree-dark-mode #userpopup>div>div>span {
     background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
 }
 
-.theseed-dark-mode .thetree-block-button:not(.thetree-button-disabled) {
+.thetree-dark-mode .thetree-block-button:not(.thetree-button-disabled) {
     background-color: #75121c !important;
 }
 
-.theseed-dark-mode .thetree-block-button:not([disabled]):not(.thetree-button-disabled):hover {
+.thetree-dark-mode .thetree-block-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #8d101d !important;
 }
 
-.theseed-dark-mode #setting-modal .thetree-modal-close {
+.thetree-dark-mode #setting-modal .thetree-modal-close {
     color: #fff;
 }
 
-.theseed-dark-mode #setting-modal header>ul>li {
+.thetree-dark-mode #setting-modal header>ul>li {
     color: #ddd;
 }
 
-.theseed-dark-mode .thetree-modal-content {
+.thetree-dark-mode .thetree-modal-content {
     background-color: #2d2f34;
     border-color: #2d3748;
 }
 
-.theseed-dark-mode .footnote-modal-contents button {
+.thetree-dark-mode .footnote-modal-contents button {
     background-color: #383b40;
     border-top: 1px solid #111;
 }
 
-.theseed-dark-mode .thetree-delete-button:not(.thetree-button-disabled) {
+.thetree-dark-mode .thetree-delete-button:not(.thetree-button-disabled) {
     background-color: #75121c;
     border-color: #861520;
 }
 
-.theseed-dark-mode .thetree-delete-button:not([disabled]):not(.thetree-button-disabled):hover {
+.thetree-dark-mode .thetree-delete-button:not([disabled]):not(.thetree-button-disabled):hover {
     background-color: #8d101d !important;
 }
 
-.theseed-dark-mode .nav-block-content-ul:not(.nav-no-border)>* {
+.thetree-dark-mode .nav-block-content-ul:not(.nav-no-border)>* {
     border-bottom-color: #575757;
     border-top-color: #575757;
 }
 
-.theseed-dark-mode .nav-block-content-ul:not(.nav-no-border)>:first-of-type {
+.thetree-dark-mode .nav-block-content-ul:not(.nav-no-border)>:first-of-type {
     border-left-color: #575757;
 }
 
-.theseed-dark-mode .nav-block-content-ul:not(.nav-no-border)>:last-of-type {
+.thetree-dark-mode .nav-block-content-ul:not(.nav-no-border)>:last-of-type {
     border-right-color: #575757;
 }
 
-.theseed-dark-mode .namespace-selector-block form {
+.thetree-dark-mode .namespace-selector-block form {
     border-color: #484848;
 }
 
-.theseed-dark-mode .namespace-selector-block select {
+.thetree-dark-mode .namespace-selector-block select {
     background-color: #282829;
     background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Cpath fill=%27%23434343%27 d=%27M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z%27/%3E%3C/svg%3E");
     border-color: #484848;

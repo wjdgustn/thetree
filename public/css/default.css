@@ -201,7 +201,7 @@ a {
     text-decoration: none;
 }
 
-.theseed-dark-mode a {
+.thetree-dark-mode a {
     color: #e69720;
 }
 
@@ -577,7 +577,7 @@ div.category-document-block div.category-document-many-content div:first-child h
     --navigation-item-underline-color: var(--brand-bright-color-2, #e3e3e3);
 }
 
-.theseed-dark-mode .nav-content:hover {
+.thetree-dark-mode .nav-content:hover {
     --navigation-item-underline-color: var(--brand-bright-color-2, #45474b);
 }
 
@@ -598,7 +598,7 @@ div.category-document-block div.category-document-many-content div:first-child h
     font-weight: 600;
 }
 
-.theseed-dark-mode .nav-content-selected {
+.thetree-dark-mode .nav-content-selected {
     color: var(--dark-text-color, var(--text-color, #e0e0e0)) !important;
 }
 

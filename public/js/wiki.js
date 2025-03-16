@@ -118,7 +118,7 @@ function setupWikiHandlers() {
     if(darkStyles.length) {
         const newDarkStyle = document.createElement('style');
         newDarkStyle.id = 'darkStyle';
-        newDarkStyle.innerHTML = darkStyles.map(a => `.theseed-dark-mode .${a.class}{${a.style}}`).join('');
+        newDarkStyle.innerHTML = darkStyles.map(a => `.thetree-dark-mode .${a.class}{${a.style}}`).join('');
         document.body.appendChild(newDarkStyle);
     }
 }

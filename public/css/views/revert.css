@@ -21,7 +21,7 @@
         opacity: 1;
     }
 
-    .theseed-dark-mode textarea {
+    .thetree-dark-mode textarea {
         background-color: #000;
         color: #ddd;
     }
@@ -45,7 +45,7 @@
         width: 100%;
     }
 
-    .theseed-dark-mode form input[type=text] {
+    .thetree-dark-mode form input[type=text] {
         background-color: #000;
         color: #ddd;
     }

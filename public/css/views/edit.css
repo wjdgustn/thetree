@@ -8,7 +8,7 @@
         padding-left: 0;
     }
 
-    .theseed-dark-mode form .form-ul {
+    .thetree-dark-mode form .form-ul {
         border-color: #383b40;
     }
 
@@ -45,13 +45,13 @@
         color: #55595c;
     }
 
-    .theseed-dark-mode form li button {
+    .thetree-dark-mode form li button {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;
     }
 
-    .theseed-dark-mode form li button.selected-tab {
+    .thetree-dark-mode form li button.selected-tab {
         background-color: #383b40;
     }
 
@@ -60,7 +60,7 @@
         border-top: none;
     }
 
-    .theseed-dark-mode .tabs {
+    .thetree-dark-mode .tabs {
         border-color: #383b40;
     }
 
@@ -135,7 +135,7 @@
         padding: 0;
     }
 
-    .theseed-dark-mode form input, .theseed-dark-mode form textarea {
+    .thetree-dark-mode form input, .thetree-dark-mode form textarea {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;

@@ -23,7 +23,7 @@
         appearance: textfield;
     }
 
-    .theseed-dark-mode .navigation-rev-input {
+    .thetree-dark-mode .navigation-rev-input {
         background-color: #282829;
         border-color: #484848;
     }
@@ -36,7 +36,7 @@
         z-index: 201;
     }
 
-    .theseed-dark-mode .navigation-rev-placeholder {
+    .thetree-dark-mode .navigation-rev-placeholder {
         color: var(--text-color, hsla(0, 0%, 88%, .749));
     }
 
