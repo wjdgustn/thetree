@@ -336,7 +336,10 @@ module.exports = {
             text = text.slice(0, aPos) + text.slice(aClosePosEnd);
         }
 
-        const html = `<a href="${globalUtils.removeHtmlTags(link)}" title="${globalUtils.removeHtmlTags(title ?? '')}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
+        const safeLink = utils.escapeHtml(globalUtils.removeHtmlTags(link));
+        const safeTitle = utils.escapeHtml(globalUtils.removeHtmlTags(title ?? ''));
+
+        const html = `<a href="${safeLink}" title="${safeTitle}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${splittedContent.length === 1 ? namumark.escape(text) : text}</a>`;
 
         if(isCategory) {
             // namumark.categoryHtmls.push(html);
