@@ -165,5 +165,7 @@ module.exports = {
         if(text && removeSuffix) text = text.slice(0, -2);
 
         return text;
-    }
+    },
+    removeHtmlTags: text => text
+        .replaceAll(/<[^>]+>/g, '')
 }

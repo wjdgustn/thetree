@@ -3,6 +3,7 @@ const Diff = require('diff');
 const { getChoseong } = require('es-hangul');
 
 const utils = require('./');
+const globalUtils = require('./global');
 const { BacklinkFlags, ACLTypes, HistoryTypes} = require('./types');
 
 const ACL = require('../class/acl');
@@ -197,7 +198,7 @@ module.exports = {
                 choseong: getChoseong(document.title),
                 namespace: dbDocument.namespace,
                 title: dbDocument.title,
-                content: utils.removeHtmlTags(parseResult.html),
+                content: globalUtils.removeHtmlTags(parseResult.html),
                 raw: rev.content,
                 anyoneReadable
             }, {

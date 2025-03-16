@@ -691,7 +691,7 @@ window.session = ${JSON.stringify(session)}
 document.getElementById('initScript')?.remove();
         `.trim().replaceAll('/', '\\/') + '\n</script>';
 
-        if(data.contentHtml) data.contentText = utils.removeHtmlTags(data.contentHtml);
+        if(data.contentHtml) data.contentText = globalUtils.removeHtmlTags(data.contentHtml);
 
         if(data.categoryHtml) {
             data.contentHtml = data.categoryHtml + data.contentHtml;

@@ -101,8 +101,6 @@ module.exports = {
 
         return true;
     },
-    removeHtmlTags: text => text
-        .replaceAll(/<[^>]+>/g, ''),
     getKeyFromObject(obj, value) {
         for(const key in obj) {
             if(obj[key] === value) return key;

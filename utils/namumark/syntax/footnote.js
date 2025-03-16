@@ -1,5 +1,5 @@
 const { Priority } = require('../types');
-const utils = require('../../../utils');
+const globalUtils = require('../../../utils/global');
 
 module.exports = {
     priority: Priority.Footnote,
@@ -29,6 +29,6 @@ module.exports = {
         });
 
         const commentPrefix = namumark.commentId ? `tc${namumark.commentId}-` : '';
-        return `<a class="wiki-fn-content" title="${utils.removeHtmlTags(values[name])}" href="#${commentPrefix}fn-${name}"><span id="${commentPrefix}rfn-${index}"></span>[${name}]</a>`;
+        return `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(values[name])}" href="#${commentPrefix}fn-${name}"><span id="${commentPrefix}rfn-${index}"></span>[${name}]</a>`;
     }
 }

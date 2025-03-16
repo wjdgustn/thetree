@@ -2,7 +2,6 @@ const sanitizeHtml = require('sanitize-html');
 
 const { Priority } = require('../types');
 
-const utils = require('../../');
 const namumarkUtils = require('../utils');
 const globalUtils = require('../../global');
 
@@ -133,7 +132,7 @@ module.exports = {
 <!noParagraph>
 <h${level} class="wiki-heading${defaultClosed ? ' wiki-heading-folded' : ''}">
 <a id="s-${paragraphNumText}" href="#${commentPrefix}toc">${paragraphNumText}.</a>
- <span id="${utils.removeHtmlTags(text)}">${text}
+ <span id="${globalUtils.removeHtmlTags(text)}">${text}
 ${editSection}
 </span>
 </h${level}>
