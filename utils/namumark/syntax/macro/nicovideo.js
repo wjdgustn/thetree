@@ -1,7 +1,7 @@
 module.exports = params => {
     params = params.split(',').map(param => param.trim());
 
-    const videoId = params.shift();
+    let videoId = params.shift();
 
     let width = '640';
     let height = '360';
@@ -21,6 +21,8 @@ module.exports = params => {
     }
 
     if(!videoId) return;
+
+    if(!videoId.startsWith('sm')) videoId = `sm${videoId}`;
 
     return `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="//embed.nicovideo.jp/watch/${videoId}" loading="lazy"></iframe>`;
 }
