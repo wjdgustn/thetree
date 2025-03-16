@@ -34,7 +34,7 @@ document.addEventListener('thetree:pageLoad', () => {
 
             requestAnimationFrame(() => {
                 const currTab = document.getElementsByClassName('selected-tab-content')[0];
-                if(currTab._thetree.editor) {
+                if(currTab._thetree?.editor) {
                     if(!currTab._thetree.editor.loaded) currTab._thetree.editor.onLoad();
                     currTab._thetree.editor.loaded = true;
                 }
