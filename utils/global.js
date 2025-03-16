@@ -166,6 +166,7 @@ module.exports = {
 
         return text;
     },
-    removeHtmlTags: text => text
-        .replaceAll(/<[^>]+>/g, '')
+    removeHtmlTags(text) {
+        return text.replaceAll(/<[^>]+>/g, '');
+    }
 }
