@@ -473,7 +473,8 @@ app.post('/member/login/pin',
             await Passkey.updateOne({
                 id: response.id
             }, {
-                counter: verification.authenticationInfo.newCounter
+                counter: verification.authenticationInfo.newCounter,
+                lastUsedAt: Date.now()
             });
         }
         else {
