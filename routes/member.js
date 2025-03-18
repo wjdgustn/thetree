@@ -428,7 +428,6 @@ app.post('/member/login/pin',
         message: 'pin의 값은 필수입니다.'
     }),
     middleware.singleFieldError,
-    middleware.captcha,
     async (req, res) => {
     const user = await User.findOne({
         uuid: req.session.pinUser,
@@ -441,6 +440,8 @@ app.post('/member/login/pin',
         delete req.session.pinUser;
         return res.redirect('/member/login');
     }
+
+    if(!req.body.challenge && !await utils.middleValidateCaptcha(req, res)) return;
 
     if(user.totpToken) {
         if(req.body.challenge) {
