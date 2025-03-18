@@ -377,7 +377,7 @@ app.post('/member/login',
         let passkeyData = null;
         if(hasPasskey) {
             passkeyData = await generateAuthenticationOptions({
-                rpID: req.hostname,
+                rpID: new URL(config.base_url).hostname,
                 allowCredentials: passkeys.map(a => ({
                     id: a.id,
                     transports: a.transports
@@ -1397,7 +1397,7 @@ app.post('/member/register_webauthn',
     });
     const options = await generateRegistrationOptions({
         rpName: config.site_name,
-        rpID: req.hostname,
+        rpID: new URL(config.base_url).hostname,
         userID: isoUint8Array.fromUTF8String(req.user.uuid),
         userName: req.user.name,
         attestationType: 'none',
