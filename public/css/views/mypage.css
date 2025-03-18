@@ -43,4 +43,37 @@
     .token-modal-form:has(+#token-page:not([style*="display: none"])) {
         display: none;
     }
+
+    .new-passkey-block {
+        margin-top: 1rem;
+    }
+
+    .new-passkey-block input {
+        width: 30%;
+    }
+
+    table {
+        background-color: transparent;
+        border-collapse: collapse;
+        border-spacing: 0;
+        margin-bottom: 1rem;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    table td, table th {
+        border-top: 1px solid #eceeef;
+        line-height: 1.5;
+        padding: .5rem .7rem;
+    }
+
+    table th {
+        border-bottom: 2px solid #eceeef;
+        text-align: left;
+        vertical-align: bottom;
+    }
+
+    table tr:last-of-type td {
+        border-bottom: 1px solid #eceeef;
+    }
 }

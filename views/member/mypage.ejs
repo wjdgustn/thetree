@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="/css/views/mypage.css">
+<script src="/js/mypage.js"></script>
 
 <form method="post">
     <div class="menu-block">
@@ -39,6 +40,36 @@
         <label>이중인증</label>
         <%if(user.totpToken) {%>
             <a class="thetree-square-button thetree-danger-button" href="/member/deactivate_otp">TOTP 비활성화</a>
+            <div class="new-passkey-block">
+                <input id="passkey-name-input" type="text" placeholder="Passkey Name"><!--
+             --><button id="add-passkey-button" class="thetree-square-button thetree-blue-button" type="button">Passkey 추가</button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>이름</th>
+                    <th>등록일</th>
+                    <th>마지막 사용</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <%if(passkeys.length) for(let passkey of passkeys) {%>
+                    <tr>
+                        <td><%=passkey.name%></td>
+                        <td><%-getFullDateTag(passkey.createdAt)%></td>
+                        <td><%-passkey.lastUsedAt ? getFullDateTag(passkey.lastUsedAt) : 'Not used'%></td>
+                        <td>
+                            <button data-name="<%=passkey.name%>" class="delete-passkey-button thetree-square-button thetree-danger-button" type="button">삭제</button>
+                        </td>
+                    </tr>
+                <%} else {%>
+                    <tr>
+                        <td colspan="4">등록된 Passkey가 없습니다.</td>
+                    </tr>
+                <%}%>
+                </tbody>
+            </table>
         <%} else {%>
             <a class="thetree-square-button thetree-mint-button" href="/member/activate_otp">TOTP 활성화</a>
         <%}%>

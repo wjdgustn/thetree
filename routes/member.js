@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param, validationResult } = require('express-validator');
+const { body, param, validationResult, oneOf } = require('express-validator');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const passport = require('passport');
@@ -7,6 +7,16 @@ const { Address4, Address6 } = require('ip-address');
 const randomstring = require('randomstring');
 const { TOTP } = require('otpauth');
 const QRCode = require('qrcode');
+const {
+    generateRegistrationOptions,
+    verifyRegistrationResponse,
+    generateAuthenticationOptions,
+    verifyAuthenticationResponse
+} = require('@simplewebauthn/server');
+const {
+    isoUint8Array,
+    isoBase64URL
+} = require('@simplewebauthn/server/helpers');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
@@ -28,6 +38,7 @@ const ThreadComment = require('../schemas/threadComment');
 const EditRequest = require('../schemas/editRequest');
 const Blacklist = require('../schemas/blacklist');
 const Star = require('../schemas/star');
+const Passkey = require('../schemas/passkey');
 
 const app = express.Router();
 
@@ -358,13 +369,32 @@ app.post('/member/login',
             });
         }
 
+        const passkeys = await Passkey.find({
+            user: user.uuid
+        });
+        const hasPasskey = user.totpToken && passkeys.length;
+
+        let passkeyData = null;
+        if(hasPasskey) {
+            passkeyData = await generateAuthenticationOptions({
+                rpID: req.hostname,
+                allowCredentials: passkeys.map(a => ({
+                    id: a.id,
+                    transports: a.transports
+                }))
+            });
+            req.session.passkeyAuthOptions = passkeyData;
+        }
+
         req.session.pinUser = user.uuid;
         req.session.redirect = req.body.redirect;
         res.renderSkin('로그인', {
             contentName: 'member/pin_verification',
+            passkeyData,
             serverData: {
                 user,
-                autologin: req.body.autologin
+                autologin: req.body.autologin,
+                hasPasskey
             }
         });
 
@@ -387,12 +417,17 @@ PIN: <b>${user.emailPin}</b>
 
 app.post('/member/login/pin',
     middleware.isLogout,
-    body('pin')
-        .notEmpty()
-        .withMessage('pin의 값은 필수입니다.')
-        .isLength(6)
-        .withMessage('pin의 값은 6글자여야 합니다.'),
-    middleware.fieldErrors,
+    oneOf([
+        body('pin')
+            .notEmpty()
+            .isLength(6)
+            .withMessage('pin의 값은 6글자여야 합니다.'),
+        body('challenge')
+            .notEmpty()
+    ], {
+        message: 'pin의 값은 필수입니다.'
+    }),
+    middleware.singleFieldError,
     middleware.captcha,
     async (req, res) => {
     const user = await User.findOne({
@@ -408,11 +443,46 @@ app.post('/member/login/pin',
     }
 
     if(user.totpToken) {
-        const totp = new TOTP({
-            secret: user.totpToken
-        });
-        const delta = totp.validate({ token: req.body.pin });
-        if(delta == null) return res.status(400).send('PIN이 올바르지 않습니다.');
+        if(req.body.challenge) {
+            const options = req.session.passkeyAuthOptions;
+            const response = req.body.challenge;
+            const passkey = await Passkey.findOne({
+                id: response.id
+            });
+            if(!passkey) return res.status(400).send('패스키를 찾을 수 없습니다.');
+
+            let verification;
+            try {
+                verification = await verifyAuthenticationResponse({
+                    response,
+                    expectedChallenge: options.challenge,
+                    expectedOrigin: config.base_url,
+                    expectedRPID: options.rpId,
+                    credential: {
+                        id: passkey.id,
+                        publicKey: passkey.publicKey,
+                        counter: passkey.counter,
+                        transports: passkey.transports
+                    }
+                });
+            } catch(e) {
+                if(debug) console.error(e);
+                return res.status(400).send('패스키 인증이 실패했습니다.');
+            }
+
+            await Passkey.updateOne({
+                id: response.id
+            }, {
+                counter: verification.authenticationInfo.newCounter
+            });
+        }
+        else {
+            const totp = new TOTP({
+                secret: user.totpToken
+            });
+            const delta = totp.validate({ token: req.body.pin });
+            if(delta == null) return res.status(400).send('PIN이 올바르지 않습니다.');
+        }
     }
     else {
         if(req.body.pin !== user.emailPin) return res.status(400).send('PIN이 올바르지 않습니다.');
@@ -463,9 +533,15 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
     });
 });
 
-app.get('/member/mypage', middleware.isLogin, (req, res) => {
+app.get('/member/mypage', middleware.isLogin, async (req, res) => {
+    const passkeys = await Passkey.find({
+        user: req.user.uuid
+    });
     res.renderSkin('내 정보', {
-        contentName: 'member/mypage'
+        contentName: 'member/mypage',
+        serverData: {
+            passkeys
+        }
     });
 });
 
@@ -1304,5 +1380,84 @@ app.get('/member/starred_documents', middleware.isLogin, async (req, res) => {
 
 app.get('/member/star/?*', middleware.isLogin, middleware.parseDocumentName, starHandler(true));
 app.get('/member/unstar/?*', middleware.isLogin, middleware.parseDocumentName, starHandler(false));
+
+app.post('/member/register_webauthn',
+    middleware.isLogin,
+    body('name')
+        .notEmpty().withMessage('이름의 값은 필수입니다.')
+        .isLength({
+            max: 80
+        }).withMessage('이름의 값은 80글자 이하여야 합니다.'),
+    middleware.singleFieldError,
+    async (req, res) => {
+    const userPasskeys = await Passkey.find({
+        user: req.user.uuid
+    });
+    const options = await generateRegistrationOptions({
+        rpName: config.site_name,
+        rpID: req.hostname,
+        userID: isoUint8Array.fromUTF8String(req.user.uuid),
+        userName: req.user.name,
+        attestationType: 'none',
+        excludeCredentials: userPasskeys.map(a => ({
+            id: a.id,
+            transports: a.transports
+        }))
+    });
+    req.session.passkeyRegisterOptions = {
+        name: req.body.name,
+        ...options
+    };
+
+    res.json(options);
+});
+
+app.post('/member/register_webauthn/challenge', async (req, res) => {
+    const options = req.session.passkeyRegisterOptions;
+
+    let verification;
+    try {
+        verification = await verifyRegistrationResponse({
+            response: req.body,
+            expectedChallenge: options.challenge,
+            expectedOrigin: config.base_url,
+            expectedRPID: options.rp.id
+        });
+    } catch(e) {
+        console.error(e);
+        return res.status(400).send({ error: e.message });
+    }
+
+    const {
+        credential,
+        credentialDeviceType,
+        credentialBackedUp
+    } = verification.registrationInfo;
+
+    await Passkey.create({
+        user: isoBase64URL.toUTF8String(options.user.id),
+        name: options.name,
+        id: credential.id,
+        publicKey: Buffer.from(credential.publicKey),
+        counter: credential.counter,
+        transports: credential.transports,
+        deviceType: credentialDeviceType,
+        backedUp: credentialBackedUp
+    });
+
+    res.status(204).end();
+});
+
+app.post('/member/delete_webauthn',
+    body('name')
+        .notEmpty().withMessage('이름의 값은 필수입니다.'),
+    middleware.singleFieldError,
+    async (req, res) => {
+    await Passkey.deleteOne({
+        user: req.user.uuid,
+        name: req.body.name
+    });
+    res.status(204).end();
+});
 
 module.exports = app;

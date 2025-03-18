@@ -16,6 +16,12 @@
  * @license MIT
  */
 
+ /**
+  * floating-ui
+  * (c) 2020 Matthew Miller
+  * @license MIT
+  */
+
 /**
  * Font Awesome Free
  * (c) 2024 Fonticons, Inc.

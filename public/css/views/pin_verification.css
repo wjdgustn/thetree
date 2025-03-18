@@ -1,0 +1,263 @@
+@scope(.content-style) {
+    form {
+        margin: 0 auto;
+        width: 28rem;
+    }
+
+    @media (max-width: 1023px) {
+        form {
+            width: 100%;
+        }
+    }
+
+    .pin-block {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        margin-bottom: 1rem;
+    }
+
+    .pin-block-inside {
+        align-items: center;
+        display: flex;
+        gap: 1.25rem;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+
+    @media screen and (max-width: 727.98px) {
+        .pin-block-inside {
+            gap: 1rem;
+        }
+    }
+
+    .pin-input {
+        background-color: var(--light-article-background-color, var(--article-background-color, #fff));
+        border: 1px solid #d5d5d5;
+        border-radius: 4px;
+        display: block;
+        line-height: 1.5;
+        padding: .3rem .75rem;
+        caret-color: transparent;
+        font-size: 1.1rem;
+        text-align: center;
+        user-select: none;
+        width: 2.25rem;
+        appearance: textfield;
+        --focus-outline-color: var(--brand-bright-color-2, #e3e3e3);
+        --focus-box-shadow-style: var(--focus-outline-color) 0 0 0 0.2rem;
+    }
+
+    .thetree-dark-mode .pin-input {
+        background-color: #282829;
+        border-color: #484848;
+    }
+
+    .pin-input:focus-visible {
+        box-shadow: var(--focus-box-shadow-style) !important;
+        transition: box-shadow .1s linear;
+    }
+
+    .pin-input::-webkit-outer-spin-button,
+    .pin-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .trust-label {
+        align-items: center;
+        display: inline-flex;
+    }
+
+    .trust-input {
+        appearance: none;
+        background-position: 50%;
+        background-repeat: no-repeat;
+        background-size: 65%;
+        border: 1px solid #d5d5d5;
+        border-radius: 4px;
+        height: 1.15em;
+        margin: 0 .5em 0 0;
+        transition: background-color .1s ease-in;
+        width: 1.15em;
+        --focus-outline-color: var(--brand-bright-color-2, #e3e3e3);
+        --focus-box-shadow-style: var(--focus-outline-color) 0 0 0 0.2rem;
+    }
+
+    .thetree-dark-mode .trust-input {
+        background-color: #282829;
+        border-color: #484848;
+    }
+
+    .trust-input:checked {
+        background-color: var(--brand-color-1,#bcbcbc);
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 448 512%27%3E%3Cpath d=%27M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7l233.4-233.3c12.5-12.5 32.8-12.5 45.3 0z%27 style=%27fill:%23fff%27/%3E%3C/svg%3E")
+    }
+
+    .trust-input:focus-visible {
+        box-shadow: var(--focus-box-shadow-style);
+        transition: box-shadow .1s linear;
+    }
+
+    .button-block {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        margin-bottom: 1rem;
+    }
+
+    .button-block-otp {
+        gap: 1rem;
+        align-items: center;
+        flex-direction: row;
+        justify-content: flex-end;
+        padding-top: .5rem;
+    }
+
+    .button-block-right {
+        align-items: center;
+        column-gap: .5rem;
+        display: flex;
+        flex: 1;
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+
+    .other-block {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin: 4rem 0 0;
+    }
+
+    .other-title {
+        font-size: 1.4rem;
+        font-weight: 500;
+    }
+
+    .other-button {
+        --button-normal-background-color: var(--light-article-background-color, var(--article-background-color, #fff));
+        --button-normal-border-color: #d5d5d5;
+        --button-background-color: var(--button-normal-background-color);
+        --button-border: 1px solid;
+        --button-border-color: var(--button-normal-border-color);
+        --button-border-radius: 4px;
+        background-color: var(--button-background-color);
+        border: 1px solid;
+        border: var(--button-border);
+        border-color: var(--button-border-color);
+        border-radius: var(--button-border-radius);
+        font-size: .9rem;
+        line-height: 1.5;
+        overflow: hidden;
+        padding: .75rem;
+        text-decoration: none !important;
+        transition: background-color .1s ease-in, box-shadow .1s linear;
+        white-space: nowrap;
+        color: var(--button-color) !important;
+        display: flex;
+        width: 100%;
+        cursor: pointer;
+        min-width: 4rem;
+        align-items: stretch;
+        gap: .75rem;
+        justify-content: flex-start;
+    }
+
+    .thetree-dark-mode .other-button {
+        --button-normal-background-color: #282829;
+        --button-normal-border-color: #484848;
+    }
+
+    .other-button:hover:not(.doing-passkey) {
+        --button-hover-color: var(--button-color);
+        --button-background-hover-color: #f2f2f2;
+        background-color: var(--button-background-hover-color);
+    }
+
+    .thetree-dark-mode .other-button:hover {
+        --button-background-hover-color: #555;
+    }
+
+    .other-button svg {
+        height: .85rem;
+        fill: currentColor;
+    }
+
+    .other-button-icon {
+        height: 1.75rem;
+        padding: .25rem;
+        width: 1.75rem;
+    }
+
+    .other-button-icon svg {
+        height: 100%;
+        width: 100%;
+    }
+
+    .other-button-content {
+        flex: 1;
+        width: 0;
+    }
+
+    .other-button-description {
+        font-size: .8rem;
+        white-space: normal;
+    }
+
+    .other-button-arrow {
+        align-items: center;
+        display: flex;
+        margin: 0 .25rem 0 0;
+        width: .65rem;
+    }
+
+    .other-button-arrow svg {
+        height: auto;
+        width: auto;
+    }
+
+    .passkey-icon-block {
+        color: var(--text-secondary-color, rgba(33, 37, 41, .749));
+        margin: 4rem 0 2rem;
+        text-align: center;
+    }
+
+    .passkey-icon-block svg {
+        fill: currentColor;
+        max-width: 5rem;
+    }
+
+    .passkey-button-block {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        margin-bottom: 1rem;
+        padding-top: .5rem;
+    }
+
+    .doing-passkey .passkey-button-block a {
+        background-color: #f7f7f7 !important;
+        border-color: #f0f0f0 !important;
+        cursor: not-allowed;
+    }
+
+    .thetree-dark-mode .doing-passkey .passkey-button-block a {
+        background-color: #373737 !important;
+        border-color: #424242 !important;
+    }
+
+    .doing-passkey .trust-label {
+        cursor: not-allowed;
+        opacity: .5;
+    }
+
+    .doing-passkey .other-button {
+        cursor: not-allowed;
+        opacity: .5;
+    }
+}
