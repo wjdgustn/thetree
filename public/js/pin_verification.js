@@ -8,7 +8,7 @@ document.addEventListener('thetree:pageLoad', () => {
     const getPinValue = () => pinInputs.map(a => a.value).join('');
     const focusPinInput = () => {
         const pinValue = getPinValue();
-        pinInputs[pinValue.length]?.focus();
+        pinInputs[Math.min(pinValue.length, pinInputs.length - 1)].focus();
         hiddenPinInput.value = pinValue;
     }
     const movePinTexts = () => {
