@@ -17,7 +17,7 @@
  */
 
  /**
-  * floating-ui
+  * SimpleWebAuthn
   * (c) 2020 Matthew Miller
   * @license MIT
   */
