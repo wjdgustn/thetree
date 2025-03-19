@@ -73,7 +73,7 @@ module.exports = async (params, namumark) => {
         const splittedParam = param.split('=');
         if(splittedParam.length < 2) continue;
 
-        const key = splittedParam[0].trim();
+        const key = splittedParam[0].replaceAll(' ', '');
         includeData[key] = splittedParam.slice(1).join('=');
     }
 
