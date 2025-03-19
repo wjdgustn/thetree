@@ -1395,6 +1395,9 @@ app.post('/member/register_webauthn',
     const userPasskeys = await Passkey.find({
         user: req.user.uuid
     });
+    if(userPasskeys.some(a => a.name === req.body.name))
+        return res.status(409).send('이름이 이미 존재합니다.');
+
     const options = await generateRegistrationOptions({
         rpName: config.site_name,
         rpID: new URL(config.base_url).hostname,
