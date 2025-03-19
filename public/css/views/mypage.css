@@ -34,6 +34,12 @@
         width: calc(100% - 0.7rem);
     }
 
+    .thetree-dark-mode form input {
+        background-color: #27292d;
+        border-color: #383b40;
+        color: #ddd;
+    }
+
     .thetree-dark-mode form select {
         background-color: #27292d;
         border-color: #383b40;
