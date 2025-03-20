@@ -225,11 +225,16 @@ const nameChecker = field => body(field)
     .withMessage('사용자 이름은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.')
     .custom(value => value[0].match(/[a-zA-Z]/))
     .withMessage('사용자 이름은 영문으로 시작해야 합니다.')
-    .custom(async value => {
+    .custom(async (value, {req}) => {
         const existingUser = await User.exists({
             name: {
                 $regex: new RegExp(`^${value}$`, 'i')
-            }
+            },
+            ...(req.user ? {
+                uuid: {
+                    $ne: req.user.uuid
+                }
+            } : {})
         });
         if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
     });
