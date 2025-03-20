@@ -304,8 +304,8 @@ app.post('/aclgroup/remove',
         ...(deleted.user == null ? {
             targetContent: deleted.ip
         } : {
-            targetUser: targetUser.uuid,
-            targetUsername: targetUser.name
+            targetUser: targetUser?.uuid || deleted.user,
+            targetUsername: targetUser?.name
         }),
         aclGroup: deleted.aclGroup,
         aclGroupName: group.name,
