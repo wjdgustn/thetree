@@ -174,9 +174,9 @@ module.exports = class ACL {
     }
 
     async check(aclType = ACLTypes.None, data = {}, noReadCheck = false) {
-        if(data.alwaysAllow) return { result: true };
+        if(data.alwaysAllow || data?.permissions?.includes('developer')) return { result: true };
 
-        if(aclType === ACLTypes.ACL && (data?.permissions?.includes('nsacl') || data?.permissions?.includes('developer'))) return { result: true };
+        if(aclType === ACLTypes.ACL && data?.permissions?.includes('nsacl')) return { result: true };
 
         if(!noReadCheck && aclType !== ACLTypes.Read && aclType !== ACLTypes.ACL) {
             const readCheck = await this.check(ACLTypes.Read, data);
