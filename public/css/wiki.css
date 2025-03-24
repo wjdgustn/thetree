@@ -107,6 +107,15 @@
     font-weight: 700;
 }
 
+.disable-bold.wiki-content strong {
+    font-weight: inherit;
+    text-decoration: none;
+}
+
+.hide-bold.wiki-content strong {
+    visibility: hidden;
+}
+
 .wiki-content em {
     font-style: italic;
 }
