@@ -63,7 +63,7 @@
     </style>
 </head>
 
-<body x-data :class="$store.state.currentTheme === 'dark' ? 'thetree-dark-mode' : 'thetree-white-mode'">
+<body x-data="app" :class="$store.state.currentTheme === 'dark' ? 'thetree-dark-mode' : 'thetree-white-mode'">
 <div id="progress-bar"></div>
 <div id="app"><%-include(`../skins/${skin}/layout`, { contentHtml: typeof contentName !== 'undefined' ? include(path.join(__dirname, `views/${contentName}`)) : contentHtml })%></div>
 

@@ -117,12 +117,22 @@
     border-radius: 0;
     padding: 2px;
 }
+
 .wiki-content del {
     color: gray;
 }
 
 .wiki-content del:hover {
     text-decoration: none;
+}
+
+.disable-strike.wiki-content del {
+    color: inherit;
+    text-decoration: none;
+}
+
+.hide-strike.wiki-content del {
+    visibility: hidden;
 }
 
 .wiki-content sup, .wiki-content sub {

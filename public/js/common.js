@@ -1112,6 +1112,22 @@ document.addEventListener('alpine:init', () => {
             await movePage(doc_action_link(this.searchText, 'w'));
         }
     }));
+
+    Alpine.data('app', () => ({
+        wikiContent: {
+            [':class']() {
+                const discuss = this.$el.classList.contains('wiki-thread-content');
+                return {
+                    'nowrap-wiki-table': State.localConfig['wiki.nowrap_wiki_table'],
+                    'always-show-external-link-icon': State.localConfig['wiki.always_show_external_link_icon'],
+                    'disable-strike': 'remove' === State.localConfig[discuss ? 'discuss.strike' : 'wiki.strike'],
+                    'hide-strike': 'hide' === State.localConfig[discuss ? 'discuss.strike' : 'wiki.strike'],
+                    'disable-bold': discuss && 'remove' === State.localConfig['discuss.bold'],
+                    'hide-bold': discuss && 'hide' === State.localConfig['discuss.bold']
+                }
+            }
+        }
+    }));
 });
 
 window.addEventListener('load', () => {

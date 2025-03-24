@@ -46,6 +46,26 @@ editModes.push({
         defaultValue: false
     },
     {
+        name: 'strike',
+        label: '취소선',
+        type: 'enum',
+        defaultValue: 'show',
+        options: [
+            {
+                name: 'show',
+                label: '보이기'
+            },
+            {
+                name: 'remove',
+                label: '취소선 제거'
+            },
+            {
+                name: 'hide',
+                label: '숨기기'
+            }
+        ]
+    },
+    {
         name: 'footnote_type',
         label: '각주 표시 형식',
         type: 'enum',
