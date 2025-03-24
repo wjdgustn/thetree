@@ -23,8 +23,7 @@ const newSchema = new Schema({
         type: String
     },
     userAgent: {
-        type: String,
-        required: true
+        type: String
     },
     createdAt: {
         type: Date,
