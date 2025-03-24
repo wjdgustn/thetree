@@ -516,6 +516,10 @@
     background-color: #2d2f34;
 }
 
+.nowrap-wiki-table.wiki-content .wiki-table {
+    white-space: nowrap;
+}
+
 .wiki-content .wiki-table td {
     border: 1px solid #ddd;
     padding: 5px 10px;
