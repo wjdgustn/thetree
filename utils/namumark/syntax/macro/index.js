@@ -42,6 +42,7 @@ module.exports = {
     priority: Priority.Macro,
     openStr: `[`,
     closeStr: `]`,
+    allowMultiline: true,
     format: async (content, namumark) => {
         // if(debug) loadMacros();
 
@@ -55,8 +56,9 @@ module.exports = {
         else {
             if(!content.endsWith(')')) return;
 
-            name = content.substring(0, openParamIndex);
-            params = content.substring(openParamIndex + 1, content.length - 1);
+            name = content.slice(0, openParamIndex);
+
+            params = content.slice(openParamIndex + 1, content.length - 1).replaceAll('<newLine/>', '\n');
         }
         name = name.toLowerCase();
 

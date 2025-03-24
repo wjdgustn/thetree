@@ -27,3 +27,9 @@
  * (c) 2024 Fonticons, Inc.
  * @license CC-BY 4.0
  */
+
+/**
+ * KaTex
+ * (c) 2024 2013-2020 Khan Academy and other contributors
+ * @license MIT
+ */

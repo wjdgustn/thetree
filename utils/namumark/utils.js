@@ -2,6 +2,7 @@ const {
     validateHTMLColorHex,
     validateHTMLColorName
 } = require('validate-color');
+const katex = require('katex');
 
 const { SelfClosingTags } = require('./types');
 
@@ -158,5 +159,8 @@ module.exports = {
             newText += char;
         }
         return newText;
-    }
+    },
+    katex: text => katex.renderToString(text, {
+        throwOnError: false
+    })
 }
