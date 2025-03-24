@@ -189,11 +189,26 @@ if(config.check_update !== false) {
 
 global.updateEngine = (exit = true) => {
     try {
+        const packageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./package.json')).digest('hex');
+        const oldPackageHash = packageHash();
+
         exec('git pull --recurse-submodules', (err, stdout, stderr) => {
             if(err) console.error(err);
             if(stdout) console.log(stdout);
             if(stderr) console.error(stderr);
-            if(exit) process.exit(0);
+
+            const newPackageHash = packageHash();
+            const packageUpdated = oldPackageHash !== newPackageHash;
+            if(exit) {
+                const onFinish = () => {
+                    process.exit(0);
+                }
+                if(packageUpdated) {
+                    console.log('package.json updated, updating packages...');
+                    exec('npm i', onFinish);
+                }
+                else onFinish();
+            }
             else global.skinCommitId = {};
         });
     } catch(e) {}
