@@ -1,4 +1,6 @@
 function setupWikiHandlers() {
+    let hideHeadingContent = State.getLocalConfig('wiki.hide_heading_content');
+
     const headings = document.getElementsByClassName('wiki-heading');
     for(let heading of headings) {
         heading.addEventListener('click', e => {
@@ -16,6 +18,11 @@ function setupWikiHandlers() {
                 content.classList.add('wiki-heading-content-folded');
             }
         });
+
+        if(hideHeadingContent) {
+            heading.classList.add('wiki-heading-folded');
+            heading.nextElementSibling.classList.add('wiki-heading-content-folded');
+        }
     }
 
     const foldings = document.getElementsByClassName('wiki-folding');
