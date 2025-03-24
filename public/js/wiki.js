@@ -1,5 +1,5 @@
 function setupWikiHandlers() {
-    let hideHeadingContent = State.getLocalConfig('wiki.hide_heading_content');
+    const hideHeadingContent = State.getLocalConfig('wiki.hide_heading_content');
 
     const headings = document.getElementsByClassName('wiki-heading');
     for(let heading of headings) {
@@ -25,6 +25,8 @@ function setupWikiHandlers() {
         }
     }
 
+    const showFolding = State.getLocalConfig('wiki.show_folding');
+
     const foldings = document.getElementsByClassName('wiki-folding');
     for(let folding of foldings) {
         const foldingText = folding.firstElementChild;
@@ -35,10 +37,12 @@ function setupWikiHandlers() {
         const resizeObserver = new ResizeObserver(([entry]) => {
             if(!entry.contentRect.height) return;
 
-            foldingContent.classList.add('wiki-folding-opened');
+            const openedBefore = foldingContent.classList.contains('wiki-folding-opened');
+
+            if(!openedBefore) foldingContent.classList.add('wiki-folding-opened');
             offsetWidth = foldingContent.offsetWidth;
             offsetHeight = foldingContent.offsetHeight;
-            foldingContent.classList.remove('wiki-folding-opened');
+            if(!openedBefore) foldingContent.classList.remove('wiki-folding-opened');
 
             resizeObserver.disconnect();
         });
@@ -68,6 +72,8 @@ function setupWikiHandlers() {
             foldingContent.removeEventListener('transitionend', finishOpen);
         }
 
+        if(showFolding) foldingContent.classList.add('wiki-folding-open-anim', 'wiki-folding-opened');
+
         foldingText.addEventListener('click', e => {
             const foldingText = e.currentTarget;
             const foldingContent = foldingText.nextElementSibling;
@@ -93,7 +99,7 @@ function setupWikiHandlers() {
         });
     }
 
-    let footnoteType = State.getLocalConfig('wiki.footnote_type');
+    const footnoteType = State.getLocalConfig('wiki.footnote_type');
 
     if(footnoteType === 'popover') setupFootnoteTooltip();
     else if(footnoteType === 'popup') setupFootnoteModal();
