@@ -823,6 +823,9 @@ app.post('/admin/batch_revert',
         }),
     body('duration')
         .notEmpty().withMessage('기간은 필수입니다.')
+        .isLength({
+            max: 100
+        })
         .custom(async (value, { req }) => {
             req.modifiedBody.duration = parseDuration(value);
             if(!req.modifiedBody.duration) throw new Error('기간 형식이 잘못되었습니다.');
