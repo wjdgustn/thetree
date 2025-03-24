@@ -622,13 +622,16 @@ module.exports = {
         return true;
     },
     async pagination(req, model, baseQuery, key, sortKey, {
-        limit, sortDirection, pageQuery
+        limit, sortDirection, pageQuery, getTotal
     } = {}) {
         sortDirection ??= -1;
         const $gte = sortDirection === -1 ? '$gte' : '$lte';
         const $lte = sortDirection === -1 ? '$lte' : '$gte';
         const $gt = sortDirection === -1 ? '$gt' : '$lt';
         const $lt = sortDirection === -1 ? '$lt' : '$gt';
+
+        let total = null;
+        if(getTotal) total = await model.countDocuments(baseQuery);
 
         const query = { ...baseQuery };
         pageQuery ??= req.query.until || req.query.from;
@@ -688,7 +691,8 @@ module.exports = {
             prevItem,
             nextItem,
             pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
-            originalPageButton
+            originalPageButton,
+            total
         }
     },
     durationToExactString(duration) {

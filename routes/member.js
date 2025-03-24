@@ -723,18 +723,12 @@ app.get('/contribution/:uuid/discuss',
     });
     // if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
 
-    let comments = await ThreadComment.find({
-        user: req.params.uuid,
-        createdAt: {
-            $gte: Date.now() - 1000 * 60 * 60 * 24 * 30
-        }
-    })
-        .sort({
-            createdAt: -1
-        })
-        .lean();
-
-    comments = await utils.findThreads(comments);
+    const data = await utils.pagination(req, ThreadComment, {
+        user: req.params.uuid
+    }, 'uuid', 'createdAt', {
+        getTotal: true
+    });
+    data.items = await utils.findThreads(data.items);
 
     res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution_discuss',
@@ -745,8 +739,7 @@ app.get('/contribution/:uuid/discuss',
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
-            // user,
-            comments,
+            ...data,
             contributionType: 'discuss'
         }
     });
