@@ -349,7 +349,10 @@
     color: #fff;
     content: "";
     font-family: "Ionicons" !important;
+    font-size: .9rem !important;
+    margin-right: .1rem;
     padding: 0 .15em;
+    position: relative;
 }
 
 .wiki-content .wiki-media {
