@@ -168,10 +168,7 @@ module.exports = {
         let parsed;
         try {
             parsed = jsep(expression);
-        } catch (e) {
-            console.error(e);
-            return null;
-        }
+        } catch (e) {}
 
         const bool = value => !!value || Number.isNaN(value);
 
@@ -258,7 +255,7 @@ module.exports = {
             }
         }
 
-        const result = parseNode(parsed);
+        const result = parsed ? parseNode(parsed) : null;
         return {
             result,
             bool: bool(result)
