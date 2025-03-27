@@ -3,6 +3,7 @@ const {
     validateHTMLColorName
 } = require('validate-color');
 const katex = require('katex');
+const jsep = require('jsep');
 
 const { SelfClosingTags } = require('./types');
 
@@ -162,5 +163,105 @@ module.exports = {
     },
     katex: text => katex.renderToString(text, {
         throwOnError: false
-    })
+    }),
+    parseExpression: (expression, data = {}) => {
+        let parsed;
+        try {
+            parsed = jsep(expression);
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
+
+        const bool = value => !!value || Number.isNaN(value);
+
+        const parseNode = node => {
+            switch(node.type) {
+                case 'Literal':
+                    return node.value;
+                case 'Identifier':
+                    switch(node.name) {
+                        case 'NaN':
+                            return NaN;
+                        default:
+                            return data[node.name] ?? null;
+                    }
+                case 'BinaryExpression':
+                case 'UnaryExpression': {
+                    let left;
+                    let right;
+                    if(node.type === 'BinaryExpression') {
+                        left = parseNode(node.left);
+                        right = parseNode(node.right);
+                    }
+                    else {
+                        left = 0;
+                        right = parseNode(node.argument);
+                    }
+
+                    const bothNum = !isNaN(left) && !isNaN(right);
+                    const bothInt = bothNum && !node.left?.raw?.includes('.') && !node.right?.raw?.includes('.');
+
+                    switch(node.operator) {
+                        case '==':
+                            return left === right;
+                        case '!=':
+                            return left !== right;
+                        case '>':
+                            return left > right;
+                        case '>=':
+                            return left >= right;
+                        case '<':
+                            return left < right;
+                        case '<=':
+                            return left <= right;
+
+                        case '&&':
+                            return left && right;
+                        case '||':
+                            return left || right;
+                        case '!':
+                            return !right;
+
+                        case '+':
+                            return Number(left) + Number(right);
+                        case '-':
+                            return left - right;
+                        case '*':
+                            return left * right;
+                        case '/':
+                            if(bothInt)
+                                return Math.trunc(left / right);
+                            else
+                                return left / right;
+                        case '%':
+                            return left % right;
+                        case '**':
+                            return left ** right;
+
+                        case '~':
+                            return ~right;
+                        case '<<':
+                            return left << right;
+                        case '>>':
+                            return left >> right;
+                        case '&':
+                            if(bothNum) return left & right;
+                            return bool(left) && bool(right);
+                        case '|':
+                            if(bothNum) return left | right;
+                            return bool(left) || bool(right);
+                        case '^':
+                            return left ^ right;
+                    }
+                }
+            }
+        }
+
+        const result = parseNode(parsed);
+        return {
+            result,
+            bool: bool(result)
+        }
+    }
 }
