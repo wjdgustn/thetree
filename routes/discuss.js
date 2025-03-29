@@ -21,6 +21,7 @@ const Thread = require('../schemas/thread');
 const ThreadComment = require('../schemas/threadComment');
 const EditRequest = require('../schemas/editRequest');
 const AuditLog = require('../schemas/auditLog');
+const Vote = require('../schemas/vote');
 
 const ACL = require('../class/acl');
 
@@ -93,6 +94,7 @@ const threadCommentEvent = async ({
 } = {}) => {
     const parser = new NamumarkParser({
         document,
+        dbComment,
         thread: true,
         commentId: dbComment.id
     });
@@ -253,6 +255,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             parser: new NamumarkParser({
                 document,
                 dbDocument,
+                aclData: req.aclData,
+                dbComment: c,
                 thread: true,
                 commentId: c.id
             })
@@ -419,6 +423,8 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
         parser: new NamumarkParser({
             document,
             dbDocument,
+            aclData: req.aclData,
+            dbComment: c,
             thread: true,
             commentId: c.id
         })
@@ -796,6 +802,51 @@ app.get('/admin/thread/:url/:id/raw', middleware.referer('/thread'), async (req,
     if(dbComment.type !== ThreadCommentTypes.Default) return res.status(400).send('원문을 볼 수 없는 댓글입니다.');
 
     res.send(dbComment.content);
+});
+
+app.post('/vote/:commentId/:voteIndex', async (req, res) => {
+    const comment = await ThreadComment.findOne({
+        uuid: req.params.commentId
+    });
+    if(!comment) return res.error('댓글이 존재하지 않습니다.', 404);
+
+    const thread = await Thread.findOne({
+        uuid: comment.thread,
+        deleted: false
+    });
+    if(!comment) return res.error('댓글이 존재하지 않습니다.', 404);
+
+    const document = await Document.findOne({
+        uuid: thread.document
+    });
+
+    const acl = await ACL.get({ document });
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
+    if(!readable) return res.error(aclMessage, 403);
+
+    const baseData = {
+        comment: comment.uuid,
+        voteIndex: parseInt(req.params.voteIndex),
+        user: req.user.uuid
+    }
+    await Vote.deleteMany(baseData);
+    try {
+        await Vote.create({
+            ...baseData,
+            value: parseInt(req.body[`vote-${req.params.voteIndex}`])
+        });
+    } catch(e) {
+        return res.status(403).send('유효성 검사에 실패했습니다.');
+    }
+
+    res.status(204).end();
+
+    await threadCommentEvent({
+        req,
+        thread,
+        document,
+        dbComment: comment
+    });
 });
 
 module.exports = app;

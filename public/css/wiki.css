@@ -648,6 +648,14 @@
     max-width: 100%;
 }
 
+.wiki-content .wiki-macro-vote {
+    all: revert;
+}
+
+.wiki-content .wiki-macro-vote legend {
+    all: revert;
+}
+
 .special-box {
     border-width: 5px 1px 1px;
     border-style: solid;

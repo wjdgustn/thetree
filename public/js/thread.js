@@ -1,6 +1,17 @@
 function setupComment() {
     setupUserText();
     setupWikiHandlers();
+
+    const forms = [...document.getElementsByTagName('form')];
+    for(let form of forms) {
+        if(form._thetree) continue;
+
+        form._thetree = {};
+        form.addEventListener('submit', formHandler);
+
+        if(formBackup[form.id]) restoreForm(false, form);
+        else backupForm(form);
+    }
 }
 
 document.addEventListener('thetree:pageLoad', () => {
@@ -82,7 +93,7 @@ document.addEventListener('thetree:pageLoad', () => {
         if(commentIndex !== -1) data.comments[commentIndex] = comment;
         else data.comments.push(comment);
 
-        if(prevComment?.contentHtml)
+        if(!comment.contentHtml && prevComment?.contentHtml)
             comment.contentHtml = prevComment.contentHtml;
 
         requestAnimationFrame(() => {

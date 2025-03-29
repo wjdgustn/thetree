@@ -131,8 +131,8 @@ const aClickHandler = async e => {
     await movePage(href);
 }
 
-function backupForm() {
-    const forms = content.querySelectorAll('form');
+function backupForm(form = null) {
+    const forms = form ? [form] : content.querySelectorAll('form');
     for(let form of forms) {
         if(!form.id) continue;
 
@@ -155,8 +155,13 @@ function restoreForm(reset = false, form = null) {
 
             if(input.type === 'hidden') continue;
 
-            if(input.type === 'checkbox' || input.type === 'radio')
+            if(input.type === 'checkbox')
                 input.checked = !!value;
+            else if(input.type === 'radio') {
+                const radios = form.querySelectorAll(`input[name="${key}"]`);
+                for(let radio of radios)
+                    radio.checked = radio.value === value;
+            }
             else {
                 if(reset) value = input.getAttribute('value') ?? '';
 
