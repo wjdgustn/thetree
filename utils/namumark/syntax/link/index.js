@@ -145,13 +145,13 @@ module.exports = {
         let isImage = false;
         const image = await processImage(content, splittedContent, link, namumark);
         if(typeof image === 'string') {
-            namumark.files.push(link);
+            namumark.files.push(utils.unescapeHtml(link));
             return image;
         }
         else if(typeof image === 'object') {
             if(image.link) link = image.link;
             if(image.text) text = image.text;
-            namumark.files.push(link);
+            namumark.files.push(utils.unescapeHtml(link));
             notExist = true;
             isImage = true;
         }
