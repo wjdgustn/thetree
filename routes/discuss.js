@@ -822,7 +822,7 @@ app.post('/vote/:commentId/:voteIndex', async (req, res) => {
 
     const acl = await ACL.get({ document });
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
-    if(!readable) return res.error(aclMessage, 403);
+    if(!readable) return res.status(403).send(aclMessage);
 
     const baseData = {
         comment: comment.uuid,
