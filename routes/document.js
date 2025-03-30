@@ -389,7 +389,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
-    if(!title) return res.status(400).send('문서 이름이 없습니다.');
+    if(!title && target === 'document') return res.status(400).send('문서 이름이 없습니다.');
 
     let dbDocument;
     if(target === 'document') {
