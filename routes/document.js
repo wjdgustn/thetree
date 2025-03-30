@@ -570,6 +570,7 @@ app.get('/action/acl/delete', async (req, res) => {
     }
     else {
         if(!req.permissions.includes('nsacl')) return res.status(403).send('이름공간 ACL 수정은 nsacl 권한이 필요합니다!');
+        if(!req.permissions.includes('config') && config.protected_namespaces?.includes(dbACL.namespace)) return res.status(403).send('protected_namespace');
     }
 
     await ACLModel.deleteOne({
