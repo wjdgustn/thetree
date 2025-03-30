@@ -28,7 +28,8 @@ const {
     BlockHistoryTypes,
     ACLTypes,
     EditRequestStatusTypes,
-    disabledFeaturesTemplates
+    disabledFeaturesTemplates,
+    ThreadCommentTypes
 } = require('../utils/types');
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
@@ -878,7 +879,8 @@ app.post('/admin/batch_revert',
             createdAt: {
                 $gte: date - duration
             },
-            hidden: false
+            hidden: false,
+            type: ThreadCommentTypes.Default
         }, {
             hiddenBy: req.user.uuid,
             hidden: true
