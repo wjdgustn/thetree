@@ -176,7 +176,10 @@ module.exports = class ACL {
     async check(aclType = ACLTypes.None, data = {}, noReadCheck = false) {
         if(data.alwaysAllow || data?.permissions?.includes('developer')) return { result: true };
 
-        if(aclType === ACLTypes.ACL && data?.permissions?.includes('nsacl')) return { result: true };
+        const nsaclPerm = data?.permissions?.includes('nsacl');
+        const nsaclPermValid = nsaclPerm && (!this.document || !config.protected_namespaces.includes(this.document.namespace));
+        const configPerm = data?.permissions?.includes('config');
+        if(aclType === ACLTypes.ACL && (nsaclPermValid || configPerm)) return { result: true };
 
         if(!noReadCheck && aclType !== ACLTypes.Read && aclType !== ACLTypes.ACL) {
             const readCheck = await this.check(ACLTypes.Read, data);
