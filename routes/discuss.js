@@ -814,7 +814,9 @@ app.post('/vote/:commentId/:voteIndex', async (req, res) => {
         uuid: comment.thread,
         deleted: false
     });
-    if(!comment) return res.error('댓글이 존재하지 않습니다.', 404);
+    if(!thread) return res.error('댓글이 존재하지 않습니다.', 404);
+
+    if(thread.status !== ThreadStatusTypes.Normal) return res.status(403).send('thread_invalid_status');
 
     const document = await Document.findOne({
         uuid: thread.document
