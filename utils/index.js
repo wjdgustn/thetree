@@ -153,7 +153,11 @@ module.exports = {
                     ]
                 }
             ]
-        }).lean();
+        })
+            .sort({
+                _id: -1
+            })
+            .lean();
         if(!aclGroupItem) return '';
 
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
