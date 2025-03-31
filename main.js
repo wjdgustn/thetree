@@ -816,7 +816,7 @@ document.getElementById('initScript')?.remove();
         if(item.type === 'js' && !eval(item.condition)) continue;
 
         const msg = (item.message || '비활성화된 기능입니다.')
-            .replaceAll('{cspNonce}', cspNonce);
+            .replaceAll('{cspNonce}', res.locals.cspNonce);
 
         let messageType = item.messageType;
         if(messageType === 'flexible') {
