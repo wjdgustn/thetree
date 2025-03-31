@@ -37,7 +37,7 @@ const isFrontPage = docTitle === config.front_page;
             <span role="button" class="thread-title-button thread-more-menu" @click="open">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 512"><path d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"></path></svg>
             </span>
-            <div class="popup" :class="!opened && 'popup-close'" @click.outside.capture="close">
+            <div x-cloak class="popup" :class="!opened && 'popup-close'" @click.outside.capture="close">
                 <div>
                     <div>
                         <label class="more-menu-item">
