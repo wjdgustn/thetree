@@ -142,7 +142,7 @@ const isFrontPage = docTitle === config.front_page;
         <%if(session.account.type !== UserTypes.Account) {%><p class="ip-warn">비로그인 상태로 토론에 참여합니다. 토론 내역에 IP(<%=req.ip%>) 주소 전체가 영구히 기록됩니다.</p><%}%>
     </div>
 
-    <button class="thetree-square-button thetree-blue-button">전송</button>
+    <button class="thetree-square-button thetree-blue-button" :disabled="$store.state.page.data.thread.status !== 0">전송</button>
     <div class="clearboth"></div>
 </form>
 
