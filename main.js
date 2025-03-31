@@ -815,7 +815,8 @@ document.getElementById('initScript')?.remove();
         if(item.type === 'string' && !req.url.startsWith(item.condition)) continue;
         if(item.type === 'js' && !eval(item.condition)) continue;
 
-        const msg = item.message || '비활성화된 기능입니다.';
+        const msg = (item.message || '비활성화된 기능입니다.')
+            .replaceAll('{cspNonce}', cspNonce);
 
         let messageType = item.messageType;
         if(messageType === 'flexible') {
