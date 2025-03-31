@@ -271,6 +271,21 @@
         --focus-box-shadow-style: var(--focus-outline-color) 0 0 0 0.2rem;
     }
 
+    @media screen and (max-width: 1023.98px) {
+        .title-group {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .thread-title {
+            align-self: auto;
+        }
+
+        .title-menu {
+            margin: .5rem 0 0;
+        }
+    }
+
     .comment-title {
         font-weight: 700;
         line-height: 1.1;
