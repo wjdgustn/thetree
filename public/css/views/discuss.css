@@ -23,12 +23,12 @@
         margin-top: 0;
     }
 
-    label {
+    label:not(.wiki-content *) {
         display: inline-block;
         margin-bottom: .2rem;
     }
 
-    input, textarea {
+    input:not(.wiki-content *), textarea {
         background-color: #fff;
         background-image: none;
         border: .0625rem solid #ccc;
@@ -41,13 +41,13 @@
         width: 100%;
     }
 
-    .thetree-dark-mode input, .thetree-dark-mode textarea {
+    .thetree-dark-mode input:not(.wiki-content *), .thetree-dark-mode textarea {
         background-color: #27292d;
         border-color: #383b40;
         color: #ddd;
     }
 
-    input {
+    input:not(.wiki-content *) {
         margin: 5px 0 10px;
     }
 
@@ -56,7 +56,7 @@
         resize: vertical;
     }
 
-    button:not(.thetree-danger-button) {
+    button:not(.thetree-danger-button):not(.wiki-content *) {
         float: right;
         width: 8rem;
     }
