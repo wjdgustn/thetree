@@ -1131,7 +1131,31 @@ document.addEventListener('alpine:init', () => {
                     'hide-bold': discuss && 'hide' === State.localConfig['discuss.bold']
                 }
             }
-        }
+        },
+        threadTitleMenu: () => ({
+            opened: false,
+            open() {
+                if(this.opened) return this.close();
+
+                this.opened = true;
+
+                FloatingUIDOM.computePosition(this.$el, this.$el.nextElementSibling, {
+                    placement: 'bottom-end',
+                    middleware: [
+                        FloatingUIDOM.offset(5),
+                        FloatingUIDOM.flip()
+                    ]
+                }).then(({x, y}) => {
+                    Object.assign(this.$el.nextElementSibling.style, {
+                        left: `${x}px`,
+                        top: `${y}px`
+                    });
+                });
+            },
+            close() {
+                this.opened = false;
+            }
+        })
     }));
 });
 
