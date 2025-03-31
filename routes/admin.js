@@ -136,6 +136,10 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         for(let [key, defaultValue] of Object.entries(exampleStringConfig)) {
             newStringConfig[key] = config[key] || defaultValue;
         }
+        const additionalEntries = Object.entries(global.stringConfig).filter(([key]) => !exampleStringConfig[key]);
+        for(let [key, value] of additionalEntries) {
+            newStringConfig[key] = value;
+        }
         fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
