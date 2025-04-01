@@ -177,7 +177,7 @@ module.exports = class ACL {
         if(data.alwaysAllow || data?.permissions?.includes('developer')) return { result: true };
 
         const nsaclPerm = data?.permissions?.includes('nsacl');
-        const nsaclPermValid = nsaclPerm && (!this.document || !config.protected_namespaces.includes(this.document.namespace));
+        const nsaclPermValid = nsaclPerm && (!this.document || !config.protected_namespaces?.includes(this.document.namespace));
         const configPerm = data?.permissions?.includes('config');
         if(aclType === ACLTypes.ACL && (nsaclPermValid || configPerm)) return { result: true };
 
