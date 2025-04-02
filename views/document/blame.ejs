@@ -22,9 +22,9 @@
                 <%remainingCount = diff.count;%>
 
                 <%let infoHtml = diff.history.infoText ? `<i>(${diff.history.infoText})</i>` : '';%>
-                <%if(diff.history.type === HistoryTypes.Revert) infoHtml = `<a href="${doc_action_link(document, 'blame', {
+                <%if(diff.history.type === HistoryTypes.Revert) infoHtml = `<a href="${namumarkUtils.escapeHtml(doc_action_link(document, 'blame', {
                     uuid: diff.history.revertUuid
-                })}">${infoHtml}</a>`;%>
+                }))}">${infoHtml}</a>`;%>
 
                 <%const isRev1 = diff.history.rev === 1;%>
                 <th rowspan="<%=remainingCount%>" style="background-color: <%=utils.increaseBrightness(colorFromUuid(diff.user.uuid), 60)%>"><%if(!isRev1) {%><a href="<%=doc_action_link(document, 'diff', {

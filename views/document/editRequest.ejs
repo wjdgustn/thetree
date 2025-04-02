@@ -73,7 +73,7 @@
                     ];
                     %>
 
-                    (<%-actions.map(a => `<a href="${doc_action_link(document, a.action, { uuid: editRequest.acceptedRev.uuid })}"${a.follow ? '' : ' rel="nofollow"'}>${a.text}</a>`).join(' | ')%>)
+                    (<%-actions.map(a => `<a href="${namumarkUtils.escapeHtml(doc_action_link(document, a.action, { uuid: editRequest.acceptedRev.uuid }))}"${a.follow ? '' : ' rel="nofollow"'}>${a.text}</a>`).join(' | ')%>)
                 </span>
                 으로 승인함.
             </div>
