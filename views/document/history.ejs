@@ -100,7 +100,7 @@ const navigationPage = include('../components/pageButton', {
                     }
                     %>
 
-                    (<%-actions.map(a => `<a href="${doc_action_link(document, a.action, { uuid: rev.uuid })}"${a.follow ? '' : ' rel="nofollow"'}>${a.text}</a>`).join(' | ')%>)
+                    (<%-actions.map(a => `<a href="${namumarkUtils.escapeHtml(doc_action_link(document, a.action, { uuid: rev.uuid }))}"${a.follow ? '' : ' rel="nofollow"'}>${a.text}</a>`).join(' | ')%>)
 
                 </span>
 

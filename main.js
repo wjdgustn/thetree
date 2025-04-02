@@ -610,6 +610,7 @@ app.use(async (req, res, next) => {
     app.locals.config = config;
 
     app.locals.utils = utils;
+    app.locals.namumarkUtils = namumarkUtils;
 
     for(let util in globalUtils) {
         app.locals[util] = globalUtils[util];
