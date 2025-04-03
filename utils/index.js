@@ -185,13 +185,13 @@ module.exports = {
                 }
 
                 const uuid = obj[key];
-                obj[key] = await models.User.findOne({
+                const dbUser = await models.User.findOne({
                     uuid
                 });
-                if(obj[key]) {
-                    obj[key] = obj.publicUser;
-                    if(!noCSS) obj[key].userCSS = await this.getUserCSS(obj[key]);
-                    cache[obj[key].uuid] = obj[key];
+                if(dbUser) {
+                    obj[key] = dbUser.publicUser;
+                    if(!noCSS) obj[key].userCSS = await this.getUserCSS(dbUser);
+                    cache[dbUser.uuid] = obj[key];
                 }
                 else obj[key] = {
                     type: UserTypes.Deleted,
