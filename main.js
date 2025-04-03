@@ -749,7 +749,7 @@ document.getElementById('initScript')?.remove();
         }
 
         const isAdmin = req.permissions.includes('admin');
-        if(backendMode) {
+        if(backendMode || (debug && req.query.be)) {
             const userConfigHash = req.get('X-You');
             const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
 
@@ -763,10 +763,11 @@ document.getElementById('initScript')?.remove();
                     'menus'
                 ]),
                 data: {
-                    ...data,
+                    ...page.data,
                     ...(data.serverData ?? {}),
                     ...pluginData
                 },
+                contentHtml: data.contentHtml,
                 ...(userConfigHash !== configHash ? {
                     configHash,
                     config: configJSON

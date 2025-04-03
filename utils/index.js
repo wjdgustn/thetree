@@ -21,9 +21,15 @@ module.exports = {
         return Math.floor(Math.random() * (max - min)) + min;
     },
     onlyKeys(obj, keys = []) {
+        if(!obj) return obj;
+        if(Array.isArray(obj)) return obj.map(a => this.onlyKeys(a, keys));
+        obj = JSON.parse(JSON.stringify(obj));
         return Object.fromEntries(Object.entries(obj).filter(([k]) => keys.includes(k)));
     },
     withoutKeys(obj, keys = []) {
+        if(!obj) return obj;
+        if(Array.isArray(obj)) return obj.map(a => this.onlyKeys(a, keys));
+        obj = JSON.parse(JSON.stringify(obj));
         return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
     },
     getGravatar(email) {
@@ -183,6 +189,7 @@ module.exports = {
                     uuid
                 }).lean();
                 if(obj[key]) {
+                    obj[key] = this.publicUser(obj[key]);
                     if(!noCSS) obj[key].userCSS = await this.getUserCSS(obj[key]);
                     cache[obj[key].uuid] = obj[key];
                 }
@@ -195,6 +202,18 @@ module.exports = {
 
         if(wasNotArr) return arr[0];
         return arr;
+    },
+    publicUser(user = {}) {
+        if(Array.isArray(user)) return user.map(a => this.publicUser(a));
+        return {
+            ...this.onlyKeys(user, [
+                'uuid',
+                'type',
+                'ip',
+                'name'
+            ]),
+            admin: user.permissions?.includes('admin')
+        }
     },
     userHtml(user, {
         isAdmin = false,

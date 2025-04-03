@@ -74,11 +74,38 @@ app.get('/aclgroup', async (req, res) => {
     res.renderSkin('ACLGroup', {
         contentName: 'admin/aclgroup',
         serverData: {
-            aclGroups,
-            selectedGroup,
-            groupItems,
-            prevItem,
-            nextItem
+            aclGroups: aclGroups.map(a => ({
+                ...utils.onlyKeys(a, [
+                    'uuid',
+                    'name'
+                ]),
+                deletable: a.deleteGroupPerms.length
+                    ? a.deleteGroupPerms.some(b => req.permissions.includes(b))
+                    : req.permissions.includes('aclgroup')
+            })),
+            selectedGroup: req.permissions.includes('config') ? utils.withoutKeys(selectedGroup, [
+                '_id',
+                '__v'
+            ]) : utils.onlyKeys(selectedGroup, [
+                'uuid',
+                'name'
+            ]),
+            addable: selectedGroup?.addPerms.length
+                ? selectedGroup.addPerms.some(a => req.permissions.includes(a))
+                : req.permissions.includes('aclgroup'),
+            removable: selectedGroup?.removePerms.length
+                ? selectedGroup.removePerms.some(a => req.permissions.includes(a))
+                : req.permissions.includes('aclgroup'),
+            groupItems: utils.onlyKeys(groupItems, [
+                'id',
+                'uuid',
+                'user',
+                'note',
+                'createdAt',
+                'expiresAt'
+            ]),
+            prevItem: prevItem?.id,
+            nextItem: nextItem?.id
         }
     });
 });
