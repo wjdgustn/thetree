@@ -203,14 +203,15 @@ module.exports = {
         if(wasNotArr) return arr[0];
         return arr;
     },
-    publicUser(user = {}) {
+    publicUser(user = {}, additionalKeys = []) {
         if(Array.isArray(user)) return user.map(a => this.publicUser(a));
         return {
             ...this.onlyKeys(user, [
                 'uuid',
                 'type',
                 'ip',
-                'name'
+                'name',
+                ...additionalKeys
             ]),
             admin: user.permissions?.includes('admin')
         }
