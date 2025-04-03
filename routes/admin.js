@@ -55,7 +55,9 @@ app.get('/admin/config', middleware.permission('config'), (req, res) => {
 
     res.renderSkin('Config', {
         contentName: 'admin/config',
-        jsonConfigs
+        serverData: {
+            jsonConfigs
+        }
     });
 });
 
@@ -79,11 +81,16 @@ app.get('/admin/developer', middleware.permission('developer'), (req, res) => {
     }
     readDir(customStaticRoot);
 
+    const jsonConfigs = ['devConfig.json'].map(name => ({
+        name,
+        content: fs.readFileSync(name).toString()
+    }));
+
     res.renderSkin('개발자 설정', {
         contentName: 'admin/developer',
         serverData: {
             customStaticFiles,
-            fs
+            jsonConfigs
         }
     });
 });
