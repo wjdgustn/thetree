@@ -1108,7 +1108,8 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
 
     const logs = await LoginHistory.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
-        .limit(100);
+        .limit(100)
+        .select('type ip device userAgent createdAt -_id');
 
     if(query._id?.$gte) logs.reverse();
 
@@ -1118,17 +1119,20 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
         prevItem = await LoginHistory.findOne({
             ...baseQuery,
             _id: { $gt: logs[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .sort({ _id: 1 })
+            .select('_id');
         nextItem = await LoginHistory.findOne({
             ...baseQuery,
             _id: { $lt: logs[logs.length - 1]._id }
-        }).sort({ _id: -1 });
+        }).sort({ _id: -1 })
+            .select('_id');
     }
 
     res.renderSkin(`${targetUser?.name} 로그인 내역`, {
         contentName: 'admin/login_history_result',
-        targetUser,
-        latestLog,
+        targetUser: utils.publicUser(targetUser),
+        userAgent: latestLog?.userAgent,
         logs,
         prevItem,
         nextItem
