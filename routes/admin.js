@@ -48,11 +48,14 @@ const ACL = require('../class/acl');
 const app = express.Router();
 
 app.get('/admin/config', middleware.permission('config'), (req, res) => {
+    const jsonConfigs = ['publicConfig.json', 'serverConfig.json'].map(name => ({
+        name,
+        content: fs.readFileSync(name).toString()
+    }));
+
     res.renderSkin('Config', {
         contentName: 'admin/config',
-        serverData: {
-            fs
-        }
+        jsonConfigs
     });
 });
 
