@@ -628,7 +628,10 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
 
     res.renderSkin('권한 부여', {
         contentName: 'admin/grant',
-        targetUser: utils.publicUser(targetUser, ['permissions'])
+        targetUser: {
+            ...targetUser,
+            permissions: targetUser.permissions
+        }
     });
 });
 
@@ -1131,7 +1134,7 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
 
     res.renderSkin(`${targetUser?.name} 로그인 내역`, {
         contentName: 'admin/login_history_result',
-        targetUser: utils.publicUser(targetUser),
+        targetUser: targetUser.publicUser,
         userAgent: latestLog?.userAgent,
         logs,
         prevItem,

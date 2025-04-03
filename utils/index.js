@@ -187,9 +187,9 @@ module.exports = {
                 const uuid = obj[key];
                 obj[key] = await models.User.findOne({
                     uuid
-                }).lean();
+                });
                 if(obj[key]) {
-                    obj[key] = this.publicUser(obj[key]);
+                    obj[key] = obj.publicUser;
                     if(!noCSS) obj[key].userCSS = await this.getUserCSS(obj[key]);
                     cache[obj[key].uuid] = obj[key];
                 }
@@ -202,19 +202,6 @@ module.exports = {
 
         if(wasNotArr) return arr[0];
         return arr;
-    },
-    publicUser(user = {}, additionalKeys = []) {
-        if(Array.isArray(user)) return user.map(a => this.publicUser(a));
-        return {
-            ...this.onlyKeys(user, [
-                'uuid',
-                'type',
-                'ip',
-                'name',
-                ...additionalKeys
-            ]),
-            admin: user.permissions?.includes('admin')
-        }
     },
     userHtml(user, {
         isAdmin = false,
