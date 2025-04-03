@@ -71,6 +71,7 @@ const disabledFeaturesPath = './cache/disabledFeatures.json';
 global.disabledFeatures = fs.existsSync(disabledFeaturesPath) ? JSON.parse(fs.readFileSync(disabledFeaturesPath).toString()) : [];
 
 require('dotenv').config();
+global.backendMode = process.env.BACKEND_MODE === 'true';
 
 global.S3 = new aws.S3Client({
     region: process.env.S3_REGION || 'auto',
@@ -690,9 +691,7 @@ app.use(async (req, res, next) => {
             } : {})
         }
 
-        const browserGlobalVarScript = `
-<script id="initScript" nonce="${res.locals.cspNonce}">
-window.CONFIG = ${JSON.stringify({
+        const configJSON = {
             ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
             ...(config.captcha.enabled ? {
                 captcha: {
@@ -700,9 +699,14 @@ window.CONFIG = ${JSON.stringify({
                     site_key: config.captcha.site_key
                 }
             } : {})
-        })}
+        }
+        const configJSONstr = JSON.stringify(configJSON);
+        const sessionJSONstr = JSON.stringify(session);
+        const browserGlobalVarScript = `
+<script id="initScript" nonce="${res.locals.cspNonce}">
+window.CONFIG = ${configJSONstr}
 window.page = ${JSON.stringify(page)}
-window.session = ${JSON.stringify(session)}
+window.session = ${sessionJSONstr}
 
 document.getElementById('initScript')?.remove();
         `.trim().replaceAll('/', '\\/') + '\n</script>';
@@ -745,7 +749,35 @@ document.getElementById('initScript')?.remove();
         }
 
         const isAdmin = req.permissions.includes('admin');
-        app.render('main', {
+        if(backendMode) {
+            const userConfigHash = req.get('X-You');
+            const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
+
+            const userSessionHash = req.get('X-Chika');
+            const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
+
+            res.json({
+                page: utils.onlyKeys(page, [
+                    'title',
+                    'viewName',
+                    'menus'
+                ]),
+                data: {
+                    ...data,
+                    ...(data.serverData ?? {}),
+                    ...pluginData
+                },
+                ...(userConfigHash !== configHash ? {
+                    configHash,
+                    config: configJSON
+                } : {}),
+                ...(userSessionHash !== sessionHash ? {
+                    sessionHash,
+                    session
+                } : {})
+            });
+        }
+        else app.render('main', {
             ...data,
             ...(data.serverData ?? {}),
             ...pluginData,
