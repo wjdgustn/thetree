@@ -564,7 +564,7 @@ app.use(async (req, res, next) => {
     req.requestId = log._id.toString();
     log.save().then();
 
-    if(req.user) {
+    if(req.user?.type !== UserType.Account) {
         if(req.session.lastIp !== req.ip) {
             req.session.lastIp = req.ip;
             setTimeout(async () => {
