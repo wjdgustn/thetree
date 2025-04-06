@@ -628,9 +628,11 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
 
     res.renderSkin('권한 부여', {
         contentName: 'admin/grant',
-        targetUser: {
-            ...targetUser,
-            permissions: targetUser.permissions
+        serverData: {
+            targetUser: targetUser ? {
+                ...targetUser.publicUser,
+                permissions: targetUser.permissions
+            } : null
         }
     });
 });
