@@ -9,6 +9,7 @@ const postProcess = require('./postProcess');
 
 const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
+const MAXIMUM_OPENED_SYNTAXES = 10;
 
 const syntaxDefaultValues = {
     openStr: '',
@@ -381,14 +382,17 @@ module.exports = class NamumarkParser {
                     }
 
                     const currStr = sourceText.slice(i, i + syntax.openStr.length);
+                    // console.log('openedSyntaxes.length', openedSyntaxes.length);
                     if (currStr === syntax.openStr) {
-                        const item = {
-                            ...syntax,
-                            index: text.length,
-                            sourceIndex: i
-                        }
+                        if(openedSyntaxes.length < MAXIMUM_OPENED_SYNTAXES) {
+                            const item = {
+                                ...syntax,
+                                index: text.length,
+                                sourceIndex: i
+                            }
 
-                        openedSyntaxes.unshift(item);
+                            openedSyntaxes.unshift(item);
+                        }
                         i += syntax.openStr.length - 1;
                         text += syntax.openStr;
                         continue;
