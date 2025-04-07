@@ -375,8 +375,8 @@ app.get('/acl/?*', middleware.parseDocumentName, async (req, res) => {
         viewName: 'acl',
         document,
         serverData: {
-            acl,
-            namespaceACL,
+            acl: utils.onlyKeys(acl, ['aclTypes']),
+            namespaceACL: utils.onlyKeys(namespaceACL, ['aclTypes']),
             editableACL,
             editableNSACL
         },
