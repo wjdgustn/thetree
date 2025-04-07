@@ -670,12 +670,20 @@ module.exports = {
                 [sortKey]: { [$gt]: items[0][sortKey] }
             })
                 .sort({ [sortKey]: -sortDirection })
+                .select([
+                    key,
+                    '-_id'
+                ])
                 .lean();
             nextItem = await model.findOne({
                 ...baseQuery,
                 [sortKey]: { [$lt]: items[items.length - 1][sortKey] }
             })
                 .sort({ [sortKey]: sortDirection })
+                .select([
+                    key,
+                    '-_id'
+                ])
                 .lean();
         }
 
