@@ -75,7 +75,11 @@ const contentLengthHandler = shortest => async (req, res) => {
     const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'contentLength', {
         sortDirection: shortest ? 1 : -1
     });
-    serverData.items = await utils.findDocuments(serverData.items);
+    serverData.items = utils.onlyKeys(await utils.findDocuments(serverData.items), ['document', 'contentLength']);
+
+    for(let item of serverData.items) {
+        item.document = utils.onlyKeys(item.document, ['parsedName']);
+    }
 
     res.renderSkin(`내용이 ${shortest ? '짧은' : '긴'} 문서`, {
         contentName: 'docList/ContentLength',
