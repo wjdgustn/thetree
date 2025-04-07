@@ -53,7 +53,11 @@ app.get('/OldPages', async (req, res) => {
     const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'createdAt', {
         sortDirection: 1
     });
-    serverData.items = await utils.findDocuments(serverData.items);
+    serverData.items = utils.onlyKeys(await utils.findDocuments(serverData.items), ['document', 'createdAt']);
+
+    for(let item of serverData.items) {
+        item.document = utils.onlyKeys(item.document, ['parsedName']);
+    }
 
     res.renderSkin('편집된 지 오래된 문서', {
         contentName: 'docList/OldPages',
