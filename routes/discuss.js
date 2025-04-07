@@ -167,6 +167,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('url topic -_id')
             .lean();
         return res.renderSkin(undefined, {
             viewName: 'thread_list_close',
@@ -191,6 +192,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('url -_id')
             .lean();
         return res.renderSkin(undefined, {
             viewName: 'edit_request_close',
@@ -215,6 +217,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('uuid url topic -_id')
             .lean();
 
         openEditRequests = await EditRequest.find({
@@ -224,6 +227,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('url -_id')
             .lean();
     }
 
