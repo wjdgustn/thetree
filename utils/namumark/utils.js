@@ -161,6 +161,11 @@ module.exports = {
         }
         return newText;
     },
+    escapedSplit(text, separator = ',') {
+        return text
+            .split(new RegExp(`(?<!\\\\)${separator}`))
+            .map(a => a.replaceAll(`\\${separator}`, separator).trim());
+    },
     katex: text => katex.renderToString(text, {
         throwOnError: false
     }),

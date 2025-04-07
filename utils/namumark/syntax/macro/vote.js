@@ -1,3 +1,5 @@
+const utils = require('../../utils');
+
 const Vote = require('../../../../schemas/vote');
 
 module.exports = {
@@ -5,7 +7,7 @@ module.exports = {
     async format(params, namumark) {
         if(!namumark.thread || !namumark.dbComment) return;
 
-        params = params.split(',').map(a => a.trim());
+        params = utils.escapedSplit(params);
         if(params.length < 2) return;
 
         const title = params.shift();

@@ -1,7 +1,7 @@
 const utils = require('../../utils');
 
 module.exports = params => {
-    params = params.split(',').map(param => param.trim());
+    params = utils.escapedSplit(params);
 
     const text = params.shift();
 
