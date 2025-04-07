@@ -99,7 +99,7 @@ const newSchema = new Schema({
                         'ip',
                         'name'
                     ]),
-                    admin: this.permissions?.includes('admin')
+                    admin: ['admin', 'developer'].some(a => this.permissions?.includes(a))
                 }
             }
         }

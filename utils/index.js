@@ -221,7 +221,7 @@ module.exports = {
         if(user.type !== UserTypes.Deleted || isAdmin) data.uuid = user.uuid;
         data.type = user.type;
         if(threadAdmin) data.threadadmin = '1';
-        if(['admin', 'developer'].some(a => user.permissions?.includes(a))) data.admin = '1';
+        if(user.admin || ['admin', 'developer'].some(a => user.permissions?.includes(a))) data.admin = '1';
 
         for(let [key, value] of Object.entries(data))
             dataset += ` data-${key}="${value}"`;
