@@ -763,7 +763,7 @@ document.getElementById('initScript')?.remove();
                     'menus'
                 ]),
                 data: {
-                    ...page.data,
+                    publicData: page.data,
                     ...(data.serverData ?? {}),
                     ...pluginData
                 },
