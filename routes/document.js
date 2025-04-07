@@ -1262,13 +1262,16 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         revs = await History.find(query)
             .sort({ rev: query.rev?.$gte ? 1 : -1 })
             .limit(30)
+            .select('type rev uuid user createdAt log troll trollBy hideLog hideLogBy hidden editRequest -_id')
             .lean();
 
         if(query.rev?.$gte) revs.reverse();
 
         latestRev = await History.findOne({
             document: dbDocument.uuid
-        }).sort({ rev: -1 });
+        })
+            .sort({ rev: -1 })
+            .select('uuid -_id');
     }
 
     if(!dbDocument || !revs.length) return res.error('문서를 찾을 수 없습니다.');
@@ -1280,7 +1283,7 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
     for(let rev of revs) {
         rev.editRequest &&= await EditRequest.findOne({
             uuid: rev.editRequest
-        });
+        }).select('url -_id');
     }
 
     res.renderSkin(undefined, {
