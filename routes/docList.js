@@ -35,6 +35,8 @@ app.get('/UncategorizedPages', async (req, res) => {
     for(let item of serverData.items)
         item.parsedName = utils.dbDocumentToDocument(item);
 
+    serverData.items = utils.onlyKeys(serverData.items, ['parsedName']);
+
     res.renderSkin('분류가 되지 않은 문서', {
         contentName: 'docList/UncategorizedPages',
         serverData

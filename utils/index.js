@@ -684,6 +684,8 @@ module.exports = {
             ...query
         })}`;
         const originalPageButton = await new Promise(async (resolve, reject) => {
+            if(global.backendMode) return resolve(null);
+
             expressApp.render('components/pageButton', {
                 prevLink: prevItem ? link({
                     until: prevItem[key].toString()
@@ -701,8 +703,10 @@ module.exports = {
             items,
             prevItem,
             nextItem,
-            pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
-            originalPageButton,
+            ...(global.backendMode ? {} : {
+                pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
+                originalPageButton,
+            }),
             total
         }
     },
