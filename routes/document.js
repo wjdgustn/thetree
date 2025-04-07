@@ -1141,7 +1141,13 @@ app.get('/edit_request/:url', async (req, res) => {
 
     editRequest.acceptedRev &&= await History.findOne({
         uuid: editRequest.acceptedRev
-    });
+    }).select('rev uuid -_id');
+
+    const showContent = [
+        EditRequestStatusTypes.Open,
+        EditRequestStatusTypes.Closed
+    ].includes(editRequest.status)
+        || (editRequest.status === EditRequestStatusTypes.Locked && req.permissions.includes('update_thread_status'));
 
     res.renderSkin(undefined, {
         viewName: 'edit_request',
@@ -1149,9 +1155,22 @@ app.get('/edit_request/:url', async (req, res) => {
         document,
         serverData: {
             contentHtml,
-            editRequest,
-            baseRev,
-            diff: await utils.generateDiff(baseRev.content, editRequest.content),
+            editRequest: utils.onlyKeys(editRequest, [
+                'url',
+                'createdUser',
+                'lastUpdateUser',
+                'createdAt',
+                'lastUpdatedAt',
+                'diffLength',
+                'log',
+                'status',
+                'acceptedRev',
+                'closedReason',
+                ...(showContent ? ['content'] : [])
+            ]),
+            baseRev: utils.onlyKeys(baseRev, ['rev']),
+            diff: showContent ? (await utils.generateDiff(baseRev.content, editRequest.content)) : null,
+            showContent,
             conflict,
             editable,
             selfCreated: editRequest.createdUser.uuid === req.user?.uuid
