@@ -292,7 +292,9 @@ module.exports = {
 
                 obj.history = await models.History.findOne({
                     uuid: obj.uuid
-                }).lean();
+                })
+                    .select('type rev uuid user createdAt log troll trollBy hideLog hideLogBy hidden editRequest -_id')
+                    .lean();
                 if(obj.history) {
                     obj.history = this.addHistoryData(obj.history, isAdmin);
                     cache[obj.uuid] = obj.history;
