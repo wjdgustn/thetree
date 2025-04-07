@@ -127,6 +127,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         })
             .sort({ rev: -1 })
             .limit(3)
+            .select('createdAt rev revertRev log moveOldDoc moveNewDoc diffLength')
             .lean();
 
         revs = await utils.findUsers(revs);
@@ -195,7 +196,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         contentHtml
     });
     let categoryHtml;
-    try {
+    if(!global.backendMode) try {
         categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !rev.content?.startsWith('#redirect '));
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
@@ -342,8 +343,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         ...defaultData,
         headings,
         serverData: {
-            rev,
-            tocContentHtml
+            tocContentHtml,
+            categories
         },
         contentHtml,
         categoryHtml,

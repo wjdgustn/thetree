@@ -267,13 +267,15 @@ module.exports = {
             note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
         });
 
-        const diffClassList = ['diff-text'];
+        if(!global.backendMode) {
+            const diffClassList = ['diff-text'];
 
-        if(rev.diffLength > 0) diffClassList.push('diff-add');
-        else if(rev.diffLength < 0) diffClassList.push('diff-remove');
+            if(rev.diffLength > 0) diffClassList.push('diff-add');
+            else if(rev.diffLength < 0) diffClassList.push('diff-remove');
 
-        rev.pureDiffHtml = `<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>`;
-        rev.diffHtml = `<span>(${rev.pureDiffHtml})</span>`;
+            rev.pureDiffHtml = `<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>`;
+            rev.diffHtml = `<span>(${rev.pureDiffHtml})</span>`;
+        }
 
         return rev;
     },
