@@ -31,7 +31,7 @@ const navigationPage = include('../components/pageButton', {
 
 <div class="navigation-div navigation-page"><%-navigationPage%></div>
 
-<%if(backlinks.length) {%>
+<%if(Object.keys(backlinksPerChar).length) {%>
     <div class="backlink-block">
         <%for(let [char, documents] of Object.entries(backlinksPerChar)) {%>
             <div>

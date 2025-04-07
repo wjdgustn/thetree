@@ -1622,6 +1622,7 @@ const getBacklinks = async (req, res) => {
                 }
             })
                 .sort({ upperTitle: -1 })
+                .select('title -_id')
                 .lean();
 
             nextItem = await Document.findOne({
@@ -1631,6 +1632,7 @@ const getBacklinks = async (req, res) => {
                 }
             })
                 .sort({ upperTitle: 1 })
+                .select('title -_id')
                 .lean();
         }
     }
@@ -1644,7 +1646,7 @@ const getBacklinks = async (req, res) => {
         document.flags = document.backlinks.find(a => a.docName === docName).flags;
 
         const arr = backlinksPerChar[char] ??= [];
-        arr.push(document);
+        arr.push(utils.onlyKeys(document, ['parsedName', 'flags']));
     }
 
     res.renderSkin(undefined, {
@@ -1654,7 +1656,6 @@ const getBacklinks = async (req, res) => {
         serverData: {
             selectedNamespace,
             namespaceCounts,
-            backlinks,
             backlinksPerChar,
             prevItem,
             nextItem
