@@ -337,7 +337,9 @@ module.exports = {
                     uuid: obj.document
                 }).lean();
                 if(obj.document) {
-                    obj.document.parsedName = this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`);
+                    obj.document = {
+                        parsedName: this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`)
+                    }
                     cache[obj.document.uuid] = obj.document;
                 }
             }
