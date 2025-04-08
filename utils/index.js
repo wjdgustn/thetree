@@ -28,7 +28,7 @@ module.exports = {
     },
     withoutKeys(obj, keys = []) {
         if(!obj) return obj;
-        if(Array.isArray(obj)) return obj.map(a => this.onlyKeys(a, keys));
+        if(Array.isArray(obj)) return obj.map(a => this.withoutKeys(a, keys));
         obj = JSON.parse(JSON.stringify(obj));
         return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
     },
