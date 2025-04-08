@@ -441,11 +441,15 @@ app.get('/BlockHistory', async (req, res) => {
         prevItem = await BlockHistory.findOne({
             ...baseQuery,
             _id: { $gt: logs[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: 1 });
         nextItem = await BlockHistory.findOne({
             ...baseQuery,
             _id: { $lt: logs[logs.length - 1]._id }
-        }).sort({ _id: -1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: -1 });
 
         logs = await utils.findUsers(logs, 'createdUser', true);
         logs = await utils.findUsers(logs, 'targetUser', true);
@@ -462,7 +466,7 @@ app.get('/BlockHistory', async (req, res) => {
     res.renderSkin('차단 내역', {
         contentName: 'special/blockHistory',
         serverData: {
-            logs,
+            logs: utils.withoutKeys(logs, ['_id', '__v']),
             prevItem,
             nextItem
         }
