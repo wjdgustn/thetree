@@ -544,7 +544,8 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
 app.get('/member/mypage', middleware.isLogin, async (req, res) => {
     const passkeys = await Passkey.find({
         user: req.user.uuid
-    });
+    })
+        .select('name createdAt lastUsedAt -_id');
     res.renderSkin('내 정보', {
         contentName: 'member/mypage',
         serverData: {
