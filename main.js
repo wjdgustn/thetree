@@ -531,7 +531,7 @@ app.use(async (req, res, next) => {
     }
     req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
-    req.backendMode = req.url.startsWith('/internal/');
+    req.backendMode = req.url.split('/')[1] === 'internal';
 
     const mobileHeader = req.get('Sec-CH-UA-Mobile');
     req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
@@ -840,7 +840,30 @@ document.getElementById('initScript')?.remove();
         const target = args.pop();
         const url = new URL(target, 'http://' + req.hostname);
         if(req.query.f) url.searchParams.set('f', req.query.f);
-        res.originalRedirect(...args, url.pathname + url.search);
+
+        const finalUrl = url.pathname + url.search;
+        if(req.backendMode) res.json({
+            code: 302,
+            url: finalUrl
+        });
+        else res.originalRedirect(...args, finalUrl);
+    }
+
+    if(req.backendMode) {
+        res.status = code => ({
+            end: data => res.json({
+                code,
+                data
+            }),
+            send: data => res.json({
+                code,
+                data
+            }),
+            json: data => res.json({
+                code,
+                data
+            })
+        })
     }
 
     const url = req.url;
