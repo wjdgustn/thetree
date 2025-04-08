@@ -89,6 +89,7 @@ app.get('/RecentDiscuss', async (req, res) => {
         threads = await Thread.find(query)
             .sort(sort)
             .limit(100)
+            .select('url topic document lastUpdateUser lastUpdatedAt -_id')
             .lean();
     }
     else {
@@ -109,6 +110,7 @@ app.get('/RecentDiscuss', async (req, res) => {
         editRequests = await EditRequest.find(query)
             .sort(sort)
             .limit(100)
+            .select('url document status lastUpdatedAt diffLength createdUser -_id')
             .lean();
     }
 
