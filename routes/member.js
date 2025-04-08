@@ -1371,14 +1371,21 @@ const starHandler = starred => async (req, res) => {
 app.get('/member/starred_documents', middleware.isLogin, async (req, res) => {
     let stars = await Star.find({
         user: req.user.uuid
-    }).lean();
-    stars = await utils.findDocuments(stars);
+    })
+        .select('document -_id')
+        .lean();
+    stars = await utils.findDocuments(stars, ['updatedAt', 'uuid']);
     stars = stars.sort((a, b) => b.document.updatedAt - a.document.updatedAt);
 
     for(let star of stars) {
         star.rev = await History.findOne({
             document: star.document.uuid
-        }).sort({ rev: -1 }).lean();
+        })
+            .sort({ rev: -1 })
+            .select('createdAt -_id')
+            .lean();
+
+        star.document = utils.withoutKeys(star.document, ['updatedAt']);
     }
 
     res.renderSkin('내 문서함', {

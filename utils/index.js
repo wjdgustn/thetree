@@ -321,7 +321,7 @@ module.exports = {
             ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
             ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
     },
-    async findDocuments(arr) {
+    async findDocuments(arr, additionalKeys = []) {
         const cache = {};
 
         for(let obj of arr) {
@@ -338,7 +338,8 @@ module.exports = {
                 }).lean();
                 if(obj.document) {
                     obj.document = {
-                        parsedName: this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`)
+                        parsedName: this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`),
+                        ...this.onlyKeys(obj.document, additionalKeys)
                     }
                     cache[obj.document.uuid] = obj.document;
                 }
