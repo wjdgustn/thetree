@@ -293,7 +293,7 @@ module.exports = {
                 obj.history = await models.History.findOne({
                     uuid: obj.uuid
                 })
-                    .select('type rev uuid user createdAt log troll trollBy hideLog hideLogBy hidden editRequest -_id')
+                    .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id')
                     .lean();
                 if(obj.history) {
                     obj.history = this.addHistoryData(obj.history, isAdmin);

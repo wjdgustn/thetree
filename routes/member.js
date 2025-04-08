@@ -676,6 +676,7 @@ app.get('/contribution/:uuid/document',
     let revs = await History.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
         .limit(100)
+        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll hideLog diffLength api -_id')
         .lean();
 
     if(query._id?.$gte) revs.reverse();
@@ -686,11 +687,15 @@ app.get('/contribution/:uuid/document',
         prevItem = await History.findOne({
             ...baseQuery,
             _id: { $gt: revs[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: 1 });
         nextItem = await History.findOne({
             ...baseQuery,
             _id: { $lt: revs[revs.length - 1]._id }
-        }).sort({ _id: -1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: -1 });
 
         revs = await utils.findDocuments(revs);
     }
@@ -704,7 +709,6 @@ app.get('/contribution/:uuid/document',
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
-            user,
             revs,
             total,
             prevItem,
