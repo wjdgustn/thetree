@@ -7,11 +7,11 @@
 
     <p>
         확인되지 않은 기기에서 로그인하셨습니다.<br>
-        <%if(user.totpToken) {%>
+        <%if(useTotp) {%>
             <span x-show="mode === 'passkey'">Passkey을 사용하여 2단계 인증을 진행합니다.</span>
             <span x-show="mode === 'otp'">Google Authenticator 코드를 입력해주세요.</span>
         <%} else {%>
-            이메일(<b><%=user.email%></b>)로 전송된 PIN을 입력해주세요.
+            이메일(<b><%=email%></b>)로 전송된 PIN을 입력해주세요.
         <%}%>
     </p>
 
@@ -39,7 +39,7 @@
 
     <div class="button-block" :class="mode === 'otp' && 'button-block-otp'">
         <label class="trust-label">
-            <input :disabled="doingPasskey" class="trust-input" type="checkbox" name="trust"<%=user.totpToken ? '' : ' checked'%>><span>이 기기를 신뢰</span>
+            <input :disabled="doingPasskey" class="trust-input" type="checkbox" name="trust"<%=useTotp ? '' : ' checked'%>><span>이 기기를 신뢰</span>
         </label>
         <div class="button-block-right" x-show="mode === 'otp'">
             <button class="thetree-button thetree-primary-button">로그인</button>

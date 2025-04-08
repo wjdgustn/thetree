@@ -397,7 +397,8 @@ app.post('/member/login',
             contentName: 'member/pin_verification',
             passkeyData,
             serverData: {
-                user,
+                email: user.email,
+                useTotp: !!user.totpToken,
                 autologin: req.body.autologin,
                 hasPasskey
             }
