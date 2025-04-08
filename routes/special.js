@@ -43,6 +43,7 @@ app.get('/RecentChanges', async (req, res) => {
     })
         .sort({ _id: -1 })
         .limit(100)
+        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll hideLog diffLength api -_id')
         .lean();
 
     revs = await utils.findUsers(revs);
