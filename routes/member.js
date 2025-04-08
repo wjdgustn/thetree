@@ -783,6 +783,7 @@ app.get('/contribution/:uuid/edit_request',
     let items = await EditRequest.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
         .limit(100)
+        .select('url document status lastUpdatedAt diffLength -_id')
         .lean();
 
     if(query._id?.$gte) items.reverse();
@@ -793,11 +794,15 @@ app.get('/contribution/:uuid/edit_request',
         prevItem = await EditRequest.findOne({
             ...query,
             _id: { $gt: items[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: 1 });
         nextItem = await EditRequest.findOne({
             ...query,
             _id: { $lt: items[items.length - 1]._id }
-        }).sort({ _id: -1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: -1 });
 
         items = await utils.findDocuments(items);
     }
