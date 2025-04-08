@@ -402,7 +402,9 @@ module.exports = {
 
                 obj.thread = await models.Thread.findOne({
                     uuid: obj.thread
-                }).lean();
+                })
+                    .select('url topic document -_id')
+                    .lean();
                 if(obj.thread) {
                     cache[obj.thread.uuid] = obj.thread;
                 }
