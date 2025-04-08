@@ -71,7 +71,6 @@ const disabledFeaturesPath = './cache/disabledFeatures.json';
 global.disabledFeatures = fs.existsSync(disabledFeaturesPath) ? JSON.parse(fs.readFileSync(disabledFeaturesPath).toString()) : [];
 
 require('dotenv').config();
-global.backendMode = process.env.BACKEND_MODE === 'true';
 
 global.S3 = new aws.S3Client({
     region: process.env.S3_REGION || 'auto',
@@ -532,6 +531,8 @@ app.use(async (req, res, next) => {
     }
     req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
+    req.backendMode = req.url.startsWith('/internal/');
+
     const mobileHeader = req.get('Sec-CH-UA-Mobile');
     req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
 
@@ -749,7 +750,7 @@ document.getElementById('initScript')?.remove();
         }
 
         const isAdmin = req.permissions.includes('admin');
-        if(backendMode || (debug && req.query.be)) {
+        if(req.backendMode || (debug && req.query.be)) {
             const userConfigHash = req.get('X-You');
             const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
 
@@ -791,7 +792,7 @@ document.getElementById('initScript')?.remove();
                 ...data,
                 isAdmin
             }),
-            addHistoryData: (rev, document) => utils.addHistoryData(rev, isAdmin, document)
+            addHistoryData: (rev, document) => utils.addHistoryData(rev, isAdmin, document, req.backendMode)
         }, async (err, html) => {
             if(err) {
                 console.error(err);
@@ -877,6 +878,7 @@ document.getElementById('initScript')?.remove();
 for(let f of fs.readdirSync('./routes')) {
     const route = require(`./routes/${f}`);
     app.use(route.router ?? route);
+    app.use('/internal', route.router ?? route);
 }
 
 app.use((req, res, next) => {

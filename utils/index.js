@@ -237,7 +237,7 @@ module.exports = {
                 : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
     },
-    addHistoryData(rev, isAdmin = false, document = null) {
+    addHistoryData(rev, isAdmin = false, document = null, backendMode = false) {
         document ??= rev.document;
 
         rev.infoText = null;
@@ -267,7 +267,7 @@ module.exports = {
             note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
         });
 
-        if(!global.backendMode) {
+        if(!backendMode) {
             const diffClassList = ['diff-text'];
 
             if(rev.diffLength > 0) diffClassList.push('diff-add');
@@ -701,7 +701,7 @@ module.exports = {
             ...query
         })}`;
         const originalPageButton = await new Promise(async (resolve, reject) => {
-            if(global.backendMode) return resolve(null);
+            if(req.backendMode) return resolve(null);
 
             expressApp.render('components/pageButton', {
                 prevLink: prevItem ? link({
@@ -720,7 +720,7 @@ module.exports = {
             items,
             prevItem,
             nextItem,
-            ...(global.backendMode ? {} : {
+            ...(req.backendMode ? {} : {
                 pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
                 originalPageButton,
             }),

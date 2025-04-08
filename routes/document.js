@@ -196,7 +196,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         contentHtml
     });
     let categoryHtml;
-    if(!global.backendMode) try {
+    if(!req.backendMode) try {
         categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !rev.content?.startsWith('#redirect '));
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
