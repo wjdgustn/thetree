@@ -754,7 +754,7 @@ document.getElementById('initScript')?.remove();
             const userConfigHash = req.get('X-You');
             const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
 
-            const userSessionHash = req.get('X-Chika');
+            const userSessionHash = req.get('X-Riko');
             const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
 
             res.json({
