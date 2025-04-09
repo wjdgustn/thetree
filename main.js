@@ -758,11 +758,16 @@ document.getElementById('initScript')?.remove();
             const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
 
             res.json({
-                page: utils.onlyKeys(page, [
-                    'title',
-                    'viewName',
-                    'menus'
-                ]),
+                page: {
+                    ...(req.backendMode ? {
+                        contentName: data.contentName
+                    } : {}),
+                    ...utils.onlyKeys(page, [
+                        'title',
+                        'viewName',
+                        'menus'
+                    ])
+                },
                 data: {
                     publicData: page.data,
                     ...(data.serverData ?? {}),
