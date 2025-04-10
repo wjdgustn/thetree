@@ -760,7 +760,8 @@ document.getElementById('initScript')?.remove();
             res.json({
                 page: {
                     ...(req.backendMode ? {
-                        contentName: data.contentName
+                        contentName: data.contentName,
+                        contentHtml: data.contentHtml
                     } : {}),
                     ...utils.onlyKeys(page, [
                         'title',
@@ -773,7 +774,6 @@ document.getElementById('initScript')?.remove();
                     ...(data.serverData ?? {}),
                     ...pluginData
                 },
-                contentHtml: data.contentHtml,
                 ...(userConfigHash !== configHash ? {
                     configHash,
                     config: configJSON
