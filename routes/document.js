@@ -342,12 +342,20 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     res.renderSkin(undefined, {
         ...defaultData,
         headings,
+        ...(req.backendMode ? {
+            contentName: 'wiki'
+        } : {}),
         serverData: {
             tocContentHtml,
-            categories
+            ...(req.backendMode ? {
+                categories,
+                contentHtml
+            } : {})
         },
-        contentHtml,
-        categoryHtml,
+        ...(req.backendMode ? {} : {
+            contentHtml,
+            categoryHtml
+        }),
         date: rev.createdAt.getTime(),
         star_count,
         starred: !!starred
@@ -734,7 +742,8 @@ const editAndEditRequest = async (req, res) => {
     if(rev?.content) {
         const parser = new NamumarkParser({
             document,
-            aclData: req.aclData
+            aclData: req.aclData,
+            req
         });
         const { html } = await parser.parseEditorComment(rev.content);
         contentHtml = html;
@@ -872,7 +881,8 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         document,
         dbDocument,
         aclData: req.aclData,
-        thread: isThread
+        thread: isThread,
+        req
     });
     let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml = '';
@@ -1119,7 +1129,8 @@ app.get('/edit_request/:url', async (req, res) => {
         if(latestRev?.content) {
             const parser = new NamumarkParser({
                 document,
-                aclData: req.aclData
+                aclData: req.aclData,
+                req
             });
             const { html } = await parser.parseEditorComment(latestRev.content);
             contentHtml = html;

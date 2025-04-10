@@ -96,7 +96,8 @@ const threadCommentEvent = async ({
         document,
         dbComment,
         thread: true,
-        commentId: dbComment.id
+        commentId: dbComment.id,
+        req
     });
 
     let commentUser = req.user;
@@ -262,7 +263,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
                 aclData: req.aclData,
                 dbComment: c,
                 thread: true,
-                commentId: c.id
+                commentId: c.id,
+                req
             })
         })(c)));
 
@@ -430,7 +432,8 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
             aclData: req.aclData,
             dbComment: c,
             thread: true,
-            commentId: c.id
+            commentId: c.id,
+            req
         })
     })(c)));
 
