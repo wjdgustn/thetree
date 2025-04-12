@@ -1360,7 +1360,7 @@ const starHandler = starred => async (req, res) => {
             document: dbDocument.uuid,
             user: req.user.uuid
         });
-        if(!deleted) res.error('already_unstarred_document', 404);
+        if(!deleted) return res.error('already_unstarred_document', 404);
     }
 
     const referer = new URL(req.get('Referer'));
