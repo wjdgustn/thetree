@@ -116,6 +116,18 @@ global.updateConfig = () => {
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 
     global.skins = fs.readdirSync('./skins');
+    global.skinInfos = {};
+    for(let skin of global.skins) {
+        const metadataPath = path.join('./skins', skin, 'metadata.json');
+        const isSPA = fs.existsSync(metadataPath);
+        if(!isSPA) continue;
+
+        const templatePath = path.join('./skins', skin, 'client/index.html');
+        global.skinInfos[skin] = {
+            ...JSON.parse(fs.readFileSync(metadataPath).toString()),
+            template: fs.readFileSync(templatePath).toString()
+        };
+    }
 }
 updateConfig();
 
@@ -403,15 +415,26 @@ app.use(express.static(`./public`));
 
 const skinsStatic = express.static('./skins');
 app.use('/skins', (req, res, next) => {
-    const filename = req.path.split('/').pop();
+    const splittedPath = req.path.split('/');
+    const skinName = splittedPath[1];
+    const filename = splittedPath.pop();
 
-    const blacklist = ['ejs', 'vue'];
-    if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) next();
+    const skinInfo = global.skinInfos[skinName];
+    if(skinInfo) {
+        if(filename.endsWith('.html')) return next();
 
-    if(config.minify.js && filename.endsWith('.js')) return minifyManager.handleSkinJS(filename, req, res, next);
-    if(config.minify.css && filename.endsWith('.css')) return minifyManager.handleSkinCSS(filename, req, res, next);
+        req.url = req.url.slice(skinName.length + 2);
+        express.static(`./skins/${skinName}/client`)(req, res, next);
+    }
+    else {
+        const blacklist = ['ejs', 'vue'];
+        if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) return next();
 
-    skinsStatic(req, res, next);
+        if(config.minify.js && filename.endsWith('.js')) return minifyManager.handleSkinJS(filename, req, res, next);
+        if(config.minify.css && filename.endsWith('.css')) return minifyManager.handleSkinCSS(filename, req, res, next);
+
+        skinsStatic(req, res, next);
+    }
 });
 
 app.use('/plugins/:pluginName', (req, res, next) => {
@@ -531,8 +554,6 @@ app.use(async (req, res, next) => {
     }
     req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
-    req.backendMode = req.url.split('/')[1] === 'internal';
-
     const mobileHeader = req.get('Sec-CH-UA-Mobile');
     req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
 
@@ -630,6 +651,10 @@ app.use(async (req, res, next) => {
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
     if(!global.skins.includes(skin)) skin = global.skins[0];
+    const skinInfo = global.skinInfos[skin];
+
+    req.isInternal = req.url.split('/')[1] === 'internal';
+    req.backendMode = skinInfo || req.isInternal;
 
     res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
 
@@ -750,19 +775,24 @@ document.getElementById('initScript')?.remove();
         }
 
         const isAdmin = req.permissions.includes('admin');
-        if(req.backendMode || (debug && req.query.be)) {
+        const isBackendMode = req.isInternal || (debug && req.query.be);
+        if(isBackendMode || skinInfo) {
+            const userClientVersion = req.get('X-Chika');
+            const clientVersion = skinInfo?.versionHeader;
+
+            if(isBackendMode && userClientVersion !== clientVersion && (!debug || userClientVersion !== 'bypass'))
+                return res.status(400).end();
+
             const userConfigHash = req.get('X-You');
             const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
 
             const userSessionHash = req.get('X-Riko');
             const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
 
-            res.json({
+            const resData = {
                 page: {
-                    ...(req.backendMode ? {
-                        contentName: data.contentName,
-                        contentHtml: data.contentHtml
-                    } : {}),
+                    contentName: data.contentName || null,
+                    contentHtml: data.contentHtml || null,
                     ...utils.onlyKeys(page, [
                         'title',
                         'viewName',
@@ -782,7 +812,18 @@ document.getElementById('initScript')?.remove();
                     sessionHash,
                     session
                 } : {})
-            });
+            }
+
+            if(isBackendMode) res.json(resData);
+            else {
+                const render = require(`./skins/${skin}/server/server.cjs`).render;
+                const rendered = await render(req.originalUrl, resData);
+                const html = skinInfo.template
+                    .replace('<!--app-body-->', rendered.html);
+
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                res.send(html);
+            }
         }
         else app.render('main', {
             ...data,
@@ -847,14 +888,14 @@ document.getElementById('initScript')?.remove();
         if(req.query.f) url.searchParams.set('f', req.query.f);
 
         const finalUrl = url.pathname + url.search;
-        if(req.backendMode) res.json({
+        if(req.isInternal) res.json({
             code: 302,
             url: finalUrl
         });
         else res.originalRedirect(...args, finalUrl);
     }
 
-    if(req.backendMode) {
+    if(req.isInternal) {
         res.status = code => ({
             end: data => res.json({
                 code,
