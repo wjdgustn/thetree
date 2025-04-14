@@ -1345,6 +1345,8 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
+    const useCaptcha = await checkDoingManyEdits(req);
+
     res.renderSkin(undefined, {
         contentName: 'document/revert',
         viewName: 'revert',
@@ -1352,13 +1354,17 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         rev: rev.rev,
         uuid: rev.uuid,
         serverData: {
-            content: rev?.content ?? ''
+            content: rev?.content ?? '',
+            useCaptcha
         }
     });
 });
 
-app.post('/revert/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
+app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     if(req.body.log.length > 255) return res.error('요약의 값은 255글자 이하여야 합니다.');
+
+    const doingManyEdits = await checkDoingManyEdits(req);
+    if(doingManyEdits && !await utils.middleValidateCaptcha(req, res)) return;
 
     const document = req.document;
 
