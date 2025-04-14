@@ -549,7 +549,12 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
     res.renderSkin('내 정보', {
         contentName: 'member/mypage',
         serverData: {
-            passkeys
+            skins: global.skins,
+            passkeys,
+            user: utils.onlyKeys(req.user, ['name', 'email', 'skin']),
+            permissions: req.displayPermissions,
+            hasTotp: !!req.user.totpToken,
+            canWithdraw: config.can_withdraw !== false
         }
     });
 });
