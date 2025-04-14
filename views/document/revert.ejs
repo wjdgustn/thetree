@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="/css/views/revert.css">
 <%-include('../components/alert')%>
-<form method="post">
+<form method="post" data-captcha="1">
     <input type="hidden" name="uuid" value="<%=uuid%>">
     <textarea readonly><%=content%></textarea>
 

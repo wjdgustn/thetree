@@ -1357,7 +1357,7 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
+app.post('/revert/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
     if(req.body.log.length > 255) return res.error('요약의 값은 255글자 이하여야 합니다.');
 
     const document = req.document;
