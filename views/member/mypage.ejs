@@ -81,7 +81,7 @@
     </div>
 
     <div class="button-block">
-        <%if(config.withdraw_save_days != null) {%><a class="thetree-square-button thetree-danger-button" href="/member/withdraw">계정 삭제</a><%}%>
+        <%if(config.can_withdraw !== false) {%><a class="thetree-square-button thetree-danger-button" href="/member/withdraw">계정 삭제</a><%}%>
         <button class="thetree-square-button thetree-blue-button">변경</button>
     </div>
 </form>
