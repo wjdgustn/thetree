@@ -726,6 +726,23 @@ app.use(async (req, res, next) => {
                 }
             } : {})
         }
+
+        const configMapper = {
+            site_name: 'wiki.site_name',
+            logo_url: 'wiki.logo_url',
+            front_page: 'wiki.front_page',
+            editagree_text: 'wiki.editagree_text',
+            copyright_text: 'wiki.copyright_text',
+            base_url: 'wiki.canonical_url',
+            sitenotice: 'wiki.sitenotice'
+        }
+        for(let [key, value] of Object.entries(configMapper)) {
+            const configVal = configJSON[key] ?? config[key];
+            delete configJSON[key];
+            if(!configVal) continue;
+            configJSON[value] = configVal;
+        }
+
         const configJSONstr = JSON.stringify(configJSON);
         const sessionJSONstr = JSON.stringify(session);
         const browserGlobalVarScript = `

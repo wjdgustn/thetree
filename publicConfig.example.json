@@ -3,6 +3,8 @@
   "front_page": "FrontPage",
   "base_url": "http://localhost:3000",
 
+  "sitenotice": "",
+
   "skin.liberty.navbar_logo_text": "테스트위키",
   "skin.liberty.brand_color_1": "#f85c64",
   "skin.liberty.navbar_logo_padding": "0.4rem 0 0 0"
