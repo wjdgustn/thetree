@@ -115,7 +115,7 @@ global.updateConfig = () => {
 
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 
-    global.skins = fs.readdirSync('./skins');
+    global.skins = fs.readdirSync('./skins').filter(a => !a.startsWith('.'));
     global.skinInfos = {};
     for(let skin of global.skins) {
         const metadataPath = path.join('./skins', skin, 'metadata.json');
