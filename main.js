@@ -798,7 +798,7 @@ document.getElementById('initScript')?.remove();
             const clientVersion = skinInfo?.versionHeader;
 
             if(isBackendMode && userClientVersion !== clientVersion && (!debug || userClientVersion !== 'bypass'))
-                return res.status(400).end();
+                return res.originalStatus(400).end();
 
             const userConfigHash = req.get('X-You');
             const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
@@ -915,6 +915,7 @@ document.getElementById('initScript')?.remove();
     }
 
     if(req.isInternal) {
+        res.originalStatus = res.status;
         res.status = code => ({
             end: data => res.json({
                 code,
