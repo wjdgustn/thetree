@@ -24,6 +24,7 @@ const meiliSearch = require('meilisearch');
 const { execSync, exec } = require('child_process');
 const axios = require('axios');
 const util = require('util');
+const msgpack = require('@msgpack/msgpack');
 
 global.debug = process.env.NODE_ENV === 'development';
 
@@ -929,7 +930,9 @@ document.getElementById('initScript')?.remove();
                 code,
                 data
             })
-        })
+        });
+
+        res.json = data => res.send(Buffer.from(msgpack.encode(data)));
     }
 
     const url = req.url;
