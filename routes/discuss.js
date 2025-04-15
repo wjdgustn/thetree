@@ -636,13 +636,10 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
 
     if(dbTargetDocument?.uuid === dbDocument.uuid) return res.status(409).send('현재 문서와 동일합니다.');
 
-    if(!dbTargetDocument) {
-        dbTargetDocument = new Document({
-            namespace: targetDocument.namespace,
-            title: targetDocument.title
-        });
-        await dbTargetDocument.save();
-    }
+    dbTargetDocument ??= await Document.create({
+        namespace: targetDocument.namespace,
+        title: targetDocument.title
+    });
 
     const targetAcl = await ACL.get({ document: dbTargetDocument });
     const { result: targetReadable, aclMessage: targetAclMessage } = await targetAcl.check(ACLTypes.Read, req.aclData);
