@@ -819,6 +819,8 @@ document.getElementById('initScript')?.remove();
                 const render = require(`./skins/${skin}/server/server.cjs`).render;
                 const rendered = await render(req.originalUrl, resData);
                 const html = skinInfo.template
+                    .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
+                    .replace('<!--app-head-->', rendered.head.headTags)
                     .replace('<!--app-body-->', rendered.html);
 
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
