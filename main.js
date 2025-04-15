@@ -932,7 +932,7 @@ document.getElementById('initScript')?.remove();
             })
         });
 
-        res.json = data => res.send(Buffer.from(msgpack.encode(data)));
+        res.json = data => res.send(Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(data)))));
     }
 
     const url = req.url;
