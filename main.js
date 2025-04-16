@@ -846,10 +846,14 @@ document.getElementById('initScript')?.remove();
             else {
                 const render = require(`./skins/${skin}/server/server.cjs`).render;
                 const rendered = await render(req.originalUrl, resData);
+                let body = rendered.html;
+                if(rendered.state) {
+                    body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
+                }
                 const html = skinInfo.template
                     .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
                     .replace('<!--app-head-->', rendered.head.headTags)
-                    .replace('<!--app-body-->', rendered.html);
+                    .replace('<!--app-body-->', body);
 
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
                 res.send(html);
