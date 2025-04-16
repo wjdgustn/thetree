@@ -659,6 +659,83 @@ app.use(async (req, res, next) => {
 
     res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
 
+    const sessionMenus = [];
+    for(let [key, value] of Object.entries(permissionMenus)) {
+        if(req.permissions.includes(key)) {
+            sessionMenus.push(...value);
+        }
+    }
+
+    const session = {
+        menus: sessionMenus,
+        account: {
+            name: req.user?.name ?? req.ip,
+            uuid: req.user?.uuid,
+            type: req.user?.type ?? UserTypes.IP
+        },
+        gravatar_url: req.user?.avatar,
+        user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
+        quick_block: req.permissions.includes('admin'),
+        ...(req.permissions.includes('no_force_captcha') ? {
+            disable_captcha: true
+        } : {})
+    }
+
+    const configJSON = {
+        ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
+        ...(config.captcha.enabled ? {
+            captcha: {
+                type: config.captcha.type,
+                site_key: config.captcha.site_key
+            }
+        } : {})
+    }
+
+    const configMapper = {
+        site_name: 'wiki.site_name',
+        logo_url: 'wiki.logo_url',
+        front_page: 'wiki.front_page',
+        editagree_text: 'wiki.editagree_text',
+        copyright_text: 'wiki.copyright_text',
+        base_url: 'wiki.canonical_url',
+        sitenotice: 'wiki.sitenotice'
+    }
+    for(let [key, value] of Object.entries(configMapper)) {
+        const configVal = configJSON[key] ?? config[key];
+        delete configJSON[key];
+        if(!configVal) continue;
+        configJSON[value] = configVal;
+    }
+
+    const configJSONstr = JSON.stringify(configJSON);
+    const sessionJSONstr = JSON.stringify(session);
+
+    const isBackendMode = req.isInternal || (debug && req.query.be);
+    const getFEBasicData = () => {
+        const userClientVersion = req.get('X-Chika');
+        const clientVersion = skinInfo?.versionHeader;
+
+        if(isBackendMode && userClientVersion !== clientVersion && (!debug || userClientVersion !== 'bypass'))
+            return res.originalStatus(400).end();
+
+        const userConfigHash = req.get('X-You');
+        const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
+
+        const userSessionHash = req.get('X-Riko');
+        const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
+
+        return {
+            ...(userConfigHash !== configHash ? {
+                configHash,
+                config: configJSON
+            } : {}),
+            ...(userSessionHash !== sessionHash ? {
+                sessionHash,
+                session
+            } : {})
+        }
+    }
+
     res.renderSkin = (...args) => renderSkin(...args).then();
 
     const renderSkin = async (title, data = {}) => {
@@ -696,56 +773,6 @@ app.use(async (req, res, next) => {
             }
         }
 
-        const sessionMenus = [];
-        for(let [key, value] of Object.entries(permissionMenus)) {
-            if(req.permissions.includes(key)) {
-                sessionMenus.push(...value);
-            }
-        }
-
-        const session = {
-            menus: sessionMenus,
-            account: {
-                name: req.user?.name ?? req.ip,
-                uuid: req.user?.uuid,
-                type: req.user?.type ?? UserTypes.IP
-            },
-            gravatar_url: req.user?.avatar,
-            user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
-            quick_block: req.permissions.includes('admin'),
-            ...(req.permissions.includes('no_force_captcha') ? {
-                disable_captcha: true
-            } : {})
-        }
-
-        const configJSON = {
-            ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
-            ...(config.captcha.enabled ? {
-                captcha: {
-                    type: config.captcha.type,
-                    site_key: config.captcha.site_key
-                }
-            } : {})
-        }
-
-        const configMapper = {
-            site_name: 'wiki.site_name',
-            logo_url: 'wiki.logo_url',
-            front_page: 'wiki.front_page',
-            editagree_text: 'wiki.editagree_text',
-            copyright_text: 'wiki.copyright_text',
-            base_url: 'wiki.canonical_url',
-            sitenotice: 'wiki.sitenotice'
-        }
-        for(let [key, value] of Object.entries(configMapper)) {
-            const configVal = configJSON[key] ?? config[key];
-            delete configJSON[key];
-            if(!configVal) continue;
-            configJSON[value] = configVal;
-        }
-
-        const configJSONstr = JSON.stringify(configJSON);
-        const sessionJSONstr = JSON.stringify(session);
         const browserGlobalVarScript = `
 <script id="initScript" nonce="${res.locals.cspNonce}">
 window.CONFIG = ${configJSONstr}
@@ -793,19 +820,9 @@ document.getElementById('initScript')?.remove();
         }
 
         const isAdmin = req.permissions.includes('admin');
-        const isBackendMode = req.isInternal || (debug && req.query.be);
         if(isBackendMode || skinInfo) {
-            const userClientVersion = req.get('X-Chika');
-            const clientVersion = skinInfo?.versionHeader;
-
-            if(isBackendMode && userClientVersion !== clientVersion && (!debug || userClientVersion !== 'bypass'))
-                return res.originalStatus(400).end();
-
-            const userConfigHash = req.get('X-You');
-            const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
-
-            const userSessionHash = req.get('X-Riko');
-            const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
+            const basicData = getFEBasicData();
+            if(!basicData) return;
 
             const resData = {
                 page: {
@@ -822,14 +839,7 @@ document.getElementById('initScript')?.remove();
                     ...(data.serverData ?? {}),
                     ...pluginData
                 },
-                ...(userConfigHash !== configHash ? {
-                    configHash,
-                    config: configJSON
-                } : {}),
-                ...(userSessionHash !== sessionHash ? {
-                    sessionHash,
-                    session
-                } : {})
+                ...basicData
             }
 
             if(isBackendMode) res.json(resData);
@@ -917,22 +927,32 @@ document.getElementById('initScript')?.remove();
 
     if(req.isInternal) {
         res.originalStatus = res.status;
-        res.status = code => ({
-            end: data => res.json({
-                code,
-                data
-            }),
-            send: data => res.json({
-                code,
-                data
-            }),
-            json: data => res.json({
-                code,
-                data
-            })
-        });
+        res.status = code => {
+            const basicData = getFEBasicData();
+            if(!basicData) return;
 
-        res.json = data => res.send(Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(data)))));
+            return {
+                end: data => res.json({
+                    code,
+                    ...basicData,
+                    data
+                }),
+                send: data => res.json({
+                    code,
+                    ...basicData,
+                    data
+                }),
+                json: data => res.json({
+                    code,
+                    ...basicData,
+                    data
+                })
+            }
+        }
+
+        res.originalSend = res.send;
+        res.json = data => res.originalSend(Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(data)))));
+        res.send = data => res.json({ data });
     }
 
     const url = req.url;
