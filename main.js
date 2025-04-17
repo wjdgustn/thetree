@@ -715,8 +715,10 @@ app.use(async (req, res, next) => {
         const userClientVersion = req.get('X-Chika');
         const clientVersion = skinInfo?.versionHeader;
 
-        if(isBackendMode && userClientVersion !== clientVersion && (!debug || userClientVersion !== 'bypass'))
-            return res.originalStatus(400).end();
+        if(isBackendMode && userClientVersion !== clientVersion && (!debug || userClientVersion !== 'bypass')) {
+            res.originalStatus(400).end();
+            return;
+        }
 
         const userConfigHash = req.get('X-You');
         const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
