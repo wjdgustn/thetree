@@ -350,6 +350,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             ...(req.backendMode ? {
                 categories: categories.map(a => ({
                     ...a,
+                    text: undefined,
                     document: utils.parseDocumentName(a.document)
                 })),
                 contentHtml
