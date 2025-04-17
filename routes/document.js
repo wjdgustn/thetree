@@ -253,6 +253,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         }
     }
 
+    let categoriesData;
     if(namespace === '분류') {
         const allNamespaces = [
             '분류',
@@ -325,7 +326,12 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 document.category = document.categories.find(a => a.document === title);
 
                 const arr = categoriesPerChar[char] ??= [];
-                arr.push(document);
+                arr.push({
+                    parsedName: document.parsedName,
+                    category: {
+                        text: document.category.text
+                    }
+                });
             }
 
             categoryInfos[namespace] = {
@@ -335,9 +341,11 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 prevItem,
                 nextItem
             };
+
+            categoriesData = categoriesPerChar;
         }
 
-        contentHtml += await utils.renderCategoryDocument({
+        if(!req.backendMode) contentHtml += await utils.renderCategoryDocument({
             document,
             categoryInfos
         });
@@ -370,7 +378,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 userboxData: {
                     admin: userIsAdmin,
                     blocked: userBlockedData
-                }
+                },
+                categoriesData
             } : {})
         },
         ...(req.backendMode ? {} : {
