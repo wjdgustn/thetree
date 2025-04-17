@@ -348,7 +348,10 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         serverData: {
             tocContentHtml,
             ...(req.backendMode ? {
-                categories,
+                categories: categories.map(a => ({
+                    ...categories,
+                    document: utils.parseDocumentName(a.document)
+                })),
                 contentHtml
             } : {})
         },
