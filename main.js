@@ -806,7 +806,7 @@ document.getElementById('initScript')?.remove();
             data.contentHtml = `
 <div class="thetree-alert thetree-alert-danger">
 <div class="thetree-alert-content">
-<b>[주의!]</b> 문서의 이전 버전(${globalUtils.getFullDateTag(data.serverData.rev.createdAt)}에 수정)을 보고 있습니다. <a href="${globalUtils.doc_action_link(data.document, 'w')}">최신 버전으로 이동</a>
+<b>[주의!]</b> 문서의 이전 버전(${globalUtils.getFullDateTag(data.date)}에 수정)을 보고 있습니다. <a href="${globalUtils.doc_action_link(data.document, 'w')}">최신 버전으로 이동</a>
 </div>
 </div>
         `.replaceAll('\n', '').trim() + data.contentHtml;
