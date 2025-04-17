@@ -18,7 +18,7 @@ app.get('/Complete', async (req, res) => {
         error: 'missing query'
     });
 
-    const document = utils.parseDocumentName(req.query.q);
+    const document = utils.parseDocumentName(req.query.q, true);
 
     const filter = ['anyoneReadable = true'];
     if(document.namespaceExists) filter.push(`namespace = '${document.namespace}'`);

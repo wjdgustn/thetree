@@ -36,7 +36,7 @@ module.exports = {
         const hash = crypto.createHash('sha256').update(email).digest('hex');
         return `//secure.gravatar.com/avatar/${hash}?d=retro`;
     },
-    parseDocumentName(name) {
+    parseDocumentName(name, getNamespaceExists = false) {
         name = name.slice(0, 255);
         const originalName = name.trim();
         const splitedName = originalName.split(':');
@@ -63,7 +63,9 @@ module.exports = {
             namespace,
             title,
             forceShowNamespace,
-            namespaceExists
+            ...(getNamespaceExists ? {
+                namespaceExists
+            } : {})
             // anchor
         }
     },
