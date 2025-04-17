@@ -178,7 +178,14 @@ app.get('/License', (req, res) => {
         viewName: 'license',
         contentName: 'special/license',
         serverData: {
-            skinCommitId: skinCommitId[skin],
+            ...(req.backendMode ? {
+                version: global.versionInfo.versionData.version,
+                branch: global.versionInfo.branch !== 'master' ? global.versionInfo.branch : undefined,
+                commitDate: global.versionInfo.commitDate,
+                commitId: global.versionInfo.commitId.slice(0, 7)
+            } : {
+                skinCommitId: skinCommitId[skin],
+            }),
             openSourceLicense
         }
     });
