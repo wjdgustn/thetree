@@ -578,13 +578,13 @@ module.exports = class NamumarkParser {
         text = text.replaceAll('<removeNoParagraph/>', '');
 
         const hasNewline = text.includes(NewLineTag);
-        let html = `${(this.includeData || childParse || this.req.backendMode) ? '' : `<div class="wiki-content${this.thread ? ' wiki-thread-content' : ''}" x-bind="wikiContent">`}${
+        let html = `${(this.includeData || childParse || this.req?.backendMode) ? '' : `<div class="wiki-content${this.thread ? ' wiki-thread-content' : ''}" x-bind="wikiContent">`}${
             text
                 .replaceAll(NewLineTag, '<br>')
                 .replaceAll('<!s>', ' ')
                 // .replaceAll('<br><removebr/>', '')
                 // .replaceAll('<removebr/>', '')
-        }${(this.includeData || childParse || this.req.backendMode) ? '' : '</div>'}`;
+        }${(this.includeData || childParse || this.req?.backendMode) ? '' : '</div>'}`;
 
         if((debug||true) && !childParse && !this.includeData && !this.thread) {
             console.timeEnd(`parse "${this.document.title}"`);
