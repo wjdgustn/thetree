@@ -165,6 +165,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     let user;
+    let userBlockedData = null;
+    let userIsAdmin = false;
     if(namespace === '사용자' && !title.includes('/')) {
         user = await User.findOne({
             name: title
@@ -223,7 +225,14 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             user: user.uuid
         });
 
-        if(blockedItem) contentHtml = `
+        if(blockedItem) {
+            if(req.backendMode) userBlockedData = {
+                id: blockedItem.id,
+                createdAt: blockedItem.createdAt,
+                expiresAt: blockedItem.expiresAt,
+                note: blockedItem.note
+            }
+            else contentHtml = `
 <div class="special-box blocked-box">
 <span>이 사용자는 차단된 사용자입니다. (#${blockedItem.id})</span>
 <br><br>
@@ -232,12 +241,16 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 차단 사유: ${blockedItem.note ?? '없음'}
 </div>
         `.replaceAll('\n', '').trim() + contentHtml;
+        }
 
-        if(user.permissions.includes('admin')) contentHtml = `
+        if(user.permissions.includes('admin')) {
+            if(req.backendMode) userIsAdmin = true;
+            else contentHtml = `
 <div class="special-box admin-box">
 <span>이 사용자는 특수 권한을 가지고 있습니다.</span>
 </div>
         `.replaceAll('\n', '').trim() + contentHtml;
+        }
     }
 
     if(namespace === '분류') {
@@ -353,7 +366,11 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                     text: undefined,
                     document: utils.parseDocumentName(a.document)
                 })),
-                contentHtml
+                contentHtml,
+                userboxData: {
+                    admin: userIsAdmin,
+                    blocked: userBlockedData
+                }
             } : {})
         },
         ...(req.backendMode ? {} : {
