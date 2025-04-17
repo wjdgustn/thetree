@@ -349,7 +349,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             tocContentHtml,
             ...(req.backendMode ? {
                 categories: categories.map(a => ({
-                    ...categories,
+                    ...a,
                     document: utils.parseDocumentName(a.document)
                 })),
                 contentHtml
