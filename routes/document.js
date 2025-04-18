@@ -253,7 +253,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         }
     }
 
-    let categoriesData;
+    const categoriesData = {};
     if(namespace === '분류') {
         const allNamespaces = [
             '분류',
@@ -341,8 +341,12 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 prevItem,
                 nextItem
             };
-
-            categoriesData = categoriesPerChar;
+            categoriesData[namespace] = {
+                categoriesPerChar,
+                count,
+                prevItem: prevItem?.title,
+                nextItem: nextItem?.title
+            }
         }
 
         if(!req.backendMode) contentHtml += await utils.renderCategoryDocument({
