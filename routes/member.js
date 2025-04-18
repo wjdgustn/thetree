@@ -44,7 +44,11 @@ const app = express.Router();
 
 app.get('/member/signup', middleware.isLogout, (req, res) => {
     res.renderSkin('계정 만들기', {
-        contentName: 'member/signup'
+        contentName: 'member/signup',
+        serverData: {
+            terms: config.terms,
+            emailWhitelist: config.email_whitelist
+        }
     });
 });
 
