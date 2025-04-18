@@ -1474,7 +1474,8 @@ app.post('/member/register_webauthn/challenge', async (req, res) => {
         backedUp: credentialBackedUp
     });
 
-    res.status(204).end();
+    if(req.backendMode) res.reload();
+    else res.status(204).end();
 });
 
 app.post('/member/delete_webauthn',
@@ -1486,7 +1487,8 @@ app.post('/member/delete_webauthn',
         user: req.user.uuid,
         name: req.body.name
     });
-    res.status(204).end();
+    if(req.backendMode) res.reload();
+    else res.status(204).end();
 });
 
 module.exports = app;
