@@ -935,32 +935,47 @@ document.getElementById('initScript')?.remove();
 
     if(req.isInternal) {
         res.originalStatus = res.status;
-        res.status = code => {
+        res.status = code => ({
+            end: data => res.json({
+                code,
+                data
+            }),
+            send: data => res.json({
+                code,
+                data
+            }),
+            json: data => res.json({
+                code,
+                data
+            })
+        })
+
+        res.originalSend = res.send;
+        res.json = data => {
             const basicData = getFEBasicData();
             if(!basicData) return;
 
-            return {
-                end: data => res.json({
-                    code,
-                    ...basicData,
-                    data
-                }),
-                send: data => res.json({
-                    code,
-                    ...basicData,
-                    data
-                }),
-                json: data => res.json({
-                    code,
-                    ...basicData,
-                    data
-                })
-            }
+            return res.originalSend(Buffer.from(msgpack.encode({
+                ...basicData,
+                ...JSON.parse(JSON.stringify(data))
+            })));
         }
-
-        res.originalSend = res.send;
-        res.json = data => res.originalSend(Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(data)))));
         res.send = data => res.json({ data });
+
+        res.partial = data => {
+            let publicData;
+            if(data.publicData) {
+                publicData = data.publicData;
+                delete data.publicData;
+            }
+
+            res.json({
+                partialData: {
+                    publicData,
+                    viewData: data
+                }
+            });
+        }
     }
 
     const url = req.url;

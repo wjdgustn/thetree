@@ -604,7 +604,10 @@ app.post('/member/generate_api_token',
         apiToken
     });
 
-    res.json({
+    if(req.backendMode) res.partial({
+        apiToken
+    });
+    else res.json({
         type: 'js',
         script: `
 document.getElementById('token-input').value = '${apiToken}';
