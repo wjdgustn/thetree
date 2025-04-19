@@ -887,7 +887,8 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
         serverData: {
             blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
             alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.',
-            noActivityTime
+            noActivityTime,
+            pledge: config.withdraw_pledge
         }
     });
 });
@@ -1044,7 +1045,8 @@ app.get('/member/change_email', middleware.isLogin, (req, res) => {
             ...(doingChangeEmail ? {
                 alert: '이메일 인증이 이미 진행 중입니다.'
             } : {}),
-            doingChangeEmail
+            doingChangeEmail,
+            email: req.user.email
         }
     });
 });

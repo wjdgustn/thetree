@@ -3,7 +3,7 @@
 <%-include('../components/alert')%>
 
 <script nonce="<%=cspNonce%>">
-    window.withdraw_pledge = <%-JSON.stringify(config.withdraw_pledge)%>;
+    window.withdraw_pledge = <%-JSON.stringify(pledge)%>;
 </script>
 
 <form method="post">
