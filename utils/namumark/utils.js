@@ -53,7 +53,7 @@ module.exports = {
         return { value, unit };
     },
     validateColor(color) {
-        return validateHTMLColorHex(color) || validateHTMLColorName(color);
+        return color === 'transparent' || validateHTMLColorHex(color) || validateHTMLColorName(color);
     },
     parseIncludeParams(text, includeData = {}) {
         let newText = '';
