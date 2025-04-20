@@ -1,6 +1,3 @@
 [submodule "skins/liberty"]
 	path = skins/liberty
 	url = https://github.com/wjdgustn/thetree-skin-liberty
-[submodule "plugins/thetree-monaco"]
-	path = plugins/thetree-monaco
-	url = https://github.com/wjdgustn/thetree-monaco
