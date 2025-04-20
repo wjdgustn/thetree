@@ -421,7 +421,7 @@ module.exports = {
 
         return arr;
     },
-    async generateDiff(oldText, newText, changeAroundLines = 3) {
+    async generateDiff(oldText, newText, getDiffData = false, changeAroundLines = 3) {
         oldText = oldText?.replaceAll('\r\n', '\n');
         newText = newText?.replaceAll('\r\n', '\n');
 
@@ -592,11 +592,23 @@ module.exports = {
             }
         }
 
-        return {
-            lineDiff,
+        const diffResult = {
+            // lineDiff,
+            lastDiffCount: lineDiff[lineDiff.length - 1].count,
             diffLines,
             changeAroundLines
         }
+
+        diffResult.diffHtml = await new Promise(async (resolve, reject) => {
+            expressApp.render('components/diffHtml', {
+                ...diffResult
+            }, (err, html) => {
+                if(err) reject(err);
+                resolve(html);
+            });
+        });
+
+        return getDiffData ? diffResult : { diffHtml: diffResult.diffHtml };
     },
     generateUrl() {
         return generateSlug(4, {

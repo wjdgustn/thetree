@@ -1,13 +1,12 @@
 <link rel="stylesheet" href="/css/views/diff.css">
 
-<%-include('../components/diff', { name:`r${oldRev} vs r${rev}`, lineDiff, diffLines })%>
+<%-include('../components/diff', { name:`r${oldRev} vs r${rev}`, ...diff })%>
 
 <%if(req.permissions.includes('developer')) {%>
 <div class="wiki-content">
     <h4 class="wiki-heading wiki-heading-folded">디버그 정보</h4>
     <div class="wiki-heading-content wiki-heading-content-folded">
-        <pre><%=JSON.stringify(diffLines, null, 2)%></pre>
-        <pre><%=JSON.stringify(lineDiff, null, 2)%></pre>
+        <pre><%=JSON.stringify(diff.diffLines, null, 2)%></pre>
     </div>
 </div>
 <%}%>

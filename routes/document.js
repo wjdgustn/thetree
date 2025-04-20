@@ -801,7 +801,9 @@ const editAndEditRequest = async (req, res) => {
             content,
             contentHtml,
             useCaptcha,
-            editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text
+            editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text,
+            conflict: req.flash.conflict,
+            editagreeAgreed: req.session.editagreeAgreed
         }
     });
 }
@@ -927,7 +929,7 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     const isAdmin = req.permissions.includes('admin');
-    if(isThread) expressApp.render('components/commentPreview', {
+    if(isThread && !req.backendMode) expressApp.render('components/commentPreview', {
         comment: {
             id: 1,
             type: ThreadCommentTypes.Default,
@@ -944,7 +946,15 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         contentHtml = html;
     });
 
-    return res.send(categoryHtml + contentHtml);
+    if(req.backendMode) res.json({
+        contentHtml,
+        categories: categories.map(a => ({
+            ...a,
+            text: undefined,
+            document: utils.parseDocumentName(a.document)
+        }))
+    });
+    else res.send(categoryHtml + contentHtml);
 });
 
 const checkDoingManyEdits = async req => {
@@ -972,6 +982,8 @@ const postEditAndEditRequest = async (req, res) => {
 
     if(req.body.agree !== 'Y') return res.status(400).send('수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+
+    req.session.editagreeAgreed = true;
 
     const section = parseInt(req.query.section);
 
@@ -1031,6 +1043,8 @@ const postEditAndEditRequest = async (req, res) => {
     let content = req.body.text;
     let log = req.body.log;
 
+    if(content == null) return res.status(400).send('content가 올바르지 않습니다.');
+
     if(rev?.content != null && req.query.section && !editingEditRequest) {
         const newLines = [];
 
@@ -1066,11 +1080,27 @@ const postEditAndEditRequest = async (req, res) => {
         else {
             if(req.isAPI) return res.status(409).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
 
-            req.session.flash.conflict = {
+            const conflictData = {
                 editedRev: editedRev.rev,
                 diff: await utils.generateDiff(editedRev.content, req.body.text)
             }
-            return res.redirect(req.originalUrl);
+            if(req.backendMode) {
+                return res.partial({
+                    alert: '편집 도중에 다른 사용자가 먼저 편집을 했습니다.',
+                    conflict: conflictData,
+                    content: editedRev.content,
+                    publicData: {
+                        body: {
+                            baserev: rev.rev,
+                            baseuuid: rev.uuid
+                        }
+                    }
+                });
+            }
+            else {
+                req.session.flash.conflict = conflictData;
+                return res.redirect(req.originalUrl);
+            }
         }
     }
 
@@ -1486,7 +1516,6 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
-const CHANGE_AROUND_LINES = 3;
 app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
@@ -1525,11 +1554,9 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    let lineDiff, diffLines;
+    let diff;
     try {
-        const result = await utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
-        lineDiff = result.lineDiff;
-        diffLines = result.diffLines;
+        diff = await utils.generateDiff(oldRev.content, rev.content, !req.backendMode);
     } catch(e) {
         return res.status(500).send(e.message);
     }
@@ -1543,9 +1570,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
         olduuid: oldRev.uuid,
         uuid: rev.uuid,
         serverData: {
-            lineDiff,
-            diffLines,
-            changeAroundLines: CHANGE_AROUND_LINES
+            diff
         }
     });
 });
