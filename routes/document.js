@@ -1721,7 +1721,7 @@ const getBacklinks = async (req, res) => {
 
     res.renderSkin(undefined, {
         contentName: 'document/backlink',
-        viewName: 'baclink',
+        viewName: 'backlink',
         document,
         serverData: {
             selectedNamespace,
