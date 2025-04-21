@@ -171,7 +171,7 @@ module.exports = {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
         return aclGroup.userCSS;
     },
-    async findUsers(arr, key = 'user', noCSS = false) {
+    async findUsers(req, arr, key = 'user', noCSS = false) {
         let wasNotArr = false;
         if(!Array.isArray(arr)) {
             arr = [arr];
@@ -197,7 +197,9 @@ module.exports = {
                 }
                 else obj[key] = {
                     type: UserTypes.Deleted,
-                    uuid
+                    ...(req.permissions.includes('admin') ? {
+                        uuid
+                    } : {})
                 }
             }
         }
@@ -262,14 +264,14 @@ module.exports = {
             rev.htmlInfoText = `<b>${namumarkUtils.escapeHtml(rev.moveOldDoc)}</b>에서 <b>${namumarkUtils.escapeHtml(rev.moveNewDoc)}</b>로 문서 이동`;
         }
 
-        if(rev.infoText) rev.htmlInfoText ??= namumarkUtils.escapeHtml(rev.infoText);
-
-        rev.userHtml = this.userHtml(rev.user, {
-            isAdmin,
-            note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
-        });
-
         if(!backendMode) {
+            if(rev.infoText) rev.htmlInfoText ??= namumarkUtils.escapeHtml(rev.infoText);
+
+            rev.userHtml = this.userHtml(rev.user, {
+                isAdmin,
+                note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
+            });
+
             const diffClassList = ['diff-text'];
 
             if(rev.diffLength > 0) diffClassList.push('diff-add');

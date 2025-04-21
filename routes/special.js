@@ -46,7 +46,7 @@ app.get('/RecentChanges', async (req, res) => {
         .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll hideLog diffLength api -_id')
         .lean();
 
-    revs = await utils.findUsers(revs);
+    revs = await utils.findUsers(req, revs);
     revs = await utils.findDocuments(revs);
 
     const logTypeText = logType != null ? req.query.logtype : 'all';
@@ -114,11 +114,11 @@ app.get('/RecentDiscuss', async (req, res) => {
             .lean();
     }
 
-    threads = await utils.findUsers(threads, 'lastUpdateUser');
+    threads = await utils.findUsers(req, threads, 'lastUpdateUser');
     threads = await utils.findDocuments(threads);
 
-    editRequests = await utils.findUsers(editRequests, 'createdUser');
-    editRequests = await utils.findUsers(editRequests, 'lastUpdateUser');
+    editRequests = await utils.findUsers(req, editRequests, 'createdUser');
+    editRequests = await utils.findUsers(req, editRequests, 'lastUpdateUser');
     editRequests = await utils.findDocuments(editRequests);
 
     res.renderSkin('최근 토론', {
@@ -458,8 +458,8 @@ app.get('/BlockHistory', async (req, res) => {
             .select('uuid -_id')
             .sort({ _id: -1 });
 
-        logs = await utils.findUsers(logs, 'createdUser', true);
-        logs = await utils.findUsers(logs, 'targetUser', true);
+        logs = await utils.findUsers(req, logs, 'createdUser', true);
+        logs = await utils.findUsers(req, logs, 'targetUser', true);
 
         const aclGroups = await ACLGroup.find();
         for(let log of logs) {

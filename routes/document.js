@@ -130,7 +130,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             .select('createdAt rev revertRev log moveOldDoc moveNewDoc diffLength')
             .lean();
 
-        revs = await utils.findUsers(revs);
+        revs = await utils.findUsers(req, revs);
 
         return res.renderSkin(undefined, {
             ...defaultData,
@@ -1203,8 +1203,8 @@ app.get('/edit_request/:url', async (req, res) => {
         }
     }
 
-    editRequest = await utils.findUsers(editRequest, 'createdUser');
-    editRequest = await utils.findUsers(editRequest, 'lastUpdateUser');
+    editRequest = await utils.findUsers(req, editRequest, 'createdUser');
+    editRequest = await utils.findUsers(req, editRequest, 'lastUpdateUser');
 
     const userHtmlOptions = {
         isAdmin: req.permissions.includes('admin'),
@@ -1337,7 +1337,7 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         revs = await History.find(query)
             .sort({ rev: query.rev?.$gte ? 1 : -1 })
             .limit(30)
-            .select('type rev uuid user createdAt log troll trollBy hideLog hideLogBy hidden editRequest -_id')
+            .select('type rev uuid user createdAt diffLength log troll trollBy hideLog hideLogBy hidden editRequest -_id')
             .lean();
 
         if(query.rev?.$gte) revs.reverse();
@@ -1351,9 +1351,9 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(!dbDocument || !revs.length) return res.error('문서를 찾을 수 없습니다.');
 
-    revs = await utils.findUsers(revs);
-    revs = await utils.findUsers(revs, 'trollBy');
-    revs = await utils.findUsers(revs, 'hideLogBy');
+    revs = await utils.findUsers(req, revs);
+    revs = await utils.findUsers(req, revs, 'trollBy');
+    revs = await utils.findUsers(req, revs, 'hideLogBy');
 
     for(let rev of revs) {
         rev.editRequest &&= await EditRequest.findOne({
@@ -1365,8 +1365,13 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         viewName: 'history',
         document,
         serverData: {
-            revs,
-            latestRev
+            revs: revs.map(a => utils.addHistoryData(a, req.permissions.includes('admin'), req.document, req.backendMode)),
+            latestRev,
+            permissions: {
+                troll: req.permissions.includes('mark_troll_revision'),
+                log: req.permissions.includes('hide_document_history_log'),
+                hide: req.permissions.includes('hide_revision')
+            }
         },
         contentName: 'document/history'
     });
@@ -1604,7 +1609,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
     let blame = await utils.findHistories(rev.blame, req.permissions.includes('admin'));
-    blame = await utils.findUsers(blame);
+    blame = await utils.findUsers(req, blame);
 
     res.renderSkin(undefined, {
         contentName: 'document/blame',

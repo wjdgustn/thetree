@@ -251,8 +251,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             comments.unshift(firstComment);
         }
 
-        comments = await utils.findUsers(comments);
-        comments = await utils.findUsers(comments, 'hiddenBy');
+        comments = await utils.findUsers(req, comments);
+        comments = await utils.findUsers(req, comments, 'hiddenBy');
 
         comments = await Promise.all(comments.map(c => threadCommentMapper({
             req,
@@ -420,8 +420,8 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
         })
         .limit(COMMENT_LOAD_AMOUNT)
         .lean();
-    comments = await utils.findUsers(comments);
-    comments = await utils.findUsers(comments, 'hiddenBy');
+    comments = await utils.findUsers(req, comments);
+    comments = await utils.findUsers(req, comments, 'hiddenBy');
 
     comments = await Promise.all(comments.map(c => threadCommentMapper({
         req,

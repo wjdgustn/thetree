@@ -68,7 +68,7 @@ app.get('/aclgroup', async (req, res) => {
             id: { $lt: groupItems[groupItems.length - 1].id }
         }).sort({ id: -1 });
 
-        groupItems = await utils.findUsers(groupItems);
+        groupItems = await utils.findUsers(req, groupItems);
     }
 
     res.renderSkin('ACLGroup', {
