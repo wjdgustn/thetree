@@ -241,7 +241,7 @@ module.exports = {
                 : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
     },
-    addHistoryData(rev, isAdmin = false, document = null, backendMode = false) {
+    addHistoryData(req, rev, isAdmin = false, document = null, backendMode = false) {
         document ??= rev.document;
 
         rev.infoText = null;
@@ -264,6 +264,9 @@ module.exports = {
             rev.htmlInfoText = `<b>${namumarkUtils.escapeHtml(rev.moveOldDoc)}</b>에서 <b>${namumarkUtils.escapeHtml(rev.moveNewDoc)}</b>로 문서 이동`;
         }
 
+        if(rev.hideLog && !req.permissions.includes('hide_document_history_log'))
+            rev.log = null;
+
         if(!backendMode) {
             if(rev.infoText) rev.htmlInfoText ??= namumarkUtils.escapeHtml(rev.infoText);
 
@@ -283,7 +286,7 @@ module.exports = {
 
         return rev;
     },
-    async findHistories(arr, isAdmin = false) {
+    async findHistories(req, arr, isAdmin = false) {
         const cache = {};
 
         for(let obj of arr) {
@@ -300,7 +303,7 @@ module.exports = {
                     .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id')
                     .lean();
                 if(obj.history) {
-                    obj.history = this.addHistoryData(obj.history, isAdmin);
+                    obj.history = this.addHistoryData(req, obj.history, isAdmin);
                     cache[obj.uuid] = obj.history;
                     obj.user = obj.history.user;
                 }

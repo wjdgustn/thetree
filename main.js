@@ -876,7 +876,7 @@ document.getElementById('initScript')?.remove();
                 ...data,
                 isAdmin
             }),
-            addHistoryData: (rev, document) => utils.addHistoryData(rev, isAdmin, document, req.backendMode)
+            addHistoryData: (rev, document) => utils.addHistoryData(req, rev, isAdmin, document, req.backendMode)
         }, async (err, html) => {
             if(err) {
                 console.error(err);

@@ -1365,7 +1365,7 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         viewName: 'history',
         document,
         serverData: {
-            revs: revs.map(a => utils.addHistoryData(a, req.permissions.includes('admin'), req.document, req.backendMode)),
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode)),
             latestRev,
             permissions: {
                 troll: req.permissions.includes('mark_troll_revision'),
@@ -1608,7 +1608,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
-    let blame = await utils.findHistories(rev.blame, req.permissions.includes('admin'));
+    let blame = await utils.findHistories(req, rev.blame, req.permissions.includes('admin'));
     blame = await utils.findUsers(req, blame);
 
     res.renderSkin(undefined, {
