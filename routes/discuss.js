@@ -283,7 +283,10 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
         document,
         serverData: {
             openThreads,
-            openEditRequests
+            openEditRequests,
+            permissions: {
+                delete: req.permissions.includes('delete_thread')
+            }
         }
     });
 });
