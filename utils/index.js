@@ -264,12 +264,16 @@ module.exports = {
             rev.htmlInfoText = `<b>${namumarkUtils.escapeHtml(rev.moveOldDoc)}</b>에서 <b>${namumarkUtils.escapeHtml(rev.moveNewDoc)}</b>로 문서 이동`;
         }
 
-        if(rev.hideLog && !req.permissions.includes('hide_document_history_log'))
+        if(rev.troll || (rev.hideLog && !req.permissions.includes('hide_document_history_log')))
             rev.log = null;
 
-        if(!backendMode) {
-            if(rev.infoText) rev.htmlInfoText ??= namumarkUtils.escapeHtml(rev.infoText);
+        if(rev.infoText) rev.htmlInfoText ??= namumarkUtils.escapeHtml(rev.infoText);
 
+        if(backendMode) {
+            rev.infoText = rev.htmlInfoText;
+            rev.htmlInfoText = null;
+        }
+        else {
             rev.userHtml = this.userHtml(rev.user, {
                 isAdmin,
                 note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
