@@ -106,21 +106,21 @@ const threadCommentEvent = async ({
         req
     });
 
-    let commentUser = req.user;
-    if(dbComment.user !== req.user.uuid) {
-        commentUser = await User.findOne({
-            uuid: dbComment.user
-        }).lean();
-    }
+    const commentUser = await User.findOne({
+        uuid: dbComment.user
+    });
+    hideUser &&= await User.findOne({
+        uuid: hideUser.uuid
+    });
 
     const comment = await threadCommentMapper({
         thread,
         parser,
         user: {
-            ...commentUser,
+            ...commentUser.publicUser,
             userCSS: await utils.getUserCSS(commentUser)
         },
-        hideUser
+        hideUser: hideUser.publicUser
     })(dbComment.toJSON());
 
     SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);
