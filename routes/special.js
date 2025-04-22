@@ -56,7 +56,7 @@ app.get('/RecentChanges', async (req, res) => {
     res.renderSkin('최근 변경내역', {
         contentName: 'special/recentChanges',
         serverData: {
-            revs,
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode)),
             logType: logTypeText
         }
     });
