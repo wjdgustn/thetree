@@ -36,7 +36,8 @@ const threadCommentMapper = ({
     user,
     hideUser
 } = {}) => async comment => {
-    comment.userHtml = utils.userHtml(user ?? comment.user, {
+    comment.user = user ?? comment.user;
+    if(!req?.backendMode) comment.userHtml = utils.userHtml(user ?? comment.user, {
         isAdmin: req?.permissions.includes('admin'),
         note: `토론 ${thread.url} #${comment.id} 긴급차단`,
         thread: true,
@@ -46,7 +47,8 @@ const threadCommentMapper = ({
     const canSeeHidden = req?.permissions.includes('hide_thread_comment');
     if(comment.hidden) {
         hideUser ??= comment.hiddenBy;
-        comment.hideUserHtml = utils.userHtml(hideUser, {
+        comment.hideUser = hideUser;
+        if(!req?.backendMode) comment.hideUserHtml = utils.userHtml(hideUser, {
             isAdmin: hideUser.permissions?.includes('admin'),
             thread: true,
             threadAdmin: true
@@ -69,8 +71,8 @@ const threadCommentMapper = ({
         }
     }
 
-    if(typeof comment.user === 'object')
-        comment.user = comment.user.uuid;
+    // if(typeof comment.user === 'object')
+    //     comment.user = comment.user.uuid;
 
     return utils.onlyKeys(comment, [
         'id',
@@ -79,9 +81,13 @@ const threadCommentMapper = ({
         'type',
         'createdAt',
         'user',
-        'userHtml',
-        'hideUserHtml',
-        'contentHtml'
+        'contentHtml',
+
+        'hideUser',
+        ...(!req || !req.backendMode ? [
+            'userHtml',
+            'hideUserHtml'
+        ] : [])
     ]);
 }
 
@@ -387,6 +393,13 @@ app.get('/thread/:url', async (req, res) => {
             topic: thread.topic,
             createdUser: thread.createdUser,
             status: thread.status
+        },
+        permissions: {
+            delete: req.permissions.includes('delete_thread'),
+            status: req.permissions.includes('update_thread_status'),
+            document: req.permissions.includes('update_thread_document'),
+            topic: req.permissions.includes('update_thread_topic'),
+            hide: req.permissions.includes('hide_thread_comment')
         },
         hideHiddenComments: true
         // hideHiddenComments: !req.permissions.includes('hide_thread_comment')
@@ -783,7 +796,7 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_co
     res.status(204).end();
 });
 
-app.get('/admin/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) => {
+app.get('/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
