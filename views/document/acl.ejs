@@ -52,7 +52,7 @@
             </thead>
 
             <%for(let [key, value] of Object.entries(ACLTypes).slice(1)) {%>
-                <%const rulesGroup = [acl?.aclTypes[value] ?? [], namespaceACL?.aclTypes[value] ?? []];%>
+                <%const rulesGroup = [acl?.[value] ?? [], namespaceACL?.[value] ?? []];%>
                 <%for(let i in rulesGroup) {%>
                     <tbody id="tbody-<%=i === '0' ? 'document' : 'namespace'%>.<%=utils.camelToSnakeCase(key)%>" class="nav-tbody" hidden>
                     <%const rules = rulesGroup[i];%>

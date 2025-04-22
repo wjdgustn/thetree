@@ -413,12 +413,28 @@ app.get('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     // const { result: editableNSACL } = await namespaceACL.check(ACLTypes.ACL, req.aclData);
     const editableNSACL = req.permissions.includes('nsacl');
 
+    const aclMapper = a => utils.onlyKeys(a.aclTypes, [
+        'uuid', 'type', 'expiresAt', 'conditionType', 'conditionContent', 'user', 'aclGroup', 'actionType', 'actionContent'
+    ]);
+
+    let aclData = aclMapper(acl);
+    let nsaclData = aclMapper(namespaceACL);
+    if(req.backendMode) {
+        const strMapper = a => ({
+            ...utils.onlyKeys(a, ['uuid', 'expiresAt']),
+            condition: ACL.ruleToConditionString(a, false),
+            action: ACL.actionToString(a)
+        });
+        aclData = aclData.map(a => a.map(b => strMapper(b)));
+        nsaclData = nsaclData.map(a => a.map(b => strMapper(b)));
+    }
+
     res.renderSkin(undefined, {
         viewName: 'acl',
         document,
         serverData: {
-            acl: utils.onlyKeys(acl, ['aclTypes']),
-            namespaceACL: utils.onlyKeys(namespaceACL, ['aclTypes']),
+            acl: aclData,
+            namespaceACL: nsaclData,
             editableACL,
             editableNSACL
         },
@@ -474,7 +490,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(conditionType === ACLConditionTypes.Perm) {
         let value = req.body.permission;
-        if(!req.body.permission
+        if(!value
             && !req.permissions.includes('developer')) return res.status(400).send('권한 값을 입력해주세요!');
         value ||= 'any';
         conditionContent = value;
@@ -655,7 +671,13 @@ app.get('/action/acl/delete', async (req, res) => {
 });
 
 app.patch('/action/acl/reorder', async (req, res) => {
-    const uuids = JSON.parse(req.body.acls);
+    let uuids;
+    try {
+        uuids = JSON.parse(req.body.acls);
+    }
+    catch (e) {
+        return res.status(400).send('invalid_uuids');
+    }
 
     const acls = await ACLModel.find({
         uuid: {
@@ -695,7 +717,8 @@ app.patch('/action/acl/reorder', async (req, res) => {
 
     if(actions.length) await ACLModel.bulkWrite(actions);
 
-    res.redirect(303, req.get('Referer'));
+    if(req.backendMode) res.status(204).end();
+    else res.redirect(303, req.get('Referer'));
 });
 
 const editAndEditRequest = async (req, res) => {

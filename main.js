@@ -914,9 +914,16 @@ document.getElementById('initScript')?.remove();
     });
 
     res.reload = anchor => {
-        const url = new URL(req.get('Referrer') || config.base_url);
-        if(anchor) url.searchParams.set('anchor', anchor);
-        res.redirect(url.pathname + url.search);
+        if(req.backendMode) {
+            res.json({
+                action: 'reloadView'
+            });
+        }
+        else {
+            const url = new URL(req.get('Referrer') || config.base_url);
+            if(anchor) url.searchParams.set('anchor', anchor);
+            res.redirect(url.pathname + url.search);
+        }
     }
 
     res.originalRedirect = res.redirect;
