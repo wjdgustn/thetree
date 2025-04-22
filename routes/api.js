@@ -33,6 +33,8 @@ app.all('/api/*', async (req, res, next) => {
         });
         if(user?.permissions.includes('api_access')) {
             req.user = user;
+            req.aclData.user = user;
+            req.aclData.permissions = user.permissions;
             return next();
         }
     }
