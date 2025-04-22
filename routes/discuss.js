@@ -120,7 +120,7 @@ const threadCommentEvent = async ({
             ...commentUser.publicUser,
             userCSS: await utils.getUserCSS(commentUser)
         },
-        hideUser: hideUser.publicUser
+        hideUser: hideUser?.publicUser
     })(dbComment.toJSON());
 
     SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);
