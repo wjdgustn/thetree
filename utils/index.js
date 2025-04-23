@@ -172,7 +172,10 @@ module.exports = {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
         return aclGroup.userCSS;
     },
-    async findUsers(req, arr, key = 'user', { noCSS = false, getColor = false }) {
+    async findUsers(req, arr, key = 'user', options = {}) {
+        const noCSS = options.noCSS;
+        const getColor = options.getColor;
+
         let wasNotArr = false;
         if(!Array.isArray(arr)) {
             arr = [arr];
