@@ -41,6 +41,10 @@ module.exports = {
             removed: false,
             value: ''
         });
+
+        const lastChange = lineDiff.at(-1);
+        if(lastChange.value.endsWith('\n')) lastChange.count += 1;
+
         const newLineArr = [];
         const lineArr = this.blameToLineArr(last?.blame || []);
 
