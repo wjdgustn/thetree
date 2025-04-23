@@ -758,7 +758,7 @@ app.use(async (req, res, next) => {
         }
 
         const page = {
-            title,
+            title: data.document ? globalUtils.doc_fulltitle(data.document) : title,
             viewName: viewName ?? '',
             menus: [],
             data: utils.withoutKeys(data, [
