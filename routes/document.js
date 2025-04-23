@@ -1811,9 +1811,16 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
     else {
         if(revExists) return res.error('문서가 이미 존재합니다.', 409);
 
-        if(dbOtherDocumentExists) await Document.deleteOne({
-            uuid: dbOtherDocument.uuid
-        });
+        if(dbOtherDocumentExists) {
+            await Document.deleteOne({
+                uuid: dbOtherDocument.uuid
+            });
+            await Thread.updateMany({
+                document: dbOtherDocument.uuid
+            }, {
+                document: dbDocument.uuid
+            });
+        }
 
         await Document.updateOne({
             uuid: dbDocument.uuid
