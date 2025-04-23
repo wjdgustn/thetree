@@ -906,12 +906,13 @@ app.post('/edit_request/:url/reopen', async (req, res) => {
     const { result: editable, aclMessage } = await acl.check(ACLTypes.EditRequest, req.aclData);
     if(!editable) return res.error(aclMessage, 403);
 
-    if(editRequest.createdUser === req.user.uuid) {
+    const statusPerm = req.permissions.includes('update_thread_status');
+    if(editRequest.createdUser === req.user.uuid && !statusPerm) {
         if(editRequest.status === EditRequestStatusTypes.Locked)
             return res.error('이 편집 요청은 잠겨있어서 다시 열 수 없습니다.', 403);
     }
     else {
-        if(!req.permissions.includes('update_thread_status'))
+        if(!statusPerm)
             return res.status(403).send('권한이 부족합니다.');
     }
 
@@ -1271,7 +1272,10 @@ app.get('/edit_request/:url', async (req, res) => {
             showContent,
             conflict,
             editable,
-            selfCreated: editRequest.createdUser.uuid === req.user?.uuid
+            selfCreated: editRequest.createdUser.uuid === req.user?.uuid,
+            permissions: {
+                status: req.permissions.includes('update_thread_status')
+            }
         }
     });
 });
