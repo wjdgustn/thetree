@@ -5,6 +5,7 @@ const Diff = require('diff');
 const { generateSlug } = require('random-word-slugs');
 const axios = require('axios');
 const querystring = require('querystring');
+const { colorFromUuid } = require('uuid-color');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./namumark/utils');
@@ -171,7 +172,7 @@ module.exports = {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
         return aclGroup.userCSS;
     },
-    async findUsers(req, arr, key = 'user', noCSS = false) {
+    async findUsers(req, arr, key = 'user', { noCSS = false, getColor = false }) {
         let wasNotArr = false;
         if(!Array.isArray(arr)) {
             arr = [arr];
@@ -201,6 +202,7 @@ module.exports = {
                         uuid
                     } : {})
                 }
+                if(getColor) obj[key].color = this.increaseBrightness(colorFromUuid(uuid), 60);
             }
         }
 
@@ -271,7 +273,7 @@ module.exports = {
 
         if(backendMode) {
             rev.infoText = rev.htmlInfoText;
-            rev.htmlInfoText = null;
+            rev.htmlInfoText = undefined;
         }
         else {
             rev.userHtml = this.userHtml(rev.user, {
@@ -304,10 +306,10 @@ module.exports = {
                 obj.history = await models.History.findOne({
                     uuid: obj.uuid
                 })
-                    .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id')
+                    .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc -_id')
                     .lean();
                 if(obj.history) {
-                    obj.history = this.addHistoryData(req, obj.history, isAdmin);
+                    obj.history = this.addHistoryData(req, obj.history, isAdmin, null, req.backendMode);
                     cache[obj.uuid] = obj.history;
                     obj.user = obj.history.user;
                 }

@@ -1649,7 +1649,28 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
     let blame = await utils.findHistories(req, rev.blame, req.permissions.includes('admin'));
-    blame = await utils.findUsers(req, blame);
+    blame = await utils.findUsers(req, blame, 'user', { getColor: true });
+
+    const lines = rev.content?.split('\n') ?? [];
+
+    const blameLines = [];
+    if(req.backendMode) {
+        let remainingCount = 0;
+        const blameCopy = blame.slice();
+        for(let i in lines) {
+            i = parseInt(i);
+            const obj = { content: lines[i] };
+
+            if(!remainingCount) {
+                const diff = blameCopy.shift();
+                remainingCount = diff.count;
+                obj.diff = diff;
+            }
+            remainingCount--;
+
+            blameLines.push(obj);
+        }
+    }
 
     res.renderSkin(undefined, {
         contentName: 'document/blame',
@@ -1658,8 +1679,13 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
         rev: rev.rev,
         uuid: rev.uuid,
         serverData: {
-            blame,
-            lines: rev.content?.split('\n') ?? []
+            ...(req.backendMode ? {
+                blameLines
+            } : {
+                document,
+                blame,
+                lines
+            })
         }
     });
 });
