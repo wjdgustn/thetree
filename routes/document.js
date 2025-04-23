@@ -1475,6 +1475,18 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
+    const latestRev = await History.findOne({
+        document: dbDocument.uuid
+    })
+        .sort({ rev: -1 })
+        .lean();
+    const parser = new NamumarkParser({
+        document,
+        aclData: req.aclData,
+        req
+    });
+    const { html: contentHtml } = await parser.parseEditorComment(latestRev.content);
+
     res.renderSkin(undefined, {
         contentName: 'document/revert',
         viewName: 'revert',
@@ -1482,7 +1494,8 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         rev: rev.rev,
         uuid: rev.uuid,
         serverData: {
-            content: rev?.content ?? ''
+            content: rev?.content ?? '',
+            contentHtml
         }
     });
 });
