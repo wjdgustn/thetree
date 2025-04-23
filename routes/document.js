@@ -127,7 +127,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         })
             .sort({ rev: -1 })
             .limit(3)
-            .select('createdAt rev revertRev log moveOldDoc moveNewDoc diffLength')
+            .select('type rev uuid user createdAt diffLength log revertRev troll trollBy hideLog hideLogBy hidden editRequest -_id')
             .lean();
 
         revs = await utils.findUsers(req, revs);
@@ -139,7 +139,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             status: 404,
             serverData: {
                 document,
-                revs
+                revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode))
             }
         });
     }
