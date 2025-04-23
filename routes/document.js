@@ -1475,6 +1475,7 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
+    let contentHtml;
     const latestRev = await History.findOne({
         document: dbDocument.uuid
     })
@@ -1485,7 +1486,10 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         aclData: req.aclData,
         req
     });
-    const { html: contentHtml } = await parser.parseEditorComment(latestRev.content);
+    if(latestRev.content) {
+        const { html } = await parser.parseEditorComment(latestRev.content);
+        if(html) contentHtml = html;
+    }
 
     res.renderSkin(undefined, {
         contentName: 'document/revert',
