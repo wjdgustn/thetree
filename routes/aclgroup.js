@@ -98,6 +98,10 @@ app.get('/aclgroup', async (req, res) => {
             removable: selectedGroup?.removePerms.length
                 ? selectedGroup.removePerms.some(a => req.permissions.includes(a))
                 : req.permissions.includes('aclgroup'),
+            permissions: {
+                aclgroup: req.permissions.includes('aclgroup'),
+                hidelog: req.permissions.includes('aclgroup_hidelog'),
+            },
             groupItems: utils.onlyKeys(groupItems, [
                 'id',
                 'uuid',
