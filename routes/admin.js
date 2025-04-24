@@ -1052,7 +1052,10 @@ app.post('/admin/batch_revert',
 
 app.get('/admin/login_history', middleware.permission('login_history'), async (req, res) => {
     res.renderSkin('로그인 내역', {
-        contentName: 'admin/login_history'
+        contentName: 'admin/login_history',
+        serverData: {
+            hidelogPerm: req.permissions.includes('login_history_hidelog')
+        }
     });
 });
 
@@ -1132,7 +1135,7 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
     const logs = await LoginHistory.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
         .limit(100)
-        .select('type ip device userAgent createdAt -_id');
+        .select('type ip device userAgent createdAt _id');
 
     if(query._id?.$gte) logs.reverse();
 
@@ -1154,9 +1157,12 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
 
     res.renderSkin(`${targetUser?.name} 로그인 내역`, {
         contentName: 'admin/login_history_result',
-        targetUser: targetUser.publicUser,
+        targetUser: {
+            ...targetUser.publicUser,
+            email: targetUser.email
+        },
         userAgent: latestLog?.userAgent,
-        logs,
+        logs: utils.withoutKeys(logs, ['_id']),
         prevItem,
         nextItem
     });
