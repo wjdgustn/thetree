@@ -758,6 +758,7 @@ app.get('/contribution/:uuid/discuss',
         getTotal: true
     });
     data.items = await utils.findThreads(data.items);
+    data.items = utils.onlyKeys(data.items, ['thread', 'id', 'createdAt']);
 
     res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution_discuss',
