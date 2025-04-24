@@ -748,7 +748,12 @@ module.exports = {
             items,
             prevItem,
             nextItem,
-            ...(req.backendMode ? {} : {
+            ...(req.backendMode ? {
+                pageProps: {
+                    prev: prevItem ? { query: { until: prevItem[key] } } : null,
+                    next: nextItem ? { query: { from: nextItem[key] } } : null
+                }
+            } : {
                 pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
                 originalPageButton,
             }),
