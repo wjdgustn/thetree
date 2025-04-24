@@ -56,7 +56,9 @@ app.get('/admin/config', middleware.permission('config'), (req, res) => {
     res.renderSkin('Config', {
         contentName: 'admin/config',
         serverData: {
-            jsonConfigs
+            jsonConfigs,
+            stringConfig,
+            disabledFeatures
         }
     });
 });
