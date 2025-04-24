@@ -691,7 +691,7 @@ app.use(async (req, res, next) => {
         } : {})
     }
 
-    if(skinInfo) {
+    if(skinInfo || req.backendMode) {
         const configMapper = {
             site_name: 'wiki.site_name',
             logo_url: 'wiki.logo_url',
