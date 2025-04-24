@@ -45,8 +45,10 @@ app.get('/aclgroup', async (req, res) => {
             aclGroup: selectedGroup.uuid
         };
 
-        if(!isNaN(req.query.until)) query.id = { $gte: parseInt(req.query.until) };
-        else if(!isNaN(req.query.from)) query.id = { $lte: parseInt(req.query.from) };
+        const until = parseInt(req.query.until);
+        const from = parseInt(req.query.from);
+        if(!isNaN(until)) query.id = { $gte: until };
+        else if(!isNaN(from)) query.id = { $lte: from };
 
         groupItems = await ACLGroupItem.find(query)
             .sort({ id: query.id?.$gte ? 1 : -1 })
