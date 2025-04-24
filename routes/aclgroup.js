@@ -101,6 +101,7 @@ app.get('/aclgroup', async (req, res) => {
             permissions: {
                 aclgroup: req.permissions.includes('aclgroup'),
                 hidelog: req.permissions.includes('aclgroup_hidelog'),
+                config: req.permissions.includes('config')
             },
             groupItems: utils.onlyKeys(groupItems, [
                 'id',
