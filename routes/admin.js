@@ -1028,11 +1028,17 @@ app.post('/admin/batch_revert',
 
     resultText.unshift(`작업 시간 : ${Date.now() - date}ms`);
 
-    req.session.flash.batchRevertResult = {
+    const resultData = {
         resultText,
         failResultText
     }
-    res.redirect('/admin/batch_revert');
+    if(req.backendMode) res.partial({
+        result: resultData
+    });
+    else {
+        req.session.flash.batchRevertResult = resultData;
+        res.redirect('/admin/batch_revert');
+    }
 });
 
 app.get('/admin/login_history', middleware.permission('login_history'), async (req, res) => {
