@@ -670,7 +670,14 @@ app.get('/contribution/:uuid/document',
     });
     // if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
 
+    const logType = {
+        create: HistoryTypes.Create,
+        delete: HistoryTypes.Delete,
+        move: HistoryTypes.Move,
+        revert: HistoryTypes.Revert
+    }[req.query.logtype];
     const baseQuery = {
+        ...(logType != null ? { type: logType } : {}),
         user: req.params.uuid
     }
     const query = { ...baseQuery };
@@ -691,7 +698,7 @@ app.get('/contribution/:uuid/document',
     let revs = await History.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
         .limit(100)
-        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll hideLog diffLength api -_id')
+        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll hideLog diffLength api')
         .lean();
 
     if(query._id?.$gte) revs.reverse();
@@ -713,6 +720,7 @@ app.get('/contribution/:uuid/document',
             .sort({ _id: -1 });
 
         revs = await utils.findDocuments(revs);
+        revs = utils.withoutKeys(revs.filter(a => a.document), ['_id']);
     }
 
     res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
@@ -724,7 +732,7 @@ app.get('/contribution/:uuid/document',
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
-            revs,
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null, req.backendMode)),
             total,
             prevItem,
             nextItem,

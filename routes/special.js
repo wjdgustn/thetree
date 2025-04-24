@@ -44,7 +44,7 @@ app.get('/RecentChanges', async (req, res) => {
     })
         .sort({ _id: -1 })
         .limit(100)
-        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll hideLog diffLength api -_id')
+        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc hideLog diffLength api -_id')
         .lean();
 
     revs = await utils.findUsers(req, revs);
@@ -57,7 +57,7 @@ app.get('/RecentChanges', async (req, res) => {
     res.renderSkin('최근 변경내역', {
         contentName: 'special/recentChanges',
         serverData: {
-            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode)),
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null, req.backendMode)),
             logType: logTypeText
         }
     });
