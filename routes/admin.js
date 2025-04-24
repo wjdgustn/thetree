@@ -58,7 +58,8 @@ app.get('/admin/config', middleware.permission('config'), (req, res) => {
         serverData: {
             jsonConfigs,
             stringConfig,
-            disabledFeatures
+            disabledFeatures,
+            disabledFeaturesTemplates
         }
     });
 });
