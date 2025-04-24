@@ -159,7 +159,8 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
 
     await ACLGroup.create(newGroup);
 
-    res.redirect(`/aclgroup?group=${encodeURIComponent(name)}`);
+    if(req.backendMode) res.reload();
+    else res.redirect(`/aclgroup?group=${encodeURIComponent(name)}`);
 });
 
 app.post('/aclgroup/group_remove', async (req, res) => {
@@ -173,7 +174,8 @@ app.post('/aclgroup/group_remove', async (req, res) => {
 
     await ACLGroup.deleteOne({ uuid });
 
-    res.redirect('/aclgroup');
+    if(req.backendMode) res.reload();
+    else res.redirect('/aclgroup');
 });
 
 app.post('/aclgroup',
@@ -286,7 +288,10 @@ app.post('/aclgroup',
         hideLog: req.body.hidelog === 'Y'
     });
 
-    if(req.referer?.pathname.startsWith('/aclgroup')) res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    if(req.referer?.pathname.startsWith('/aclgroup')) {
+        if(req.backendMode) res.reload();
+        else res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    }
     else res.status(204).end();
 });
 
@@ -347,7 +352,8 @@ app.post('/aclgroup/remove',
         hideLog: req.body.hidelog === 'Y'
     });
 
-    res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    if(req.backendMode) res.reload();
+    else res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
 });
 
 app.post('/aclgroup/group_edit', middleware.permission('config'),
