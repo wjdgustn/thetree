@@ -629,13 +629,19 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
         });
     }
 
+    const grantPerms = config.grant_permissions.filter(a => AllPermissions.includes(a));
+    const configPerms = AllPermissions.filter(a => (req.permissions.includes('developer') || !ProtectedPermissions.includes(a)) && !grantPerms.includes(a));
+    const grantablePermissions = [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])];
+
     res.renderSkin('권한 부여', {
         contentName: 'admin/grant',
         serverData: {
             targetUser: targetUser ? {
                 ...targetUser.publicUser,
                 permissions: targetUser.permissions
-            } : null
+            } : null,
+            grantablePermissions: grantablePermissions,
+            hidelogPerm: req.permissions.includes('grant_hidelog')
         }
     });
 });
@@ -823,7 +829,10 @@ app.post('/admin/config/disabledfeatures', middleware.permission('config'), (req
 
 app.get('/admin/batch_revert', middleware.permission('batch_revert'), (req, res) => {
     res.renderSkin('일괄 되돌리기', {
-        contentName: 'admin/batch_revert'
+        contentName: 'admin/batch_revert',
+        serverData: {
+            hidelogPerm: req.permissions.includes('batch_revert_hidelog')
+        }
     });
 });
 
