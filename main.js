@@ -989,7 +989,9 @@ document.getElementById('initScript')?.remove();
     if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) for(let item of global.disabledFeatures) {
         if(item.method !== 'ALL' && item.method !== req.method) continue;
 
-        if(item.type === 'string' && !req.url.startsWith(item.condition)) continue;
+        let checkUrl = url;
+        if(checkUrl.startsWith('/internal/')) checkUrl = checkUrl.replace('/internal', '');
+        if(item.type === 'string' && !checkUrl.startsWith(item.condition)) continue;
         if(item.type === 'js' && !eval(item.condition)) continue;
 
         const msg = (item.message || '비활성화된 기능입니다.')
