@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="/css/views/login_history_result.css">
 <%
-const link = query => `/admin/login_history/result?${querystring.stringify({
+const link = query => `${req.path}?${querystring.stringify({
     ...utils.withoutKeys(req.query, [query.from ? 'until' : 'from']),
     ...query
 })}`;
