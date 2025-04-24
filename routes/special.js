@@ -503,7 +503,8 @@ app.get('/RandomPage', async (req, res) => {
     res.renderSkin('RandomPage', {
         contentName: 'special/randomPage',
         serverData: {
-            docs
+            docs,
+            namespaces: config.namespaces
         }
     });
 });
