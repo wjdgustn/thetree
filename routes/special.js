@@ -477,7 +477,10 @@ app.get('/BlockHistory', async (req, res) => {
         serverData: {
             logs: utils.withoutKeys(logs, ['_id', '__v']),
             prevItem,
-            nextItem
+            nextItem,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });
