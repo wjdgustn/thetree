@@ -715,7 +715,7 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
         return res.status(400).send('build failed');
     }
 
-    delete require.cache[require.resolve(path.join(skinPath, 'server/server.cjs'))];
+    delete require.cache[require.resolve(path.resolve(skinPath, 'server/server.cjs'))];
 
     global.updateSkinInfo();
     res.reload();
