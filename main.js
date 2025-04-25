@@ -22,6 +22,8 @@ const { colorFromUuid } = require('uuid-color');
 const aws = require('@aws-sdk/client-s3');
 const meiliSearch = require('meilisearch');
 const { execSync, exec } = require('child_process');
+const { promisify } = require('util');
+const execPromise = promisify(exec);
 const axios = require('axios');
 const util = require('util');
 const msgpack = require('@msgpack/msgpack');
@@ -116,6 +118,20 @@ global.updateConfig = () => {
 
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 
+    updateSkinInfo();
+}
+
+const versionData = JSON.parse(fs.readFileSync('./version.json').toString());
+global.updateSkinInfo = () => {
+    if(!fs.existsSync('./frontend')) {
+        console.log('Downloading frontend...');
+        const result = execSync(`git clone ${new URL(versionData.feRepo, 'https://github.com')} frontend`);
+        console.log(result.toString());
+        const npmResult = execSync('npm i', { cwd: './frontend' });
+        console.log(npmResult.toString());
+    }
+    if(!fs.existsSync('./skins')) fs.mkdirSync('./skins');
+
     global.skins = fs.readdirSync('./skins').filter(a => !a.startsWith('.'));
     global.skinInfos = {};
     for(let skin of global.skins) {
@@ -127,7 +143,7 @@ global.updateConfig = () => {
         global.skinInfos[skin] = {
             ...JSON.parse(fs.readFileSync(metadataPath).toString()),
             template: fs.readFileSync(templatePath).toString()
-        };
+        }
     }
 }
 updateConfig();
@@ -140,17 +156,21 @@ try {
 }
 global.versionInfo = {
     branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(),
+    feBranch: execSync('git rev-parse --abbrev-ref HEAD', { cwd: './frontend' }).toString().trim(),
     commitId: execSync('git rev-parse HEAD').toString().trim(),
+    feCommitId: execSync('git rev-parse HEAD', { cwd: './frontend' }).toString().trim(),
     commitDate: new Date(Number(execSync('git log -1 --format="%at"').toString().trim()) * 1000),
-    versionData: JSON.parse(fs.readFileSync('./version.json').toString()),
+    feCommitDate: new Date(Number(execSync('git log -1 --format="%at"', { cwd: './frontend' }).toString().trim()) * 1000),
+    versionData,
     updateRequired: false
 };
 global.newVersionInfo = { ...global.versionInfo };
 global.newCommits = [];
+global.newFECommits = [];
 
 global.checkUpdate = async () => {
     const githubAPI = axios.create({
-        baseURL: `https://api.github.com/repos/${global.versionInfo.versionData.repo}`,
+        baseURL: `https://api.github.com/repos`,
         headers: {
             ...(config.github_api_token ? {
                 Authorization: `token ${config.github_api_token}`
@@ -159,36 +179,62 @@ global.checkUpdate = async () => {
     });
 
     let newCommits;
-    let newVerionData;
+    let newFECommits;
+    let newVersionData;
     try {
-        const { data: newCommitData } = await githubAPI.get(`/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
+        const { data: newCommitData } = await githubAPI.get(`${global.versionInfo.versionData.repo}/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
         newCommits = newCommitData.commits;
-        const { data: newVersionFile } = await githubAPI.get('/contents/version.json', {
+        const { data: newVersionFile } = await githubAPI.get(`${global.versionInfo.versionData.repo}/contents/version.json`, {
             params: {
                 ref: global.versionInfo.branch
             }
         });
-        newVerionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
+        newVersionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
+
+        const { data: newFECommitData } = await githubAPI.get(`${global.versionInfo.versionData.feRepo}/compare/${global.versionInfo.feCommitId}...${global.versionInfo.feBranch}`);
+        newFECommits = newFECommitData.commits;
     } catch(e) {
         console.error('failed to fetch latest version info', e);
         return;
     }
-    if(!newCommits.length) {
+    if(!newCommits.length && !newFECommits.length) {
         global.newVersionInfo.lastUpdateCheck = new Date();
         return;
     }
 
-    global.newCommits = newCommits.reverse();
+    const commitMapper = a => ({
+        html_url: a.html_url,
+        sha: a.sha,
+        commit: {
+            message: a.commit.message,
+            author: {
+                name: a.commit.author.name
+            }
+        },
+        author: {
+            html_url: a.author.html_url
+        }
+    });
+
+    global.newCommits = newCommits.map(commitMapper).reverse();
+    global.newFECommits = newFECommits.map(commitMapper).reverse();
     global.newVersionInfo = {
         ...global.versionInfo,
-        commitId: newCommits[newCommits.length - 1].sha,
-        commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
-        versionData: newVerionData,
-        updateRequired: newVerionData.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
+        ...(newCommits.length ? {
+            commitId: newCommits[newCommits.length - 1].sha,
+            commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
+            versionData: newVersionData,
+            updateRequired: newVersionData.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
+        } : {}),
+        ...(newFECommits.length ? {
+            feCommitId: newFECommits[newFECommits.length - 1].sha,
+            feCommitDate: new Date(newFECommits[newFECommits.length - 1].commit.committer.date)
+        } : {}),
         lastUpdateCheck: new Date()
-    };
+    }
 
-    if(global.versionInfo.commitId !== global.newVersionInfo.commitId
+    if((global.versionInfo.commitId !== global.newVersionInfo.commitId
+            || global.versionInfo.feCommitId !== global.newVersionInfo.feCommitId)
         && (global.newVersionInfo.updateRequired || config.auto_update)) {
         console.log('auto updating...');
         global.updateEngine();
@@ -201,30 +247,46 @@ if(config.check_update !== false) {
 }
 
 global.updateEngine = (exit = true) => {
-    try {
-        const packageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./package.json')).digest('hex');
-        const oldPackageHash = packageHash();
+    (async () => {
+        try {
+            const packageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./package.json')).digest('hex');
+            const fePackageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./frontend/package.json')).digest('hex');
+            const oldPackageHash = packageHash();
+            const oldFEPackageHash = fePackageHash();
 
-        exec('git pull --recurse-submodules', (err, stdout, stderr) => {
-            if(err) console.error(err);
-            if(stdout) console.log(stdout);
-            if(stderr) console.error(stderr);
+            const doEngine = global.versionInfo.commitId !== global.newVersionInfo.commitId;
+            const doFE = global.versionInfo.feCommitId !== global.newVersionInfo.commitId;
+
+            const results = await Promise.all([
+                ...(doEngine ? [execPromise('git pull')] : []),
+                ...(doFE ? [execPromise('git pull', { cwd: './frontend' })] : [])
+            ]);
+            for(let result of results) {
+                console.log(result.stdout);
+                console.error(result.stderr);
+            }
 
             const newPackageHash = packageHash();
+            const newFEPackageHash = fePackageHash();
             const packageUpdated = oldPackageHash !== newPackageHash;
+            const fePackageUpdated = oldPackageHash !== newFEPackageHash;
             if(exit) {
                 const onFinish = () => {
-                    process.exit(0);
+                    if(doEngine) process.exit(0);
                 }
                 if(packageUpdated) {
                     console.log('package.json updated, updating packages...');
                     exec('npm i', onFinish);
                 }
+                else if(fePackageUpdated) {
+                    console.log('Frontend package.json updated, updating packages...');
+                    exec('npm i', { cwd: './frontend' }, onFinish);
+                }
                 else onFinish();
             }
             else global.skinCommitId = {};
-        });
-    } catch(e) {}
+        } catch(e) {}
+    })()
 }
 
 global.plugins = {

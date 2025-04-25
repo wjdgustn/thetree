@@ -1,6 +1,6 @@
 const express = require('express');
 const util = require('util');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
@@ -9,6 +9,7 @@ const { body } = require('express-validator');
 const parseDuration = require('parse-duration');
 const crypto = require('crypto');
 const { exec } = require('child_process');
+const execPromise = util.promisify(exec);
 
 // openNAMU migration things
 const sqlite3 = require('sqlite3').verbose();
@@ -47,11 +48,11 @@ const ACL = require('../class/acl');
 
 const app = express.Router();
 
-app.get('/admin/config', middleware.permission('config'), (req, res) => {
-    const jsonConfigs = ['publicConfig.json', 'serverConfig.json'].map(name => ({
+app.get('/admin/config', middleware.permission('config'), async (req, res) => {
+    const jsonConfigs = await Promise.all(['publicConfig.json', 'serverConfig.json'].map(async name => ({
         name,
-        content: fs.readFileSync(name).toString()
-    }));
+        content: (await fs.readFile(name)).toString()
+    })));
 
     res.renderSkin('Config', {
         contentName: 'admin/config',
@@ -64,36 +65,51 @@ app.get('/admin/config', middleware.permission('config'), (req, res) => {
     });
 });
 
-app.get('/admin/developer', middleware.permission('developer'), (req, res) => {
+app.get('/admin/developer', middleware.permission('developer'), async (req, res) => {
     const customStaticFiles = [];
     const customStaticRoot = './customStatic';
-    const readDir = path => {
-        const files = fs.readdirSync(path);
+    const readDir = async path => {
+        const files = await fs.readdir(path);
         if(path !== customStaticRoot && !files.length) {
-            fs.rmSync(path, { recursive: true });
+            await fs.rm(path, { recursive: true });
         }
         else for(let file of files) {
             const filePath = path + '/' + file;
-            const stat = fs.statSync(filePath);
+            const stat = await fs.stat(filePath);
             if(stat.isDirectory()) {
-                readDir(filePath);
+                await readDir(filePath);
             } else {
                 customStaticFiles.push(filePath.slice(customStaticRoot.length));
             }
         }
     }
-    readDir(customStaticRoot);
+    await readDir(customStaticRoot);
 
-    const jsonConfigs = ['devConfig.json'].map(name => ({
+    const jsonConfigs = await Promise.all(['devConfig.json'].map(async name => ({
         name,
-        content: fs.readFileSync(name).toString()
-    }));
+        content: (await fs.readFile(name)).toString()
+    })));
+
+    let skinCommitIds = [];
+    try {
+        const installedSkins = await fs.readdir('./frontend/skins');
+        skinCommitIds = Object.fromEntries(await Promise.all(
+            installedSkins.map(async name => [name, (await execPromise('git rev-parse --short HEAD', { cwd: path.join('./frontend/skins', name) })).stdout.trim()])
+        ));
+    } catch(e) {}
 
     res.renderSkin('개발자 설정', {
         contentName: 'admin/developer',
         serverData: {
             customStaticFiles,
-            jsonConfigs
+            jsonConfigs,
+            versionInfo: global.versionInfo,
+            newVersionInfo: global.newVersionInfo,
+            newCommits: global.newCommits,
+            newFECommits: global.newFECommits,
+            checkUpdate: config.check_update !== false,
+            skinInfos: Object.fromEntries(Object.entries(global.skinInfos).map(([key, value]) => [key, utils.withoutKeys(value, ['template'])])),
+            skinCommitIds
         }
     });
 });
@@ -117,7 +133,9 @@ app.post('/admin/developer/eval', middleware.permission('developer'), async (req
 
     if(isStr) result = namumarkUtils.escapeHtml(result);
     else result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
-    res.send(result);
+
+    if(req.backendMode) res.partial({ evalOutput: result });
+    else res.send(result);
 });
 
 app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware.referer('/admin/'), async (req, res) => {
@@ -126,8 +144,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     if(tool === 'deletedisabledfeature') {
         const index = parseInt(req.query.index);
         global.disabledFeatures.splice(index, 1);
-        if(global.disabledFeatures.length) fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
-        else fs.rmSync('./cache/disabledFeatures.json');
+        if(global.disabledFeatures.length) await fs.writeFile('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+        else await fs.rm('./cache/disabledFeatures.json');
 
         return res.reload();
     }
@@ -138,14 +156,14 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         const path = req.query.path;
         if(!path) return res.status(400).send('path not provided');
         if(path.includes('..')) return res.status(400).send('invalid path');
-        fs.unlinkSync('./customStatic' + path);
+        await fs.unlink('./customStatic' + path);
 
         return res.reload();
     }
 
     else if(tool === 'fixstringconfig') {
         const newStringConfig = {};
-        const exampleStringConfig = JSON.parse(fs.readFileSync('./stringConfig.example.json').toString());
+        const exampleStringConfig = JSON.parse(await fs.readFile('./stringConfig.example.json').toString());
         for(let [key, defaultValue] of Object.entries(exampleStringConfig)) {
             newStringConfig[key] = config[key] || defaultValue;
         }
@@ -153,7 +171,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         for(let [key, value] of additionalEntries) {
             newStringConfig[key] = value;
         }
-        fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        await fs.writeFile('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
         return res.reload();
@@ -162,7 +180,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool === 'removestringconfig') {
         const newStringConfig = { ...global.stringConfig };
         delete newStringConfig[req.query.key];
-        fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        await fs.writeFile('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
         return res.reload();
@@ -179,25 +197,25 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'clearpublicmindir') {
-        const files = fs.readdirSync('./publicMin');
+        const files = await fs.readdir('./publicMin');
         for(let file of files) {
             const dirPath = path.join('./publicMin', file);
-            const stat = fs.statSync(dirPath);
+            const stat = await fs.stat(dirPath);
             if(!stat.isDirectory()) continue;
 
-            fs.rmSync(dirPath, { recursive: true });
+            await fs.rm(dirPath, { recursive: true });
         }
         return res.status(204).end();
     }
 
     else if(tool === 'clearcachedir') {
-        const files = fs.readdirSync('./cache');
+        const files = await fs.readdir('./cache');
         for(let file of files) {
             const dirPath = path.join('./cache', file);
-            const stat = fs.statSync(dirPath);
+            const stat = await fs.stat(dirPath);
             if(!stat.isDirectory()) continue;
 
-            fs.rmSync(dirPath, { recursive: true });
+            await fs.rm(dirPath, { recursive: true });
         }
         return res.status(204).end();
     }
@@ -326,7 +344,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'migrateopennamu') {
-        if(!fs.existsSync('./opennamu_data/data.db')) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
+        if(!(await fs.exists('./opennamu_data/data.db'))) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
 
         res.status(204).end();
 
@@ -436,8 +454,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
                         console.log(`file rev 1 detected, filename: ${filename} ext: ${ext} hash: ${hash} imgPath: ${imgPath}`);
 
-                        if(fs.existsSync(imgPath)) {
-                            const img = fs.readFileSync(imgPath);
+                        if(await fs.exists(imgPath)) {
+                            const img = await fs.readFile(imgPath);
                             try {
                                 const metadata = await sharp(img).metadata();
                                 fileInfo.fileWidth = metadata.width;
@@ -495,7 +513,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
                 }
                 log('migration complete!');
 
-                fs.writeFileSync(`./opennamu_data/migration_${Date.now()}.log`, logs.join('\n'));
+                await fs.writeFile(`./opennamu_data/migration_${Date.now()}.log`, logs.join('\n'));
             });
         });
     }
@@ -518,7 +536,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool === 'updateskin') {
         res.status(204).end();
         for(let skin of global.skins) {
-            const checkGit = fs.existsSync(`./skins/${skin}/.git`);
+            const checkGit = await fs.exists(`./skins/${skin}/.git`);
             if(!checkGit) continue;
 
             exec('git pull', {
@@ -535,7 +553,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else return res.status(404).send('tool not found');
 });
 
-app.post('/admin/config/configjson', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/configjson', middleware.permission('config'), async (req, res) => {
     const config = req.body.config;
     // if(config.includes('/') || !config.endsWith('.json')) return res.status(400).send('Invalid config file');
 
@@ -561,12 +579,12 @@ app.post('/admin/config/configjson', middleware.permission('config'), (req, res)
         if(global.devConfig.hasOwnProperty(key)) return res.status(400).send(`Invalid key "${key}"`);
     }
 
-    fs.writeFileSync(config, req.body.content);
+    await fs.writeFile(config, req.body.content);
     updateConfig();
     return res.status(204).end();
 });
 
-app.post('/admin/config/stringconfig', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/stringconfig', middleware.permission('config'), async (req, res) => {
     // let newObj = {};
     // for(let key of Object.keys(stringConfig)) {
     //     newObj[key] = req.body[key] || '';
@@ -577,28 +595,28 @@ app.post('/admin/config/stringconfig', middleware.permission('config'), (req, re
 
     const newObj = { ...global.stringConfig };
     newObj[req.body.key] = req.body.value;
-    fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    await fs.writeFile('./stringConfig.json', JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.status(204).end();
 });
 
-app.post('/admin/config/stringconfig/add', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/stringconfig/add', middleware.permission('config'), async (req, res) => {
     const newObj = { ...global.stringConfig };
     newObj[req.body.key] = '';
-    fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    await fs.writeFile('./stringConfig.json', JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.reload();
 });
 
 const uploadStaticFile = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => {
+        destination: async (req, file, cb) => {
             if(req.body.path.includes('..')) return cb('invalid path');
             if(req.body.path === '/admin') return cb(`can't override admin page`);
 
             const path = './customStatic' + req.body.path;
-            if(!fs.existsSync(path)) {
-                fs.mkdirSync(path, { recursive: true });
+            if(!await fs.exists(path)) {
+                await fs.mkdir(path, { recursive: true });
             }
 
             cb(null, path);
@@ -615,6 +633,86 @@ const uploadStaticFile = multer({
     }
 }).single('file');
 app.post('/admin/developer/staticfile', middleware.permission('developer'), uploadStaticFile, (req, res) => {
+    res.reload();
+});
+
+app.post('/admin/developer/skin/add', middleware.permission('developer'), async (req, res) => {
+    let url;
+    try {
+        url = new URL(req.body.url);
+    } catch(e) {
+        return res.status(400).send('Invalid URL');
+    }
+
+    const name = req.body.name;
+    if(!name?.trim() || name.includes('..') || name.includes('/')) return res.status(400).send('Invalid name');
+
+    const checkSkinsDir = await fs.exists('./frontend/skins');
+    if(!checkSkinsDir) await fs.mkdir('./frontend/skins');
+    try {
+        await execPromise(`git clone "${url}" "${name}"`, {cwd: './frontend/skins'});
+    } catch(e) {
+        return res.status(400).send('Invalid repository');
+    }
+
+    res.reload();
+});
+
+app.post('/admin/developer/skin/update', middleware.permission('developer'), async (req, res) => {
+    const name = req.body.name;
+    if(name.includes('..')) return res.status(400).send('Invalid name');
+    const dir = path.join('./frontend/skins', name);
+    const skinExists = await fs.exists(dir);
+    if(!skinExists) return res.status(400).send('Invalid skin');
+
+    try {
+        await execPromise('git pull', {cwd: dir});
+    } catch(e) {
+        return res.status(400).send('pull failed');
+    }
+
+    res.reload();
+});
+
+app.post('/admin/developer/skin/delete', middleware.permission('developer'), async (req, res) => {
+    const name = req.body.name;
+    if(name.includes('..')) return res.status(400).send('Invalid name');
+    const dir = path.join('./frontend/skins', name);
+    const skinExists = await fs.exists(dir);
+    if(!skinExists) return res.status(400).send('Invalid skin');
+
+    const skinPath = path.join('./skins', name);
+
+    await fs.rm(dir, { recursive: true });
+    await fs.rm(skinPath, { recursive: true });
+
+    global.updateSkinInfo();
+    res.reload();
+});
+
+app.post('/admin/developer/skin/build', middleware.permission('developer'), async (req, res) => {
+    const name = req.body.name;
+    if(name.includes('..')) return res.status(400).send('Invalid name');
+    const dir = path.join('./frontend/skins', name);
+    const skinExists = await fs.exists(dir);
+    if(!skinExists) return res.status(400).send('Invalid skin');
+
+    const skinPath = path.join('./skins', name);
+
+    try {
+        await execPromise('npm run build', {
+            cwd: './frontend',
+            env: {
+                SKIN_NAME: name
+            }
+        });
+        await fs.move('./frontend/dist', skinPath, { overwrite: true });
+    } catch(e) {
+        console.error(e);
+        return res.status(400).send('build failed');
+    }
+
+    global.updateSkinInfo();
     res.reload();
 });
 
@@ -799,7 +897,7 @@ app.post('/admin/config/migratecontribution', middleware.permission('config'), a
     return res.status(204).end();
 });
 
-app.post('/admin/config/disabledfeatures', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/disabledfeatures', middleware.permission('config'), async (req, res) => {
     const {
         methodField: method,
         type,
@@ -822,7 +920,7 @@ app.post('/admin/config/disabledfeatures', middleware.permission('config'), (req
         message,
         messageType
     });
-    fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+    await fs.writeFile('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
 
     res.reload();
 });

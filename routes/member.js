@@ -565,10 +565,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
 
 app.post('/member/mypage', middleware.isLogin,
     body('skin')
-        .isIn([
-            'default',
-            ...global.skins
-        ])
+        .custom(value => ['default', ...global.skins].includes(value))
         .withMessage('invalid_skin'),
     middleware.fieldErrors,
     async (req, res) => {
