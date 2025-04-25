@@ -36,6 +36,7 @@ app.get('/UncategorizedPages', async (req, res) => {
         item.parsedName = utils.dbDocumentToDocument(item);
 
     serverData.items = utils.onlyKeys(serverData.items, ['parsedName']);
+    serverData.namespaces = config.namespaces;
 
     res.renderSkin('분류가 되지 않은 문서', {
         contentName: 'docList/UncategorizedPages',
@@ -237,7 +238,8 @@ app.get('/NeededPages', (req, res) => {
             items,
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
-            total: fullItems.length
+            total: fullItems.length,
+            namespaces: config.namespaces
         }
     });
 });
@@ -268,7 +270,8 @@ app.get('/OrphanedPages', async (req, res) => {
             items,
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
-            total: fullItems.length
+            total: fullItems.length,
+            namespaces: config.namespaces
         }
     });
 });
