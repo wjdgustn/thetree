@@ -856,7 +856,7 @@ document.getElementById('initScript')?.remove();
                 }
                 const html = skinInfo.template
                     .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
-                    .replace('<!--app-head-->', rendered.head.headTags)
+                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + config.head_html)
                     .replace('<!--app-body-->', body);
 
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
