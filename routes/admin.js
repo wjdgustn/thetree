@@ -708,8 +708,8 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
                 METADATA_PATH: path.resolve(skinPath)
             }
         }
-        await execPromise(`npx vite build --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
-        await execPromise(`npx vite build --outDir "${path.resolve(skinPath, 'client')}"`, opts);
+        await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
+        await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'client')}"`, opts);
     } catch(e) {
         console.error(e);
         return res.status(400).send('build failed');
