@@ -462,7 +462,8 @@ app.get('/BlockHistory', async (req, res) => {
         logs = await utils.findUsers(req, logs, 'createdUser', { noCSS: true });
         logs = await utils.findUsers(req, logs, 'targetUser', { noCSS: true });
 
-        const aclGroups = await ACLGroup.find();
+        const aclGroups = await ACLGroup.find()
+            .select('name uuid -_id');
         for(let log of logs) {
             if(log.aclGroup) {
                 const foundGroup = aclGroups.find(a => a.uuid === log.aclGroup);
