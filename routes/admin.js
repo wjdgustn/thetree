@@ -701,10 +701,9 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
 
     try {
         const opts = {
-            shell: process.platform === 'win32' ? 'cmd' : '/bin/bash',
-            stdio: 'inherit',
             cwd: './frontend',
             env: {
+                ...process.env,
                 SKIN_NAME: name,
                 METADATA_PATH: path.resolve(skinPath)
             }
