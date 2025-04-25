@@ -235,11 +235,14 @@ app.get('/NeededPages', (req, res) => {
     res.renderSkin('작성이 필요한 문서', {
         contentName: 'docList/NeededPages',
         serverData: {
-            items,
+            items: items.map(a => utils.parseDocumentName(a)),
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
             total: fullItems.length,
-            namespaces: config.namespaces
+            namespaces: config.namespaces,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });
@@ -267,11 +270,14 @@ app.get('/OrphanedPages', async (req, res) => {
     res.renderSkin('고립된 문서', {
         contentName: 'docList/OrphanedPages',
         serverData: {
-            items,
+            items: items.map(a => utils.parseDocumentName(a)),
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
             total: fullItems.length,
-            namespaces: config.namespaces
+            namespaces: config.namespaces,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });
@@ -291,10 +297,13 @@ app.get('/OrphanedCategories', async (req, res) => {
     res.renderSkin('고립된 분류', {
         contentName: 'docList/OrphanedCategories',
         serverData: {
-            items,
+            items: items.map(a => utils.parseDocumentName(a)),
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
-            total: fullItems.length
+            total: fullItems.length,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });
