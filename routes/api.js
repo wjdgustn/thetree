@@ -16,7 +16,6 @@ const {
 
 const User = require('../schemas/user');
 const EditToken = require('../schemas/editToken');
-const Document = require('../schemas/document');
 
 const app = express.Router();
 
@@ -33,8 +32,7 @@ app.all('/api/*', async (req, res, next) => {
         });
         if(user?.permissions.includes('api_access')) {
             req.user = user;
-            req.aclData.user = user;
-            req.aclData.permissions = user.permissions;
+            await utils.makeACLData(req);
             return next();
         }
     }
