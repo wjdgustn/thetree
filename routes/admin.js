@@ -700,13 +700,15 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
     const skinPath = path.join('./skins', name);
 
     try {
-        await execPromise('npm run build', {
+        const opts = {
             cwd: './frontend',
             env: {
-                SKIN_NAME: name
+                SKIN_NAME: name,
+                METADATA_PATH: path.resolve(skinPath)
             }
-        });
-        await fs.move('./frontend/dist', skinPath, { overwrite: true });
+        }
+        await execPromise(`npx vite build --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
+        await execPromise(`npx vite build --outDir "${path.resolve(skinPath, 'client')}"`, opts);
     } catch(e) {
         console.error(e);
         return res.status(400).send('build failed');
