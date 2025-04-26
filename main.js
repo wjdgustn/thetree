@@ -192,7 +192,6 @@ global.checkUpdate = async () => {
         newVersionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
     } catch(e) {
         console.error('failed to fetch latest version info', e);
-        return;
     }
     try {
         const { data: newFECommitData } = await githubAPI.get(`${global.versionInfo.versionData.feRepo}/compare/${global.versionInfo.feCommitId}...${global.versionInfo.feBranch}`);
