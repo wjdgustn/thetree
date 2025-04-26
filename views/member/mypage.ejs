@@ -38,7 +38,7 @@
 
     <div class="menu-block">
         <label>이중인증</label>
-        <%if(user.totpToken) {%>
+        <%if(hasTotp) {%>
             <a class="thetree-square-button thetree-danger-button" href="/member/deactivate_otp">TOTP 비활성화</a>
             <div class="new-passkey-block">
                 <input id="passkey-name-input" type="text" placeholder="Passkey Name"><!--
@@ -81,7 +81,7 @@
     </div>
 
     <div class="button-block">
-        <%if(config.withdraw_save_days != null) {%><a class="thetree-square-button thetree-danger-button" href="/member/withdraw">계정 삭제</a><%}%>
+        <%if(config.can_withdraw !== false) {%><a class="thetree-square-button thetree-danger-button" href="/member/withdraw">계정 삭제</a><%}%>
         <button class="thetree-square-button thetree-blue-button">변경</button>
     </div>
 </form>

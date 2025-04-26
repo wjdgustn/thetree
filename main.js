@@ -22,8 +22,11 @@ const { colorFromUuid } = require('uuid-color');
 const aws = require('@aws-sdk/client-s3');
 const meiliSearch = require('meilisearch');
 const { execSync, exec } = require('child_process');
+const { promisify } = require('util');
+const execPromise = promisify(exec);
 const axios = require('axios');
 const util = require('util');
+const msgpack = require('@msgpack/msgpack');
 
 global.debug = process.env.NODE_ENV === 'development';
 
@@ -115,7 +118,33 @@ global.updateConfig = () => {
 
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 
-    global.skins = fs.readdirSync('./skins');
+    updateSkinInfo();
+}
+
+const versionData = JSON.parse(fs.readFileSync('./version.json').toString());
+global.updateSkinInfo = () => {
+    if(!fs.existsSync('./frontend')) {
+        console.log('Downloading frontend...');
+        const result = execSync(`git clone ${new URL(versionData.feRepo, 'https://github.com')} frontend`);
+        console.log(result.toString());
+        const npmResult = execSync('npm i', { cwd: './frontend' });
+        console.log(npmResult.toString());
+    }
+    if(!fs.existsSync('./skins')) fs.mkdirSync('./skins');
+
+    global.skins = fs.readdirSync('./skins').filter(a => !a.startsWith('.'));
+    global.skinInfos = {};
+    for(let skin of global.skins) {
+        const metadataPath = path.join('./skins', skin, 'metadata.json');
+        const isSPA = fs.existsSync(metadataPath);
+        if(!isSPA) continue;
+
+        const templatePath = path.join('./skins', skin, 'client/index.html');
+        global.skinInfos[skin] = {
+            ...JSON.parse(fs.readFileSync(metadataPath).toString()),
+            template: fs.readFileSync(templatePath).toString()
+        }
+    }
 }
 updateConfig();
 
@@ -129,15 +158,25 @@ global.versionInfo = {
     branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(),
     commitId: execSync('git rev-parse HEAD').toString().trim(),
     commitDate: new Date(Number(execSync('git log -1 --format="%at"').toString().trim()) * 1000),
-    versionData: JSON.parse(fs.readFileSync('./version.json').toString()),
+    versionData,
     updateRequired: false
 };
+global.updateFEVersionInfo = () => {
+    global.versionInfo = {
+        ...global.versionInfo,
+        feBranch: execSync('git rev-parse --abbrev-ref HEAD', { cwd: './frontend' }).toString().trim(),
+        feCommitId: execSync('git rev-parse HEAD', { cwd: './frontend' }).toString().trim(),
+        feCommitDate: new Date(Number(execSync('git log -1 --format="%at"', { cwd: './frontend' }).toString().trim()) * 1000)
+    }
+}
+updateFEVersionInfo();
 global.newVersionInfo = { ...global.versionInfo };
 global.newCommits = [];
+global.newFECommits = [];
 
 global.checkUpdate = async () => {
     const githubAPI = axios.create({
-        baseURL: `https://api.github.com/repos/${global.versionInfo.versionData.repo}`,
+        baseURL: `https://api.github.com/repos`,
         headers: {
             ...(config.github_api_token ? {
                 Authorization: `token ${config.github_api_token}`
@@ -145,37 +184,65 @@ global.checkUpdate = async () => {
         }
     });
 
-    let newCommits;
-    let newVerionData;
+    let newCommits = [];
+    let newFECommits = [];
+    let newVersionData;
     try {
-        const { data: newCommitData } = await githubAPI.get(`/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
+        const { data: newCommitData } = await githubAPI.get(`${global.versionInfo.versionData.repo}/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
         newCommits = newCommitData.commits;
-        const { data: newVersionFile } = await githubAPI.get('/contents/version.json', {
+        const { data: newVersionFile } = await githubAPI.get(`${global.versionInfo.versionData.repo}/contents/version.json`, {
             params: {
                 ref: global.versionInfo.branch
             }
         });
-        newVerionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
+        newVersionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
     } catch(e) {
         console.error('failed to fetch latest version info', e);
-        return;
     }
-    if(!newCommits.length) {
+    try {
+        const { data: newFECommitData } = await githubAPI.get(`${global.versionInfo.versionData.feRepo}/compare/${global.versionInfo.feCommitId}...${global.versionInfo.feBranch}`);
+        newFECommits = newFECommitData.commits;
+    } catch(e) {
+        console.error('failed to fetch latest FE commit info', e);
+    }
+    if(!newCommits.length && !newFECommits.length) {
         global.newVersionInfo.lastUpdateCheck = new Date();
         return;
     }
 
-    global.newCommits = newCommits.reverse();
+    const commitMapper = a => ({
+        html_url: a.html_url,
+        sha: a.sha,
+        commit: {
+            message: a.commit.message,
+            author: {
+                name: a.commit.author.name
+            }
+        },
+        author: {
+            html_url: a.author.html_url
+        }
+    });
+
+    global.newCommits = newCommits.map(commitMapper).reverse();
+    global.newFECommits = newFECommits.map(commitMapper).reverse();
     global.newVersionInfo = {
         ...global.versionInfo,
-        commitId: newCommits[newCommits.length - 1].sha,
-        commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
-        versionData: newVerionData,
-        updateRequired: newVerionData.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
+        ...(newCommits.length ? {
+            commitId: newCommits[newCommits.length - 1].sha,
+            commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
+            versionData: newVersionData,
+            updateRequired: newVersionData.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
+        } : {}),
+        ...(newFECommits.length ? {
+            feCommitId: newFECommits[newFECommits.length - 1].sha,
+            feCommitDate: new Date(newFECommits[newFECommits.length - 1].commit.committer.date)
+        } : {}),
         lastUpdateCheck: new Date()
-    };
+    }
 
-    if(global.versionInfo.commitId !== global.newVersionInfo.commitId
+    if((global.versionInfo.commitId !== global.newVersionInfo.commitId
+            || global.versionInfo.feCommitId !== global.newVersionInfo.feCommitId)
         && (global.newVersionInfo.updateRequired || config.auto_update)) {
         console.log('auto updating...');
         global.updateEngine();
@@ -188,30 +255,47 @@ if(config.check_update !== false) {
 }
 
 global.updateEngine = (exit = true) => {
-    try {
-        const packageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./package.json')).digest('hex');
-        const oldPackageHash = packageHash();
+    (async () => {
+        try {
+            const packageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./package.json')).digest('hex');
+            const fePackageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./frontend/package.json')).digest('hex');
+            const oldPackageHash = packageHash();
+            const oldFEPackageHash = fePackageHash();
 
-        exec('git pull --recurse-submodules', (err, stdout, stderr) => {
-            if(err) console.error(err);
-            if(stdout) console.log(stdout);
-            if(stderr) console.error(stderr);
+            const doEngine = global.versionInfo.commitId !== global.newVersionInfo.commitId;
+            const doFE = global.versionInfo.feCommitId !== global.newVersionInfo.commitId;
+
+            const results = await Promise.all([
+                ...(doEngine ? [execPromise('git pull')] : []),
+                ...(doFE ? [execPromise('git pull', { cwd: './frontend' })] : [])
+            ]);
+            for(let result of results) {
+                console.log(result.stdout);
+                console.error(result.stderr);
+            }
 
             const newPackageHash = packageHash();
+            const newFEPackageHash = fePackageHash();
             const packageUpdated = oldPackageHash !== newPackageHash;
+            const fePackageUpdated = oldFEPackageHash !== newFEPackageHash;
             if(exit) {
                 const onFinish = () => {
-                    process.exit(0);
+                    if(doEngine) process.exit(0);
+                    else updateFEVersionInfo();
                 }
                 if(packageUpdated) {
                     console.log('package.json updated, updating packages...');
                     exec('npm i', onFinish);
                 }
+                else if(fePackageUpdated) {
+                    console.log('Frontend package.json updated, updating packages...');
+                    exec('npm i', { cwd: './frontend' }, onFinish);
+                }
                 else onFinish();
             }
             else global.skinCommitId = {};
-        });
-    } catch(e) {}
+        } catch(e) {}
+    })()
 }
 
 global.plugins = {
@@ -403,15 +487,26 @@ app.use(express.static(`./public`));
 
 const skinsStatic = express.static('./skins');
 app.use('/skins', (req, res, next) => {
-    const filename = req.path.split('/').pop();
+    const splittedPath = req.path.split('/');
+    const skinName = splittedPath[1];
+    const filename = splittedPath.pop();
 
-    const blacklist = ['ejs', 'vue'];
-    if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) next();
+    const skinInfo = global.skinInfos[skinName];
+    if(skinInfo) {
+        if(filename.endsWith('.html')) return next();
 
-    if(config.minify.js && filename.endsWith('.js')) return minifyManager.handleSkinJS(filename, req, res, next);
-    if(config.minify.css && filename.endsWith('.css')) return minifyManager.handleSkinCSS(filename, req, res, next);
+        req.url = req.url.slice(skinName.length + 2);
+        express.static(`./skins/${skinName}/client`)(req, res, next);
+    }
+    else {
+        const blacklist = ['ejs', 'vue'];
+        if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) return next();
 
-    skinsStatic(req, res, next);
+        if(config.minify.js && filename.endsWith('.js')) return minifyManager.handleSkinJS(filename, req, res, next);
+        if(config.minify.css && filename.endsWith('.css')) return minifyManager.handleSkinCSS(filename, req, res, next);
+
+        skinsStatic(req, res, next);
+    }
 });
 
 app.use('/plugins/:pluginName', (req, res, next) => {
@@ -628,8 +723,93 @@ app.use(async (req, res, next) => {
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
     if(!global.skins.includes(skin)) skin = global.skins[0];
+    const skinInfo = global.skinInfos[skin];
+
+    req.isInternal = req.url.split('/')[1] === 'internal';
+    req.backendMode = skinInfo || req.isInternal;
 
     res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
+
+    const sessionMenus = [];
+    for(let [key, value] of Object.entries(permissionMenus)) {
+        if(req.permissions.includes(key)) {
+            sessionMenus.push(...value);
+        }
+    }
+
+    const session = {
+        menus: sessionMenus,
+        account: {
+            name: req.user?.name ?? req.ip,
+            uuid: req.user?.uuid,
+            type: req.user?.type ?? UserTypes.IP
+        },
+        gravatar_url: req.user?.avatar,
+        user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
+        quick_block: req.permissions.includes('admin'),
+        ...(req.permissions.includes('no_force_captcha') ? {
+            disable_captcha: true
+        } : {})
+    }
+
+    const configJSON = {
+        ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => debug || !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
+        ...(config.captcha.enabled ? {
+            captcha: {
+                type: config.captcha.type,
+                site_key: config.captcha.site_key
+            }
+        } : {})
+    }
+
+    if(skinInfo || req.backendMode) {
+        const configMapper = {
+            site_name: 'wiki.site_name',
+            logo_url: 'wiki.logo_url',
+            front_page: 'wiki.front_page',
+            editagree_text: 'wiki.editagree_text',
+            copyright_text: 'wiki.copyright_text',
+            base_url: 'wiki.canonical_url',
+            sitenotice: 'wiki.sitenotice'
+        }
+        for(let [key, value] of Object.entries(configMapper)) {
+            const configVal = configJSON[key] ?? config[key];
+            delete configJSON[key];
+            if(!configVal) continue;
+            configJSON[value] = configVal;
+        }
+    }
+
+    const configJSONstr = JSON.stringify(configJSON);
+    const sessionJSONstr = JSON.stringify(session);
+
+    const isBackendMode = req.isInternal || (debug && req.query.be);
+    const getFEBasicData = () => {
+        const userClientVersion = req.get('X-Chika');
+        const clientVersion = skinInfo?.versionHeader;
+
+        if(isBackendMode && userClientVersion !== clientVersion && ((!debug && !config.testwiki) || userClientVersion !== 'bypass')) {
+            res.originalStatus(400).end();
+            return;
+        }
+
+        const userConfigHash = req.get('X-You');
+        const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
+
+        const userSessionHash = req.get('X-Riko');
+        const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
+
+        return {
+            ...(userConfigHash !== configHash ? {
+                configHash,
+                config: configJSON
+            } : {}),
+            ...(userSessionHash !== sessionHash ? {
+                sessionHash,
+                session
+            } : {})
+        }
+    }
 
     res.renderSkin = (...args) => renderSkin(...args).then();
 
@@ -649,7 +829,7 @@ app.use(async (req, res, next) => {
         }
 
         const page = {
-            title,
+            title: data.document ? globalUtils.doc_fulltitle(data.document) : title,
             viewName: viewName ?? '',
             menus: [],
             data: utils.withoutKeys(data, [
@@ -668,41 +848,11 @@ app.use(async (req, res, next) => {
             }
         }
 
-        const sessionMenus = [];
-        for(let [key, value] of Object.entries(permissionMenus)) {
-            if(req.permissions.includes(key)) {
-                sessionMenus.push(...value);
-            }
-        }
-
-        const session = {
-            menus: sessionMenus,
-            account: {
-                name: req.user?.name ?? req.ip,
-                uuid: req.user?.uuid,
-                type: req.user?.type ?? UserTypes.IP
-            },
-            gravatar_url: req.user?.avatar,
-            user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
-            quick_block: req.permissions.includes('admin'),
-            ...(req.permissions.includes('no_force_captcha') ? {
-                disable_captcha: true
-            } : {})
-        }
-
         const browserGlobalVarScript = `
 <script id="initScript" nonce="${res.locals.cspNonce}">
-window.CONFIG = ${JSON.stringify({
-            ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
-            ...(config.captcha.enabled ? {
-                captcha: {
-                    type: config.captcha.type,
-                    site_key: config.captcha.site_key
-                }
-            } : {})
-        })}
+window.CONFIG = ${configJSONstr}
 window.page = ${JSON.stringify(page)}
-window.session = ${JSON.stringify(session)}
+window.session = ${sessionJSONstr}
 
 document.getElementById('initScript')?.remove();
         `.trim().replaceAll('/', '\\/') + '\n</script>';
@@ -727,7 +877,7 @@ document.getElementById('initScript')?.remove();
             data.contentHtml = `
 <div class="thetree-alert thetree-alert-danger">
 <div class="thetree-alert-content">
-<b>[주의!]</b> 문서의 이전 버전(${globalUtils.getFullDateTag(data.serverData.rev.createdAt)}에 수정)을 보고 있습니다. <a href="${globalUtils.doc_action_link(data.document, 'w')}">최신 버전으로 이동</a>
+<b>[주의!]</b> 문서의 이전 버전(${globalUtils.getFullDateTag(data.date)}에 수정)을 보고 있습니다. <a href="${globalUtils.doc_action_link(data.document, 'w')}">최신 버전으로 이동</a>
 </div>
 </div>
         `.replaceAll('\n', '').trim() + data.contentHtml;
@@ -745,7 +895,46 @@ document.getElementById('initScript')?.remove();
         }
 
         const isAdmin = req.permissions.includes('admin');
-        app.render('main', {
+        if(isBackendMode || skinInfo) {
+            const basicData = getFEBasicData();
+            if(!basicData) return;
+
+            const resData = {
+                page: {
+                    contentName: data.contentName || null,
+                    contentHtml: data.contentHtml || null,
+                    ...utils.onlyKeys(page, [
+                        'title',
+                        'viewName',
+                        'menus'
+                    ])
+                },
+                data: {
+                    publicData: page.data,
+                    ...(data.serverData ?? {}),
+                    ...pluginData
+                },
+                ...basicData
+            }
+
+            if(isBackendMode) res.json(resData);
+            else {
+                const render = require(`./skins/${skin}/server/server.cjs`).render;
+                const rendered = await render(req.originalUrl, resData);
+                let body = rendered.html;
+                if(rendered.state) {
+                    body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
+                }
+                const html = skinInfo.template
+                    .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
+                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '')
+                    .replace('<!--app-body-->', body);
+
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                res.send(html);
+            }
+        }
+        else app.render('main', {
             ...data,
             ...(data.serverData ?? {}),
             ...pluginData,
@@ -758,7 +947,7 @@ document.getElementById('initScript')?.remove();
                 ...data,
                 isAdmin
             }),
-            addHistoryData: (rev, document) => utils.addHistoryData(rev, isAdmin, document)
+            addHistoryData: (rev, document) => utils.addHistoryData(req, rev, isAdmin, document, req.backendMode)
         }, async (err, html) => {
             if(err) {
                 console.error(err);
@@ -796,9 +985,16 @@ document.getElementById('initScript')?.remove();
     });
 
     res.reload = anchor => {
-        const url = new URL(req.get('Referrer') || config.base_url);
-        if(anchor) url.searchParams.set('anchor', anchor);
-        res.redirect(url.pathname + url.search);
+        if(req.backendMode) {
+            res.json({
+                action: 'reloadView'
+            });
+        }
+        else {
+            const url = new URL(req.get('Referrer') || config.base_url);
+            if(anchor) url.searchParams.set('anchor', anchor);
+            res.redirect(url.pathname + url.search);
+        }
     }
 
     res.originalRedirect = res.redirect;
@@ -806,14 +1002,67 @@ document.getElementById('initScript')?.remove();
         const target = args.pop();
         const url = new URL(target, 'http://' + req.hostname);
         if(req.query.f) url.searchParams.set('f', req.query.f);
-        res.originalRedirect(...args, url.pathname + url.search);
+
+        const finalUrl = url.pathname + url.search;
+        if(req.isInternal) res.json({
+            code: 302,
+            url: finalUrl
+        });
+        else res.originalRedirect(...args, finalUrl);
+    }
+
+    if(req.isInternal) {
+        res.originalStatus = res.status;
+        res.status = code => ({
+            end: data => res.json({
+                code,
+                data
+            }),
+            send: data => res.json({
+                code,
+                data
+            }),
+            json: data => res.json({
+                code,
+                data
+            })
+        })
+
+        res.originalSend = res.send;
+        res.json = data => {
+            const basicData = getFEBasicData();
+            if(!basicData) return;
+
+            return res.originalSend(Buffer.from(msgpack.encode({
+                ...basicData,
+                ...JSON.parse(JSON.stringify(data))
+            })));
+        }
+        res.send = data => res.json({ data });
+
+        res.partial = data => {
+            let publicData;
+            if(data.publicData) {
+                publicData = data.publicData;
+                delete data.publicData;
+            }
+
+            res.json({
+                partialData: {
+                    publicData,
+                    viewData: data
+                }
+            });
+        }
     }
 
     const url = req.url;
     if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) for(let item of global.disabledFeatures) {
         if(item.method !== 'ALL' && item.method !== req.method) continue;
 
-        if(item.type === 'string' && !req.url.startsWith(item.condition)) continue;
+        let checkUrl = url;
+        if(checkUrl.startsWith('/internal/')) checkUrl = checkUrl.replace('/internal', '');
+        if(item.type === 'string' && !checkUrl.startsWith(item.condition)) continue;
         if(item.type === 'js' && !eval(item.condition)) continue;
 
         const msg = (item.message || '비활성화된 기능입니다.')
@@ -844,6 +1093,7 @@ document.getElementById('initScript')?.remove();
 for(let f of fs.readdirSync('./routes')) {
     const route = require(`./routes/${f}`);
     app.use(route.router ?? route);
+    app.use('/internal', route.router ?? route);
 }
 
 app.use((req, res, next) => {

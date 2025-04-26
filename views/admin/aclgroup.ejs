@@ -8,9 +8,6 @@
 const hideLogPerm = req.permissions.includes('aclgroup_hidelog');
 const aclgroupPerm = req.permissions.includes('aclgroup');
 const configPerm = req.permissions.includes('config');
-
-const addable = selectedGroup?.addPerms.length ? selectedGroup?.addPerms.some(a => req.permissions.includes(a)) : aclgroupPerm;
-const removable = selectedGroup?.removePerms.length ? selectedGroup?.removePerms.some(a => req.permissions.includes(a)) : aclgroupPerm;
 %>
 
 <form id="aclgroup-remove-form" method="post" action="aclgroup/group_remove">
@@ -24,7 +21,7 @@ const removable = selectedGroup?.removePerms.length ? selectedGroup?.removePerms
         <li>
             <a href="/aclgroup?group=<%=group.name%>"<%-selectedGroup.uuid === group.uuid ? ' class="selected-group"' : ''%>>
                 <%=group.name%>
-                <%if(group.deleteGroupPerms.length ? group.deleteGroupPerms.some(a => req.permissions.includes(a)) : aclgroupPerm) {%>
+                <%if(group.deletable) {%>
                     <button class="delete-aclgroup" data-name="<%=group.name%>" data-uuid="<%=group.uuid%>">×</button>
                 <%}%>
             </a>
@@ -177,8 +174,8 @@ const aclGroupLink = (query) => {
     return str;
 }
 const navigationPage = include('../components/pageButton', {
-    prevLink: prevItem ? aclGroupLink({ until: prevItem.id }) : null,
-    nextLink: nextItem ? aclGroupLink({ from: nextItem.id }) : null
+    prevLink: prevItem ? aclGroupLink({ until: prevItem }) : null,
+    nextLink: nextItem ? aclGroupLink({ from: nextItem }) : null
 });
 %>
 

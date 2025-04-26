@@ -45,12 +45,16 @@ module.exports = class ACL {
             if(rule.conditionType === ACLConditionTypes.User) {
                 rule.user = await models.User.findOne({
                     uuid: rule.conditionContent
-                }).lean();
+                })
+                    .select('type uuid name -_id')
+                    .lean();
             }
             else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
                 rule.aclGroup = await models.ACLGroup.findOne({
                     uuid: rule.conditionContent
-                });
+                })
+                    .select('uuid name aclMessage isWarn -_id')
+                    .lean();
             }
 
             if(rule.actionType === ACLActionTypes.GotoOtherNS && !noOtherNS) {
@@ -151,7 +155,7 @@ module.exports = class ACL {
             return `${ACL.permissionToString(rule.conditionContent, !formatPerm)}`
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
-            return `user:${rule.user.name}`
+            return `user:${rule.user?.name ?? rule.conditionContent}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
             return `aclgroup:${rule.aclGroup?.name ?? rule.conditionContent}`

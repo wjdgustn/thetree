@@ -45,8 +45,10 @@ app.get('/aclgroup', async (req, res) => {
             aclGroup: selectedGroup.uuid
         };
 
-        if(!isNaN(req.query.until)) query.id = { $gte: parseInt(req.query.until) };
-        else if(!isNaN(req.query.from)) query.id = { $lte: parseInt(req.query.from) };
+        const until = parseInt(req.query.until);
+        const from = parseInt(req.query.from);
+        if(!isNaN(until)) query.id = { $gte: until };
+        else if(!isNaN(from)) query.id = { $lte: from };
 
         groupItems = await ACLGroupItem.find(query)
             .sort({ id: query.id?.$gte ? 1 : -1 })
@@ -68,17 +70,50 @@ app.get('/aclgroup', async (req, res) => {
             id: { $lt: groupItems[groupItems.length - 1].id }
         }).sort({ id: -1 });
 
-        groupItems = await utils.findUsers(groupItems);
+        groupItems = await utils.findUsers(req, groupItems);
     }
 
     res.renderSkin('ACLGroup', {
         contentName: 'admin/aclgroup',
         serverData: {
-            aclGroups,
-            selectedGroup,
-            groupItems,
-            prevItem,
-            nextItem
+            aclGroups: aclGroups.map(a => ({
+                ...utils.onlyKeys(a, [
+                    'uuid',
+                    'name'
+                ]),
+                deletable: a.deleteGroupPerms.length
+                    ? a.deleteGroupPerms.some(b => req.permissions.includes(b))
+                    : req.permissions.includes('aclgroup')
+            })),
+            selectedGroup: req.permissions.includes('config') ? utils.withoutKeys(selectedGroup, [
+                '_id',
+                '__v'
+            ]) : utils.onlyKeys(selectedGroup, [
+                'uuid',
+                'name'
+            ]),
+            addable: selectedGroup?.addPerms.length
+                ? selectedGroup.addPerms.some(a => req.permissions.includes(a))
+                : req.permissions.includes('aclgroup'),
+            removable: selectedGroup?.removePerms.length
+                ? selectedGroup.removePerms.some(a => req.permissions.includes(a))
+                : req.permissions.includes('aclgroup'),
+            permissions: {
+                aclgroup: req.permissions.includes('aclgroup'),
+                hidelog: req.permissions.includes('aclgroup_hidelog'),
+                config: req.permissions.includes('config')
+            },
+            groupItems: utils.onlyKeys(groupItems, [
+                'id',
+                'uuid',
+                'user',
+                'ip',
+                'note',
+                'createdAt',
+                'expiresAt'
+            ]),
+            prevItem: prevItem?.id,
+            nextItem: nextItem?.id
         }
     });
 });
@@ -126,7 +161,8 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
 
     await ACLGroup.create(newGroup);
 
-    res.redirect(`/aclgroup?group=${encodeURIComponent(name)}`);
+    if(req.backendMode) res.reload();
+    else res.redirect(`/aclgroup?group=${encodeURIComponent(name)}`);
 });
 
 app.post('/aclgroup/group_remove', async (req, res) => {
@@ -140,7 +176,8 @@ app.post('/aclgroup/group_remove', async (req, res) => {
 
     await ACLGroup.deleteOne({ uuid });
 
-    res.redirect('/aclgroup');
+    if(req.backendMode) res.reload();
+    else res.redirect('/aclgroup');
 });
 
 app.post('/aclgroup',
@@ -253,7 +290,10 @@ app.post('/aclgroup',
         hideLog: req.body.hidelog === 'Y'
     });
 
-    if(req.referer?.pathname.startsWith('/aclgroup')) res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    if(req.referer?.pathname.startsWith('/aclgroup')) {
+        if(req.backendMode) res.reload();
+        else res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    }
     else res.status(204).end();
 });
 
@@ -314,7 +354,8 @@ app.post('/aclgroup/remove',
         hideLog: req.body.hidelog === 'Y'
     });
 
-    res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
+    if(req.backendMode) res.reload();
+    else res.redirect(`/aclgroup?group=${encodeURIComponent(group.name)}`);
 });
 
 app.post('/aclgroup/group_edit', middleware.permission('config'),

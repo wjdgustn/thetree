@@ -112,8 +112,11 @@ module.exports = {
         });
         // console.timeEnd('문단 텍스트 처리비');
         namumark.headings.push({
+            level,
             num: paragraphNumText,
-            text: sanitizedHtml
+            text: sanitizedHtml,
+            title: `${paragraphNumText}. ${text}`,
+            anchor: `s-${paragraphNumText}`
         });
 
         const editSection = namumark.thread ? '' : `

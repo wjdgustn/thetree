@@ -36,7 +36,8 @@ const threadCommentMapper = ({
     user,
     hideUser
 } = {}) => async comment => {
-    comment.userHtml = utils.userHtml(user ?? comment.user, {
+    comment.user = user ?? comment.user;
+    if(!req?.backendMode) comment.userHtml = utils.userHtml(user ?? comment.user, {
         isAdmin: req?.permissions.includes('admin'),
         note: `토론 ${thread.url} #${comment.id} 긴급차단`,
         thread: true,
@@ -46,7 +47,8 @@ const threadCommentMapper = ({
     const canSeeHidden = req?.permissions.includes('hide_thread_comment');
     if(comment.hidden) {
         hideUser ??= comment.hiddenBy;
-        comment.hideUserHtml = utils.userHtml(hideUser, {
+        comment.hideUser = hideUser;
+        if(!req?.backendMode) comment.hideUserHtml = utils.userHtml(hideUser, {
             isAdmin: hideUser.permissions?.includes('admin'),
             thread: true,
             threadAdmin: true
@@ -69,8 +71,8 @@ const threadCommentMapper = ({
         }
     }
 
-    if(typeof comment.user === 'object')
-        comment.user = comment.user.uuid;
+    // if(typeof comment.user === 'object')
+    //     comment.user = comment.user.uuid;
 
     return utils.onlyKeys(comment, [
         'id',
@@ -79,9 +81,13 @@ const threadCommentMapper = ({
         'type',
         'createdAt',
         'user',
-        'userHtml',
-        'hideUserHtml',
-        'contentHtml'
+        'contentHtml',
+
+        'hideUser',
+        ...(!req || !req.backendMode ? [
+            'userHtml',
+            'hideUserHtml'
+        ] : [])
     ]);
 }
 
@@ -96,24 +102,25 @@ const threadCommentEvent = async ({
         document,
         dbComment,
         thread: true,
-        commentId: dbComment.id
+        commentId: dbComment.id,
+        req
     });
 
-    let commentUser = req.user;
-    if(dbComment.user !== req.user.uuid) {
-        commentUser = await User.findOne({
-            uuid: dbComment.user
-        }).lean();
-    }
+    const commentUser = await User.findOne({
+        uuid: dbComment.user
+    });
+    hideUser &&= await User.findOne({
+        uuid: hideUser.uuid
+    });
 
     const comment = await threadCommentMapper({
         thread,
         parser,
         user: {
-            ...commentUser,
+            ...commentUser.publicUser,
             userCSS: await utils.getUserCSS(commentUser)
         },
-        hideUser
+        hideUser: hideUser?.publicUser
     })(dbComment.toJSON());
 
     SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);
@@ -167,6 +174,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('url topic -_id')
             .lean();
         return res.renderSkin(undefined, {
             viewName: 'thread_list_close',
@@ -191,6 +199,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('url -_id')
             .lean();
         return res.renderSkin(undefined, {
             viewName: 'edit_request_close',
@@ -215,6 +224,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('uuid url topic -_id')
             .lean();
 
         openEditRequests = await EditRequest.find({
@@ -224,6 +234,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             .sort({
                 lastUpdatedAt: -1
             })
+            .select('url -_id')
             .lean();
     }
 
@@ -246,8 +257,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
             comments.unshift(firstComment);
         }
 
-        comments = await utils.findUsers(comments);
-        comments = await utils.findUsers(comments, 'hiddenBy');
+        comments = await utils.findUsers(req, comments);
+        comments = await utils.findUsers(req, comments, 'hiddenBy');
 
         comments = await Promise.all(comments.map(c => threadCommentMapper({
             req,
@@ -258,7 +269,8 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
                 aclData: req.aclData,
                 dbComment: c,
                 thread: true,
-                commentId: c.id
+                commentId: c.id,
+                req
             })
         })(c)));
 
@@ -271,7 +283,10 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
         document,
         serverData: {
             openThreads,
-            openEditRequests
+            openEditRequests,
+            permissions: {
+                delete: req.permissions.includes('delete_thread')
+            }
         }
     });
 });
@@ -382,6 +397,13 @@ app.get('/thread/:url', async (req, res) => {
             createdUser: thread.createdUser,
             status: thread.status
         },
+        permissions: {
+            delete: req.permissions.includes('delete_thread'),
+            status: req.permissions.includes('update_thread_status'),
+            document: req.permissions.includes('update_thread_document'),
+            topic: req.permissions.includes('update_thread_topic'),
+            hide: req.permissions.includes('hide_thread_comment')
+        },
         hideHiddenComments: true
         // hideHiddenComments: !req.permissions.includes('hide_thread_comment')
     });
@@ -414,8 +436,8 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
         })
         .limit(COMMENT_LOAD_AMOUNT)
         .lean();
-    comments = await utils.findUsers(comments);
-    comments = await utils.findUsers(comments, 'hiddenBy');
+    comments = await utils.findUsers(req, comments);
+    comments = await utils.findUsers(req, comments, 'hiddenBy');
 
     comments = await Promise.all(comments.map(c => threadCommentMapper({
         req,
@@ -426,7 +448,8 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
             aclData: req.aclData,
             dbComment: c,
             thread: true,
-            commentId: c.id
+            commentId: c.id,
+            req
         })
     })(c)));
 
@@ -773,7 +796,7 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_co
     res.status(204).end();
 });
 
-app.get('/admin/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) => {
+app.get('/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false

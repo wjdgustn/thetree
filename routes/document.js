@@ -127,9 +127,10 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         })
             .sort({ rev: -1 })
             .limit(3)
+            .select('type rev uuid user createdAt diffLength log revertRev troll trollBy hideLog hideLogBy hidden editRequest -_id')
             .lean();
 
-        revs = await utils.findUsers(revs);
+        revs = await utils.findUsers(req, revs);
 
         return res.renderSkin(undefined, {
             ...defaultData,
@@ -138,7 +139,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             status: 404,
             serverData: {
                 document,
-                revs
+                revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode))
             }
         });
     }
@@ -164,6 +165,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     let user;
+    let userBlockedData = null;
+    let userIsAdmin = false;
     if(namespace === '사용자' && !title.includes('/')) {
         user = await User.findOne({
             name: title
@@ -195,7 +198,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         contentHtml
     });
     let categoryHtml;
-    try {
+    if(!req.backendMode) try {
         categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !rev.content?.startsWith('#redirect '));
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
@@ -222,7 +225,14 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             user: user.uuid
         });
 
-        if(blockedItem) contentHtml = `
+        if(blockedItem) {
+            if(req.backendMode) userBlockedData = {
+                id: blockedItem.id,
+                createdAt: blockedItem.createdAt,
+                expiresAt: blockedItem.expiresAt,
+                note: blockedItem.note
+            }
+            else contentHtml = `
 <div class="special-box blocked-box">
 <span>이 사용자는 차단된 사용자입니다. (#${blockedItem.id})</span>
 <br><br>
@@ -231,14 +241,19 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 차단 사유: ${blockedItem.note ?? '없음'}
 </div>
         `.replaceAll('\n', '').trim() + contentHtml;
+        }
 
-        if(user.permissions.includes('admin')) contentHtml = `
+        if(user.permissions.includes('admin')) {
+            if(req.backendMode) userIsAdmin = true;
+            else contentHtml = `
 <div class="special-box admin-box">
 <span>이 사용자는 특수 권한을 가지고 있습니다.</span>
 </div>
         `.replaceAll('\n', '').trim() + contentHtml;
+        }
     }
 
+    const categoriesData = {};
     if(namespace === '분류') {
         const allNamespaces = [
             '분류',
@@ -311,7 +326,12 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 document.category = document.categories.find(a => a.document === title);
 
                 const arr = categoriesPerChar[char] ??= [];
-                arr.push(document);
+                arr.push({
+                    parsedName: document.parsedName,
+                    category: {
+                        text: document.category.text
+                    }
+                });
             }
 
             categoryInfos[namespace] = {
@@ -321,9 +341,15 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 prevItem,
                 nextItem
             };
+            categoriesData[namespace] = {
+                categoriesPerChar,
+                count,
+                prevItem: prevItem?.title,
+                nextItem: nextItem?.title
+            }
         }
 
-        contentHtml += await utils.renderCategoryDocument({
+        if(!req.backendMode) contentHtml += await utils.renderCategoryDocument({
             document,
             categoryInfos
         });
@@ -341,12 +367,29 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     res.renderSkin(undefined, {
         ...defaultData,
         headings,
+        ...(req.backendMode ? {
+            contentName: 'wiki'
+        } : {}),
         serverData: {
-            rev,
-            tocContentHtml
+            tocContentHtml,
+            ...(req.backendMode ? {
+                categories: categories.map(a => ({
+                    ...a,
+                    text: undefined,
+                    document: utils.parseDocumentName(a.document)
+                })),
+                contentHtml,
+                userboxData: {
+                    admin: userIsAdmin,
+                    blocked: userBlockedData
+                },
+                categoriesData
+            } : {})
         },
-        contentHtml,
-        categoryHtml,
+        ...(req.backendMode ? {} : {
+            contentHtml,
+            categoryHtml
+        }),
         date: rev.createdAt.getTime(),
         star_count,
         starred: !!starred
@@ -370,12 +413,28 @@ app.get('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     // const { result: editableNSACL } = await namespaceACL.check(ACLTypes.ACL, req.aclData);
     const editableNSACL = req.permissions.includes('nsacl');
 
+    const aclMapper = a => utils.onlyKeys(a.aclTypes, [
+        'uuid', 'type', 'expiresAt', 'conditionType', 'conditionContent', 'user', 'aclGroup', 'actionType', 'actionContent'
+    ]);
+
+    let aclData = aclMapper(acl);
+    let nsaclData = aclMapper(namespaceACL);
+    if(req.backendMode) {
+        const strMapper = a => ({
+            ...utils.onlyKeys(a, ['uuid', 'expiresAt']),
+            condition: ACL.ruleToConditionString(a, false),
+            action: ACL.actionToString(a)
+        });
+        aclData = aclData.map(a => a.map(b => strMapper(b)));
+        nsaclData = nsaclData.map(a => a.map(b => strMapper(b)));
+    }
+
     res.renderSkin(undefined, {
         viewName: 'acl',
         document,
         serverData: {
-            acl,
-            namespaceACL,
+            acl: aclData,
+            namespaceACL: nsaclData,
             editableACL,
             editableNSACL
         },
@@ -431,7 +490,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(conditionType === ACLConditionTypes.Perm) {
         let value = req.body.permission;
-        if(!req.body.permission
+        if(!value
             && !req.permissions.includes('developer')) return res.status(400).send('권한 값을 입력해주세요!');
         value ||= 'any';
         conditionContent = value;
@@ -612,7 +671,13 @@ app.get('/action/acl/delete', async (req, res) => {
 });
 
 app.patch('/action/acl/reorder', async (req, res) => {
-    const uuids = JSON.parse(req.body.acls);
+    let uuids;
+    try {
+        uuids = JSON.parse(req.body.acls);
+    }
+    catch (e) {
+        return res.status(400).send('invalid_uuids');
+    }
 
     const acls = await ACLModel.find({
         uuid: {
@@ -652,7 +717,8 @@ app.patch('/action/acl/reorder', async (req, res) => {
 
     if(actions.length) await ACLModel.bulkWrite(actions);
 
-    res.redirect(303, req.get('Referer'));
+    if(req.backendMode) res.status(204).end();
+    else res.redirect(303, req.get('Referer'));
 });
 
 const editAndEditRequest = async (req, res) => {
@@ -733,7 +799,8 @@ const editAndEditRequest = async (req, res) => {
     if(rev?.content) {
         const parser = new NamumarkParser({
             document,
-            aclData: req.aclData
+            aclData: req.aclData,
+            req
         });
         const { html } = await parser.parseEditorComment(rev.content);
         contentHtml = html;
@@ -757,7 +824,9 @@ const editAndEditRequest = async (req, res) => {
             content,
             contentHtml,
             useCaptcha,
-            editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text
+            editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text,
+            conflict: req.flash.conflict,
+            editagreeAgreed: req.session.editagreeAgreed
         }
     });
 }
@@ -837,12 +906,13 @@ app.post('/edit_request/:url/reopen', async (req, res) => {
     const { result: editable, aclMessage } = await acl.check(ACLTypes.EditRequest, req.aclData);
     if(!editable) return res.error(aclMessage, 403);
 
-    if(editRequest.createdUser === req.user.uuid) {
+    const statusPerm = req.permissions.includes('update_thread_status');
+    if(editRequest.createdUser === req.user.uuid && !statusPerm) {
         if(editRequest.status === EditRequestStatusTypes.Locked)
             return res.error('이 편집 요청은 잠겨있어서 다시 열 수 없습니다.', 403);
     }
     else {
-        if(!req.permissions.includes('update_thread_status'))
+        if(!statusPerm)
             return res.status(403).send('권한이 부족합니다.');
     }
 
@@ -871,18 +941,19 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         document,
         dbDocument,
         aclData: req.aclData,
-        thread: isThread
+        thread: isThread,
+        req
     });
     let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml = '';
-    if(!isThread) try {
+    if(!isThread && !req.backendMode) try {
         categoryHtml = await utils.renderCategory(categories);
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
     }
 
     const isAdmin = req.permissions.includes('admin');
-    if(isThread) expressApp.render('components/commentPreview', {
+    if(isThread && !req.backendMode) expressApp.render('components/commentPreview', {
         comment: {
             id: 1,
             type: ThreadCommentTypes.Default,
@@ -899,7 +970,15 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         contentHtml = html;
     });
 
-    return res.send(categoryHtml + contentHtml);
+    if(req.backendMode) res.json({
+        contentHtml,
+        categories: categories.map(a => ({
+            ...a,
+            text: undefined,
+            document: utils.parseDocumentName(a.document)
+        }))
+    });
+    else res.send(categoryHtml + contentHtml);
 });
 
 const checkDoingManyEdits = async req => {
@@ -927,6 +1006,8 @@ const postEditAndEditRequest = async (req, res) => {
 
     if(req.body.agree !== 'Y') return res.status(400).send('수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+
+    req.session.editagreeAgreed = true;
 
     const section = parseInt(req.query.section);
 
@@ -986,6 +1067,8 @@ const postEditAndEditRequest = async (req, res) => {
     let content = req.body.text;
     let log = req.body.log;
 
+    if(content == null) return res.status(400).send('content가 올바르지 않습니다.');
+
     if(rev?.content != null && req.query.section && !editingEditRequest) {
         const newLines = [];
 
@@ -1021,11 +1104,27 @@ const postEditAndEditRequest = async (req, res) => {
         else {
             if(req.isAPI) return res.status(409).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
 
-            req.session.flash.conflict = {
+            const conflictData = {
                 editedRev: editedRev.rev,
                 diff: await utils.generateDiff(editedRev.content, req.body.text)
             }
-            return res.redirect(req.originalUrl);
+            if(req.backendMode) {
+                return res.partial({
+                    alert: '편집 도중에 다른 사용자가 먼저 편집을 했습니다.',
+                    conflict: conflictData,
+                    content: editedRev.content,
+                    publicData: {
+                        body: {
+                            baserev: rev.rev,
+                            baseuuid: rev.uuid
+                        }
+                    }
+                });
+            }
+            else {
+                req.session.flash.conflict = conflictData;
+                return res.redirect(req.originalUrl);
+            }
         }
     }
 
@@ -1118,7 +1217,8 @@ app.get('/edit_request/:url', async (req, res) => {
         if(latestRev?.content) {
             const parser = new NamumarkParser({
                 document,
-                aclData: req.aclData
+                aclData: req.aclData,
+                req
             });
             const { html } = await parser.parseEditorComment(latestRev.content);
             contentHtml = html;
@@ -1127,8 +1227,8 @@ app.get('/edit_request/:url', async (req, res) => {
         }
     }
 
-    editRequest = await utils.findUsers(editRequest, 'createdUser');
-    editRequest = await utils.findUsers(editRequest, 'lastUpdateUser');
+    editRequest = await utils.findUsers(req, editRequest, 'createdUser');
+    editRequest = await utils.findUsers(req, editRequest, 'lastUpdateUser');
 
     const userHtmlOptions = {
         isAdmin: req.permissions.includes('admin'),
@@ -1140,7 +1240,13 @@ app.get('/edit_request/:url', async (req, res) => {
 
     editRequest.acceptedRev &&= await History.findOne({
         uuid: editRequest.acceptedRev
-    });
+    }).select('rev uuid -_id');
+
+    const showContent = [
+        EditRequestStatusTypes.Open,
+        EditRequestStatusTypes.Closed
+    ].includes(editRequest.status)
+        || (editRequest.status === EditRequestStatusTypes.Locked && req.permissions.includes('update_thread_status'));
 
     res.renderSkin(undefined, {
         viewName: 'edit_request',
@@ -1148,12 +1254,28 @@ app.get('/edit_request/:url', async (req, res) => {
         document,
         serverData: {
             contentHtml,
-            editRequest,
-            baseRev,
-            diff: await utils.generateDiff(baseRev.content, editRequest.content),
+            editRequest: utils.onlyKeys(editRequest, [
+                'url',
+                'createdUser',
+                'lastUpdateUser',
+                'createdAt',
+                'lastUpdatedAt',
+                'diffLength',
+                'log',
+                'status',
+                'acceptedRev',
+                'closedReason',
+                ...(showContent ? ['content'] : [])
+            ]),
+            baseRev: utils.onlyKeys(baseRev, ['rev']),
+            diff: showContent ? (await utils.generateDiff(baseRev.content, editRequest.content)) : null,
+            showContent,
             conflict,
             editable,
-            selfCreated: editRequest.createdUser.uuid === req.user?.uuid
+            selfCreated: editRequest.createdUser.uuid === req.user?.uuid,
+            permissions: {
+                status: req.permissions.includes('update_thread_status')
+            }
         }
     });
 });
@@ -1242,33 +1364,41 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         revs = await History.find(query)
             .sort({ rev: query.rev?.$gte ? 1 : -1 })
             .limit(30)
+            .select('type rev uuid user createdAt diffLength log revertRev troll trollBy hideLog hideLogBy hidden editRequest -_id')
             .lean();
 
         if(query.rev?.$gte) revs.reverse();
 
         latestRev = await History.findOne({
             document: dbDocument.uuid
-        }).sort({ rev: -1 });
+        })
+            .sort({ rev: -1 })
+            .select('uuid -_id');
     }
 
     if(!dbDocument || !revs.length) return res.error('문서를 찾을 수 없습니다.');
 
-    revs = await utils.findUsers(revs);
-    revs = await utils.findUsers(revs, 'trollBy');
-    revs = await utils.findUsers(revs, 'hideLogBy');
+    revs = await utils.findUsers(req, revs);
+    revs = await utils.findUsers(req, revs, 'trollBy');
+    revs = await utils.findUsers(req, revs, 'hideLogBy');
 
     for(let rev of revs) {
         rev.editRequest &&= await EditRequest.findOne({
             uuid: rev.editRequest
-        });
+        }).select('url -_id');
     }
 
     res.renderSkin(undefined, {
         viewName: 'history',
         document,
         serverData: {
-            revs,
-            latestRev
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode)),
+            latestRev,
+            permissions: {
+                troll: req.permissions.includes('mark_troll_revision'),
+                log: req.permissions.includes('hide_document_history_log'),
+                hide: req.permissions.includes('hide_revision')
+            }
         },
         contentName: 'document/history'
     });
@@ -1345,6 +1475,22 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
     if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
+    let contentHtml;
+    const latestRev = await History.findOne({
+        document: dbDocument.uuid
+    })
+        .sort({ rev: -1 })
+        .lean();
+    const parser = new NamumarkParser({
+        document,
+        aclData: req.aclData,
+        req
+    });
+    if(latestRev.content) {
+        const { html } = await parser.parseEditorComment(latestRev.content);
+        if(html) contentHtml = html;
+    }
+
     const useCaptcha = await checkDoingManyEdits(req);
 
     res.renderSkin(undefined, {
@@ -1355,6 +1501,7 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: rev.uuid,
         serverData: {
             content: rev?.content ?? '',
+            contentHtml,
             useCaptcha
         }
     });
@@ -1424,7 +1571,6 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
-const CHANGE_AROUND_LINES = 3;
 app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
@@ -1463,11 +1609,9 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
 
-    let lineDiff, diffLines;
+    let diff;
     try {
-        const result = await utils.generateDiff(oldRev.content, rev.content, CHANGE_AROUND_LINES);
-        lineDiff = result.lineDiff;
-        diffLines = result.diffLines;
+        diff = await utils.generateDiff(oldRev.content, rev.content, !req.backendMode);
     } catch(e) {
         return res.status(500).send(e.message);
     }
@@ -1481,9 +1625,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
         olduuid: oldRev.uuid,
         uuid: rev.uuid,
         serverData: {
-            lineDiff,
-            diffLines,
-            changeAroundLines: CHANGE_AROUND_LINES
+            diff
         }
     });
 });
@@ -1516,8 +1658,29 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
-    let blame = await utils.findHistories(rev.blame, req.permissions.includes('admin'));
-    blame = await utils.findUsers(blame);
+    let blame = await utils.findHistories(req, rev.blame, req.permissions.includes('admin'));
+    blame = await utils.findUsers(req, blame, 'user', { getColor: true });
+
+    const lines = rev.content?.split('\n') ?? [];
+
+    const blameLines = [];
+    if(req.backendMode) {
+        let remainingCount = 0;
+        const blameCopy = blame.slice();
+        for(let i in lines) {
+            i = parseInt(i);
+            const obj = { content: lines[i] };
+
+            if(!remainingCount) {
+                const diff = blameCopy.shift();
+                remainingCount = diff.count;
+                obj.diff = diff;
+            }
+            remainingCount--;
+
+            blameLines.push(obj);
+        }
+    }
 
     res.renderSkin(undefined, {
         contentName: 'document/blame',
@@ -1526,8 +1689,13 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
         rev: rev.rev,
         uuid: rev.uuid,
         serverData: {
-            blame,
-            lines: rev.content?.split('\n') ?? []
+            ...(req.backendMode ? {
+                blameLines
+            } : {
+                document,
+                blame,
+                lines
+            })
         }
     });
 });
@@ -1605,6 +1773,7 @@ const getBacklinks = async (req, res) => {
                 }
             })
                 .sort({ upperTitle: -1 })
+                .select('title -_id')
                 .lean();
 
             nextItem = await Document.findOne({
@@ -1614,6 +1783,7 @@ const getBacklinks = async (req, res) => {
                 }
             })
                 .sort({ upperTitle: 1 })
+                .select('title -_id')
                 .lean();
         }
     }
@@ -1627,17 +1797,16 @@ const getBacklinks = async (req, res) => {
         document.flags = document.backlinks.find(a => a.docName === docName).flags;
 
         const arr = backlinksPerChar[char] ??= [];
-        arr.push(document);
+        arr.push(utils.onlyKeys(document, ['parsedName', 'flags']));
     }
 
     res.renderSkin(undefined, {
         contentName: 'document/backlink',
-        viewName: 'baclink',
+        viewName: 'backlink',
         document,
         serverData: {
             selectedNamespace,
             namespaceCounts,
-            backlinks,
             backlinksPerChar,
             prevItem,
             nextItem
@@ -1733,7 +1902,7 @@ app.get('/move/?*', middleware.parseDocumentName, async (req, res) => {
 app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
     if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
-    if(req.body.title.length > 255) return res.status(400).send('문서 이름이 올바르지 않습니다.');
+    if(!req.body.title || req.body.title.length > 255) return res.status(400).send('문서 이름이 올바르지 않습니다.');
 
     const document = req.document;
     const otherDocument = utils.parseDocumentName(req.body.title);

@@ -5,6 +5,7 @@ const Diff = require('diff');
 const { generateSlug } = require('random-word-slugs');
 const axios = require('axios');
 const querystring = require('querystring');
+const { colorFromUuid } = require('uuid-color');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./namumark/utils');
@@ -21,16 +22,22 @@ module.exports = {
         return Math.floor(Math.random() * (max - min)) + min;
     },
     onlyKeys(obj, keys = []) {
+        if(!obj) return obj;
+        if(Array.isArray(obj)) return obj.map(a => this.onlyKeys(a, keys));
+        obj = JSON.parse(JSON.stringify(obj));
         return Object.fromEntries(Object.entries(obj).filter(([k]) => keys.includes(k)));
     },
     withoutKeys(obj, keys = []) {
+        if(!obj) return obj;
+        if(Array.isArray(obj)) return obj.map(a => this.withoutKeys(a, keys));
+        obj = JSON.parse(JSON.stringify(obj));
         return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
     },
     getGravatar(email) {
         const hash = crypto.createHash('sha256').update(email).digest('hex');
         return `//secure.gravatar.com/avatar/${hash}?d=retro`;
     },
-    parseDocumentName(name) {
+    parseDocumentName(name, getNamespaceExists = false) {
         name = name.slice(0, 255);
         const originalName = name.trim();
         const splitedName = originalName.split(':');
@@ -57,16 +64,18 @@ module.exports = {
             namespace,
             title,
             forceShowNamespace,
-            namespaceExists
+            ...(getNamespaceExists ? {
+                namespaceExists
+            } : {})
             // anchor
         }
     },
     dbDocumentToDocument(dbDocument) {
         return this.parseDocumentName(`${dbDocument.namespace}:${dbDocument.title}`);
-    },
-    camelToSnakeCase(str) {
+    },camelToSnakeCase(str) {
         return str.replace(/(.)([A-Z][a-z]+)/, '$1_$2').replace(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase();
     },
+
     renderCategory: (categories = [], fromWiki = false) => new Promise((resolve, reject) => {
         expressApp.render('components/category', {
             categories,
@@ -163,7 +172,10 @@ module.exports = {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
         return aclGroup.userCSS;
     },
-    async findUsers(arr, key = 'user', noCSS = false) {
+    async findUsers(req, arr, key = 'user', options = {}) {
+        const noCSS = options.noCSS;
+        const getColor = options.getColor;
+
         let wasNotArr = false;
         if(!Array.isArray(arr)) {
             arr = [arr];
@@ -179,17 +191,21 @@ module.exports = {
                 }
 
                 const uuid = obj[key];
-                obj[key] = await models.User.findOne({
+                const dbUser = await models.User.findOne({
                     uuid
-                }).lean();
-                if(obj[key]) {
-                    if(!noCSS) obj[key].userCSS = await this.getUserCSS(obj[key]);
-                    cache[obj[key].uuid] = obj[key];
+                });
+                if(dbUser) {
+                    obj[key] = dbUser.publicUser;
+                    if(!noCSS) obj[key].userCSS = await this.getUserCSS(dbUser);
+                    cache[dbUser.uuid] = obj[key];
                 }
                 else obj[key] = {
                     type: UserTypes.Deleted,
-                    uuid
+                    ...(req.permissions.includes('admin') ? {
+                        uuid
+                    } : {})
                 }
+                if(getColor) obj[key].color = this.increaseBrightness(colorFromUuid(uuid), 60);
             }
         }
 
@@ -214,7 +230,7 @@ module.exports = {
         if(user.type !== UserTypes.Deleted || isAdmin) data.uuid = user.uuid;
         data.type = user.type;
         if(threadAdmin) data.threadadmin = '1';
-        if(['admin', 'developer'].some(a => user.permissions?.includes(a))) data.admin = '1';
+        if(user.admin || ['admin', 'developer'].some(a => user.permissions?.includes(a))) data.admin = '1';
 
         for(let [key, value] of Object.entries(data))
             dataset += ` data-${key}="${value}"`;
@@ -230,7 +246,7 @@ module.exports = {
                 : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
     },
-    addHistoryData(rev, isAdmin = false, document = null) {
+    addHistoryData(req, rev, isAdmin = false, document = null, backendMode = false) {
         document ??= rev.document;
 
         rev.infoText = null;
@@ -253,24 +269,33 @@ module.exports = {
             rev.htmlInfoText = `<b>${namumarkUtils.escapeHtml(rev.moveOldDoc)}</b>에서 <b>${namumarkUtils.escapeHtml(rev.moveNewDoc)}</b>로 문서 이동`;
         }
 
+        if(rev.troll || (rev.hideLog && !req.permissions.includes('hide_document_history_log')))
+            rev.log = null;
+
         if(rev.infoText) rev.htmlInfoText ??= namumarkUtils.escapeHtml(rev.infoText);
 
-        rev.userHtml = this.userHtml(rev.user, {
-            isAdmin,
-            note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
-        });
+        if(backendMode) {
+            rev.infoText = rev.htmlInfoText;
+            rev.htmlInfoText = undefined;
+        }
+        else {
+            rev.userHtml = this.userHtml(rev.user, {
+                isAdmin,
+                note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
+            });
 
-        const diffClassList = ['diff-text'];
+            const diffClassList = ['diff-text'];
 
-        if(rev.diffLength > 0) diffClassList.push('diff-add');
-        else if(rev.diffLength < 0) diffClassList.push('diff-remove');
+            if(rev.diffLength > 0) diffClassList.push('diff-add');
+            else if(rev.diffLength < 0) diffClassList.push('diff-remove');
 
-        rev.pureDiffHtml = `<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>`;
-        rev.diffHtml = `<span>(${rev.pureDiffHtml})</span>`;
+            rev.pureDiffHtml = `<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>`;
+            rev.diffHtml = `<span>(${rev.pureDiffHtml})</span>`;
+        }
 
         return rev;
     },
-    async findHistories(arr, isAdmin = false) {
+    async findHistories(req, arr, isAdmin = false) {
         const cache = {};
 
         for(let obj of arr) {
@@ -283,9 +308,11 @@ module.exports = {
 
                 obj.history = await models.History.findOne({
                     uuid: obj.uuid
-                }).lean();
+                })
+                    .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc -_id')
+                    .lean();
                 if(obj.history) {
-                    obj.history = this.addHistoryData(obj.history, isAdmin);
+                    obj.history = this.addHistoryData(req, obj.history, isAdmin, null, req.backendMode);
                     cache[obj.uuid] = obj.history;
                     obj.user = obj.history.user;
                 }
@@ -310,7 +337,7 @@ module.exports = {
             ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
             ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
     },
-    async findDocuments(arr) {
+    async findDocuments(arr, additionalKeys = []) {
         const cache = {};
 
         for(let obj of arr) {
@@ -326,7 +353,10 @@ module.exports = {
                     uuid: obj.document
                 }).lean();
                 if(obj.document) {
-                    obj.document.parsedName = this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`);
+                    obj.document = {
+                        parsedName: this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`),
+                        ...this.onlyKeys(obj.document, additionalKeys)
+                    }
                     cache[obj.document.uuid] = obj.document;
                 }
             }
@@ -389,7 +419,9 @@ module.exports = {
 
                 obj.thread = await models.Thread.findOne({
                     uuid: obj.thread
-                }).lean();
+                })
+                    .select('url topic document -_id')
+                    .lean();
                 if(obj.thread) {
                     cache[obj.thread.uuid] = obj.thread;
                 }
@@ -403,7 +435,7 @@ module.exports = {
 
         return arr;
     },
-    async generateDiff(oldText, newText, changeAroundLines = 3) {
+    async generateDiff(oldText, newText, getDiffData = false, changeAroundLines = 3) {
         oldText = oldText?.replaceAll('\r\n', '\n');
         newText = newText?.replaceAll('\r\n', '\n');
 
@@ -574,11 +606,23 @@ module.exports = {
             }
         }
 
-        return {
-            lineDiff,
+        const diffResult = {
+            // lineDiff,
+            lastDiffCount: lineDiff[lineDiff.length - 1].count,
             diffLines,
             changeAroundLines
         }
+
+        diffResult.diffHtml = await new Promise(async (resolve, reject) => {
+            expressApp.render('components/diffHtml', {
+                ...diffResult
+            }, (err, html) => {
+                if(err) reject(err);
+                resolve(html);
+            });
+        });
+
+        return getDiffData ? diffResult : { diffHtml: diffResult.diffHtml };
     },
     generateUrl() {
         return generateSlug(4, {
@@ -663,12 +707,20 @@ module.exports = {
                 [sortKey]: { [$gt]: items[0][sortKey] }
             })
                 .sort({ [sortKey]: -sortDirection })
+                .select([
+                    key,
+                    '-_id'
+                ])
                 .lean();
             nextItem = await model.findOne({
                 ...baseQuery,
                 [sortKey]: { [$lt]: items[items.length - 1][sortKey] }
             })
                 .sort({ [sortKey]: sortDirection })
+                .select([
+                    key,
+                    '-_id'
+                ])
                 .lean();
         }
 
@@ -677,6 +729,8 @@ module.exports = {
             ...query
         })}`;
         const originalPageButton = await new Promise(async (resolve, reject) => {
+            if(req.backendMode) return resolve(null);
+
             expressApp.render('components/pageButton', {
                 prevLink: prevItem ? link({
                     until: prevItem[key].toString()
@@ -694,8 +748,15 @@ module.exports = {
             items,
             prevItem,
             nextItem,
-            pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
-            originalPageButton,
+            ...(req.backendMode ? {
+                pageProps: {
+                    prev: prevItem ? { query: { until: prevItem[key] } } : null,
+                    next: nextItem ? { query: { from: nextItem[key] } } : null
+                }
+            } : {
+                pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
+                originalPageButton,
+            }),
             total
         }
     },

@@ -18,11 +18,7 @@
     <input type="hidden" name="uuid" value="<%=targetUser.uuid%>">
     <h3><%=targetUser.name%></h3>
 
-    <%
-        const grantPerms = config.grant_permissions.filter(a => AllPermissions.includes(a));
-        const configPerms = AllPermissions.filter(a => (req.permissions.includes('developer') || !ProtectedPermissions.includes(a)) && !grantPerms.includes(a));
-    %>
-    <%for(let perm of [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])]) {%>
+    <%for(let perm of grantablePermissions) {%>
         <p>
             <label for="perm_<%=perm%>"><%=perm%></label>
             <input type="checkbox" id="perm_<%=perm%>" name="<%=perm%>" value="Y"<%=targetUser.permissions.includes(perm) ? ' checked' : ''%>>

@@ -44,7 +44,11 @@ const app = express.Router();
 
 app.get('/member/signup', middleware.isLogout, (req, res) => {
     res.renderSkin('계정 만들기', {
-        contentName: 'member/signup'
+        contentName: 'member/signup',
+        serverData: {
+            terms: config.terms,
+            emailWhitelist: config.email_whitelist
+        }
     });
 });
 
@@ -397,7 +401,8 @@ app.post('/member/login',
             contentName: 'member/pin_verification',
             passkeyData,
             serverData: {
-                user,
+                email: user.email,
+                useTotp: !!user.totpToken,
                 autologin: req.body.autologin,
                 hasPasskey
             }
@@ -536,28 +541,31 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
         req.session.fullReload = true;
         delete req.session.contributor;
         res.clearCookie('honoka');
-        res.reload();
+        res.redirect(req.get('Referer') || '/');
     });
 });
 
 app.get('/member/mypage', middleware.isLogin, async (req, res) => {
     const passkeys = await Passkey.find({
         user: req.user.uuid
-    });
+    })
+        .select('name createdAt lastUsedAt -_id');
     res.renderSkin('내 정보', {
         contentName: 'member/mypage',
         serverData: {
-            passkeys
+            skins: global.skins,
+            passkeys,
+            user: utils.onlyKeys(req.user, ['name', 'email', 'skin']),
+            permissions: req.displayPermissions,
+            hasTotp: !!req.user.totpToken,
+            canWithdraw: config.can_withdraw !== false
         }
     });
 });
 
 app.post('/member/mypage', middleware.isLogin,
     body('skin')
-        .isIn([
-            'default',
-            ...global.skins
-        ])
+        .custom(value => ['default', ...global.skins].includes(value))
         .withMessage('invalid_skin'),
     middleware.fieldErrors,
     async (req, res) => {
@@ -567,7 +575,10 @@ app.post('/member/mypage', middleware.isLogin,
         skin: req.body.skin
     });
 
-    if(req.user.skin !== req.body.skin) req.session.fullReload = true;
+    if(req.user.skin !== req.body.skin) {
+        if(req.isInternal) return res.originalStatus(400).end();
+        else req.session.fullReload = true;
+    }
 
     res.redirect('/member/mypage');
 });
@@ -590,7 +601,10 @@ app.post('/member/generate_api_token',
         apiToken
     });
 
-    res.json({
+    if(req.backendMode) res.partial({
+        apiToken
+    });
+    else res.json({
         type: 'js',
         script: `
 document.getElementById('token-input').value = '${apiToken}';
@@ -653,7 +667,14 @@ app.get('/contribution/:uuid/document',
     });
     // if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
 
+    const logType = {
+        create: HistoryTypes.Create,
+        delete: HistoryTypes.Delete,
+        move: HistoryTypes.Move,
+        revert: HistoryTypes.Revert
+    }[req.query.logtype];
     const baseQuery = {
+        ...(logType != null ? { type: logType } : {}),
         user: req.params.uuid
     }
     const query = { ...baseQuery };
@@ -674,6 +695,7 @@ app.get('/contribution/:uuid/document',
     let revs = await History.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
         .limit(100)
+        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc troll hideLog diffLength api')
         .lean();
 
     if(query._id?.$gte) revs.reverse();
@@ -684,13 +706,18 @@ app.get('/contribution/:uuid/document',
         prevItem = await History.findOne({
             ...baseQuery,
             _id: { $gt: revs[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: 1 });
         nextItem = await History.findOne({
             ...baseQuery,
             _id: { $lt: revs[revs.length - 1]._id }
-        }).sort({ _id: -1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: -1 });
 
         revs = await utils.findDocuments(revs);
+        revs = utils.withoutKeys(revs.filter(a => a.document), ['_id']);
     }
 
     res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
@@ -702,8 +729,7 @@ app.get('/contribution/:uuid/document',
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
-            user,
-            revs,
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null, req.backendMode)),
             total,
             prevItem,
             nextItem,
@@ -729,6 +755,7 @@ app.get('/contribution/:uuid/discuss',
         getTotal: true
     });
     data.items = await utils.findThreads(data.items);
+    data.items = utils.onlyKeys(data.items, ['thread', 'id', 'createdAt']);
 
     res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution_discuss',
@@ -777,6 +804,7 @@ app.get('/contribution/:uuid/edit_request',
     let items = await EditRequest.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
         .limit(100)
+        .select('url document status lastUpdatedAt diffLength -_id')
         .lean();
 
     if(query._id?.$gte) items.reverse();
@@ -787,11 +815,15 @@ app.get('/contribution/:uuid/edit_request',
         prevItem = await EditRequest.findOne({
             ...query,
             _id: { $gt: items[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: 1 });
         nextItem = await EditRequest.findOne({
             ...query,
             _id: { $lt: items[items.length - 1]._id }
-        }).sort({ _id: -1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: -1 });
 
         items = await utils.findDocuments(items);
     }
@@ -864,7 +896,8 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
         serverData: {
             blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
             alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.',
-            noActivityTime
+            noActivityTime,
+            pledge: config.withdraw_pledge
         }
     });
 });
@@ -1021,7 +1054,8 @@ app.get('/member/change_email', middleware.isLogin, (req, res) => {
             ...(doingChangeEmail ? {
                 alert: '이메일 인증이 이미 진행 중입니다.'
             } : {}),
-            doingChangeEmail
+            doingChangeEmail,
+            email: req.user.email
         }
     });
 });
@@ -1349,7 +1383,7 @@ const starHandler = starred => async (req, res) => {
             document: dbDocument.uuid,
             user: req.user.uuid
         });
-        if(!deleted) res.error('already_unstarred_document', 404);
+        if(!deleted) return res.error('already_unstarred_document', 404);
     }
 
     const referer = new URL(req.get('Referer'));
@@ -1360,14 +1394,21 @@ const starHandler = starred => async (req, res) => {
 app.get('/member/starred_documents', middleware.isLogin, async (req, res) => {
     let stars = await Star.find({
         user: req.user.uuid
-    }).lean();
-    stars = await utils.findDocuments(stars);
+    })
+        .select('document -_id')
+        .lean();
+    stars = await utils.findDocuments(stars, ['updatedAt', 'uuid']);
     stars = stars.sort((a, b) => b.document.updatedAt - a.document.updatedAt);
 
     for(let star of stars) {
         star.rev = await History.findOne({
             document: star.document.uuid
-        }).sort({ rev: -1 }).lean();
+        })
+            .sort({ rev: -1 })
+            .select('createdAt -_id')
+            .lean();
+
+        star.document = utils.withoutKeys(star.document, ['updatedAt']);
     }
 
     res.renderSkin('내 문서함', {
@@ -1448,7 +1489,8 @@ app.post('/member/register_webauthn/challenge', async (req, res) => {
         backedUp: credentialBackedUp
     });
 
-    res.status(204).end();
+    if(req.backendMode) res.reload();
+    else res.status(204).end();
 });
 
 app.post('/member/delete_webauthn',
@@ -1460,7 +1502,8 @@ app.post('/member/delete_webauthn',
         user: req.user.uuid,
         name: req.body.name
     });
-    res.status(204).end();
+    if(req.backendMode) res.reload();
+    else res.status(204).end();
 });
 
 module.exports = app;

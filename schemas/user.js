@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
+const utils = require('../utils');
 const { UserTypes } = require('../utils/types');
 
 const { Schema } = mongoose;
@@ -86,6 +87,22 @@ const newSchema = new Schema({
     },
     lastChangePassword: {
         type: Date
+    }
+}, {
+    virtuals: {
+        publicUser: {
+            get() {
+                return {
+                    ...utils.onlyKeys(this, [
+                        'uuid',
+                        'type',
+                        'ip',
+                        'name'
+                    ]),
+                    admin: ['admin', 'developer'].some(a => this.permissions?.includes(a))
+                }
+            }
+        }
     }
 });
 

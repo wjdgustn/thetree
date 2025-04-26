@@ -37,7 +37,7 @@ const navigationPage = include('../components/pageButton', {
 
     <ul x-data="{ oldRow: <%=revs.length%>, newRow: -1 }">
         <%for(let i in revs) {%>
-            <%rev = addHistoryData(revs[i], document);%>
+            <%rev = revs[i];%>
 
             <li<%-rev.troll ? ' class="troll"' : ''%>>
                 <span><%-getFullDateTag(rev.createdAt)%></span>
@@ -126,7 +126,7 @@ const navigationPage = include('../components/pageButton', {
 
                 <%if(rev.troll) {%>
                     [<%-userHtml(rev.trollBy)%> 사용자에 의해 반달로 표시됨]
-                <%} else if(rev.log) {%>
+                <%} else if(rev.log || rev.hideLog) {%>
                     (<span class="history-log"><%if(rev.hideLog) {%><%-userHtml(rev.hideLogBy)%> 사용자에 의해 편집 요약 숨겨짐<%} else {%><%=rev.log%><%}%></span>)
                     <%if(req.permissions.includes('hide_document_history_log') && rev.hideLog) {%>
                         <span x-data="{ show: false }">

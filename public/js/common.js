@@ -903,7 +903,7 @@ document.addEventListener('alpine:init', () => {
                 const comment = State.threadPopup.comment;
 
                 if(!comment.rawHtml) {
-                    const response = await fetch(`/admin/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/raw`);
+                    const response = await fetch(`/thread/${State.page.data.thread.url}/${State.threadPopup.comment.id}/raw`);
                     const text = await response.text();
                     if(!response.ok) return alert(text);
 

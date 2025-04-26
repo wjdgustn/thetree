@@ -1,6 +1,6 @@
 const express = require('express');
 const util = require('util');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
@@ -9,6 +9,7 @@ const { body } = require('express-validator');
 const parseDuration = require('parse-duration');
 const crypto = require('crypto');
 const { exec } = require('child_process');
+const execPromise = util.promisify(exec);
 
 // openNAMU migration things
 const sqlite3 = require('sqlite3').verbose();
@@ -47,40 +48,68 @@ const ACL = require('../class/acl');
 
 const app = express.Router();
 
-app.get('/admin/config', middleware.permission('config'), (req, res) => {
+app.get('/admin/config', middleware.permission('config'), async (req, res) => {
+    const jsonConfigs = await Promise.all(['publicConfig.json', 'serverConfig.json'].map(async name => ({
+        name,
+        content: (await fs.readFile(name)).toString()
+    })));
+
     res.renderSkin('Config', {
         contentName: 'admin/config',
         serverData: {
-            fs
+            jsonConfigs,
+            stringConfig,
+            disabledFeatures,
+            disabledFeaturesTemplates
         }
     });
 });
 
-app.get('/admin/developer', middleware.permission('developer'), (req, res) => {
+app.get('/admin/developer', middleware.permission('developer'), async (req, res) => {
     const customStaticFiles = [];
     const customStaticRoot = './customStatic';
-    const readDir = path => {
-        const files = fs.readdirSync(path);
+    const readDir = async path => {
+        const files = await fs.readdir(path);
         if(path !== customStaticRoot && !files.length) {
-            fs.rmSync(path, { recursive: true });
+            await fs.rm(path, { recursive: true });
         }
         else for(let file of files) {
             const filePath = path + '/' + file;
-            const stat = fs.statSync(filePath);
+            const stat = await fs.stat(filePath);
             if(stat.isDirectory()) {
-                readDir(filePath);
+                await readDir(filePath);
             } else {
                 customStaticFiles.push(filePath.slice(customStaticRoot.length));
             }
         }
     }
-    readDir(customStaticRoot);
+    await readDir(customStaticRoot);
+
+    const jsonConfigs = await Promise.all(['devConfig.json'].map(async name => ({
+        name,
+        content: (await fs.readFile(name)).toString()
+    })));
+
+    let skinCommitIds = [];
+    try {
+        const installedSkins = await fs.readdir('./frontend/skins');
+        skinCommitIds = Object.fromEntries(await Promise.all(
+            installedSkins.map(async name => [name, (await execPromise('git rev-parse --short HEAD', { cwd: path.join('./frontend/skins', name) })).stdout.trim()])
+        ));
+    } catch(e) {}
 
     res.renderSkin('개발자 설정', {
         contentName: 'admin/developer',
         serverData: {
             customStaticFiles,
-            fs
+            jsonConfigs,
+            versionInfo: global.versionInfo,
+            newVersionInfo: global.newVersionInfo,
+            newCommits: global.newCommits,
+            newFECommits: global.newFECommits,
+            checkUpdate: config.check_update !== false,
+            skinInfos: Object.fromEntries(Object.entries(global.skinInfos).map(([key, value]) => [key, utils.withoutKeys(value, ['template'])])),
+            skinCommitIds
         }
     });
 });
@@ -104,7 +133,9 @@ app.post('/admin/developer/eval', middleware.permission('developer'), async (req
 
     if(isStr) result = namumarkUtils.escapeHtml(result);
     else result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
-    res.send(result);
+
+    if(req.backendMode) res.partial({ evalOutput: result });
+    else res.send(result);
 });
 
 app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware.referer('/admin/'), async (req, res) => {
@@ -113,8 +144,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     if(tool === 'deletedisabledfeature') {
         const index = parseInt(req.query.index);
         global.disabledFeatures.splice(index, 1);
-        if(global.disabledFeatures.length) fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
-        else fs.rmSync('./cache/disabledFeatures.json');
+        if(global.disabledFeatures.length) await fs.writeFile('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+        else await fs.rm('./cache/disabledFeatures.json');
 
         return res.reload();
     }
@@ -125,14 +156,14 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         const path = req.query.path;
         if(!path) return res.status(400).send('path not provided');
         if(path.includes('..')) return res.status(400).send('invalid path');
-        fs.unlinkSync('./customStatic' + path);
+        await fs.unlink('./customStatic' + path);
 
         return res.reload();
     }
 
     else if(tool === 'fixstringconfig') {
         const newStringConfig = {};
-        const exampleStringConfig = JSON.parse(fs.readFileSync('./stringConfig.example.json').toString());
+        const exampleStringConfig = JSON.parse(await fs.readFile('./stringConfig.example.json').toString());
         for(let [key, defaultValue] of Object.entries(exampleStringConfig)) {
             newStringConfig[key] = config[key] || defaultValue;
         }
@@ -140,7 +171,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         for(let [key, value] of additionalEntries) {
             newStringConfig[key] = value;
         }
-        fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        await fs.writeFile('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
         return res.reload();
@@ -149,7 +180,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool === 'removestringconfig') {
         const newStringConfig = { ...global.stringConfig };
         delete newStringConfig[req.query.key];
-        fs.writeFileSync('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        await fs.writeFile('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
         return res.reload();
@@ -166,25 +197,25 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'clearpublicmindir') {
-        const files = fs.readdirSync('./publicMin');
+        const files = await fs.readdir('./publicMin');
         for(let file of files) {
             const dirPath = path.join('./publicMin', file);
-            const stat = fs.statSync(dirPath);
+            const stat = await fs.stat(dirPath);
             if(!stat.isDirectory()) continue;
 
-            fs.rmSync(dirPath, { recursive: true });
+            await fs.rm(dirPath, { recursive: true });
         }
         return res.status(204).end();
     }
 
     else if(tool === 'clearcachedir') {
-        const files = fs.readdirSync('./cache');
+        const files = await fs.readdir('./cache');
         for(let file of files) {
             const dirPath = path.join('./cache', file);
-            const stat = fs.statSync(dirPath);
+            const stat = await fs.stat(dirPath);
             if(!stat.isDirectory()) continue;
 
-            fs.rmSync(dirPath, { recursive: true });
+            await fs.rm(dirPath, { recursive: true });
         }
         return res.status(204).end();
     }
@@ -313,7 +344,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'migrateopennamu') {
-        if(!fs.existsSync('./opennamu_data/data.db')) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
+        if(!(await fs.exists('./opennamu_data/data.db'))) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
 
         res.status(204).end();
 
@@ -423,8 +454,8 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
                         console.log(`file rev 1 detected, filename: ${filename} ext: ${ext} hash: ${hash} imgPath: ${imgPath}`);
 
-                        if(fs.existsSync(imgPath)) {
-                            const img = fs.readFileSync(imgPath);
+                        if(await fs.exists(imgPath)) {
+                            const img = await fs.readFile(imgPath);
                             try {
                                 const metadata = await sharp(img).metadata();
                                 fileInfo.fileWidth = metadata.width;
@@ -482,7 +513,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
                 }
                 log('migration complete!');
 
-                fs.writeFileSync(`./opennamu_data/migration_${Date.now()}.log`, logs.join('\n'));
+                await fs.writeFile(`./opennamu_data/migration_${Date.now()}.log`, logs.join('\n'));
             });
         });
     }
@@ -505,7 +536,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool === 'updateskin') {
         res.status(204).end();
         for(let skin of global.skins) {
-            const checkGit = fs.existsSync(`./skins/${skin}/.git`);
+            const checkGit = await fs.exists(`./skins/${skin}/.git`);
             if(!checkGit) continue;
 
             exec('git pull', {
@@ -522,7 +553,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else return res.status(404).send('tool not found');
 });
 
-app.post('/admin/config/configjson', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/configjson', middleware.permission('config'), async (req, res) => {
     const config = req.body.config;
     // if(config.includes('/') || !config.endsWith('.json')) return res.status(400).send('Invalid config file');
 
@@ -548,12 +579,12 @@ app.post('/admin/config/configjson', middleware.permission('config'), (req, res)
         if(global.devConfig.hasOwnProperty(key)) return res.status(400).send(`Invalid key "${key}"`);
     }
 
-    fs.writeFileSync(config, req.body.content);
+    await fs.writeFile(config, req.body.content);
     updateConfig();
     return res.status(204).end();
 });
 
-app.post('/admin/config/stringconfig', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/stringconfig', middleware.permission('config'), async (req, res) => {
     // let newObj = {};
     // for(let key of Object.keys(stringConfig)) {
     //     newObj[key] = req.body[key] || '';
@@ -564,28 +595,28 @@ app.post('/admin/config/stringconfig', middleware.permission('config'), (req, re
 
     const newObj = { ...global.stringConfig };
     newObj[req.body.key] = req.body.value;
-    fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    await fs.writeFile('./stringConfig.json', JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.status(204).end();
 });
 
-app.post('/admin/config/stringconfig/add', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/stringconfig/add', middleware.permission('config'), async (req, res) => {
     const newObj = { ...global.stringConfig };
     newObj[req.body.key] = '';
-    fs.writeFileSync('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    await fs.writeFile('./stringConfig.json', JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.reload();
 });
 
 const uploadStaticFile = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => {
+        destination: async (req, file, cb) => {
             if(req.body.path.includes('..')) return cb('invalid path');
             if(req.body.path === '/admin') return cb(`can't override admin page`);
 
             const path = './customStatic' + req.body.path;
-            if(!fs.existsSync(path)) {
-                fs.mkdirSync(path, { recursive: true });
+            if(!await fs.exists(path)) {
+                await fs.mkdir(path, { recursive: true });
             }
 
             cb(null, path);
@@ -605,6 +636,92 @@ app.post('/admin/developer/staticfile', middleware.permission('developer'), uplo
     res.reload();
 });
 
+app.post('/admin/developer/skin/add', middleware.permission('developer'), async (req, res) => {
+    let url;
+    try {
+        url = new URL(req.body.url);
+    } catch(e) {
+        return res.status(400).send('Invalid URL');
+    }
+
+    const name = req.body.name;
+    if(!name?.trim() || name.includes('..') || name.includes('/')) return res.status(400).send('Invalid name');
+
+    const checkSkinsDir = await fs.exists('./frontend/skins');
+    if(!checkSkinsDir) await fs.mkdir('./frontend/skins');
+    try {
+        await execPromise(`git clone "${url}" "${name}"`, {cwd: './frontend/skins'});
+    } catch(e) {
+        return res.status(400).send('Invalid repository');
+    }
+
+    res.reload();
+});
+
+app.post('/admin/developer/skin/update', middleware.permission('developer'), async (req, res) => {
+    const name = req.body.name;
+    if(name.includes('..')) return res.status(400).send('Invalid name');
+    const dir = path.join('./frontend/skins', name);
+    const skinExists = await fs.exists(dir);
+    if(!skinExists) return res.status(400).send('Invalid skin');
+
+    try {
+        await execPromise('git pull', {cwd: dir});
+    } catch(e) {
+        return res.status(400).send('pull failed');
+    }
+
+    res.reload();
+});
+
+app.post('/admin/developer/skin/delete', middleware.permission('developer'), async (req, res) => {
+    const name = req.body.name;
+    if(name.includes('..')) return res.status(400).send('Invalid name');
+    const dir = path.join('./frontend/skins', name);
+    const skinExists = await fs.exists(dir);
+    if(!skinExists) return res.status(400).send('Invalid skin');
+
+    const skinPath = path.join('./skins', name);
+
+    await fs.rm(dir, { recursive: true });
+    await fs.rm(skinPath, { recursive: true });
+
+    global.updateSkinInfo();
+    res.reload();
+});
+
+app.post('/admin/developer/skin/build', middleware.permission('developer'), async (req, res) => {
+    const name = req.body.name;
+    if(name.includes('..')) return res.status(400).send('Invalid name');
+    const dir = path.join('./frontend/skins', name);
+    const skinExists = await fs.exists(dir);
+    if(!skinExists) return res.status(400).send('Invalid skin');
+
+    const skinPath = path.join('./skins', name);
+
+    try {
+        const opts = {
+            cwd: './frontend',
+            env: {
+                ...process.env,
+                SKIN_NAME: name,
+                METADATA_PATH: path.resolve(skinPath)
+            }
+        }
+        await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
+        await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'client')}"`, opts);
+    } catch(e) {
+        console.error(e);
+        return res.status(400).send('build failed');
+    }
+
+    const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath, 'server')));
+    for(let module of ssrModules) delete require.cache[module];
+
+    global.updateSkinInfo();
+    res.reload();
+});
+
 app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
     let targetUser;
 
@@ -616,9 +733,20 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
         });
     }
 
+    const grantPerms = config.grant_permissions.filter(a => AllPermissions.includes(a));
+    const configPerms = AllPermissions.filter(a => (req.permissions.includes('developer') || !ProtectedPermissions.includes(a)) && !grantPerms.includes(a));
+    const grantablePermissions = [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])];
+
     res.renderSkin('권한 부여', {
         contentName: 'admin/grant',
-        targetUser
+        serverData: {
+            targetUser: targetUser ? {
+                ...targetUser.publicUser,
+                permissions: targetUser.permissions
+            } : null,
+            grantablePermissions: grantablePermissions,
+            hidelogPerm: req.permissions.includes('grant_hidelog')
+        }
     });
 });
 
@@ -775,7 +903,7 @@ app.post('/admin/config/migratecontribution', middleware.permission('config'), a
     return res.status(204).end();
 });
 
-app.post('/admin/config/disabledfeatures', middleware.permission('config'), (req, res) => {
+app.post('/admin/config/disabledfeatures', middleware.permission('config'), async (req, res) => {
     const {
         methodField: method,
         type,
@@ -798,14 +926,17 @@ app.post('/admin/config/disabledfeatures', middleware.permission('config'), (req
         message,
         messageType
     });
-    fs.writeFileSync('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
+    await fs.writeFile('./cache/disabledFeatures.json', JSON.stringify(global.disabledFeatures, null, 2));
 
     res.reload();
 });
 
 app.get('/admin/batch_revert', middleware.permission('batch_revert'), (req, res) => {
     res.renderSkin('일괄 되돌리기', {
-        contentName: 'admin/batch_revert'
+        contentName: 'admin/batch_revert',
+        serverData: {
+            hidelogPerm: req.permissions.includes('batch_revert_hidelog')
+        }
     });
 });
 
@@ -1010,16 +1141,25 @@ app.post('/admin/batch_revert',
 
     resultText.unshift(`작업 시간 : ${Date.now() - date}ms`);
 
-    req.session.flash.batchRevertResult = {
+    const resultData = {
         resultText,
         failResultText
     }
-    res.redirect('/admin/batch_revert');
+    if(req.backendMode) res.partial({
+        result: resultData
+    });
+    else {
+        req.session.flash.batchRevertResult = resultData;
+        res.redirect('/admin/batch_revert');
+    }
 });
 
 app.get('/admin/login_history', middleware.permission('login_history'), async (req, res) => {
     res.renderSkin('로그인 내역', {
-        contentName: 'admin/login_history'
+        contentName: 'admin/login_history',
+        serverData: {
+            hidelogPerm: req.permissions.includes('login_history_hidelog')
+        }
     });
 });
 
@@ -1098,7 +1238,8 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
 
     const logs = await LoginHistory.find(query)
         .sort({ _id: query._id?.$gte ? 1 : -1 })
-        .limit(100);
+        .limit(100)
+        .select('type ip device userAgent createdAt _id');
 
     if(query._id?.$gte) logs.reverse();
 
@@ -1108,18 +1249,24 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
         prevItem = await LoginHistory.findOne({
             ...baseQuery,
             _id: { $gt: logs[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .sort({ _id: 1 })
+            .select('_id');
         nextItem = await LoginHistory.findOne({
             ...baseQuery,
             _id: { $lt: logs[logs.length - 1]._id }
-        }).sort({ _id: -1 });
+        }).sort({ _id: -1 })
+            .select('_id');
     }
 
     res.renderSkin(`${targetUser?.name} 로그인 내역`, {
         contentName: 'admin/login_history_result',
-        targetUser,
-        latestLog,
-        logs,
+        targetUser: {
+            ...targetUser.publicUser,
+            email: targetUser.email
+        },
+        userAgent: latestLog?.userAgent,
+        logs: utils.withoutKeys(logs, ['_id']),
         prevItem,
         nextItem
     });

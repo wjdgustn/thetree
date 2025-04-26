@@ -35,6 +35,9 @@ app.get('/UncategorizedPages', async (req, res) => {
     for(let item of serverData.items)
         item.parsedName = utils.dbDocumentToDocument(item);
 
+    serverData.items = utils.onlyKeys(serverData.items, ['parsedName']);
+    serverData.namespaces = config.namespaces;
+
     res.renderSkin('분류가 되지 않은 문서', {
         contentName: 'docList/UncategorizedPages',
         serverData
@@ -51,7 +54,11 @@ app.get('/OldPages', async (req, res) => {
     const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'createdAt', {
         sortDirection: 1
     });
-    serverData.items = await utils.findDocuments(serverData.items);
+    serverData.items = utils.onlyKeys(await utils.findDocuments(serverData.items), ['document', 'createdAt']);
+
+    for(let item of serverData.items) {
+        item.document = utils.onlyKeys(item.document, ['parsedName']);
+    }
 
     res.renderSkin('편집된 지 오래된 문서', {
         contentName: 'docList/OldPages',
@@ -69,7 +76,11 @@ const contentLengthHandler = shortest => async (req, res) => {
     const serverData = await utils.pagination(req, History, baseQuery, 'uuid', 'contentLength', {
         sortDirection: shortest ? 1 : -1
     });
-    serverData.items = await utils.findDocuments(serverData.items);
+    serverData.items = utils.onlyKeys(await utils.findDocuments(serverData.items), ['document', 'contentLength']);
+
+    for(let item of serverData.items) {
+        item.document = utils.onlyKeys(item.document, ['parsedName']);
+    }
 
     res.renderSkin(`내용이 ${shortest ? '짧은' : '긴'} 문서`, {
         contentName: 'docList/ContentLength',
@@ -224,10 +235,14 @@ app.get('/NeededPages', (req, res) => {
     res.renderSkin('작성이 필요한 문서', {
         contentName: 'docList/NeededPages',
         serverData: {
-            items,
+            items: items.map(a => utils.parseDocumentName(a)),
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
-            total: fullItems.length
+            total: fullItems.length,
+            namespaces: config.namespaces,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });
@@ -255,10 +270,14 @@ app.get('/OrphanedPages', async (req, res) => {
     res.renderSkin('고립된 문서', {
         contentName: 'docList/OrphanedPages',
         serverData: {
-            items,
+            items: items.map(a => utils.parseDocumentName(a)),
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
-            total: fullItems.length
+            total: fullItems.length,
+            namespaces: config.namespaces,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });
@@ -278,10 +297,13 @@ app.get('/OrphanedCategories', async (req, res) => {
     res.renderSkin('고립된 분류', {
         contentName: 'docList/OrphanedCategories',
         serverData: {
-            items,
+            items: items.map(a => utils.parseDocumentName(a)),
             prevItem: skipCount - 1,
             nextItem: skipCount + displayCount,
-            total: fullItems.length
+            total: fullItems.length,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });

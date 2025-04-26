@@ -39,13 +39,15 @@ app.get('/RecentChanges', async (req, res) => {
     }[req.query.logtype];
 
     let revs = await History.find({
-        ...(logType != null ? { type: logType } : {})
+        ...(logType != null ? { type: logType } : {}),
+        troll: false
     })
         .sort({ _id: -1 })
         .limit(100)
+        .select('type document rev revertRev uuid user createdAt log moveOldDoc moveNewDoc hideLog diffLength api -_id')
         .lean();
 
-    revs = await utils.findUsers(revs);
+    revs = await utils.findUsers(req, revs);
     revs = await utils.findDocuments(revs);
 
     const logTypeText = logType != null ? req.query.logtype : 'all';
@@ -55,7 +57,7 @@ app.get('/RecentChanges', async (req, res) => {
     res.renderSkin('최근 변경내역', {
         contentName: 'special/recentChanges',
         serverData: {
-            revs,
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null, req.backendMode)),
             logType: logTypeText
         }
     });
@@ -88,6 +90,7 @@ app.get('/RecentDiscuss', async (req, res) => {
         threads = await Thread.find(query)
             .sort(sort)
             .limit(100)
+            .select('url topic document lastUpdateUser lastUpdatedAt -_id')
             .lean();
     }
     else {
@@ -108,14 +111,15 @@ app.get('/RecentDiscuss', async (req, res) => {
         editRequests = await EditRequest.find(query)
             .sort(sort)
             .limit(100)
+            .select('url document status lastUpdatedAt diffLength createdUser -_id')
             .lean();
     }
 
-    threads = await utils.findUsers(threads, 'lastUpdateUser');
+    threads = await utils.findUsers(req, threads, 'lastUpdateUser');
     threads = await utils.findDocuments(threads);
 
-    editRequests = await utils.findUsers(editRequests, 'createdUser');
-    editRequests = await utils.findUsers(editRequests, 'lastUpdateUser');
+    editRequests = await utils.findUsers(req, editRequests, 'createdUser');
+    editRequests = await utils.findUsers(req, editRequests, 'lastUpdateUser');
     editRequests = await utils.findDocuments(editRequests);
 
     res.renderSkin('최근 토론', {
@@ -175,7 +179,14 @@ app.get('/License', (req, res) => {
         viewName: 'license',
         contentName: 'special/license',
         serverData: {
-            skinCommitId: skinCommitId[skin],
+            ...(req.backendMode ? {
+                version: global.versionInfo.versionData.version,
+                branch: global.versionInfo.branch !== 'master' ? global.versionInfo.branch : undefined,
+                commitDate: global.versionInfo.commitDate,
+                commitId: global.versionInfo.commitId.slice(0, 7)
+            } : {
+                skinCommitId: skinCommitId[skin],
+            }),
             openSourceLicense
         }
     });
@@ -438,16 +449,21 @@ app.get('/BlockHistory', async (req, res) => {
         prevItem = await BlockHistory.findOne({
             ...baseQuery,
             _id: { $gt: logs[0]._id }
-        }).sort({ _id: 1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: 1 });
         nextItem = await BlockHistory.findOne({
             ...baseQuery,
             _id: { $lt: logs[logs.length - 1]._id }
-        }).sort({ _id: -1 });
+        })
+            .select('uuid -_id')
+            .sort({ _id: -1 });
 
-        logs = await utils.findUsers(logs, 'createdUser', true);
-        logs = await utils.findUsers(logs, 'targetUser', true);
+        logs = await utils.findUsers(req, logs, 'createdUser', { noCSS: true });
+        logs = await utils.findUsers(req, logs, 'targetUser', { noCSS: true });
 
-        const aclGroups = await ACLGroup.find();
+        const aclGroups = await ACLGroup.find()
+            .select('name uuid -_id');
         for(let log of logs) {
             if(log.aclGroup) {
                 const foundGroup = aclGroups.find(a => a.uuid === log.aclGroup);
@@ -459,9 +475,12 @@ app.get('/BlockHistory', async (req, res) => {
     res.renderSkin('차단 내역', {
         contentName: 'special/blockHistory',
         serverData: {
-            logs,
+            logs: utils.withoutKeys(logs, ['_id', '__v']),
             prevItem,
-            nextItem
+            nextItem,
+            permissions: {
+                dev: req.permissions.includes('developer')
+            }
         }
     });
 });
@@ -488,7 +507,8 @@ app.get('/RandomPage', async (req, res) => {
     res.renderSkin('RandomPage', {
         contentName: 'special/randomPage',
         serverData: {
-            docs
+            docs,
+            namespaces: config.namespaces
         }
     });
 });

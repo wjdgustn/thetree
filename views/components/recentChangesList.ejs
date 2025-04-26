@@ -10,7 +10,6 @@
 
     <%for(let rev of revs) {%>
     <%if(!rev.document) continue;%>
-    <%rev = addHistoryData(rev);%>
     <div class="changes-line<%=rev.troll ? ' troll-line' : ''%>">
         <div class="changes-value">
             <a href="<%=doc_action_link(rev.document.parsedName, 'w')%>"><%=doc_fulltitle(rev.document.parsedName)%></a><%-rev.pureDiffHtml%>
