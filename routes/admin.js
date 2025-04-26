@@ -715,7 +715,8 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
         return res.status(400).send('build failed');
     }
 
-    delete require.cache[require.resolve(path.resolve(skinPath, 'server/server.cjs'))];
+    const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath, 'server')));
+    for(let module of ssrModules) delete require.cache[module];
 
     global.updateSkinInfo();
     res.reload();
