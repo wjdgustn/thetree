@@ -1842,6 +1842,10 @@ app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
 });
 
 app.post('/delete/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
+    if(!req.permissions.includes('edit_protected_file')
+        && Object.keys(config.external_link_icons).includes(globalUtils.doc_fulltitle(req.document)))
+        return res.error('protect_file', 403);
+
     if(req.body.agree !== 'Y') return res.status(400).send('문서 삭제에 대한 안내를 확인해 주세요.');
     if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
@@ -1906,6 +1910,12 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
 
     const document = req.document;
     const otherDocument = utils.parseDocumentName(req.body.title);
+
+    const protectedFiles = Object.keys(config.external_link_icons);
+    if(!req.permissions.includes('edit_protected_file')
+        && (protectedFiles.includes(globalUtils.doc_fulltitle(document))
+            || protectedFiles.includes(globalUtils.doc_fulltitle(otherDocument))))
+        return res.error('protect_file', 403);
 
     if(document.namespace.includes('파일')) {
         const ext = document.title.split('.').pop();

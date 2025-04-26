@@ -100,7 +100,8 @@ module.exports = {
         'aclgroup_hidelog',
         'grant_hidelog',
         'login_history_hidelog',
-        'batch_revert_hidelog'
+        'batch_revert_hidelog',
+        'edit_protected_file'
     ],
     ProtectedPermissions: [
         'developer'
