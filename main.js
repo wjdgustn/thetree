@@ -271,7 +271,7 @@ global.updateEngine = (exit = true) => {
             const newPackageHash = packageHash();
             const newFEPackageHash = fePackageHash();
             const packageUpdated = oldPackageHash !== newPackageHash;
-            const fePackageUpdated = oldPackageHash !== newFEPackageHash;
+            const fePackageUpdated = oldFEPackageHash !== newFEPackageHash;
             if(exit) {
                 const onFinish = () => {
                     if(doEngine) process.exit(0);
