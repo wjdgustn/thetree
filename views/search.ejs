@@ -42,11 +42,10 @@
 
 <section>
     <%for(let doc of hits) {%>
-        <%const document = utils.dbDocumentToDocument(doc);%>
         <div>
             <h4>
                 <i class="ion-md-document"></i>
-                <a href="<%=doc_action_link(document, 'w')%>"><%=doc_fulltitle(document)%></a>
+                <a href="<%=doc_action_link(doc, 'w')%>"><%=doc_fulltitle(doc)%></a>
             </h4>
             <div><%-doc.content || doc.raw%></div>
         </div>

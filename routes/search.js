@@ -141,7 +141,10 @@ app.get('/Search', async (req, res) => {
         serverData: {
             query: req.query.q,
             readableNamespaces,
-            hits: result.hits.map(a => a._formatted),
+            hits: result.hits.map(a => ({
+                ...a._formatted,
+                ...utils.dbDocumentToDocument(a._formatted)
+            })),
             totalHits: result.totalHits,
             totalPages: result.totalPages,
             processingTime: result.processingTimeMs
