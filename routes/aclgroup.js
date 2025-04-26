@@ -107,6 +107,7 @@ app.get('/aclgroup', async (req, res) => {
                 'id',
                 'uuid',
                 'user',
+                'ip',
                 'note',
                 'createdAt',
                 'expiresAt'
