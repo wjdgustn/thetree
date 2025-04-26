@@ -178,8 +178,8 @@ global.checkUpdate = async () => {
         }
     });
 
-    let newCommits;
-    let newFECommits;
+    let newCommits = [];
+    let newFECommits = [];
     let newVersionData;
     try {
         const { data: newCommitData } = await githubAPI.get(`${global.versionInfo.versionData.repo}/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
