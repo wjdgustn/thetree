@@ -156,14 +156,20 @@ try {
 }
 global.versionInfo = {
     branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(),
-    feBranch: execSync('git rev-parse --abbrev-ref HEAD', { cwd: './frontend' }).toString().trim(),
     commitId: execSync('git rev-parse HEAD').toString().trim(),
-    feCommitId: execSync('git rev-parse HEAD', { cwd: './frontend' }).toString().trim(),
     commitDate: new Date(Number(execSync('git log -1 --format="%at"').toString().trim()) * 1000),
-    feCommitDate: new Date(Number(execSync('git log -1 --format="%at"', { cwd: './frontend' }).toString().trim()) * 1000),
     versionData,
     updateRequired: false
 };
+global.updateFEVersionInfo = () => {
+    global.versionInfo = {
+        ...global.versionInfo,
+        feBranch: execSync('git rev-parse --abbrev-ref HEAD', { cwd: './frontend' }).toString().trim(),
+        feCommitId: execSync('git rev-parse HEAD', { cwd: './frontend' }).toString().trim(),
+        feCommitDate: new Date(Number(execSync('git log -1 --format="%at"', { cwd: './frontend' }).toString().trim()) * 1000)
+    }
+}
+updateFEVersionInfo();
 global.newVersionInfo = { ...global.versionInfo };
 global.newCommits = [];
 global.newFECommits = [];
@@ -275,6 +281,7 @@ global.updateEngine = (exit = true) => {
             if(exit) {
                 const onFinish = () => {
                     if(doEngine) process.exit(0);
+                    else updateFEVersionInfo();
                 }
                 if(packageUpdated) {
                     console.log('package.json updated, updating packages...');
