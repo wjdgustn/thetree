@@ -927,7 +927,7 @@ document.getElementById('initScript')?.remove();
                 }
                 const html = skinInfo.template
                     .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
-                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + config.head_html)
+                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '')
                     .replace('<!--app-body-->', body);
 
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
