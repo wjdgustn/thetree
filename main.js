@@ -190,12 +190,15 @@ global.checkUpdate = async () => {
             }
         });
         newVersionData = JSON.parse(Buffer.from(newVersionFile.content, 'base64').toString());
-
-        const { data: newFECommitData } = await githubAPI.get(`${global.versionInfo.versionData.feRepo}/compare/${global.versionInfo.feCommitId}...${global.versionInfo.feBranch}`);
-        newFECommits = newFECommitData.commits;
     } catch(e) {
         console.error('failed to fetch latest version info', e);
         return;
+    }
+    try {
+        const { data: newFECommitData } = await githubAPI.get(`${global.versionInfo.versionData.feRepo}/compare/${global.versionInfo.feCommitId}...${global.versionInfo.feBranch}`);
+        newFECommits = newFECommitData.commits;
+    } catch(e) {
+        console.error('failed to fetch latest FE commit info', e);
     }
     if(!newCommits.length && !newFECommits.length) {
         global.newVersionInfo.lastUpdateCheck = new Date();
