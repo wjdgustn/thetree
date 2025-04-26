@@ -155,7 +155,7 @@ module.exports = class ACL {
             return `${ACL.permissionToString(rule.conditionContent, !formatPerm)}`
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
-            return `user:${rule.user.name}`
+            return `user:${rule.user?.name ?? rule.conditionContent}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
             return `aclgroup:${rule.aclGroup?.name ?? rule.conditionContent}`
