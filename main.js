@@ -759,7 +759,10 @@ app.use(async (req, res, next) => {
         }
 
         configJSON = {
-            ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => debug || !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
+            ...Object.fromEntries([
+                ...Object.entries(publicConfig).filter(([k]) => debug || !k.startsWith('skin.')),
+                ...Object.entries(config).filter(([k]) => k.startsWith(`skin.${skin}.`))
+            ]),
             ...(config.captcha.enabled ? {
                 captcha: {
                     type: config.captcha.type,
