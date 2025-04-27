@@ -723,9 +723,10 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
 
         const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath, 'server')));
         for(let module of ssrModules) delete require.cache[module];
+
+        global.updateSkinInfo();
     }));
 
-    global.updateSkinInfo();
     res.reload();
 });
 
