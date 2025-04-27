@@ -21,7 +21,6 @@ const newSchema = new Schema({
     },
     ip: {
         type: String,
-        required: true,
         unique: true,
         index: true
     },
@@ -29,6 +28,9 @@ const newSchema = new Schema({
         type: Date,
         required: true,
         default: Date.now
+    },
+    name: {
+        type: String
     }
 });
 

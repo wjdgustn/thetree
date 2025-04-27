@@ -43,6 +43,7 @@ const BlockHistory = require('../schemas/blockHistory');
 const EditRequest = require('../schemas/editRequest');
 const ThreadComment = require('../schemas/threadComment');
 const LoginHistory = require('../schemas/loginHistory');
+const SignupToken = require('../schemas/signupToken');
 
 const ACL = require('../class/acl');
 
@@ -726,6 +727,34 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
 
     global.updateSkinInfo();
     res.reload();
+});
+
+app.post('/admin/developer/signup', middleware.permission('developer'), async (req, res) => {
+    const email = req.body.email;
+    const name = req.body.name;
+
+    const checkUserExists = await User.exists({
+        email
+    });
+    if(checkUserExists) return res.status(409).json({
+        fieldErrors: {
+            email: {
+                msg: '이미 계정이 생성된 이메일입니다.'
+            }
+        }
+    });
+
+    await SignupToken.deleteMany({
+        email
+    });
+
+    const newToken = await SignupToken.create({
+        email,
+        name
+    });
+
+    const signupUrl = `/member/signup/${newToken.token}`;
+    res.redirect(signupUrl);
 });
 
 app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {

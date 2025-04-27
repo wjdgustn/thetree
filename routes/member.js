@@ -210,17 +210,19 @@ app.get('/member/signup/:token', async (req, res) => {
     });
     if(!token || Date.now() - token.createdAt > 1000 * 60 * 60 * 24) return res.error('인증 요청이 만료되었거나 올바르지 않습니다.');
 
-    if(token.ip !== req.ip) return res.error('보안 상의 이유로 요청한 아이피 주소와 현재 아이피 주소가 같아야 합니다.');
+    if(token.ip && token.ip !== req.ip) return res.error('보안 상의 이유로 요청한 아이피 주소와 현재 아이피 주소가 같아야 합니다.');
 
     res.renderSkin('계정 만들기', {
         contentName: 'member/signup_final',
         serverData: {
-            email: token.email
+            email: token.email,
+            name: token.name
         }
     });
 });
 
 const nameChecker = field => body(field)
+    .if(body(field).not().equals('special:bypass'))
     .notEmpty()
     .withMessage('사용자 이름의 값은 필수입니다.')
     .isLength({ min: 3, max: 32 })
@@ -259,7 +261,15 @@ app.post('/member/signup/:token',
     });
     if(!token
         || Date.now() - token.createdAt > 1000 * 60 * 60 * 24
-        || token.ip !== req.ip) return res.status(400).send('유효하지 않은 토큰');
+        || (token.ip && token.ip !== req.ip)) return res.status(400).send('유효하지 않은 토큰');
+
+    if(!!token.name !== (req.body.username === 'special:bypass')) return res.status(400).json({
+        fieldErrors: {
+            username: {
+                msg: '사용자 이름이 유효하지 않습니다.'
+            }
+        }
+    });
 
     const emailDupCheck = await User.exists({
         email: token.email
@@ -272,11 +282,12 @@ app.post('/member/signup/:token',
         }
     });
 
+    const name = token.name || req.body.username;
     const hash = await bcrypt.hash(req.body.password, 12);
     const newUserJson = {
         email: token.email,
         password: hash,
-        name: req.body.username
+        name
     }
 
     const userExists = await User.exists();
@@ -318,7 +329,7 @@ app.post('/member/signup/:token',
             req.session.fullReload = true;
             delete req.session.contributor;
             return res.renderSkin('계정 만들기', {
-                contentHtml: `<p>환영합니다! <b>${req.body.username}</b>님 계정 생성이 완료되었습니다.</p>`
+                contentHtml: `<p>환영합니다! <b>${newUser.name}</b>님 계정 생성이 완료되었습니다.</p>`
             });
         }
     });
