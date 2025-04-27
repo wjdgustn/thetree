@@ -861,14 +861,13 @@ app.post('/vote/:commentId/:voteIndex', async (req, res) => {
         return res.status(403).send('유효성 검사에 실패했습니다.');
     }
 
-    res.status(204).end();
-
     await threadCommentEvent({
         req,
         thread,
         document,
         dbComment: comment
     });
+    res.status(204).end();
 });
 
 module.exports = app;
