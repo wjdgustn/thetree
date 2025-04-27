@@ -842,6 +842,14 @@ app.use(async (req, res, next) => {
             delete req.session.fullReload;
         }
 
+        if(viewName === 'wiki') {
+            data.copyright_text = config.copyright_text;
+            if(data.document) {
+                const nsKey = `namespace.${data.document.namespace}.copyright_text`;
+                if(config[nsKey]) data.copyright_text = config[nsKey];
+            }
+        }
+
         const page = {
             title: data.document ? globalUtils.doc_fulltitle(data.document) : title,
             viewName: viewName ?? '',
@@ -852,14 +860,6 @@ app.use(async (req, res, next) => {
                 'categoryHtml',
                 'serverData'
             ])
-        }
-
-        if(viewName === 'wiki') {
-            data.copyright_text = config.copyright_text;
-            if(data.document) {
-                const nsKey = `namespace.${data.document.namespace}.copyright_text`;
-                if(config[nsKey]) data.serverData.copyright_text = config[nsKey];
-            }
         }
 
         const browserGlobalVarScript = `
