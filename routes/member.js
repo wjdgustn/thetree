@@ -586,10 +586,8 @@ app.post('/member/mypage', middleware.isLogin,
         skin: req.body.skin
     });
 
-    if(req.user.skin !== req.body.skin) {
-        if(req.isInternal) return res.originalStatus(400).end();
-        else req.session.fullReload = true;
-    }
+    if(req.user.skin !== req.body.skin)
+        req.session.fullReload = true;
 
     res.redirect('/member/mypage');
 });

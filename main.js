@@ -730,61 +730,70 @@ app.use(async (req, res, next) => {
 
     res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
 
-    const sessionMenus = [];
-    for(let [key, value] of Object.entries(permissionMenus)) {
-        if(req.permissions.includes(key)) {
-            sessionMenus.push(...value);
-        }
-    }
+    let session;
+    let configJSON;
+    let configJSONstr;
+    let sessionJSONstr;
 
-    const session = {
-        menus: sessionMenus,
-        account: {
-            name: req.user?.name ?? req.ip,
-            uuid: req.user?.uuid,
-            type: req.user?.type ?? UserTypes.IP
-        },
-        gravatar_url: req.user?.avatar,
-        user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
-        quick_block: req.permissions.includes('admin'),
-        ...(req.permissions.includes('no_force_captcha') ? {
-            disable_captcha: true
-        } : {})
-    }
-
-    const configJSON = {
-        ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => debug || !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
-        ...(config.captcha.enabled ? {
-            captcha: {
-                type: config.captcha.type,
-                site_key: config.captcha.site_key
+    const makeConfigAndSession = () => {
+        const sessionMenus = [];
+        for(let [key, value] of Object.entries(permissionMenus)) {
+            if(req.permissions.includes(key)) {
+                sessionMenus.push(...value);
             }
-        } : {})
-    }
-
-    if(skinInfo || req.backendMode) {
-        const configMapper = {
-            site_name: 'wiki.site_name',
-            logo_url: 'wiki.logo_url',
-            front_page: 'wiki.front_page',
-            editagree_text: 'wiki.editagree_text',
-            copyright_text: 'wiki.copyright_text',
-            base_url: 'wiki.canonical_url',
-            sitenotice: 'wiki.sitenotice'
         }
-        for(let [key, value] of Object.entries(configMapper)) {
-            const configVal = configJSON[key] ?? config[key];
-            delete configJSON[key];
-            if(!configVal) continue;
-            configJSON[value] = configVal;
-        }
-    }
 
-    const configJSONstr = JSON.stringify(configJSON);
-    const sessionJSONstr = JSON.stringify(session);
+        session = {
+            menus: sessionMenus,
+            account: {
+                name: req.user?.name ?? req.ip,
+                uuid: req.user?.uuid,
+                type: req.user?.type ?? UserTypes.IP
+            },
+            gravatar_url: req.user?.avatar,
+            user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
+            quick_block: req.permissions.includes('admin'),
+            ...(req.permissions.includes('no_force_captcha') ? {
+                disable_captcha: true
+            } : {})
+        }
+
+        configJSON = {
+            ...Object.fromEntries(Object.entries(publicConfig).filter(([k]) => debug || !k.startsWith('skin.') || k.startsWith(`skin.${skin}.`))),
+            ...(config.captcha.enabled ? {
+                captcha: {
+                    type: config.captcha.type,
+                    site_key: config.captcha.site_key
+                }
+            } : {})
+        }
+
+        if(skinInfo || req.backendMode) {
+            const configMapper = {
+                site_name: 'wiki.site_name',
+                logo_url: 'wiki.logo_url',
+                front_page: 'wiki.front_page',
+                editagree_text: 'wiki.editagree_text',
+                copyright_text: 'wiki.copyright_text',
+                base_url: 'wiki.canonical_url',
+                sitenotice: 'wiki.sitenotice'
+            }
+            for(let [key, value] of Object.entries(configMapper)) {
+                const configVal = configJSON[key] ?? config[key];
+                delete configJSON[key];
+                if(!configVal) continue;
+                configJSON[value] = configVal;
+            }
+        }
+
+        configJSONstr = JSON.stringify(configJSON);
+        sessionJSONstr = JSON.stringify(session);
+    }
 
     const isBackendMode = req.isInternal || (debug && req.query.be);
     const getFEBasicData = () => {
+        makeConfigAndSession();
+
         const userClientVersion = req.get('X-Chika');
         const clientVersion = skinInfo?.versionHeader;
 
@@ -814,6 +823,8 @@ app.use(async (req, res, next) => {
     res.renderSkin = (...args) => renderSkin(...args).then();
 
     const renderSkin = async (title, data = {}) => {
+        makeConfigAndSession();
+
         const status = data.status || 200;
         delete data.status;
 
