@@ -3,7 +3,9 @@
   "front_page": "FrontPage",
   "base_url": "http://localhost:3000",
 
-  "sitenotice": "",
+  "logo_text": "테스트위키",
+  "logo_url": "테스트위키",
+  "theme_color": "#f85c64",
 
   "skin.liberty.navbar_logo_text": "테스트위키",
   "skin.liberty.brand_color_1": "#f85c64",
