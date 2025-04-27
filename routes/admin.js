@@ -699,7 +699,9 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
         const dir = path.join('./frontend/skins', name);
         const skinExists = await fs.exists(dir);
         if(!skinExists) return res.status(400).send('Invalid skin');
+    }
 
+    await Promise.allSettled(names.map(async name => {
         const skinPath = path.join('./skins', name);
 
         try {
@@ -720,7 +722,7 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
 
         const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath, 'server')));
         for(let module of ssrModules) delete require.cache[module];
-    }
+    }));
 
     global.updateSkinInfo();
     res.reload();
