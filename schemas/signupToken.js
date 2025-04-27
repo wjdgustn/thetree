@@ -21,7 +21,6 @@ const newSchema = new Schema({
     },
     ip: {
         type: String,
-        unique: true,
         index: true
     },
     createdAt: {
@@ -38,6 +37,14 @@ newSchema.index({
     createdAt: 1
 }, {
     expireAfterSeconds: 60 * 60 * 24
+});
+newSchema.index({
+    ip: 1
+}, {
+    unique: true,
+    partialFilterExpression: {
+        ip: { $exists: true }
+    }
 });
 
 module.exports = mongoose.model('SignupToken', newSchema);
