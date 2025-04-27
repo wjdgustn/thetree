@@ -1056,13 +1056,12 @@ document.getElementById('initScript')?.remove();
         }
     }
 
-    const url = req.url;
+    let url = req.url;
     if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) for(let item of global.disabledFeatures) {
         if(item.method !== 'ALL' && item.method !== req.method) continue;
 
-        let checkUrl = url;
-        if(checkUrl.startsWith('/internal/')) checkUrl = checkUrl.replace('/internal', '');
-        if(item.type === 'string' && !checkUrl.startsWith(item.condition)) continue;
+        if(url.startsWith('/internal/')) url = url.replace('/internal', '');
+        if(item.type === 'string' && !url.startsWith(item.condition)) continue;
         if(item.type === 'js' && !eval(item.condition)) continue;
 
         const msg = (item.message || '비활성화된 기능입니다.')
