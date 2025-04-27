@@ -381,7 +381,12 @@ app.post('/Upload', (req, res, next) => {
 });
 
 app.get('/BlockHistory', async (req, res) => {
-    const baseQuery = {};
+    const typeNum = parseInt(req.query.type);
+    const baseQuery = {
+        ...(isNaN(typeNum) ? {} : {
+            type: typeNum
+        })
+    }
 
     if(!req.permissions.includes('developer') || req.query.showHidden !== '1')
         baseQuery.hideLog = {
