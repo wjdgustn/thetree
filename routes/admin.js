@@ -691,32 +691,36 @@ app.post('/admin/developer/skin/delete', middleware.permission('developer'), asy
 });
 
 app.post('/admin/developer/skin/build', middleware.permission('developer'), async (req, res) => {
-    const name = req.body.name;
-    if(name.includes('..')) return res.status(400).send('Invalid name');
-    const dir = path.join('./frontend/skins', name);
-    const skinExists = await fs.exists(dir);
-    if(!skinExists) return res.status(400).send('Invalid skin');
+    let names = req.body.name;
+    if(typeof names === 'string') names = [...names.split(',')].map(a => a.trim());
 
-    const skinPath = path.join('./skins', name);
+    for(let name of names) {
+        if(name.includes('..')) return res.status(400).send('Invalid name');
+        const dir = path.join('./frontend/skins', name);
+        const skinExists = await fs.exists(dir);
+        if(!skinExists) return res.status(400).send('Invalid skin');
 
-    try {
-        const opts = {
-            cwd: './frontend',
-            env: {
-                ...process.env,
-                SKIN_NAME: name,
-                METADATA_PATH: path.resolve(skinPath)
+        const skinPath = path.join('./skins', name);
+
+        try {
+            const opts = {
+                cwd: './frontend',
+                env: {
+                    ...process.env,
+                    SKIN_NAME: name,
+                    METADATA_PATH: path.resolve(skinPath)
+                }
             }
+            await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
+            await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'client')}"`, opts);
+        } catch(e) {
+            console.error(e);
+            return res.status(400).send('build failed');
         }
-        await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
-        await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'client')}"`, opts);
-    } catch(e) {
-        console.error(e);
-        return res.status(400).send('build failed');
-    }
 
-    const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath, 'server')));
-    for(let module of ssrModules) delete require.cache[module];
+        const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath, 'server')));
+        for(let module of ssrModules) delete require.cache[module];
+    }
 
     global.updateSkinInfo();
     res.reload();
