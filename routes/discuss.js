@@ -81,6 +81,7 @@ const threadCommentMapper = ({
         'type',
         'createdAt',
         'user',
+        'admin',
         'contentHtml',
 
         'hideUser',
