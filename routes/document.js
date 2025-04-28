@@ -1364,7 +1364,7 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         revs = await History.find(query)
             .sort({ rev: query.rev?.$gte ? 1 : -1 })
             .limit(30)
-            .select('type rev uuid user createdAt diffLength log revertRev troll trollBy hideLog hideLogBy hidden editRequest -_id')
+            .select('type rev uuid user createdAt diffLength log revertRev moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id')
             .lean();
 
         if(query.rev?.$gte) revs.reverse();
