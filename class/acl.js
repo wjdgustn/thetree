@@ -178,7 +178,7 @@ module.exports = class ACL {
     }
 
     async check(aclType = ACLTypes.None, data = {}, noReadCheck = false) {
-        if(data.alwaysAllow || data?.permissions?.includes('developer')) return { result: true };
+        if(data.alwaysAllow) return { result: true };
 
         const nsaclPerm = data?.permissions?.includes('nsacl');
         const nsaclPermValid = nsaclPerm && (!this.document || !config.protected_namespaces?.includes(this.document.namespace));
@@ -279,6 +279,9 @@ module.exports = class ACL {
         }
 
         const action = rule.actionType;
+
+        if(action === ACLActionTypes.Allow
+            && data?.permissions?.includes('developer')) return { action };
 
         if(rule.conditionType === ACLConditionTypes.Perm) {
             if(rule.conditionContent === 'any') return { action };
