@@ -280,7 +280,7 @@ module.exports = class ACL {
 
         const action = rule.actionType;
 
-        if(action === ACLActionTypes.Allow
+        if(action >= ACLActionTypes.Allow
             && data?.permissions?.includes('developer')) return { action };
 
         if(rule.conditionType === ACLConditionTypes.Perm) {
