@@ -130,12 +130,12 @@ app.get('/api/backlink/?*', middleware.parseDocumentName, async (req, res) => {
         const data = finalData.serverData;
         res.json({
             namespaces: data.namespaceCounts,
-            backlinks: (data.backlinks ?? []).map(a => ({
+            backlinks: data.backlinks.map(a => ({
                 document: globalUtils.doc_fulltitle(utils.dbDocumentToDocument(a)),
                 flags: a.flags.map(a => utils.getKeyFromObject(BacklinkFlags, a).toLowerCase()).join(',')
             })),
-            to: data.prevItem?.title,
-            from: data.nextItem?.title
+            to: data.prevItem?.title ?? null,
+            from: data.nextItem?.title ?? null
         });
     }
 });

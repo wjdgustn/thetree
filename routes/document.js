@@ -1809,7 +1809,10 @@ const getBacklinks = async (req, res) => {
             namespaceCounts,
             backlinksPerChar,
             prevItem,
-            nextItem
+            nextItem,
+            ...(req.isAPI ? {
+                backlinks
+            } : {})
         }
     });
 }
