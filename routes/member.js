@@ -558,7 +558,7 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
         req.session.fullReload = true;
         delete req.session.contributor;
         res.clearCookie('honoka');
-        res.redirect(req.get('Referer') || '/');
+        res.redirect(req.query.redirect || req.get('Referer') || '/');
     });
 });
 
