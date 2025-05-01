@@ -336,6 +336,12 @@ app.post('/member/signup/:token',
 });
 
 app.get('/member/login', middleware.isLogout, (req, res) => {
+    if(!req.query.redirect && req.referer) {
+        const url = new URL(req.url, config.base_url);
+        url.searchParams.set('redirect', req.referer.pathname + req.referer.search);
+        return res.redirect(url.pathname + url.search);
+    }
+
     res.renderSkin('로그인', {
         contentName: 'member/login'
     });
