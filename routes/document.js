@@ -159,9 +159,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             title: redirectDoc.title
         });
         if(checkDoc) return res.redirect(globalUtils.doc_action_link(redirectDoc, 'w', {
-            from: globalUtils.doc_fulltitle(document),
-            anchor
-        }));
+            from: globalUtils.doc_fulltitle(document)
+        }) + (anchor ? '#' + anchor : ''));
     }
 
     let user;
