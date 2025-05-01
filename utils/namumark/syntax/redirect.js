@@ -6,7 +6,7 @@ module.exports = {
     priority: Priority.Literal,
     fullLine: true,
     format(content, namumark, lines) {
-        if(lines.length !== 1) return;
+        if(namumark.thread || lines.length !== 1) return;
 
         if(!content.startsWith('#redirect ')) return;
 
