@@ -184,7 +184,7 @@ global.newFECommits = [];
 
 if(!fs.existsSync('./cache/lastNotificationCheck.json')) {
     fs.writeFileSync('./cache/lastNotificationCheck.json', JSON.stringify({
-        timestamp: fs.existsSync('./minifyCache.json') ? 0 : Date.now()
+        timestamp: fs.existsSync('./cache/minifyCache.json') ? 0 : Date.now()
     }));
 }
 global.checkUpdate = async (manually = false) => {
