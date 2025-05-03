@@ -184,8 +184,17 @@ global.newFECommits = [];
 
 global.checkUpdate = async () => {
     try {
+        if(!fs.existsSync('./cache/lastNotificationCheck.json'))
+            fs.writeFileSync('./cache/lastNotificationCheck.json', JSON.stringify({
+                timestamp: Date.now()
+            }));
+        const lastNotificationCheck = JSON.parse(fs.readFileSync('./cache/lastNotificationCheck.json').toString());
+
         const { data } = await axios.get('/engine/notification', {
-            baseURL: versionData.officialWiki
+            baseURL: versionData.officialWiki,
+            params: {
+                after: lastNotificationCheck.timestamp
+            }
         });
         await Promise.all(data.map(a => Notification.create({
             type: NotificationTypes.Owner,
@@ -193,6 +202,9 @@ global.checkUpdate = async () => {
             createdAt: a.createdAt,
             data: a.content
         })));
+        fs.writeFileSync('./cache/lastNotificationCheck.json', JSON.stringify({
+            timestamp: Date.now()
+        }));
     } catch(e) {}
 
     if(config.check_update === false) return;
