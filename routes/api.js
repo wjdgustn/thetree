@@ -162,7 +162,11 @@ if(config.testwiki) {
             createdAt: {
                 $gt: new Date(after)
             },
-            threadCommentType: ThreadCommentTypes.Default
+            threadCommentType: ThreadCommentTypes.Default,
+            id: {
+                $ne: 1
+            },
+            hidden: false
         })
             .select('content createdAt -_id')
             .lean();
@@ -181,7 +185,8 @@ if(config.testwiki) {
 
         const exists = await ThreadComment.find({
             thread: thread.uuid,
-            content: req.query.text
+            content: req.query.text,
+            hidden: false
         });
         res.json({ result: !!exists });
     });
