@@ -185,7 +185,7 @@ if(config.testwiki) {
             .lean();
         if(!thread) return res.status(404).send('Verification thread not found');
 
-        const exists = await ThreadComment.find({
+        const exists = await ThreadComment.exists({
             thread: thread.uuid,
             content: req.query.text,
             type: ThreadCommentTypes.Default,
