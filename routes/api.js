@@ -147,7 +147,7 @@ app.get('/api/backlink/?*', middleware.parseDocumentName, async (req, res) => {
 if(config.testwiki) {
     app.get('/engine/notification', async (req, res) => {
         let after = parseInt(req.query.after);
-        after ??= 0;
+        after ||= 0;
 
         const thread = await Thread.findOne({
             specialType: 'notification',
