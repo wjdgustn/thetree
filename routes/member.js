@@ -1306,7 +1306,7 @@ app.post('/member/recover_password', middleware.isLogout, middleware.captcha, as
     if(!email) return res.status(400).send('이메일의 값은 필수입니다.');
 
     res.renderSkin('계정 찾기', {
-        contentName: '/member/recover_password_email_sent',
+        contentName: 'member/recover_password_email_sent',
         serverData: { email }
     });
 
