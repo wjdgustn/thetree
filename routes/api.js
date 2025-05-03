@@ -175,6 +175,8 @@ if(config.testwiki) {
     });
 
     app.get('/engine/verify_developer', async (req, res) => {
+        if(!req.query.text) return res.status(400).send('missing_text');
+
         const thread = await Thread.findOne({
             specialType: 'verification',
             status: ThreadStatusTypes.Normal
