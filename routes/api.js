@@ -186,7 +186,7 @@ if(config.testwiki) {
         const exists = await ThreadComment.find({
             thread: thread.uuid,
             content: req.query.text,
-            type: ThreadCommentTypes.default,
+            type: ThreadCommentTypes.Default,
             hidden: false
         });
         res.json({ result: !!exists });
