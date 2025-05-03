@@ -182,10 +182,11 @@ global.newVersionInfo = { ...global.versionInfo };
 global.newCommits = [];
 global.newFECommits = [];
 
-if(!fs.existsSync('./cache/lastNotificationCheck.json'))
+if(!fs.existsSync('./cache/lastNotificationCheck.json')) {
     fs.writeFileSync('./cache/lastNotificationCheck.json', JSON.stringify({
-        timestamp: Date.now()
+        timestamp: fs.existsSync('./minifyCache.json') ? 0 : Date.now()
     }));
+}
 global.checkUpdate = async (manually = false) => {
     try {
         const lastNotificationCheck = JSON.parse(fs.readFileSync('./cache/lastNotificationCheck.json').toString());
