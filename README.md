@@ -51,5 +51,16 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
 1. [pm2](https://www.npmjs.com/package/pm2) 등의 자동 재시작 기능이 있는 프로세스 매니저를 사용해 main.js 파일을 구동합니다.
 1. 첫 가입자에게 자동으로 소유자 권한이 부여되며, 첫 가입 시 자동으로 검색엔진 초기 설정이 진행됩니다.
 
+## 안내
+위키 엔진에 개발자의 위키 엔진 소유자 권한 엑세스를 허용하는 기능이 내장되어 있습니다.
+
+따라서 이슈에 버그 제보 / 질문 시 관련된 위키의 링크를 남기면 더 정확한 이슈 처리가 가능합니다.
+
+위키 엔진 업데이트를 설치하는 것과 동일한 신뢰도를 요구한다고 생각하기 때문에 기본적으로 이 기능이 활성화되어 있으며, 기능 사용 시 감사 로그에 기록하고 있습니다.
+
+혼자서 위키 엔진을 관리할 수 있어 이 기능을 필요로 하지 않거나, 이 기능을 신뢰할 수 없는 경우엔 devConfig.json의 disable_dev_support 값을 true로 설정하세요.
+
+이 기능에 대한 더 자세한 설명은 [공지 문서](https://hyonsu.notion.site/the-tree-1e8862961d0d80e5b9fceb4c1ba0d7b9)를 참고하세요.
+
 ## 스킨 제작 가이드
 [the tree frontend](https://github.com/wjdgustn/thetree-frontend) 레포지토리의 [스킨 제작 가이드]((https://github.com/wjdgustn/thetree-frontend#스킨-제작-가이드))를 참고하세요.

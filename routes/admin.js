@@ -24,13 +24,15 @@ const namumarkUtils = require('../utils/namumark/utils');
 const {
     AllPermissions,
     ProtectedPermissions,
+    NoGrantPermissions,
     UserTypes,
     HistoryTypes,
     BlockHistoryTypes,
     ACLTypes,
     EditRequestStatusTypes,
     disabledFeaturesTemplates,
-    ThreadCommentTypes
+    ThreadCommentTypes,
+    AuditLogTypes
 } = require('../utils/types');
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
@@ -44,6 +46,8 @@ const EditRequest = require('../schemas/editRequest');
 const ThreadComment = require('../schemas/threadComment');
 const LoginHistory = require('../schemas/loginHistory');
 const SignupToken = require('../schemas/signupToken');
+const AuditLog = require('../schemas/auditLog');
+const Thread = require('../schemas/thread');
 
 const ACL = require('../class/acl');
 
@@ -770,7 +774,12 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
     }
 
     const grantPerms = config.grant_permissions.filter(a => AllPermissions.includes(a));
-    const configPerms = AllPermissions.filter(a => (req.permissions.includes('developer') || !ProtectedPermissions.includes(a)) && !grantPerms.includes(a));
+    const configPerms = AllPermissions
+        .filter(a =>
+            !NoGrantPermissions.includes(a)
+            && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+            && !grantPerms.includes(a)
+        );
     const grantablePermissions = [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])];
 
     res.renderSkin('권한 부여', {
@@ -801,7 +810,10 @@ app.post('/admin/grant',
     if(!targetUser) return res.status(404).send('User not found');
 
     const grantablePermissions = req.permissions.includes('config')
-        ? AllPermissions.filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+        ? AllPermissions.filter(a =>
+            !NoGrantPermissions.includes(a)
+            && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+        )
         : AllPermissions.filter(a => config.grant_permissions.includes(a));
 
     let newPerm = [];
@@ -1305,6 +1317,67 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
         logs: utils.withoutKeys(logs, ['_id']),
         prevItem,
         nextItem
+    });
+});
+
+app.get('/admin/audit_log', middleware.permission('config'), async (req, res) => {
+    const typeNum = parseInt(req.query.type);
+    const baseQuery = {
+        ...(isNaN(typeNum) ? {} : {
+            type: typeNum
+        })
+    }
+
+    const query = req.query.query;
+    if(query) {
+        if(req.query.target === 'author') {
+            if(query.includes('-')) baseQuery.createdUser = query;
+            else {
+                const checkUser = await User.findOne({
+                    $or: [
+                        {
+                            name: query
+                        }
+                    ]
+                });
+                baseQuery.user = checkUser?.uuid;
+            }
+        }
+        else {
+            const regex = {
+                $regex: new RegExp(utils.escapeRegExp(query), 'i')
+            };
+            // const exactRegex = {
+            //     $regex: new RegExp(`^${utils.escapeRegExp(query)}$`, 'i')
+            // }
+            baseQuery.$or = [
+                { target: regex },
+                { content: regex }
+            ]
+        }
+    }
+
+    const data = await utils.pagination(req, AuditLog, baseQuery, '_id', '_id', {
+        limit: 100
+    });
+    for(let item of data.items) {
+        item.createdAt = item._id.getTimestamp();
+
+        if(item.action === AuditLogTypes.DeleteThread) {
+            item.thread = await Thread.findOne({
+                uuid: item.content
+            })
+                .select('url topic -_id')
+                .lean();
+            delete item.content;
+        }
+    }
+    data.items = await utils.findUsers(req, data.items);
+    data.items = utils.withoutKeys(data.items, ['_id', '__v']);
+
+    res.renderSkin('감사 로그', {
+        contentName: 'admin/auditLog',
+        serverData: data
     });
 });
 

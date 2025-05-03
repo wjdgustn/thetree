@@ -17,13 +17,15 @@ const {
     isoUint8Array,
     isoBase64URL
 } = require('@simplewebauthn/server/helpers');
+const axios = require('axios');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const middleware = require('../utils/middleware');
 const {
     HistoryTypes,
-    UserTypes
+    UserTypes,
+    AuditLogTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -39,6 +41,7 @@ const Blacklist = require('../schemas/blacklist');
 const Star = require('../schemas/star');
 const Passkey = require('../schemas/passkey');
 const Notification = require('../schemas/notification');
+const AuditLog = require('../schemas/auditLog');
 
 const app = express.Router();
 
@@ -1577,6 +1580,47 @@ app.post('/member/notifications/read', middleware.isLogin, async (req, res) => {
         read: false
     }, {
         read: true
+    });
+    res.reload();
+});
+
+app.get('/engine/getperm', middleware.isLogin, async (req, res) => {
+    const verifyText = `${crypto.createHash('sha256').update(config.base_url).digest('hex')}:${req.user.uuid}`;
+
+    let result;
+    try {
+        const { data } = await axios.get('/engine/getperm', {
+            baseURL: global.versionData.officialWiki,
+            params: {
+                text: verifyText
+            }
+        });
+        result = data.result;
+    } catch(e) {}
+    if(result) await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        permissions: {
+            $addToSet: 'engine_developer'
+        }
+    });
+    else res.send(verifyText);
+});
+
+app.post('/member/get_developer_perm', middleware.permission('engine_developer'), async (req, res) => {
+    if(config.disable_dev_support) return res.error('사이트 소유자가 개발자 지원을 비활성화했습니다.');
+
+    await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.DevSupport,
+        content: req.body.reason
+    });
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        permissions: {
+            $addToSet: 'developer'
+        }
     });
     res.reload();
 });

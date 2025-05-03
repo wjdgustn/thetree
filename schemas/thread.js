@@ -54,6 +54,9 @@ const newSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    specialType: {
+        type: String
     }
 });
 

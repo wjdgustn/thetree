@@ -70,7 +70,8 @@ module.exports = {
     },
     AuditLogTypes: {
         NamespaceACL: 0,
-        DeleteThread: 1
+        DeleteThread: 1,
+        DevSupport: 2
     },
     LoginHistoryTypes: {
         Login: 0,
@@ -106,10 +107,14 @@ module.exports = {
         'grant_hidelog',
         'login_history_hidelog',
         'batch_revert_hidelog',
-        'edit_protected_file'
+        'edit_protected_file',
+        'engine_developer'
     ],
     ProtectedPermissions: [
         'developer'
+    ],
+    NoGrantPermissions: [
+        'engine_developer'
     ],
     ACLPermissions: [
         'any',
@@ -138,10 +143,16 @@ module.exports = {
             l: '/admin/batch_revert',
             t: '일괄 되돌리기'
         }],
-        config: [{
-            l: '/admin/config',
-            t: '설정'
-        }],
+        config: [
+            {
+                l: '/admin/audit_log',
+                t: '감사 로그'
+            },
+            {
+                l: '/admin/config',
+                t: '설정'
+            }
+        ],
         developer: [{
             l: '/admin/developer',
             t: '개발자 설정'

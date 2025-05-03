@@ -6,7 +6,9 @@ const middleware = require('../utils/middleware');
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const {
-    BacklinkFlags
+    BacklinkFlags,
+    ThreadStatusTypes,
+    ThreadCommentTypes
 } = require('../utils/types');
 const {
     editAndEditRequest,
@@ -16,6 +18,8 @@ const {
 
 const User = require('../schemas/user');
 const EditToken = require('../schemas/editToken');
+const Thread = require('../schemas/thread');
+const ThreadComment = require('../schemas/threadComment');
 
 const app = express.Router();
 
@@ -139,4 +143,48 @@ app.get('/api/backlink/?*', middleware.parseDocumentName, async (req, res) => {
         });
     }
 });
+
+if(config.testwiki) {
+    app.get('/engine/notification', async (req, res) => {
+        let after = parseInt(req.query.after);
+        after ??= 0;
+
+        const thread = await Thread.findOne({
+            specialType: 'notification',
+            status: ThreadStatusTypes.Normal
+        })
+            .sort({ _id: -1 })
+            .lean();
+        if(!thread) return res.status(404).send('Notification thread not found');
+
+        const comments = await ThreadComment.find({
+            thread: thread.uuid,
+            createdAt: {
+                $gt: new Date(after)
+            },
+            threadCommentType: ThreadCommentTypes.Default
+        })
+            .select('content createdAt -_id')
+            .lean();
+
+        res.json(comments);
+    });
+
+    app.get('/engine/verify_developer', async (req, res) => {
+        const thread = await Thread.findOne({
+            specialType: 'verification',
+            status: ThreadStatusTypes.Normal
+        })
+            .sort({ _id: -1 })
+            .lean();
+        if(!thread) return res.status(404).send('Verification thread not found');
+
+        const exists = await ThreadComment.find({
+            thread: thread.uuid,
+            content: req.query.text
+        });
+        res.json({ result: !!exists });
+    });
+}
+
 module.exports = app;

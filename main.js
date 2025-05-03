@@ -34,7 +34,13 @@ const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
 const types = require('./utils/types');
-const { UserTypes, permissionMenus, AllPermissions, LoginHistoryTypes } = types;
+const {
+    UserTypes,
+    permissionMenus,
+    AllPermissions,
+    LoginHistoryTypes,
+    NotificationTypes
+} = types;
 const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
@@ -123,6 +129,7 @@ global.updateConfig = () => {
 }
 
 const versionData = JSON.parse(fs.readFileSync('./version.json').toString());
+global.versionData = versionData;
 global.updateSkinInfo = () => {
     if(!fs.existsSync('./frontend')) {
         console.log('Downloading frontend...');
@@ -176,6 +183,20 @@ global.newCommits = [];
 global.newFECommits = [];
 
 global.checkUpdate = async () => {
+    try {
+        const { data } = await axios.get('/engine/notification', {
+            baseURL: versionData.officialWiki
+        });
+        await Promise.all(data.map(a => Notification.create({
+            type: NotificationTypes.Owner,
+            user: 'developer',
+            createdAt: a.createdAt,
+            data: a.content
+        })));
+    } catch(e) {}
+
+    if(config.check_update === false) return;
+
     const githubAPI = axios.create({
         baseURL: `https://api.github.com/repos`,
         headers: {
@@ -250,10 +271,9 @@ global.checkUpdate = async () => {
     }
 }
 
-if(config.check_update !== false) {
-    setInterval(checkUpdate, 1000 * 60 * 60);
+setInterval(checkUpdate, 1000 * 60 * 60);
+if(config.check_update !== false)
     checkUpdate().then();
-}
 
 global.updateEngine = (exit = true) => {
     (async () => {

@@ -30,5 +30,6 @@
 
   "github_api_token": "",
   "check_update": true,
-  "auto_update": false
+  "auto_update": false,
+  "disable_dev_support": false
 }
