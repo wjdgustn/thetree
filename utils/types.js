@@ -76,6 +76,11 @@ module.exports = {
         Login: 0,
         IPChange: 1
     },
+    NotificationTypes: {
+        UserDiscuss: 0,
+        Mention: 1,
+        Owner: 2
+    },
     AllPermissions: [
         'delete_thread',
         'admin',

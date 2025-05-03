@@ -12,7 +12,10 @@ const namumarkUtils = require('./namumark/utils');
 const {
     UserTypes,
     HistoryTypes,
-    ACLTypes
+    ACLTypes,
+    ThreadCommentTypes,
+    ThreadStatusTypes,
+    NotificationTypes
 } = require('./types');
 
 module.exports = {
@@ -833,5 +836,136 @@ module.exports = {
             if(readable) readableNamespaces.push(namespace);
         }
         return readableNamespaces;
+    },
+    async threadCommentMapper(
+        comment,
+        {
+            req,
+            thread,
+            parser,
+            user,
+            hideUser
+        } = {}
+    ) {
+        comment.user = user ?? comment.user;
+        if(!req?.backendMode) comment.userHtml = this.userHtml(user ?? comment.user, {
+            isAdmin: req?.permissions.includes('admin'),
+            note: `토론 ${thread.url} #${comment.id} 긴급차단`,
+            thread: true,
+            threadAdmin: comment.admin
+        });
+
+        const canSeeHidden = req?.permissions.includes('hide_thread_comment');
+        if(comment.hidden) {
+            hideUser ??= comment.hiddenBy;
+            comment.hideUser = hideUser;
+            if(!req?.backendMode) comment.hideUserHtml = this.userHtml(hideUser, {
+                isAdmin: hideUser.permissions?.includes('admin'),
+                thread: true,
+                threadAdmin: true
+            });
+        }
+
+        if(!comment.hidden || canSeeHidden) {
+            if(comment.type === ThreadCommentTypes.Default) {
+                const { html } = await parser.parse(comment.content);
+                comment.contentHtml = html;
+            }
+            else if(comment.type === ThreadCommentTypes.UpdateStatus) {
+                comment.contentHtml = `스레드 상태를 <b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
+            }
+            else if(comment.type === ThreadCommentTypes.UpdateTopic) {
+                comment.contentHtml = `스레드 주제를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 변경`;
+            }
+            else if(comment.type === ThreadCommentTypes.UpdateDocument) {
+                comment.contentHtml = `스레드를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 이동`;
+            }
+        }
+
+        // if(typeof comment.user === 'object')
+        //     comment.user = comment.user.uuid;
+
+        return this.onlyKeys(comment, [
+            'id',
+            'hidden',
+
+            'type',
+            'createdAt',
+            'user',
+            'admin',
+            'contentHtml',
+
+            'hideUser',
+            ...(!req || !req.backendMode ? [
+                'userHtml',
+                'hideUserHtml'
+            ] : [])
+        ]);
+    },
+    async notificationMapper(req, items = []) {
+        await Promise.all(items.map(item => new Promise(async resolve => {
+            switch(item.type) {
+                case NotificationTypes.UserDiscuss: {
+                    const thread = await models.Thread.findOne({
+                        uuid: item.data
+                    }).lean();
+                    item.thread = this.onlyKeys(thread, ['url', 'topic']);
+                    const dbDocument = await models.Document.findOne({
+                        uuid: thread.document
+                    });
+                    item.document = this.dbDocumentToDocument(dbDocument);
+                    const comment = await models.ThreadComment.findOne({
+                        thread: thread.uuid
+                    }).sort({
+                        _id: -1
+                    }).lean();
+                    item.comment = await this.threadCommentMapper(comment, {
+                        req,
+                        parser: new NamumarkParser({
+                            document: dbDocument,
+                            aclData: req.aclData,
+                            dbComment: comment,
+                            thread: true,
+                            commentId: comment.id,
+                            req
+                        })
+                    });
+                    item.comment = await this.findUsers(req, item.comment);
+                    item.url = `/thread/${thread.url}`;
+                    delete item.data;
+                    break;
+                }
+                case NotificationTypes.Mention: {
+                    const comment = await models.ThreadComment.findOne({
+                        uuid: item.data
+                    }).lean();
+                    const thread = await models.Thread.findOne({
+                        uuid: comment.thread
+                    });
+                    item.thread = this.onlyKeys(thread, ['url', 'topic']);
+                    const dbDocument = await models.Document.findOne({
+                        uuid: thread.document
+                    });
+                    item.document = this.dbDocumentToDocument(dbDocument);
+                    item.comment = await this.threadCommentMapper(comment, {
+                        req,
+                        parser: new NamumarkParser({
+                            document: dbDocument,
+                            aclData: req.aclData,
+                            dbComment: comment,
+                            thread: true,
+                            commentId: comment.id,
+                            req
+                        })
+                    });
+                    item.comment = await this.findUsers(req, item.comment);
+                    item.url = `/thread/${thread.url}#${comment.id}`;
+                    delete item.data;
+                    break;
+                }
+            }
+            resolve();
+        })));
+        return items;
     }
 }

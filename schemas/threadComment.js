@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
-const globalUtils = require("../utils/global");
-const { ThreadCommentTypes } = require('../utils/types');
+const globalUtils = require('../utils/global');
+const { ThreadCommentTypes, NotificationTypes } = require('../utils/types');
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
@@ -84,7 +84,7 @@ newSchema.pre('save', async function() {
     }
 });
 
-newSchema.post('save', function() {
+newSchema.post('save', async function() {
     delete lastItem[this.id];
 
     mongoose.models.Thread.updateOne({
@@ -93,6 +93,37 @@ newSchema.post('save', function() {
         lastUpdateUser: this.user,
         lastUpdatedAt: this.createdAt
     }).then();
+
+    const thread = await mongoose.models.Thread.findOne({
+        uuid: this.thread
+    });
+    const dbDocument = await mongoose.models.Document.findOne({
+        uuid: thread.document
+    });
+    if(!dbDocument) return;
+
+    const parser = new global.NamumarkParser({
+        document: dbDocument,
+        aclData: {
+            alwaysAllow: true
+        },
+        dbComment: this,
+        thread: true,
+        commentId: this.id
+    });
+    const { links } = await parser.parse(this.content);
+    const mentions = links.filter(a => a.startsWith('사용자:')).map(a => a.slice(4));
+    const users = await mongoose.models.User.find({
+        name: {
+            $in: mentions
+        }
+    });
+    await Promise.all(users.filter(a => a).map(a => mongoose.models.Notification.create({
+        type: NotificationTypes.Mention,
+        user: a.uuid,
+        data: this.uuid,
+        thread: this.thread
+    })));
 });
 
 const model = mongoose.model('ThreadComment', newSchema);

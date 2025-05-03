@@ -29,7 +29,6 @@ const {
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
 const AutoLoginToken = require('../schemas/autoLoginToken');
-const LoginHistory = require('../schemas/loginHistory');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const ACLGroup = require('../schemas/aclGroup');
@@ -39,6 +38,7 @@ const EditRequest = require('../schemas/editRequest');
 const Blacklist = require('../schemas/blacklist');
 const Star = require('../schemas/star');
 const Passkey = require('../schemas/passkey');
+const Notification = require('../schemas/notification');
 
 const app = express.Router();
 
@@ -1519,6 +1519,66 @@ app.post('/member/delete_webauthn',
     });
     if(req.backendMode) res.reload();
     else res.status(204).end();
+});
+
+app.get('/member/notifications', middleware.isLogin, async (req, res) => {
+    const queries = [{
+        user: req.user.uuid
+    }];
+    if(req.permissions.includes('developer')) queries.push({
+        user: 'developer'
+    });
+
+    let statusStr = req.query.status;
+    if(!['read', 'unread', 'all'].includes(statusStr))
+        statusStr = null;
+    statusStr ??= 'unread';
+
+    const data = await utils.pagination(req, Notification, {
+        $or: queries,
+        ...(statusStr !== 'all' ? {
+            read: statusStr === 'read'
+        } : {})
+    }, 'uuid', 'createdAt', {
+        limit: 10
+    });
+    data.items = utils.onlyKeys(data.items, ['uuid', 'type', 'read', 'data', 'createdAt']);
+    data.items = await utils.notificationMapper(req, data.items);
+
+    res.renderSkin('알림', {
+        contentName: 'member/notifications',
+        serverData: data
+    });
+});
+
+app.post('/member/notifications/:uuid/read', middleware.isLogin, async (req, res) => {
+    await Notification.updateOne({
+        user: req.user.uuid,
+        uuid: req.params.uuid
+    }, {
+        read: true
+    });
+    res.reload();
+});
+
+app.post('/member/notifications/:uuid/unread', middleware.isLogin, async (req, res) => {
+    await Notification.updateOne({
+        user: req.user.uuid,
+        uuid: req.params.uuid
+    }, {
+        read: false
+    });
+    res.reload();
+});
+
+app.post('/member/notifications/read', middleware.isLogin, async (req, res) => {
+    await Notification.updateMany({
+        user: req.user.uuid,
+        read: false
+    }, {
+        read: true
+    });
+    res.reload();
 });
 
 module.exports = app;

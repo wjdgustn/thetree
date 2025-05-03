@@ -12,7 +12,8 @@ const {
     ACLTypes,
     EditRequestStatusTypes,
     UserTypes,
-    AuditLogTypes
+    AuditLogTypes,
+    NotificationTypes
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -22,75 +23,13 @@ const ThreadComment = require('../schemas/threadComment');
 const EditRequest = require('../schemas/editRequest');
 const AuditLog = require('../schemas/auditLog');
 const Vote = require('../schemas/vote');
+const Notification = require('../schemas/notification');
 
 const ACL = require('../class/acl');
 
 const app = express.Router();
 
 const COMMENT_LOAD_AMOUNT = 10;
-
-const threadCommentMapper = ({
-    req,
-    thread,
-    parser,
-    user,
-    hideUser
-} = {}) => async comment => {
-    comment.user = user ?? comment.user;
-    if(!req?.backendMode) comment.userHtml = utils.userHtml(user ?? comment.user, {
-        isAdmin: req?.permissions.includes('admin'),
-        note: `토론 ${thread.url} #${comment.id} 긴급차단`,
-        thread: true,
-        threadAdmin: comment.admin
-    });
-
-    const canSeeHidden = req?.permissions.includes('hide_thread_comment');
-    if(comment.hidden) {
-        hideUser ??= comment.hiddenBy;
-        comment.hideUser = hideUser;
-        if(!req?.backendMode) comment.hideUserHtml = utils.userHtml(hideUser, {
-            isAdmin: hideUser.permissions?.includes('admin'),
-            thread: true,
-            threadAdmin: true
-        });
-    }
-
-    if(!comment.hidden || canSeeHidden) {
-        if(comment.type === ThreadCommentTypes.Default) {
-            const { html } = await parser.parse(comment.content);
-            comment.contentHtml = html;
-        }
-        else if(comment.type === ThreadCommentTypes.UpdateStatus) {
-            comment.contentHtml = `스레드 상태를 <b>${utils.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
-        }
-        else if(comment.type === ThreadCommentTypes.UpdateTopic) {
-            comment.contentHtml = `스레드 주제를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 변경`;
-        }
-        else if(comment.type === ThreadCommentTypes.UpdateDocument) {
-            comment.contentHtml = `스레드를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 이동`;
-        }
-    }
-
-    // if(typeof comment.user === 'object')
-    //     comment.user = comment.user.uuid;
-
-    return utils.onlyKeys(comment, [
-        'id',
-        'hidden',
-
-        'type',
-        'createdAt',
-        'user',
-        'admin',
-        'contentHtml',
-
-        'hideUser',
-        ...(!req || !req.backendMode ? [
-            'userHtml',
-            'hideUserHtml'
-        ] : [])
-    ]);
-}
 
 const threadCommentEvent = async ({
     req,
@@ -114,7 +53,7 @@ const threadCommentEvent = async ({
         uuid: hideUser.uuid
     });
 
-    const comment = await threadCommentMapper({
+    const comment = await utils.threadCommentMapper(dbComment.toJSON(), {
         thread,
         parser,
         user: {
@@ -122,7 +61,7 @@ const threadCommentEvent = async ({
             userCSS: await utils.getUserCSS(commentUser)
         },
         hideUser: hideUser?.publicUser
-    })(dbComment.toJSON());
+    });
 
     SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);
 }
@@ -261,7 +200,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
         comments = await utils.findUsers(req, comments);
         comments = await utils.findUsers(req, comments, 'hiddenBy');
 
-        comments = await Promise.all(comments.map(c => threadCommentMapper({
+        comments = await Promise.all(comments.map(c => utils.threadCommentMapper(c, {
             req,
             thread,
             parser: new NamumarkParser({
@@ -273,7 +212,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
                 commentId: c.id,
                 req
             })
-        })(c)));
+        })));
 
         thread.recentComments = comments;
     }
@@ -347,12 +286,18 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         content: req.body.text
     });
 
-    if(document.namespace === '사용자')
-        await User.updateOne({
+    if(document.namespace === '사용자') {
+        const user = await User.findOneAndUpdate({
             name: document.title
         }, {
             lastUserDocumentDiscuss: thread.lastUpdatedAt
         });
+        if(user) await Notification.create({
+            user: user.uuid,
+            type: NotificationTypes.UserDiscuss,
+            data: thread.uuid
+        });
+    }
 
     res.redirect(`/thread/${thread.url}`);
 });
@@ -440,7 +385,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
     comments = await utils.findUsers(req, comments);
     comments = await utils.findUsers(req, comments, 'hiddenBy');
 
-    comments = await Promise.all(comments.map(c => threadCommentMapper({
+    comments = await Promise.all(comments.map(c => utils.threadCommentMapper(c, {
         req,
         thread,
         parser: new NamumarkParser({
@@ -452,7 +397,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
             commentId: c.id,
             req
         })
-    })(c)));
+    })));
 
     res.json(comments);
 });
@@ -492,12 +437,35 @@ app.post('/thread/:url', async (req, res) => {
         dbComment
     });
 
-    if(document.namespace === '사용자')
-        await User.updateOne({
+    if(document.namespace === '사용자') {
+        const user = await User.findOneAndUpdate({
             name: document.title
         }, {
             lastUserDocumentDiscuss: dbComment.createdAt
         });
+        if(user) {
+            const exists = await Notification.exists({
+                user: user.uuid,
+                type: NotificationTypes.UserDiscuss,
+                data: thread.uuid,
+                read: false
+            });
+            if(!exists) await Notification.create({
+                user: user.uuid,
+                type: NotificationTypes.UserDiscuss,
+                data: thread.uuid
+            });
+        }
+    }
+
+    await Notification.updateMany({
+        user: req.user.uuid,
+        type: NotificationTypes.Mention,
+        thread: thread.uuid,
+        read: false
+    }, {
+        read: true
+    });
 
     res.status(204).end();
 });
@@ -559,12 +527,21 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
         const user = await User.findOne({
             name: document.title
         });
-        if(user.lastUserDocumentDiscuss <= latestComment.createdAt)
+        if(user.lastUserDocumentDiscuss <= latestComment.createdAt) {
             await User.updateOne({
                 uuid: user.uuid
             }, {
                 lastUserDocumentDiscuss: null
             });
+            await Notification.updateMany({
+                user: user.uuid,
+                type: NotificationTypes.UserDiscuss,
+                data: thread.uuid,
+                read: false
+            }, {
+                read: true
+            });
+        }
     }
 
     res.status(204).end();
@@ -694,23 +671,36 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
         const user = await User.findOne({
             name: document.title
         });
-        if(user.lastUserDocumentDiscuss <= dbComment.createdAt)
+        if(user.lastUserDocumentDiscuss <= dbComment.createdAt) {
             await User.updateOne({
                 uuid: user.uuid
             }, {
                 lastUserDocumentDiscuss: null
             });
+            await Notification.deleteMany({
+                user: user.uuid,
+                type: NotificationTypes.UserDiscuss,
+                data: thread.uuid,
+                read: false
+            });
+        }
     }
-    if(dbTargetDocument.namespace === '사용자') {
+    if(dbTargetDocument.namespace === '사용자' && thread.status !== ThreadStatusTypes.Close) {
         const user = await User.findOne({
             name: dbTargetDocument.title
         });
-        if(user.lastUserDocumentDiscuss <= dbComment.createdAt)
+        if(user.lastUserDocumentDiscuss <= dbComment.createdAt) {
             await User.updateOne({
                 uuid: user.uuid
             }, {
                 lastUserDocumentDiscuss: dbComment.createdAt
             });
+            await Notification.create({
+                user: user.uuid,
+                type: NotificationTypes.UserDiscuss,
+                data: thread.uuid
+            });
+        }
     }
 
     res.status(204).end();
