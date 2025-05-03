@@ -1618,13 +1618,16 @@ app.get('/engine/getperm', middleware.isLogin, async (req, res) => {
         });
         result = data.result;
     } catch(e) {}
-    if(result) await User.updateOne({
-        uuid: req.user.uuid
-    }, {
-        permissions: {
-            $addToSet: 'engine_developer'
-        }
-    });
+    if(result) {
+        await User.updateOne({
+            uuid: req.user.uuid
+        }, {
+            permissions: {
+                $addToSet: 'engine_developer'
+            }
+        });
+        res.redirect('/member/mypage');
+    }
     else res.send(verifyText);
 });
 
