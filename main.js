@@ -756,21 +756,25 @@ app.use(async (req, res, next) => {
     let configJSONstr;
     let sessionJSONstr;
 
-    const queries = [{
-        user: req.user.uuid
-    }];
-    if(req.permissions.includes('developer')) queries.push({
-        user: 'developer'
-    });
-    let notifications = await Notification.find({
-        $or: queries,
-        read: false
-    })
-        .select('uuid type read data createdAt -_id')
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .lean();
-    notifications = await utils.notificationMapper(req, notifications, true);
+    let notifications = [];
+
+    if(req.user?.type === UserTypes.Account) {
+        const queries = [{
+            user: req.user.uuid
+        }];
+        if(req.permissions.includes('developer')) queries.push({
+            user: 'developer'
+        });
+        notifications = await Notification.find({
+            $or: queries,
+            read: false
+        })
+            .select('uuid type read data createdAt -_id')
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .lean();
+        notifications = await utils.notificationMapper(req, notifications, true);
+    }
 
     const makeConfigAndSession = () => {
         const sessionMenus = [];
