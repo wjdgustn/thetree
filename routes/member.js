@@ -1633,6 +1633,7 @@ app.get('/engine/getperm', middleware.isLogin, async (req, res) => {
 
 app.post('/member/get_developer_perm', middleware.permission('engine_developer'), async (req, res) => {
     if(config.disable_dev_support) return res.error('사이트 소유자가 개발자 지원을 비활성화했습니다.');
+    if(req.permissions.includes('developer')) return res.error('이미 권한을 보유하고 있습니다.');
 
     await AuditLog.create({
         user: req.user.uuid,
