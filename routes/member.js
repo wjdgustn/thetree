@@ -1610,7 +1610,7 @@ app.get('/engine/getperm', middleware.isLogin, async (req, res) => {
 
     let result;
     try {
-        const { data } = await axios.get('/engine/getperm', {
+        const { data } = await axios.get('/engine/verify_developer', {
             baseURL: global.versionData.officialWiki,
             params: {
                 text: verifyText
