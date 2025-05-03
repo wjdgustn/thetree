@@ -868,8 +868,11 @@ module.exports = {
 
         if(!comment.hidden || canSeeHidden) {
             if(comment.type === ThreadCommentTypes.Default) {
-                const { html } = await parser.parse(comment.content);
-                comment.contentHtml = html;
+                if(parser) {
+                    const { html } = await parser.parse(comment.content);
+                    comment.contentHtml = html;
+                }
+                else comment.contentHtml = NamumarkParser.escape(comment.content);
             }
             else if(comment.type === ThreadCommentTypes.UpdateStatus) {
                 comment.contentHtml = `스레드 상태를 <b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
@@ -902,7 +905,7 @@ module.exports = {
             ] : [])
         ]);
     },
-    async notificationMapper(req, items = []) {
+    async notificationMapper(req, items = [], lightMode = false) {
         await Promise.all(items.map(item => new Promise(async resolve => {
             switch(item.type) {
                 case NotificationTypes.UserDiscuss: {
@@ -921,7 +924,7 @@ module.exports = {
                     }).lean();
                     item.comment = await this.threadCommentMapper(comment, {
                         req,
-                        parser: new NamumarkParser({
+                        parser: lightMode ? null : new NamumarkParser({
                             document: dbDocument,
                             aclData: req.aclData,
                             dbComment: comment,
@@ -949,7 +952,7 @@ module.exports = {
                     item.document = this.dbDocumentToDocument(dbDocument);
                     item.comment = await this.threadCommentMapper(comment, {
                         req,
-                        parser: new NamumarkParser({
+                        parser: lightMode ? null : new NamumarkParser({
                             document: dbDocument,
                             aclData: req.aclData,
                             dbComment: comment,

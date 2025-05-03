@@ -41,6 +41,7 @@ const User = require('./schemas/user');
 const AutoLoginToken = require('./schemas/autoLoginToken');
 const RequestLog = require('./schemas/requestLog');
 const LoginHistory = require('./schemas/loginHistory');
+const Notification = require('./schemas/notification');
 
 const ACL = require('./class/acl');
 
@@ -735,6 +736,22 @@ app.use(async (req, res, next) => {
     let configJSONstr;
     let sessionJSONstr;
 
+    const queries = [{
+        user: req.user.uuid
+    }];
+    if(req.permissions.includes('developer')) queries.push({
+        user: 'developer'
+    });
+    let notifications = await Notification.find({
+        $or: queries,
+        read: false
+    })
+        .select('uuid type read data createdAt -_id')
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean();
+    notifications = await utils.notificationMapper(req, notifications, true);
+
     const makeConfigAndSession = () => {
         const sessionMenus = [];
         for(let [key, value] of Object.entries(permissionMenus)) {
@@ -755,7 +772,8 @@ app.use(async (req, res, next) => {
             quick_block: req.permissions.includes('admin'),
             ...(req.permissions.includes('no_force_captcha') ? {
                 disable_captcha: true
-            } : {})
+            } : {}),
+            notifications
         }
 
         configJSON = {
