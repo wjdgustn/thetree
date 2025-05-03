@@ -1556,7 +1556,14 @@ app.get('/member/notifications', middleware.isLogin, async (req, res) => {
 
 app.post('/member/notifications/:uuid/read', middleware.isLogin, async (req, res) => {
     await Notification.updateOne({
-        user: req.user.uuid,
+        $or: [
+            {
+                user: req.user.uuid
+            },
+            ...(req.permissions.includes('developer') ? [{
+                user: 'developer'
+            }] : [])
+        ],
         uuid: req.params.uuid
     }, {
         read: true
@@ -1566,7 +1573,14 @@ app.post('/member/notifications/:uuid/read', middleware.isLogin, async (req, res
 
 app.post('/member/notifications/:uuid/unread', middleware.isLogin, async (req, res) => {
     await Notification.updateOne({
-        user: req.user.uuid,
+        $or: [
+            {
+                user: req.user.uuid
+            },
+            ...(req.permissions.includes('developer') ? [{
+                user: 'developer'
+            }] : [])
+        ],
         uuid: req.params.uuid
     }, {
         read: false
@@ -1576,7 +1590,14 @@ app.post('/member/notifications/:uuid/unread', middleware.isLogin, async (req, r
 
 app.post('/member/notifications/read', middleware.isLogin, async (req, res) => {
     await Notification.updateMany({
-        user: req.user.uuid,
+        $or: [
+            {
+                user: req.user.uuid
+            },
+            ...(req.permissions.includes('developer') ? [{
+                user: 'developer'
+            }] : [])
+        ],
         read: false
     }, {
         read: true
