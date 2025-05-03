@@ -34,7 +34,7 @@ app.all('/api/*', async (req, res, next) => {
         const user = await User.findOne({
             apiToken
         });
-        if(user?.permissions.includes('api_access')) {
+        if(user?.permissions.includes('api_access') || user?.permissions.includes('developer')) {
             req.user = user;
             await utils.makeACLData(req);
             return next();
