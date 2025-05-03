@@ -75,9 +75,11 @@ app.get('/RecentDiscuss', async (req, res) => {
         const query = {
             status: ThreadStatusTypes.Normal,
             deleted: false,
-            specialType: {
-                $exists: false
-            }
+            ...(req.permissions.developer ? {} : {
+                specialType: {
+                    $exists: false
+                }
+            })
         };
         const sort = {
             lastUpdatedAt: -1
