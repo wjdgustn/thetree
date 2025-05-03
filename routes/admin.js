@@ -524,7 +524,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'checkupdate') {
-        await global.checkUpdate();
+        await global.checkUpdate(true);
         res.reload();
     }
 

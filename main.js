@@ -182,7 +182,7 @@ global.newVersionInfo = { ...global.versionInfo };
 global.newCommits = [];
 global.newFECommits = [];
 
-global.checkUpdate = async () => {
+global.checkUpdate = async (manually = false) => {
     try {
         if(!fs.existsSync('./cache/lastNotificationCheck.json'))
             fs.writeFileSync('./cache/lastNotificationCheck.json', JSON.stringify({
@@ -207,7 +207,7 @@ global.checkUpdate = async () => {
         }));
     } catch(e) {}
 
-    if(config.check_update === false) return;
+    if(!manually && config.check_update === false) return;
 
     const githubAPI = axios.create({
         baseURL: `https://api.github.com/repos`,
