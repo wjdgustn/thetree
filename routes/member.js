@@ -1622,8 +1622,8 @@ app.get('/engine/getperm', middleware.isLogin, async (req, res) => {
         await User.updateOne({
             uuid: req.user.uuid
         }, {
-            permissions: {
-                $addToSet: 'engine_developer'
+            $addToSet: {
+                permissions: 'engine_developer'
             }
         });
         res.redirect('/member/mypage');
@@ -1642,8 +1642,8 @@ app.post('/member/get_developer_perm', middleware.permission('engine_developer')
     await User.updateOne({
         uuid: req.user.uuid
     }, {
-        permissions: {
-            $addToSet: 'developer'
+        $addToSet: {
+            permissions: 'developer'
         }
     });
     res.reload();
