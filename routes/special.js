@@ -75,7 +75,7 @@ app.get('/RecentDiscuss', async (req, res) => {
         const query = {
             status: ThreadStatusTypes.Normal,
             deleted: false,
-            ...(req.permissions.developer ? {} : {
+            ...(req.permissions.includes('developer') ? {} : {
                 specialType: {
                     $exists: false
                 }
