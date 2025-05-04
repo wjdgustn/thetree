@@ -169,7 +169,7 @@ app.get('/License', (req, res) => {
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
 
-    skinCommitId[skin] ??= execSync('git rev-parse HEAD', {
+    if(!req.backendMode) skinCommitId[skin] ??= execSync('git rev-parse HEAD', {
         cwd: `./skins/${skin}`
     }).toString().trim().slice(0, 7);
 
