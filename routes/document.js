@@ -637,34 +637,40 @@ app.get('/action/acl/delete', async (req, res) => {
 
     const aclTypeStr = utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, dbACL.type));
 
-    if(dbDocument) {
-        const conditionType = dbACL.conditionType;
-        let conditionContent = dbACL.conditionContent;
-        if(conditionType === ACLConditionTypes.User) {
-            const member = await User.findOne({
-                uuid: dbACL.conditionContent
-            });
-            if (member) conditionContent = member.name;
-        }
-        else if(conditionType === ACLConditionTypes.ACLGroup) {
-            const aclGroup = await ACLGroup.findOne({
-                uuid: dbACL.conditionContent
-            });
-            if(aclGroup) conditionContent = aclGroup.name;
-        }
-
-        await History.create({
-            user: req.user.uuid,
-            type: HistoryTypes.ACL,
-            document: dbDocument.uuid,
-            log: [
-                'delete',
-                aclTypeStr,
-                utils.getKeyFromObject(ACLActionTypes, dbACL.actionType).toLowerCase(),
-                utils.getKeyFromObject(ACLConditionTypes, conditionType).toLowerCase() + ':' + conditionContent
-            ].join(',')
+    const conditionType = dbACL.conditionType;
+    let conditionContent = dbACL.conditionContent;
+    if(conditionType === ACLConditionTypes.User) {
+        const member = await User.findOne({
+            uuid: dbACL.conditionContent
         });
+        if (member) conditionContent = member.name;
     }
+    else if(conditionType === ACLConditionTypes.ACLGroup) {
+        const aclGroup = await ACLGroup.findOne({
+            uuid: dbACL.conditionContent
+        });
+        if(aclGroup) conditionContent = aclGroup.name;
+    }
+
+    const log = [
+        'delete',
+        aclTypeStr,
+        utils.getKeyFromObject(ACLActionTypes, dbACL.actionType).toLowerCase(),
+        utils.getKeyFromObject(ACLConditionTypes, conditionType).toLowerCase() + ':' + conditionContent
+    ].join(',');
+
+    if(dbDocument) await History.create({
+        user: req.user.uuid,
+        type: HistoryTypes.ACL,
+        document: dbDocument.uuid,
+        log
+    });
+    else await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.NamespaceACL,
+        target: dbACL.namespace,
+        content: log
+    });
 
     res.reload(dbACL.document ? 'document' : 'namespace' + '.' + aclTypeStr);
 });
