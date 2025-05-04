@@ -1324,7 +1324,7 @@ app.get('/admin/audit_log', middleware.permission('config'), async (req, res) =>
     const typeNum = parseInt(req.query.type);
     const baseQuery = {
         ...(isNaN(typeNum) ? {} : {
-            type: typeNum
+            action: typeNum
         })
     }
 
