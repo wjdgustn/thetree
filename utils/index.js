@@ -712,7 +712,7 @@ module.exports = {
                 .sort({ [sortKey]: -sortDirection })
                 .select([
                     key,
-                    '-_id'
+                    ...(key === '_id' ? [] : ['-_id'])
                 ])
                 .lean();
             nextItem = await model.findOne({
@@ -722,7 +722,7 @@ module.exports = {
                 .sort({ [sortKey]: sortDirection })
                 .select([
                     key,
-                    '-_id'
+                    ...(key === '_id' ? [] : ['-_id'])
                 ])
                 .lean();
         }
