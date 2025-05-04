@@ -1650,4 +1650,17 @@ app.post('/member/get_developer_perm', middleware.permission('engine_developer')
     res.reload();
 });
 
+app.post('/member/remove_developer_perm', middleware.permission('engine_developer'), async (req, res) => {
+    if(!req.permissions.includes('developer')) return res.error('권한을 보유하고 있지 않습니다.');
+
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        $pull: {
+            permissions: 'developer'
+        }
+    });
+    res.reload();
+});
+
 module.exports = app;
