@@ -151,7 +151,8 @@ if(config.testwiki) {
 
         const thread = await Thread.findOne({
             specialType: 'notification',
-            status: ThreadStatusTypes.Normal
+            status: ThreadStatusTypes.Normal,
+            deleted: false
         })
             .sort({ _id: -1 })
             .lean();
@@ -179,7 +180,8 @@ if(config.testwiki) {
 
         const thread = await Thread.findOne({
             specialType: 'verification',
-            status: ThreadStatusTypes.Normal
+            status: ThreadStatusTypes.Normal,
+            deleted: false
         })
             .sort({ _id: -1 })
             .lean();
