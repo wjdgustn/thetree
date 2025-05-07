@@ -989,14 +989,14 @@ document.getElementById('initScript')?.remove();
             if(isBackendMode) res.json(resData);
             else {
                 const render = require(`./skins/${skin}/server/server.cjs`).render;
-                const rendered = await render(req.originalUrl, resData);
+                const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`));
                 let body = rendered.html;
                 if(rendered.state) {
                     body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
                 }
                 const html = skinInfo.template
                     .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
-                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '')
+                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
                     .replace('<!--app-body-->', body);
 
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
