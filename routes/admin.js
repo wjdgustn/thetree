@@ -774,13 +774,10 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
     }
 
     const grantPerms = config.grant_permissions.filter(a => AllPermissions.includes(a));
-    const configPerms = AllPermissions
-        .filter(a =>
-            !NoGrantPermissions.includes(a)
-            && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
-            && !grantPerms.includes(a)
-        );
-    const grantablePermissions = [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])];
+    const configPerms = AllPermissions.filter(a => !grantPerms.includes(a));
+    const grantablePermissions = [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])]
+        .filter(a => !NoGrantPermissions.includes(a)
+            && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a)));
 
     res.renderSkin('권한 부여', {
         contentName: 'admin/grant',
@@ -809,12 +806,10 @@ app.post('/admin/grant',
     });
     if(!targetUser) return res.status(404).send('User not found');
 
-    const grantablePermissions = req.permissions.includes('config')
-        ? AllPermissions.filter(a =>
-            !NoGrantPermissions.includes(a)
-            && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
-        )
-        : AllPermissions.filter(a => config.grant_permissions.includes(a));
+    const grantablePermissions = AllPermissions.filter(a =>
+        !NoGrantPermissions.includes(a)
+        && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+        && (req.permissions.includes('config') || config.grant_permissions.includes(a)));
 
     let newPerm = [];
     for(let perm of AllPermissions) {
