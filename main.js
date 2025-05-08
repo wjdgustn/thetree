@@ -1050,7 +1050,10 @@ document.getElementById('initScript')?.remove();
 
     res.error = (contentHtml, status = 400) => res.renderSkin('오류', {
         contentHtml,
-        status
+        status,
+        serverData: {
+            document: req.document ?? undefined
+        }
     });
 
     res.reload = anchor => {
