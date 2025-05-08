@@ -198,6 +198,11 @@ module.exports = class ACL {
             if(!editCheck.result) return editCheck;
         }
 
+        if(aclType === ACLTypes.CreateThread) {
+            const commentCheck = await this.check(ACLTypes.WriteThreadComment, data, true);
+            if(!commentCheck.result) return commentCheck;
+        }
+
         let rules = this.aclTypes[aclType];
         if(!rules.length && this.namespaceACL) rules = this.namespaceACL.aclTypes[aclType];
 
