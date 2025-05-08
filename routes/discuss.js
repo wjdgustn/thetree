@@ -317,6 +317,10 @@ app.get('/thread/:url', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(readAclMessage, 403);
+    
+    const { result: writable } = await acl.check(ACLTypes.WriteThreadComment, req.aclData, true);
+    
+    const checkPerm = name => writable && req.permissions.includes(name);
 
     const comments = await ThreadComment.find({
         thread: thread.uuid
@@ -344,11 +348,11 @@ app.get('/thread/:url', async (req, res) => {
             status: thread.status
         },
         permissions: {
-            delete: req.permissions.includes('delete_thread'),
-            status: req.permissions.includes('update_thread_status'),
-            document: req.permissions.includes('update_thread_document'),
-            topic: req.permissions.includes('update_thread_topic'),
-            hide: req.permissions.includes('hide_thread_comment')
+            delete: checkPerm('delete_thread'),
+            status: checkPerm('update_thread_status'),
+            document: checkPerm('update_thread_document'),
+            topic: checkPerm('update_thread_topic'),
+            hide: checkPerm('hide_thread_comment')
         },
         hideHiddenComments: true
         // hideHiddenComments: !req.permissions.includes('hide_thread_comment')
@@ -487,7 +491,7 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
     });
 
     const acl = await ACL.get({ document });
-    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
     const status = ThreadStatusTypes[req.body.status];
@@ -570,7 +574,7 @@ app.post('/admin/thread/:url/topic', middleware.permission('update_thread_topic'
     });
 
     const acl = await ACL.get({ document });
-    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
     const topic = req.body.topic;
@@ -626,7 +630,7 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
     const document = utils.dbDocumentToDocument(dbDocument);
 
     const acl = await ACL.get({ document: dbDocument });
-    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
     const targetDocument = utils.parseDocumentName(req.body.document);
@@ -718,7 +722,7 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
     });
 
     const acl = await ACL.get({ document });
-    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
     await Thread.updateOne({
@@ -756,7 +760,7 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_co
     });
 
     const acl = await ACL.get({ document });
-    const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
     let dbComment = await ThreadComment.findOne({
