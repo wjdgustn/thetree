@@ -863,6 +863,38 @@ app.get('/contribution/:uuid/edit_request',
         }
     });
 });
+app.get('/contribution/:uuid/accepted_edit_request',
+    param('uuid')
+        .isUUID(),
+    async (req, res, next) => {
+    if (!validationResult(req).isEmpty()) return next();
+
+    const user = await User.findOne({
+        uuid: req.params.uuid
+    });
+
+    const data = await utils.pagination(req, EditRequest, {
+        lastUpdateUser: req.params.uuid
+    }, 'uuid', '_id', {
+        getTotal: true
+    });
+    data.items = await utils.findDocuments(data.items);
+    data.items = utils.onlyKeys(data.items, ['url', 'document', 'status', 'lastUpdatedAt', 'diffLength']);
+
+    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
+        viewName: 'contribution_edit_request',
+        contentName: 'userContribution/editRequest',
+        account: {
+            uuid: req.params.uuid,
+            name: user?.name,
+            type: user?.type ?? UserTypes.Deleted
+        },
+        serverData: {
+            ...data,
+            contributionType: 'accepted_edit_request'
+        }
+    });
+});
 
 const checkDeletable = async user => {
     let noActivityTime = 1000 * 60 * 60 * (config.withdraw_last_activity_hours ?? 24);
