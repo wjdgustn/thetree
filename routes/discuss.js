@@ -647,7 +647,7 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
     });
 
     const targetAcl = await ACL.get({ document: dbTargetDocument });
-    const { result: targetReadable, aclMessage: targetAclMessage } = await targetAcl.check(ACLTypes.Read, req.aclData);
+    const { result: targetReadable, aclMessage: targetAclMessage } = await targetAcl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!targetReadable) return res.status(403).send(targetAclMessage);
 
     await Thread.updateOne({
