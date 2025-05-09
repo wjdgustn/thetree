@@ -108,13 +108,15 @@ module.exports = {
         'login_history_hidelog',
         'batch_revert_hidelog',
         'edit_protected_file',
-        'engine_developer'
+        'engine_developer',
+        'auto_verified_member'
     ],
     ProtectedPermissions: [
         'developer'
     ],
     NoGrantPermissions: [
-        'engine_developer'
+        'engine_developer',
+        'auto_verified_member'
     ],
     ACLPermissions: [
         'any',

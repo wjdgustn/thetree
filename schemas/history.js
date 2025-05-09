@@ -180,7 +180,10 @@ newSchema.pre('save', async function() {
 newSchema.post('save', function() {
     delete lastItem[this.document];
 
-    if(!this.migrated) docUtils.postHistorySave(this).then();
+    if(!this.migrated) {
+        docUtils.postHistorySave(this).then();
+        docUtils.checkMemberContribution(this.user).then();
+    }
 });
 
 const model = mongoose.model('History', newSchema);

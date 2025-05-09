@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
+const docUtils = require('../utils/docUtils');
 const globalUtils = require('../utils/global');
 const { ThreadCommentTypes, NotificationTypes } = require('../utils/types');
 
@@ -124,6 +125,8 @@ newSchema.post('save', async function() {
         data: this.uuid,
         thread: this.thread
     })));
+
+    docUtils.checkMemberContribution(this.user).then();
 });
 
 const model = mongoose.model('ThreadComment', newSchema);

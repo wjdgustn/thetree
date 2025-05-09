@@ -4,7 +4,14 @@ const { getChoseong } = require('es-hangul');
 
 const utils = require('./');
 const globalUtils = require('./global');
-const { BacklinkFlags, ACLTypes, HistoryTypes} = require('./types');
+const {
+    BacklinkFlags,
+    ACLTypes,
+    HistoryTypes,
+    UserTypes,
+    ThreadCommentTypes,
+    BlockHistoryTypes
+} = require('./types');
 
 const ACL = require('../class/acl');
 
@@ -209,6 +216,81 @@ module.exports = {
                 primaryKey: 'uuid'
             });
             else await documentIndex.deleteDocument(dbDocument.uuid);
+        }
+    },
+    async checkMemberContribution(uuid) {
+        const checkDays = parseInt(config.auto_verified_member?.check_days);
+        if(!checkDays || isNaN(checkDays)) return;
+
+        const delayHours = parseInt(config.auto_verified_member?.delay_hours);
+        if(isNaN(delayHours)) return;
+
+        const createdAt = {
+            $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * checkDays),
+            ...(delayHours ? {
+                $lte: new Date(Date.now() - 1000 * 60 * 60 * delayHours)
+            } : {})
+        }
+
+        const user = await mongoose.models.User.findOne({ uuid });
+        if(user?.type !== UserTypes.Account) return;
+
+        if(user.permissions.includes('auto_verified_member')) return;
+
+        if(config.auto_verified_member.no_block_days) {
+            const blockGroups = await mongoose.models.ACLGroup.find({
+                $or: [
+                    {
+                        forBlock: true
+                    },
+                    {
+                        isWarn: true
+                    }
+                ]
+            });
+            const blocked = await mongoose.models.BlockHistory.exists({
+                type: BlockHistoryTypes.ACLGroupAdd,
+                targetUser: user.uuid,
+                aclGroup: {
+                    $in: blockGroups.map(group => group.uuid)
+                },
+                createdAt: {
+                    $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * config.auto_verified_member.no_block_days)
+                }
+            });
+            if(blocked) return;
+        }
+
+        const verify = async () => await mongoose.models.User.updateOne({
+            uuid: user.uuid
+        }, {
+            $addToSet: {
+                permissions: 'auto_verified_member'
+            }
+        });
+
+        if(config.auto_verified_member.edit_count) {
+            const editCount = await mongoose.models.History.countDocuments({
+                user: user.uuid,
+                type: {
+                    $in: [
+                        HistoryTypes.Create,
+                        HistoryTypes.Modify
+                    ]
+                },
+                createdAt
+            });
+            if(editCount >= config.auto_verified_member.edit_count)
+                return verify();
+        }
+        if(config.auto_verified_member.comment_count) {
+            const commentCount = await mongoose.models.ThreadComment.countDocuments({
+                user: user.uuid,
+                type: ThreadCommentTypes.Default,
+                createdAt
+            });
+            if(commentCount >= config.auto_verified_member.comment_count)
+                return verify();
         }
     }
 }

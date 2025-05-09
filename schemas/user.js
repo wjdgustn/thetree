@@ -99,7 +99,8 @@ const newSchema = new Schema({
                         'ip',
                         'name'
                     ]),
-                    admin: ['admin', 'developer'].some(a => this.permissions?.includes(a))
+                    admin: ['admin', 'developer'].some(a => this.permissions?.includes(a)),
+                    autoVerified: this.permissions?.includes('auto_verified_member')
                 }
             }
         }

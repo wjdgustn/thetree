@@ -35,6 +35,14 @@
   "email_whitelist": [],
   "use_email_verification": false,
 
+  "auto_verified_member": {
+    "check_days": 7,
+    "delay_hours": 3,
+    "no_block_days": 7,
+    "edit_count": 80,
+    "comment_count": 50
+  },
+
   "external_link_icons": {
     "파일:홈페이지 아이콘.svg": ""
   },
