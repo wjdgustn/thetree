@@ -127,7 +127,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         })
             .sort({ rev: -1 })
             .limit(3)
-            .select('type rev uuid user createdAt diffLength log revertRev troll trollBy hideLog hideLogBy hidden editRequest -_id')
+            .select('type rev uuid user createdAt diffLength log revertRev moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id')
             .lean();
 
         revs = await utils.findUsers(req, revs);
