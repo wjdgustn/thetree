@@ -144,7 +144,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         });
     }
 
-    if(!req.query.noredirect && !req.query.from && rev.content?.startsWith('#redirect ')) {
+    const isRedirect = rev.content?.startsWith('#redirect ');
+    if(!req.query.noredirect && !req.query.from && isRedirect) {
         let anchor = undefined;
         let redirectName = rev.content.split('\n')[0].slice('#redirect '.length);
         const hashSplitted = redirectName.split('#');
@@ -198,7 +199,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     });
     let categoryHtml;
     if(!req.backendMode) try {
-        categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !rev.content?.startsWith('#redirect '));
+        categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !isRedirect);
     } catch (e) {
         return res.status(500).send('카테고리 렌더 오류');
     }
@@ -382,7 +383,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                     admin: userIsAdmin,
                     blocked: userBlockedData
                 },
-                categoriesData
+                categoriesData,
+                isRedirect
             } : {})
         },
         ...(req.backendMode ? {} : {
