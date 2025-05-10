@@ -2,8 +2,8 @@ module.exports = {
     Priority: {
         Literal: 1,
         Comment: 2,
-        ContentChange: 3,
-        Macro: 4,
+        Macro: 3,
+        ContentChange: 4,
         Heading: 5,
         Div: 6,
         Footnote: 7,
