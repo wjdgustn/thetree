@@ -226,6 +226,7 @@ app.get('/Upload', async (req, res) => {
         serverData: {
             licenses,
             categories,
+            file_upload_template: config.file_upload_template ?? '',
             editagree_text: config[`namespace.파일.editagree_text`] || config.editagree_text
         }
     });

@@ -24,7 +24,7 @@
             <input id="documentInput" name="document" @input="$refs.documentLabel.innerText = $el.value.length ? `파일 이름 (${$el.value.length}/190)` : '파일 이름'">
         </div>
 
-        <textarea name="text" wrap="soft"><%=config.file_upload_template%></textarea>
+        <textarea name="text" wrap="soft"><%=file_upload_template%></textarea>
 
         <div class="form-block">
             <label for="licenseSelect">라이선스</label>
