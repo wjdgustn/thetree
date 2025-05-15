@@ -251,8 +251,9 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         })
         .withMessage('본문의 값은 65536글자 이하여야 합니다.'),
     middleware.fieldErrors,
-    middleware.captcha,
     async (req, res) => {
+    if(req.user.type !== UserTypes.Account && !await utils.middleValidateCaptcha(req, res)) return;
+
     const document = req.document;
     const { namespace, title } = document;
     let dbDocument = await Document.findOne({
@@ -317,9 +318,9 @@ app.get('/thread/:url', async (req, res) => {
     const acl = await ACL.get({ document: dbDocument }, document);
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(readAclMessage, 403);
-    
+
     const { result: writable } = await acl.check(ACLTypes.WriteThreadComment, req.aclData, true);
-    
+
     const checkPerm = name => writable && req.permissions.includes(name);
 
     const comments = await ThreadComment.find({
