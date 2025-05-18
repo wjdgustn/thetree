@@ -77,6 +77,9 @@ Object.defineProperty(global, 'config', {
     }
 });
 
+if(!fs.existsSync('./cache')) fs.mkdirSync('./cache');
+if(!fs.existsSync('./customStatic')) fs.mkdirSync('./customStatic');
+
 const disabledFeaturesPath = './cache/disabledFeatures.json';
 global.disabledFeatures = fs.existsSync(disabledFeaturesPath) ? JSON.parse(fs.readFileSync(disabledFeaturesPath).toString()) : [];
 
@@ -389,9 +392,6 @@ global.NamumarkParser = NamumarkParser;
 global.ACLClass = ACL;
 
 require('./schemas')();
-
-if(!fs.existsSync('./cache')) fs.mkdirSync('./cache');
-if(!fs.existsSync('./customStatic')) fs.mkdirSync('./customStatic');
 
 const app = express();
 global.expressApp = app;
