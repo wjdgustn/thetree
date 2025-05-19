@@ -15,7 +15,7 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
 ## 기여
 프로젝트 상태, 기능의 일관성, 저작권 문제 등으로 인해 이 프로젝트에 대한 공개 기여는 받지 않을 생각입니다.
 
-다만 스킨은 [스킨 제작 가이드]((https://github.com/wjdgustn/thetree-frontend#스킨-제작-가이드))를 참고해 자유롭게 제작하실 수 있습니다.
+다만 스킨은 [스킨 제작 가이드](https://github.com/wjdgustn/thetree-frontend#스킨-제작-가이드)를 참고해 자유롭게 제작하실 수 있습니다.
 
 ## 라이선스
 이 프로젝트는 오픈소스 라이선스를 적용하지 않으며, 별도로 명시되지 않은 부분은 레포지토리 소유자가 저작권을 보유합니다.
@@ -63,4 +63,4 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
 이 기능에 대한 더 자세한 설명은 [공지 문서](https://hyonsu.notion.site/the-tree-1e8862961d0d80e5b9fceb4c1ba0d7b9)를 참고하세요.
 
 ## 스킨 제작 가이드
-[the tree frontend](https://github.com/wjdgustn/thetree-frontend) 레포지토리의 [스킨 제작 가이드]((https://github.com/wjdgustn/thetree-frontend#스킨-제작-가이드))를 참고하세요.
+[the tree frontend](https://github.com/wjdgustn/thetree-frontend) 레포지토리의 [스킨 제작 가이드](https://github.com/wjdgustn/thetree-frontend#스킨-제작-가이드)를 참고하세요.
