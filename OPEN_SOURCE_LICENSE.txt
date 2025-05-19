@@ -29,7 +29,7 @@
  */
 
 /**
- * KaTex
+ * KaTeX
  * (c) 2024 2013-2020 Khan Academy and other contributors
  * @license MIT
  */
