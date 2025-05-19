@@ -55,7 +55,7 @@ app.get('/aclgroup', async (req, res) => {
             .limit(50)
             .lean();
 
-        if(query.rev?.$gte) revs.reverse();
+        if(query.id?.$gte) groupItems.reverse();
     }
 
     let prevItem;
