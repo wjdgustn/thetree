@@ -50,7 +50,8 @@ const newSchema = new Schema({
         default: true
     },
     content: {
-        type: String
+        type: String,
+        maxLength: 4000000
     },
     fileKey: {
         type: String
