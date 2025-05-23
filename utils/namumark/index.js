@@ -24,6 +24,8 @@ const syntaxDefaultValues = {
     fullContent: false
 }
 
+const debug = false;
+
 let syntaxes = [];
 let sortedSyntaxes = [];
 let lastSyntaxCount = 0;

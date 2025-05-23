@@ -364,6 +364,28 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         user: req.user.uuid
     });
 
+    if(req.query.np) {
+        console.log('testing new parser');
+        const parserPath = require.resolve('../utils/newNamumark/parser');
+        delete require.cache[parserPath];
+        const parser = require(parserPath);
+
+        const toHtmlPath = require.resolve('../utils/newNamumark/toHtml');
+        delete require.cache[toHtmlPath];
+        const toHtml = require(toHtmlPath);
+
+        console.time('parser');
+        const { tokens, result } = parser(content);
+        console.timeEnd('parser');
+
+        if(req.query.np === 'tok') return res.json(tokens);
+        if(req.query.np === 'cst') return res.json(result);
+
+        console.time('toHtml');
+        contentHtml = toHtml(result);
+        console.timeEnd('toHtml');
+    }
+
     res.renderSkin(undefined, {
         ...defaultData,
         headings,
