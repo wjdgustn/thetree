@@ -872,7 +872,7 @@ module.exports = {
                     const { html } = await parser.parse(comment.content);
                     comment.contentHtml = html;
                 }
-                else comment.contentHtml = NamumarkParser.escape(comment.content);
+                else comment.contentHtml = NamumarkParser.remove(comment.content);
             }
             else if(comment.type === ThreadCommentTypes.UpdateStatus) {
                 comment.contentHtml = `스레드 상태를 <b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;

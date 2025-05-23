@@ -157,6 +157,14 @@ module.exports = class NamumarkParser {
         return str;
     }
 
+    static remove(str) {
+        for(let tag of escapeTags) {
+            str = str.replaceAll(tag, '');
+        }
+
+        return str;
+    }
+
     escape(str) {
         return NamumarkParser.escape(str);
     }
