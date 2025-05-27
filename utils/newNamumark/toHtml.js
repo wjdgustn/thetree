@@ -1,65 +1,182 @@
 const utils = require('./utils');
+const mainUtils = require('../');
 const globalUtils = require('../global');
+const { ACLTypes } = require('../types');
 
 const link = require('./syntax/link');
+const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
-const toHtml = (doc, { document, thread, commentId } = {}) => {
+const ACL = require('../../class/acl');
+
+const Document = require('../../schemas/document');
+const History = require('../../schemas/history');
+
+const topToHtml = async (parsed, options = {}) => {
+    options.originalDocument ??= options.document;
+    const {
+        document,
+        dbDocument,
+        originalDocument,
+        rev,
+        thread = false,
+        aclData = {},
+        commentId,
+        req,
+        includeData = null
+    } = options;
+
+    const Store = options.Store ??= {
+        dbDocuments: [],
+        revDocCache: [],
+        categories: []
+    }
+
+    const toHtml = doc => topToHtml(doc, options);
+
+    const isTop = !Array.isArray(parsed);
+    const doc = isTop ? parsed.result : parsed;
+
     if(Array.isArray(doc[0])) {
         const lines = [];
         for(let line of doc) {
-            lines.push(toHtml(line));
+            lines.push(await toHtml(line));
         }
         return lines.join('<br>');
     }
 
-    let lowestLevel = 6;
-    for(let obj of doc) {
-        if(obj.type !== 'heading') continue;
-        if(obj.level < lowestLevel) lowestLevel = obj.level;
-    }
-    let sectionNum = 0;
-    const paragraphNum = [...Array(6 + 1 - lowestLevel)].map(_ => 0);
-
     const commentPrefix = commentId ? `tc${commentId}-` : '';
+
+    if(parsed.data) {
+        const parsedDocs = [];
+        for(let link of [
+            ...parsed.data.links,
+            ...parsed.data.categories.map(a => '분류:' + a),
+            ...parsed.data.includes
+        ]) {
+            if(link.startsWith(':')) {
+                const slicedLink = link.slice(1);
+                if(config.namespaces.some(a => slicedLink.startsWith(a + ':')))
+                    link = slicedLink;
+            }
+            parsedDocs.push(mainUtils.parseDocumentName(link));
+        }
+        const namespaces = [...new Set(parsedDocs.map(a => a.namespace))];
+
+        const query = { $or: [] };
+        for(let namespace of namespaces) {
+            query.$or.push({
+                namespace,
+                title: {
+                    $in: parsedDocs.filter(a => a.namespace === namespace).map(a => a.title)
+                }
+            });
+        }
+        if(query.$or.length) {
+            const result = await Document.find(query);
+            Store.dbDocuments = [
+                ...result,
+                ...parsedDocs
+                    .map(a => !result.some(b => a.namespace === b.namespace && a.title === b.title) ? {
+                        ...a,
+                        contentExists: false
+                    } : null)
+                    .filter(a => a)
+            ]
+        }
+
+        const revDocs = Store.dbDocuments
+            .filter(a => a.namespace.includes('파일') || parsed.data.includes.includes(globalUtils.doc_fulltitle(a)));
+        const docRevs = await History.find({
+            document: {
+                $in: revDocs.map(a => a.uuid)
+            }
+        }).sort({ rev: -1 });
+
+        const nsACLResultCache = {};
+        for(let doc of revDocs) {
+            let readable;
+            if(doc.contentExists) {
+                if(doc.lastReadACL === -1) {
+                    if(nsACLResultCache[doc.namespace] == null) {
+                        const acl = await ACL.get({ namespace: doc.namespace }, doc);
+                        const { result } = await acl.check(ACLTypes.Read, aclData);
+                        readable = result;
+                        nsACLResultCache[doc.namespace] = readable;
+                    }
+
+                    readable = nsACLResultCache[doc.namespace];
+                }
+                else {
+                    const acl = await ACL.get({ document: doc });
+                    const { result } = await acl.check(ACLTypes.Read, aclData);
+                    readable = result;
+                }
+            }
+            else readable = false;
+
+            Store.revDocCache.push({
+                namespace: doc.namespace,
+                title: doc.title,
+                readable,
+                rev: docRevs.find(a => a.document === doc.uuid)
+            });
+        }
+    }
 
     let result = '';
     for(let obj of doc) {
         switch(obj.type) {
             case 'paragraph': {
-                result += `<div class="wiki-paragraph">${toHtml(obj.lines)}</div>`;
+                result += `<div class="wiki-paragraph">${await toHtml(obj.lines)}</div>`;
                 break;
             }
 
             case 'heading': {
-                for(let i = obj.level - lowestLevel + 1; i < paragraphNum.length; i++) {
-                    paragraphNum[i] = 0;
-                }
-
-                const thisSectionNum = ++sectionNum;
-                const paragraphNumTextArr = [];
-                for(let i = 0; i <= obj.level - lowestLevel; i++) {
-                    if(i === obj.level - lowestLevel) paragraphNum[i]++;
-
-                    paragraphNumTextArr.push(paragraphNum[i]);
-                }
-                const paragraphNumText = paragraphNumTextArr.join('.');
-
-                const text = toHtml(obj.text);
+                const text = await toHtml(obj.text);
 
                 result += `<h${obj.level} class="wiki-heading${obj.closed ? ' wiki-heading-folded' : ''}">`;
-                result += `<a id="s-${paragraphNumText}" href="#${commentPrefix}toc">${paragraphNumText}.</a>`;
+                result += `<a id="s-${obj.numText}" href="#${commentPrefix}toc">${obj.numText}.</a>`;
                 result += ` <span id="${globalUtils.removeHtmlTags(text)}">${text}`;
                 if(!thread) result += `
 <span class="wiki-edit-section">
 <a href="${utils.escapeHtml(globalUtils.doc_action_link(document, 'edit', {
-                    section: thisSectionNum
+                    section: obj.sectionNum
                 }))}" rel="nofollow">[편집]</a>
 </span>`.trim();
                 result += `</span></h${obj.level}>`;
                 result += `<div class="wiki-heading-content${obj.closed ? ' wiki-heading-content-folded' : ''}">`;
-                result += toHtml(obj.content);
+                result += await toHtml(obj.content);
                 result += `</div>`;
+                break;
+            }
+            case 'table':
+                result += await table(obj, toHtml);
+                break;
+            case 'indent':
+                result += `<div class="wiki-indent">${await toHtml(obj.content)}</div>`;
+                break;
+            case 'blockquote':
+                result = `<blockquote class="wiki-quote">${await toHtml(obj.content)}</blockquote>`;
+                break;
+            case 'hr':
+                result += '<hr>';
+                break;
+            case 'list': {
+                const tagName = obj.listType === '*' ? 'ul' : 'ol';
+                const listClass = {
+                    '*': '',
+                    '1': '',
+                    'a': 'wiki-list-alpha',
+                    'A': 'wiki-list-upper-alpha',
+                    'i': 'wiki-list-roman',
+                    'I': 'wiki-list-upper-roman'
+                }[obj.listType];
+                result += `<${tagName} class="wiki-list${listClass ? ` ${listClass}` : ''}">`;
+                for(let item of obj.items) {
+                    result += `<li>${await toHtml(item)}</li>`;
+                }
+                result += `</${tagName}>`;
                 break;
             }
 
@@ -67,25 +184,25 @@ const toHtml = (doc, { document, thread, commentId } = {}) => {
                 result += utils.escapeHtml(obj.text).replaceAll('\n', '<br>');
                 break;
             case 'bold':
-                result += `<strong>${toHtml(obj.content)}</strong>`;
+                result += `<strong>${await toHtml(obj.content)}</strong>`;
                 break;
             case 'italic':
-                result += `<em>${toHtml(obj.content)}</em>`;
+                result += `<em>${await toHtml(obj.content)}</em>`;
                 break;
             case 'strike':
-                result += `<del>${toHtml(obj.content)}</del>`;
+                result += `<del>${await toHtml(obj.content)}</del>`;
                 break;
             case 'underline':
-                result += `<u>${toHtml(obj.content)}</u>`;
+                result += `<u>${await toHtml(obj.content)}</u>`;
                 break;
             case 'sup':
-                result += `<sup>${toHtml(obj.content)}</sup>`;
+                result += `<sup>${await toHtml(obj.content)}</sup>`;
                 break;
             case 'sub':
-                result += `<sub>${toHtml(obj.content)}</sub>`;
+                result += `<sub>${await toHtml(obj.content)}</sub>`;
                 break;
             case 'scaleText':
-                result += `<span class="wiki-size-${obj.isSizeUp ? 'up' : 'down'}-${obj.size}">${toHtml(obj.content)}</span>`;
+                result += `<span class="wiki-size-${obj.isSizeUp ? 'up' : 'down'}-${obj.size}">${await toHtml(obj.content)}</span>`;
                 break;
             case 'literal': {
                 const hasNewline = obj.text.includes('\n');
@@ -96,24 +213,35 @@ const toHtml = (doc, { document, thread, commentId } = {}) => {
                 break;
             }
             case 'link':
-                // result += link(obj, );
-                result += `<a href="/">${obj.text}</a>`;
+                result += await link(obj, {
+                    document: originalDocument,
+                    dbDocument,
+                    rev,
+                    thread,
+                    toHtml,
+                    Store
+                });
+                break;
+            case 'macro':
+                result += await macro(obj, { includeData });
                 break;
             case 'footnote': {
-                result += `[${obj.name}]`;
+                const name = obj.name;
+                const value = await toHtml(obj.value);
+                result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(value)}" href="#${commentPrefix}fn-${name}"><span id="${commentPrefix}rfn-${obj.index}"></span>[${name}]</a>`;
                 break;
             }
-            case 'table':
-                result += table(obj, toHtml);
-                break;
 
             default:
-                // console.log(obj);
+                // console.trace();
                 console.error('missing implementation:', obj.type);
         }
     }
 
+    if(isTop) return {
+        html: result
+    }
     return result;
 }
 
-module.exports = toHtml;
+module.exports = topToHtml;

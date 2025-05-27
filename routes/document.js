@@ -375,14 +375,21 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         const toHtml = require(toHtmlPath);
 
         console.time('parser');
-        const { tokens, result } = parser(content);
+        const result = parser(content);
         console.timeEnd('parser');
 
-        if(req.query.np === 'tok') return res.json(tokens);
-        if(req.query.np === 'cst') return res.json(result);
+        if(req.query.np === 'tok') return res.json(result.tokens);
+        if(req.query.np === 'cst') return res.json(result.result);
 
         console.time('toHtml');
-        contentHtml = toHtml(result);
+        const { html } = await toHtml(result, {
+            document,
+            dbDocument,
+            rev,
+            aclData: req.aclData,
+            req
+        });
+        contentHtml = html;
         console.timeEnd('toHtml');
     }
 

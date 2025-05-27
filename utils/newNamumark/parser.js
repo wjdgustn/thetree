@@ -39,7 +39,7 @@ const fullLineRegex = (regex, { laterRegex } = {}) => {
     });
 }
 
-const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex) => ({
+const nestedRegex = (openRegex, closeRegex, allowNewline = false) => ({
     pattern: (text, startOffset) => {
         const newlineIndex = text.indexOf('\n', startOffset);
         const str = text.slice(startOffset, (allowNewline || newlineIndex === -1) ? undefined : newlineIndex);
@@ -66,6 +66,8 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
             const closeEndIndex = closeIndex + close[0].length;
             if(openEndIndex > closeEndIndex) console.log('openEndIndex is bigger');
             tokIndex = openEndIndex ? Math.max(openEndIndex, closeEndIndex) : closeEndIndex;
+
+            if(tokIndex > closeIndex) openCount--;
         }
     },
     line_breaks: true
@@ -189,7 +191,7 @@ const Sub = createToken({
 });
 const ScaleText = createToken({
     name: 'ScaleText',
-    ...nestedRegex(/{{{[+-][1-5] /, /}}}/)
+    ...nestedRegex(/{{{[+-][1-5] /, /}}}/, true)
 });
 const WikiSyntax = createToken({
     name: 'WikiSyntax',
@@ -226,7 +228,6 @@ const Footnote = createToken({
     name: 'Footnote',
     // pattern: /\[\*[\s\S]+?]/,
     // line_breaks: true
-    // ...nestedRegex(/\[\*/, /]/, true, /\[/)
     pattern: (text, startOffset) => {
         const str = text.slice(startOffset);
         if(!str.startsWith('[*')) return null;
@@ -251,7 +252,7 @@ const Footnote = createToken({
 });
 const Macro = createToken({
     name: 'Macro',
-    pattern: /\[\S+?]|\[\S+?\([\s\S]*\)]/,
+    pattern: /\[\S+?]|\[\S+?\([\s\S]*?\)]/,
     line_breaks: true
 });
 
@@ -315,6 +316,13 @@ let currDepth = 0;
 
 let Store = {
     links: [],
+    categories: [],
+    includes: [],
+    heading: {
+        sectionNum: 0,
+        lowestLevel: 6,
+        list: []
+    },
     footnote: {
         index: 0,
         values: {},
@@ -394,17 +402,25 @@ class NamumarkParser extends EmbeddedActionsParser {
             });
 
             let text = str.slice(1, -(level + 1 + (closed ? 1 : 0)));
+            let sectionNum;
             $.ACTION(() => {
                 text = parseInline(text);
+                if(level < Store.heading.lowestLevel)
+                    Store.heading.lowestLevel = level;
+                sectionNum = ++Store.heading.sectionNum;
             });
 
-            return {
+            const obj = {
                 type: 'heading',
                 level,
                 closed,
+                sectionNum,
+                numText: null,
                 text,
                 content
             }
+            Store.heading.list.push(obj);
+            return obj;
         });
 
         $.RULE('table', () => {
@@ -455,19 +471,31 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('list', () => {
             let listType;
+            let startNum = 1;
             const items = [];
             $.AT_LEAST_ONE({
                 GATE: () => {
                     const next = $.LA(1);
                     if(next.tokenType !== List) return false;
-                    return !listType || next.image[1] === listType;
+                    return !listType || (next.image[1] === listType && !/#\d+/.test(next.image.slice(3)));
                 },
                 DEF: () => {
                     const tok = $.CONSUME(List);
 
+                    const isFirst = !listType;
                     let content = tok.image.split('\n').map(a => a.slice(1)).join('\n');
                     listType ??= content[0];
-                    content = content.slice(2);
+                    content = content.slice(listType.length);
+
+                    if(isFirst) {
+                        const match = content.match(/#\d+/);
+                        if(match) {
+                            startNum = parseInt(match[0].slice(1));
+                            content = content.slice(match[0].length);
+                        }
+                    }
+
+                    if(content.startsWith(' ')) content = content.slice(1);
 
                     $.ACTION(() => {
                         content = parseBlock(content);
@@ -482,6 +510,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'list',
                 listType,
+                startNum,
                 items
             }
         });
@@ -728,7 +757,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(Link);
             const content = tok.image.slice(2, -2);
             const splitted = content.split(/(?<!\\)\|/).map(a => a.replace(/\\./g, ''));
-            const link = splitted[0];
+            let link = splitted[0];
             const origParsedText = splitted.slice(1).join('|');
             let parsedText = origParsedText;
 
@@ -751,16 +780,53 @@ class NamumarkParser extends EmbeddedActionsParser {
                 ]
             }
 
-            parsedText ||= text;
+            parsedText ||= [{
+                type: 'text',
+                text
+            }];
 
-            if(!Store.links.includes(link))
-                Store.links.push(link);
+            let isCategory = false;
+            $.ACTION(() => {
+                let parsedUrl;
+                try {
+                    parsedUrl = new URL(link);
+                } catch (e) {}
+
+                if(!parsedUrl) {
+                    if(link.startsWith('분류:') && !Store.thread) {
+                        link = link.slice(3);
+
+                        let blur;
+                        if(link.endsWith('#blur')) {
+                            link = link.slice(0, -'#blur'.length);
+                            blur = true;
+                        }
+                        const newCategory = {
+                            document: link,
+                            text: origParsedText ? text : undefined,
+                            blur
+                        }
+                        if(!Store.categories.includes(link))
+                            Store.categories.push(newCategory);
+                        isCategory = true;
+                    }
+                    else {
+                        if(!Store.links.includes(link))
+                            Store.links.push(link);
+                    }
+                }
+            });
+            if(isCategory) return {
+                type: 'text',
+                text: ''
+            }
 
             return {
                 type: 'link',
                 content,
                 link,
                 text,
+                textExists: !!origParsedText,
                 parsedText
             }
         });
@@ -812,7 +878,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'footnote',
                 name,
-                value
+                value,
+                index,
+                startOffset: tok.startOffset
             }
         });
 
@@ -847,10 +915,16 @@ class NamumarkParser extends EmbeddedActionsParser {
                 params = content.slice(openParamIndex + 1, content.length - 1);
             }
 
+            if(name === 'include') {
+                const includeParams = params.split(/(?<!\\),/).map(a => a.replaceAll('\\,', ','));
+                Store.includes.push(includeParams[0]);
+            }
+
             return {
                 type: 'macro',
                 name,
-                params
+                params,
+                startOffset: tok.startOffset
             }
         });
 
@@ -923,8 +997,12 @@ const parseBlock = (text, noTopParagraph = false) => {
 
 const parser = new NamumarkParser();
 
-module.exports = text => {
-    Store = { ...originalStore };
+module.exports = (text, { thread = false, includeParams = {} } = {}) => {
+    Store = {
+        ...originalStore,
+        thread,
+        includeParams
+    }
 
     console.time('tokenize');
     const lexed = lexer.tokenize(text);
@@ -934,12 +1012,28 @@ module.exports = text => {
     const result = parser.document();
     console.timeEnd('cst');
 
+    const headings = [];
+
+    const paragraphNum = [...Array(6 + 1 - Store.heading.lowestLevel)].map(_ => 0);
+    for(let heading of Store.heading.list) {
+        const paragraphNumTextArr = [];
+        for(let i = 0; i <= heading.level - Store.heading.lowestLevel; i++) {
+            if(i === heading.level - Store.heading.lowestLevel) paragraphNum[i]++;
+
+            paragraphNumTextArr.push(paragraphNum[i]);
+        }
+        heading.numText = paragraphNumTextArr.join('.');
+    }
+
     return {
         tokens: lexed.tokens,
         result,
         data: {
             links: Store.links,
-            footnoteList: Store.footnoteList
+            categories: Store.categories,
+            includes: Store.includes,
+            headings,
+            footnoteList: Store.footnote.list
         }
     }
 }

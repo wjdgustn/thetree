@@ -1,5 +1,6 @@
-const utils = require('../../namumark/utils');
-module.exports = (obj, toHtml) => {
+const utils = require('../utils');
+
+module.exports = async (obj, toHtml) => {
     const rows = obj.rows;
 
     let tableAlign;
@@ -37,7 +38,7 @@ module.exports = (obj, toHtml) => {
         let visualRowIndex = -1;
         for(let rowIndex in row) {
             rowIndex = parseInt(rowIndex);
-            let value = row[rowIndex];
+            const value = row[rowIndex];
             if(!value) {
                 colspan++;
                 continue;
@@ -56,216 +57,220 @@ module.exports = (obj, toHtml) => {
             let colBgColorAssigned = false;
             let colColorAssigned = false;
 
-            // let paramStr = value;
-            // const prevParamStrLength = paramStr.length;
-            // while(paramStr.startsWith('&lt;')) {
-            //     const closeIndex = paramStr.indexOf('&gt;');
-            //     if(closeIndex === -1) break;
-            //
-            //     const tagStr = paramStr.slice('&lt;'.length, closeIndex);
-            //
-            //     const splittedTagStr = tagStr.split('=');
-            //     const [name, value] = splittedTagStr;
-            //
-            //     const splittedValue = (value || name)?.split(',') ?? [];
-            //     const [light, dark] = splittedValue;
-            //
-            //     if(!tagStr.startsWith('table')
-            //         && name.includes('color')) {
-            //         if(splittedValue.length > 2) break;
-            //         if(splittedValue
-            //             .some(v => !utils.validateColor(v))) break;
-            //     }
-            //
-            //     if(tagStr.startsWith('table')) {
-            //         const splittedTableStr = tagStr.slice('table'.length).trimStart().split('=');
-            //         if(splittedTableStr.length !== 2) break;
-            //
-            //         let [name, value] = splittedTableStr;
-            //         if(value.startsWith('&quot;') && value.endsWith('&quot;')) {
-            //             value = value.slice(6, -6);
-            //         }
-            //         else if(value.startsWith('&#039;') && value.endsWith('&#039;')) {
-            //             value = value.slice(6, -6);
-            //         }
-            //         const splittedValue = value.split(',');
-            //
-            //         const [light, dark] = splittedValue;
-            //
-            //         if(name.includes('color')) {
-            //             if(splittedValue.length > 2) break;
-            //             if(splittedValue
-            //                 .some(v => !utils.validateColor(v))) break;
-            //         }
-            //
-            //         if(name === 'align') {
-            //             if(tableAlign) break;
-            //
-            //             if(value === 'left') tableAlign = 'left';
-            //             else if(value === 'center') tableAlign = 'center';
-            //             else if(value === 'right') tableAlign = 'right';
-            //             else break;
-            //         }
-            //         else if(name === 'color') {
-            //             if(tableStyle.includes(';color:')) break;
-            //
-            //             tableStyle += `color:${light};`;
-            //             if(dark) tableDarkStyle += `color:${dark};`;
-            //         }
-            //         else if(name === 'bgcolor') {
-            //             if(tableStyle.includes(';background-color:')) break;
-            //
-            //             tableStyle += `background-color:${light};`;
-            //             if(dark) tableDarkStyle += `background-color:${dark};`;
-            //         }
-            //         else if(name === 'bordercolor') {
-            //             if(tableStyle.includes(';border:')) break;
-            //
-            //             tableStyle += `border:2px solid ${light};`;
-            //             if(dark) tableDarkStyle += `border:2px solid ${dark};`;
-            //         }
-            //         else if(name === 'width') {
-            //             if(tableWrapStyle.includes(';width:')) break;
-            //
-            //             const size = utils.parseSize(value);
-            //             if(!size) return;
-            //
-            //             tableWrapStyle += `width:${size.value}${size.unit};`;
-            //             tableStyle += `width:100%;`;
-            //         }
-            //         else break;
-            //     }
-            //     else if(tagStr.startsWith('-')) {
-            //         if(colspanAssigned) break;
-            //
-            //         const num = parseInt(tagStr.slice(1));
-            //         if(isNaN(num) || num < 0) break;
-            //
-            //         colspan = num;
-            //         colspanAssigned = true;
-            //     }
-            //     else if(tagStr.startsWith('|') || tagStr.slice(1).startsWith('|')) {
-            //         if(rowspan) break;
-            //
-            //         let newStyle = '';
-            //         if(!tagStr.startsWith('|')) {
-            //             if(tagStr[0] === '^') newStyle += 'vertical-align:top;';
-            //             else if(tagStr[0] === 'v') newStyle += 'vertical-align:bottom;';
-            //             else break;
-            //         }
-            //
-            //         const num = parseInt(tagStr.slice(newStyle ? 2 : 1));
-            //         if(isNaN(num) || num < 0) break;
-            //
-            //         rowspan = num;
-            //         tdStyle += newStyle;
-            //     }
-            //     else if(['(', ':', ')'].includes(tagStr)) {
-            //         if(align) break;
-            //
-            //         if(tagStr === '(') align = 'left';
-            //         else if(tagStr === ':') align = 'center';
-            //         else if(tagStr === ')') align = 'right';
-            //     }
-            //     else if(name === 'width') {
-            //         if(tdStyle.includes(';width:')) break;
-            //
-            //         const size = utils.parseSize(value);
-            //         if(!size) return;
-            //
-            //         tdStyle += `width:${size.value}${size.unit};`;
-            //     }
-            //     else if(name === 'height') {
-            //         if(tdStyle.includes(';height:')) break;
-            //
-            //         const size = utils.parseSize(value);
-            //         if(!size) return;
-            //
-            //         tdStyle += `height:${size.value}${size.unit};`;
-            //     }
-            //     else if(tagStr === 'nopad') {
-            //         if(tdClassList.includes('wiki-table-nopadding')) break;
-            //
-            //         tdClassList.push('wiki-table-nopadding');
-            //     }
-            //     else if(name === 'bgcolor') {
-            //         if(tdStyle.includes(';background-color:')) break;
-            //
-            //         tdStyle += `background-color:${light};`;
-            //         if(dark) tdDarkStyle += `background-color:${dark};`;
-            //     }
-            //     else if(name === 'colbgcolor') {
-            //         if(colBgColorAssigned) break;
-            //
-            //         colBgColors[visualRowIndex] = light;
-            //         if(dark) colDarkBgColors[visualRowIndex] = dark;
-            //
-            //         colBgColorAssigned = true;
-            //     }
-            //     else if(name === 'rowbgcolor') {
-            //         if(trStyle.includes(';background-color:')) break;
-            //
-            //         trStyle += `background-color:${light};`;
-            //         if(dark) trDarkStyle += `background-color:${dark};`;
-            //     }
-            //     else if(name === 'color') {
-            //         if(tdStyle.includes(';color:')) break;
-            //
-            //         tdStyle += `color:${light};`;
-            //         if(dark) tdDarkStyle += `color:${dark};`;
-            //     }
-            //     else if(name === 'colcolor') {
-            //         if(colColorAssigned) break;
-            //
-            //         colColors[visualRowIndex] = light;
-            //         if(dark) colDarkColors[visualRowIndex] = dark;
-            //
-            //         colColorAssigned = true;
-            //     }
-            //     else if(name === 'rowcolor') {
-            //         if(trStyle.includes(';color:')) break;
-            //
-            //         trStyle += `color:${light};`;
-            //         if(dark) trDarkStyle += `color:${dark};`;
-            //     }
-            //     else if(tagStr === 'keepall') {
-            //         if(tdClassList.includes('wiki-table-keepall')) break;
-            //         tdClassList.push('wiki-table-keepall');
-            //     }
-            //     else if(tagStr === 'rowkeepall') {
-            //         if(trClassList.includes('wiki-table-keepall')) break;
-            //         trClassList.push('wiki-table-keepall');
-            //     }
-            //     else if(tagStr === 'colkeepall') {
-            //         if(colKeepAll.includes(rowIndex)) break;
-            //         colKeepAll[rowIndex] = true;
-            //     }
-            //     else if([1, 2].includes(splittedValue.length)
-            //         && splittedValue.every(a => utils.validateColor(a))) {
-            //         if(tdStyle.includes(';background-color:')) break;
-            //
-            //         tdStyle += `background-color:${light};`;
-            //         if(dark) tdDarkStyle += `background-color:${dark};`;
-            //     }
-            //     else break;
-            //
-            //     paramStr = paramStr.slice(closeIndex + '&gt;'.length);
-            // }
-            //
-            // value = value.slice(prevParamStrLength - paramStr.length);
+            const firstTextObj = value[0].lines?.[0][0];
+            const lastTextObj = value.at(-1).lines?.at(-1).at(-1);
+            let paramStr = firstTextObj?.text;
+            const originalParamStr = paramStr;
+            const prevParamStrLength = paramStr?.length;
+            if(paramStr) while(paramStr.startsWith('<')) {
+                const closeIndex = paramStr.indexOf('>');
+                if(closeIndex === -1) break;
 
-            const startsWithSpace = value.lines?.[0].type === 'text' && value.lines?.[0].text.startsWith(' ');
-            const endsWithSpace = value.lines?.at(-1).type === 'text' && value.lines?.at(-1).text.endsWith(' ');
+                const tagStr = paramStr.slice(1, closeIndex);
+
+                const splittedTagStr = tagStr.split('=');
+                const [name, value] = splittedTagStr;
+
+                const splittedValue = (value || name)?.split(',') ?? [];
+                const [light, dark] = splittedValue;
+
+                if(!tagStr.startsWith('table')
+                    && name.includes('color')) {
+                    if(splittedValue.length > 2) break;
+                    if(splittedValue
+                        .some(v => !utils.validateColor(v))) break;
+                }
+
+                if(tagStr.startsWith('table')) {
+                    const splittedTableStr = tagStr.slice('table'.length).trimStart().split('=');
+                    if(splittedTableStr.length !== 2) break;
+
+                    let [name, value] = splittedTableStr;
+                    if(value.startsWith('"') && value.endsWith('"')) {
+                        value = value.slice(1, -1);
+                    }
+                    else if(value.startsWith("'") && value.endsWith("'")) {
+                        value = value.slice(1, -1);
+                    }
+                    const splittedValue = value.split(',');
+
+                    const [light, dark] = splittedValue;
+
+                    if(name.includes('color')) {
+                        if(splittedValue.length > 2) break;
+                        if(splittedValue
+                            .some(v => !utils.validateColor(v))) break;
+                    }
+
+                    if(name === 'align') {
+                        if(tableAlign) break;
+
+                        if(value === 'left') tableAlign = 'left';
+                        else if(value === 'center') tableAlign = 'center';
+                        else if(value === 'right') tableAlign = 'right';
+                        else break;
+                    }
+                    else if(name === 'color') {
+                        if(tableStyle.includes(';color:')) break;
+
+                        tableStyle += `color:${light};`;
+                        if(dark) tableDarkStyle += `color:${dark};`;
+                    }
+                    else if(name === 'bgcolor') {
+                        if(tableStyle.includes(';background-color:')) break;
+
+                        tableStyle += `background-color:${light};`;
+                        if(dark) tableDarkStyle += `background-color:${dark};`;
+                    }
+                    else if(name === 'bordercolor') {
+                        if(tableStyle.includes(';border:')) break;
+
+                        tableStyle += `border:2px solid ${light};`;
+                        if(dark) tableDarkStyle += `border:2px solid ${dark};`;
+                    }
+                    else if(name === 'width') {
+                        if(tableWrapStyle.includes(';width:')) break;
+
+                        const size = utils.parseSize(value);
+                        if(!size) return;
+
+                        tableWrapStyle += `width:${size.value}${size.unit};`;
+                        tableStyle += `width:100%;`;
+                    }
+                    else break;
+                }
+                else if(tagStr.startsWith('-')) {
+                    if(colspanAssigned) break;
+
+                    const num = parseInt(tagStr.slice(1));
+                    if(isNaN(num) || num < 0) break;
+
+                    colspan = num;
+                    colspanAssigned = true;
+                }
+                else if(tagStr.startsWith('|') || tagStr.slice(1).startsWith('|')) {
+                    if(rowspan) break;
+
+                    let newStyle = '';
+                    if(!tagStr.startsWith('|')) {
+                        if(tagStr[0] === '^') newStyle += 'vertical-align:top;';
+                        else if(tagStr[0] === 'v') newStyle += 'vertical-align:bottom;';
+                        else break;
+                    }
+
+                    const num = parseInt(tagStr.slice(newStyle ? 2 : 1));
+                    if(isNaN(num) || num < 0) break;
+
+                    rowspan = num;
+                    tdStyle += newStyle;
+                }
+                else if(['(', ':', ')'].includes(tagStr)) {
+                    if(align) break;
+
+                    if(tagStr === '(') align = 'left';
+                    else if(tagStr === ':') align = 'center';
+                    else if(tagStr === ')') align = 'right';
+                }
+                else if(name === 'width') {
+                    if(tdStyle.includes(';width:')) break;
+
+                    const size = utils.parseSize(value);
+                    if(!size) return;
+
+                    tdStyle += `width:${size.value}${size.unit};`;
+                }
+                else if(name === 'height') {
+                    if(tdStyle.includes(';height:')) break;
+
+                    const size = utils.parseSize(value);
+                    if(!size) return;
+
+                    tdStyle += `height:${size.value}${size.unit};`;
+                }
+                else if(tagStr === 'nopad') {
+                    if(tdClassList.includes('wiki-table-nopadding')) break;
+
+                    tdClassList.push('wiki-table-nopadding');
+                }
+                else if(name === 'bgcolor') {
+                    if(tdStyle.includes(';background-color:')) break;
+
+                    tdStyle += `background-color:${light};`;
+                    if(dark) tdDarkStyle += `background-color:${dark};`;
+                }
+                else if(name === 'colbgcolor') {
+                    if(colBgColorAssigned) break;
+
+                    colBgColors[visualRowIndex] = light;
+                    if(dark) colDarkBgColors[visualRowIndex] = dark;
+
+                    colBgColorAssigned = true;
+                }
+                else if(name === 'rowbgcolor') {
+                    if(trStyle.includes(';background-color:')) break;
+
+                    trStyle += `background-color:${light};`;
+                    if(dark) trDarkStyle += `background-color:${dark};`;
+                }
+                else if(name === 'color') {
+                    if(tdStyle.includes(';color:')) break;
+
+                    tdStyle += `color:${light};`;
+                    if(dark) tdDarkStyle += `color:${dark};`;
+                }
+                else if(name === 'colcolor') {
+                    if(colColorAssigned) break;
+
+                    colColors[visualRowIndex] = light;
+                    if(dark) colDarkColors[visualRowIndex] = dark;
+
+                    colColorAssigned = true;
+                }
+                else if(name === 'rowcolor') {
+                    if(trStyle.includes(';color:')) break;
+
+                    trStyle += `color:${light};`;
+                    if(dark) trDarkStyle += `color:${dark};`;
+                }
+                else if(tagStr === 'keepall') {
+                    if(tdClassList.includes('wiki-table-keepall')) break;
+                    tdClassList.push('wiki-table-keepall');
+                }
+                else if(tagStr === 'rowkeepall') {
+                    if(trClassList.includes('wiki-table-keepall')) break;
+                    trClassList.push('wiki-table-keepall');
+                }
+                else if(tagStr === 'colkeepall') {
+                    if(colKeepAll.includes(rowIndex)) break;
+                    colKeepAll[rowIndex] = true;
+                }
+                else if([1, 2].includes(splittedValue.length)
+                    && splittedValue.every(a => utils.validateColor(a))) {
+                    if(tdStyle.includes(';background-color:')) break;
+
+                    tdStyle += `background-color:${light};`;
+                    if(dark) tdDarkStyle += `background-color:${dark};`;
+                }
+                else break;
+
+                paramStr = paramStr.slice(closeIndex + '>'.length);
+            }
+
+            if(paramStr) firstTextObj.text = originalParamStr.slice(prevParamStrLength - paramStr.length);
+
+            const startsWithSpace = firstTextObj?.text.startsWith(' ');
+            const endsWithSpace = lastTextObj?.text.endsWith(' ');
 
             if(startsWithSpace && endsWithSpace) {
                 align ??= 'center';
-                value = value.slice(1, -1);
+                firstTextObj.text = firstTextObj.text.slice(1);
+                lastTextObj.text = lastTextObj.text.slice(0, -1);
             } else if(startsWithSpace) {
                 align ??= 'right';
-                value = value.slice(1);
+                firstTextObj.text = firstTextObj.text.slice(1);
             } else if(endsWithSpace) {
                 align ??= 'left';
-                value = value.slice(0, -1);
+                lastTextObj.text = lastTextObj.text.slice(0, -1);
             }
             if(align) tdStyle += `text-align:${align};`;
 
@@ -285,7 +290,7 @@ module.exports = (obj, toHtml) => {
             tdStyle = tdStyle.slice(1);
             tdDarkStyle = tdDarkStyle.slice(1);
 
-            htmlValues.push(`<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${toHtml(value)}</td>`.trim());
+            htmlValues.push(`<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</td>`.trim());
 
             for(let i = 0; i < colspan; i++) {
                 aliveRowSpans[visualRowIndex + i] = rowspan ?? 0;
