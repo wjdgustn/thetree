@@ -39,39 +39,73 @@ const fullLineRegex = (regex, { laterRegex } = {}) => {
     });
 }
 
-const nestedRegex = (openRegex, closeRegex, allowNewline = false) => ({
-    pattern: (text, startOffset) => {
-        const newlineIndex = text.indexOf('\n', startOffset);
-        const str = text.slice(startOffset, (allowNewline || newlineIndex === -1) ? undefined : newlineIndex);
-        const firstOpen = str.match(openRegex);
-        if(!firstOpen || firstOpen.index) return null;
+const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex = null) => {
+    openCheckRegex ??= openRegex;
+    openRegex = new RegExp('^' + openRegex.source, 'i');
 
-        let tokIndex = firstOpen.index + firstOpen[0].length;
-        let openCount = 0;
-        while(true) {
-            const sliced = str.slice(tokIndex);
-            const open = sliced.match(openRegex);
-            const close = sliced.match(closeRegex);
-            const openIndex = open?.index + tokIndex;
-            const closeIndex = close?.index + tokIndex;
+    return ({
+        pattern: (text, startOffset) => {
+            // const newlineIndex = text.indexOf('\n', startOffset);
+            // const str = text.slice(startOffset, (allowNewline || newlineIndex === -1) ? undefined : newlineIndex);
+            // const firstOpen = str.match(openRegex);
+            // if(!firstOpen || firstOpen.index) return null;
+            //
+            // let tokIndex = firstOpen.index + firstOpen[0].length;
+            // let openCount = 0;
+            // while(true) {
+            //     const sliced = str.slice(tokIndex);
+            //     const open = sliced.match(openRegex);
+            //     const close = sliced.match(closeRegex);
+            //     const openIndex = open?.index + tokIndex;
+            //     const closeIndex = close?.index + tokIndex;
+            //
+            //     if(!close) return null;
+            //
+            //     if(openIndex < closeIndex) openCount++;
+            //     else if(openCount) openCount--;
+            //
+            //     if(!openCount) return [str.slice(firstOpen.index, closeIndex + close[0].length)];
+            //
+            //     const openEndIndex = openIndex + open?.[0].length;
+            //     const closeEndIndex = closeIndex + close[0].length;
+            //     if(openEndIndex > closeEndIndex) console.log('openEndIndex is bigger');
+            //     tokIndex = openEndIndex ? Math.max(openEndIndex, closeEndIndex) : closeEndIndex;
+            //
+            //     if(tokIndex > closeIndex) openCount--;
+            // }
 
-            if(!close) return null;
+            const str = text.slice(startOffset);
+            const openMatch = str.match(openRegex);
+            if(!openMatch) return null;
 
-            if(openIndex < closeIndex) openCount++;
-            else if(openCount) openCount--;
+            let tokIndex = openMatch[0].length;
+            let openCount = 0;
+            while(true) {
+                // const openIndex = str.indexOf('[', tokIndex);
+                const sliced = str.slice(tokIndex);
+                const openMatch = sliced.match(openCheckRegex);
+                const openIndex = openMatch ? openMatch.index + tokIndex : -1;
+                // const closeIndex = str.indexOf(']', tokIndex);
+                const closeMatch = sliced.match(closeRegex);
+                const closeIndex = closeMatch ? closeMatch.index + tokIndex : -1;
+                // if(openIndex < 0) break;
+                if(closeIndex < 0) return null;
 
-            if(!openCount) return [str.slice(firstOpen.index, closeIndex + close[0].length)];
+                if(openIndex >= 0 && openIndex < closeIndex) openCount++;
+                else openCount--;
 
-            const openEndIndex = openIndex + open?.[0].length;
-            const closeEndIndex = closeIndex + close[0].length;
-            if(openEndIndex > closeEndIndex) console.log('openEndIndex is bigger');
-            tokIndex = openEndIndex ? Math.max(openEndIndex, closeEndIndex) : closeEndIndex;
+                if(openCount < 0) return [str.slice(0, closeIndex + closeMatch[0].length)];
 
-            if(tokIndex > closeIndex) openCount--;
-        }
-    },
-    line_breaks: true
-});
+                tokIndex = (
+                    openIndex >= 0
+                        ? Math.min(openIndex + openMatch[0].length, closeIndex + closeMatch[0].length)
+                        : closeIndex + closeMatch[0].length
+                );
+            }
+        },
+        line_breaks: true
+    });
+}
 
 const Escape = createToken({
     name: 'Escape',
@@ -191,11 +225,11 @@ const Sub = createToken({
 });
 const ScaleText = createToken({
     name: 'ScaleText',
-    ...nestedRegex(/{{{[+-][1-5] /, /}}}/, true)
+    ...nestedRegex(/{{{[+-][1-5] /, /}}}/, true, /{{{/)
 });
 const WikiSyntax = createToken({
     name: 'WikiSyntax',
-    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true)
+    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true, /{{{/)
 });
 const HtmlSyntax = createToken({
     name: 'HtmlSyntax',
@@ -204,11 +238,11 @@ const HtmlSyntax = createToken({
 });
 const Folding = createToken({
     name: 'Folding',
-    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true)
+    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true, /{{{/)
 });
 const IfSyntax = createToken({
     name: 'IfSyntax',
-    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, true)
+    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, true, /{{{/)
 });
 const Literal = createToken({
     name: 'Literal',
@@ -228,27 +262,28 @@ const Footnote = createToken({
     name: 'Footnote',
     // pattern: /\[\*[\s\S]+?]/,
     // line_breaks: true
-    pattern: (text, startOffset) => {
-        const str = text.slice(startOffset);
-        if(!str.startsWith('[*')) return null;
-
-        let tokIndex = 2;
-        let openCount = 0;
-        while(true) {
-            const openIndex = str.indexOf('[', tokIndex);
-            const closeIndex = str.indexOf(']', tokIndex);
-            // if(openIndex < 0) break;
-            if(closeIndex < 0) return null;
-
-            if(openIndex >= 0 && openIndex < closeIndex) openCount++;
-            else openCount--;
-
-            if(openCount < 0) return [str.slice(0, closeIndex + 1)];
-
-            tokIndex = (openIndex >= 0 ? Math.min(openIndex, closeIndex) : closeIndex) + 1;
-        }
-    },
-    line_breaks: true
+    // pattern: (text, startOffset) => {
+    //     const str = text.slice(startOffset);
+    //     if(!str.startsWith('[*')) return null;
+    //
+    //     let tokIndex = 2;
+    //     let openCount = 0;
+    //     while(true) {
+    //         const openIndex = str.indexOf('[', tokIndex);
+    //         const closeIndex = str.indexOf(']', tokIndex);
+    //         // if(openIndex < 0) break;
+    //         if(closeIndex < 0) return null;
+    //
+    //         if(openIndex >= 0 && openIndex < closeIndex) openCount++;
+    //         else openCount--;
+    //
+    //         if(openCount < 0) return [str.slice(0, closeIndex + 1)];
+    //
+    //         tokIndex = (openIndex >= 0 ? Math.min(openIndex, closeIndex) : closeIndex) + 1;
+    //     }
+    // },
+    // line_breaks: true
+    ...nestedRegex(/\[\*/, /]/, true, /\[/)
 });
 const Macro = createToken({
     name: 'Macro',

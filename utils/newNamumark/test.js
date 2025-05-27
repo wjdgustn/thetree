@@ -7,14 +7,16 @@ const fs = require('fs');
 // const doc = `
 // {{{+5 {{{+5 large text}}}}}}
 // `.trim();
+// TODO: 이거 안 됨, 처음 lexer에서 bold 처리돼서 안 되는 듯?
 const doc = `
-{{{#!wiki style="word-break: keep-all;"
-|| {{{'''굵게'''}}} || '''굵게 ''' ||{{{#!wiki style="min-width:300px"
-작은따옴표(')를 세 번 입력한 상태입니다.}}}||
-|| {{{''기울임''}}} || ''기울임'' ||작은따옴표(')를 두 번 입력한 상태입니다.||}}}
-||<-6><bgcolor=#00a495><color=#fff> 응용 ||
-||<-3> {{{{{{+5 {{{+5 +10단계}}}}}}}}} ||<-3> {{{+5 {{{+5 +10단계}}}}}} ||
+|| {{{'''굵게'''}}}||
 `.trim();
+// const doc = `
+// [[https://github.com|[[파일:GitHub.png]][[파일:GitHubDark.png]]]]
+// {{{#!wiki
+// {{{리터럴}}}
+// }}}
+// `.trim();
 
 const parser = require('./parser');
 const { tokens, result, data } = parser(doc);
