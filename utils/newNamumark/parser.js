@@ -162,7 +162,7 @@ const Indent = createToken({
 });
 const Text = createToken({
     name: 'Text',
-    pattern: /[^\\'\r\n_\[\]~\-^,|]+|['\r\n_\[\]~\-^,|]/
+    pattern: /[^\\'\r\n_\[\]~\-^,|{]+|['\r\n_\[\]~\-^,|{]/
 });
 
 const Heading = createToken({

@@ -7,7 +7,6 @@ const fs = require('fs');
 // const doc = `
 // {{{+5 {{{+5 large text}}}}}}
 // `.trim();
-// TODO: 이거 안 됨, 처음 lexer에서 bold 처리돼서 안 되는 듯?
 const doc = `
 || {{{'''굵게'''}}}||
 `.trim();
