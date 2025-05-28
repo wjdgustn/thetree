@@ -382,14 +382,19 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         if(req.query.np === 'cst') return res.json(result.result);
 
         console.time('toHtml');
-        const { html } = await toHtml(result, {
-            document,
-            dbDocument,
-            rev,
-            aclData: req.aclData,
-            req
-        });
-        contentHtml = html;
+        try {
+            const { html } = await toHtml(result, {
+                document,
+                dbDocument,
+                rev,
+                aclData: req.aclData,
+                req
+            });
+            contentHtml = html;
+        } catch (e) {
+            console.error(e);
+            return res.status(500).send('toHtml 실패');
+        }
         console.timeEnd('toHtml');
     }
 

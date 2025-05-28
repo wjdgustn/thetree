@@ -8,14 +8,11 @@ const fs = require('fs');
 // {{{+5 {{{+5 large text}}}}}}
 // `.trim();
 const doc = `
-|| {{{'''굵게'''}}}||
+{{{#!wiki
+text
+|| table ||}}}
 `.trim();
-// const doc = `
-// [[https://github.com|[[파일:GitHub.png]][[파일:GitHubDark.png]]]]
-// {{{#!wiki
-// {{{리터럴}}}
-// }}}
-// `.trim();
+// const doc = ` *list\n *second\n\ntext\nwow`;
 
 const parser = require('./parser');
 const { tokens, result, data } = parser(doc);

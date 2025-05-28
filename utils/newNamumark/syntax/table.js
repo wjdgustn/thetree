@@ -57,8 +57,11 @@ module.exports = async (obj, toHtml) => {
             let colBgColorAssigned = false;
             let colColorAssigned = false;
 
-            const firstTextObj = value[0].lines?.[0][0];
-            const lastTextObj = value.at(-1).lines?.at(-1).at(-1);
+            let firstTextObj = value[0].lines?.[0][0];
+            if(firstTextObj?.type !== 'text') firstTextObj = null;
+            let lastTextObj = value.at(-1).lines?.at(-1).at(-1);
+            if(lastTextObj?.type !== 'text') lastTextObj = null;
+
             let paramStr = firstTextObj?.text;
             const originalParamStr = paramStr;
             const prevParamStrLength = paramStr?.length;

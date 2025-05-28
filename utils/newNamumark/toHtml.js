@@ -34,8 +34,11 @@ const topToHtml = async (parsed, options = {}) => {
 
     const toHtml = doc => topToHtml(doc, options);
 
-    const isTop = !Array.isArray(parsed);
-    const doc = isTop ? parsed.result : parsed;
+    const isTop = !!parsed.result;
+    let doc = isTop ? parsed.result : parsed;
+
+    if(!isTop && !Array.isArray(doc))
+        doc = [doc];
 
     if(Array.isArray(doc[0])) {
         const lines = [];
@@ -179,6 +182,10 @@ const topToHtml = async (parsed, options = {}) => {
                 result += `</${tagName}>`;
                 break;
             }
+
+            case 'wikiSyntax':
+                result += `<div${obj.style ? ` style="${obj.style}"` : ''}${obj.darkStyle ? ` data-dark-style="${obj.darkStyle}"` : ''}>${await toHtml(obj.content)}</div>`;
+                break;
 
             case 'text':
                 result += utils.escapeHtml(obj.text).replaceAll('\n', '<br>');

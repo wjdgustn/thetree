@@ -392,9 +392,9 @@ class NamumarkParser extends EmbeddedActionsParser {
         });
 
         $.RULE('block', () => {
-            $.OPTION(() => {
-                $.CONSUME(Newline);
-            });
+            // $.OPTION(() => {
+            //     $.CONSUME(Newline);
+            // });
             return $.OR([
                 { ALT: () => $.SUBRULE($.table) },
                 { ALT: () => $.SUBRULE($.hr) },
@@ -406,9 +406,9 @@ class NamumarkParser extends EmbeddedActionsParser {
         });
 
         $.RULE('rootBlock', () => {
-            $.OPTION(() => {
-                $.CONSUME(Newline);
-            });
+            // $.OPTION(() => {
+            //     $.CONSUME(Newline);
+            // });
             return $.OR([
                 { ALT: () => $.SUBRULE($.heading) },
                 { ALT: () => $.SUBRULE($.block) }
@@ -463,10 +463,13 @@ class NamumarkParser extends EmbeddedActionsParser {
             $.AT_LEAST_ONE(() => {
                 const items = [];
                 $.CONSUME(TableRowOpen);
+                const noTopParagraphBak = this.noTopParagraph;
+                this.noTopParagraph = false;
                 $.AT_LEAST_ONE_SEP({
                     SEP: TableSplit,
                     DEF: () => items.push([$.SUBRULE($.block)])
                 });
+                this.noTopParagraph = noTopParagraphBak;
                 $.CONSUME(TableRowClose);
                 $.OPTION(() => {
                     $.CONSUME(Newline);
@@ -508,12 +511,13 @@ class NamumarkParser extends EmbeddedActionsParser {
             let listType;
             let startNum = 1;
             const items = [];
+            const checkNext = (howMuch = 1) => () => {
+                const next = $.LA(howMuch);
+                if(next.tokenType !== List) return false;
+                return !listType || (next.image[1] === listType && !/#\d+/.test(next.image.slice(3)));
+            }
             $.AT_LEAST_ONE({
-                GATE: () => {
-                    const next = $.LA(1);
-                    if(next.tokenType !== List) return false;
-                    return !listType || (next.image[1] === listType && !/#\d+/.test(next.image.slice(3)));
-                },
+                GATE: checkNext,
                 DEF: () => {
                     const tok = $.CONSUME(List);
 
@@ -536,8 +540,11 @@ class NamumarkParser extends EmbeddedActionsParser {
                         content = parseBlock(content);
                     });
                     items.push(content);
-                    $.OPTION(() => {
-                        $.CONSUME(Newline);
+                    $.OPTION({
+                        GATE: checkNext(2),
+                        DEF: () => {
+                            $.CONSUME(Newline);
+                        }
                     });
                 }
             });
@@ -590,9 +597,9 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('line', () => {
             const result = $.SUBRULE($.inline);
-            $.OPTION(() => {
-                $.CONSUME(Newline);
-            });
+            // $.OPTION(() => {
+            //     $.CONSUME(Newline);
+            // });
             return result;
         });
 
