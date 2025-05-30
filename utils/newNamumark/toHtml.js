@@ -40,13 +40,13 @@ const topToHtml = async (parsed, options = {}) => {
     if(!isTop && !Array.isArray(doc))
         doc = [doc];
 
-    if(Array.isArray(doc[0])) {
-        const lines = [];
-        for(let line of doc) {
-            lines.push(await toHtml(line));
-        }
-        return lines.join('<br>');
-    }
+    // if(Array.isArray(doc[0])) {
+    //     const lines = [];
+    //     for(let line of doc) {
+    //         lines.push(await toHtml(line));
+    //     }
+    //     return lines.join('<br>');
+    // }
 
     const commentPrefix = commentId ? `tc${commentId}-` : '';
 
@@ -129,6 +129,14 @@ const topToHtml = async (parsed, options = {}) => {
 
     let result = '';
     for(let obj of doc) {
+        if(Array.isArray(obj)) {
+            const lines = [];
+            for(let line of obj) {
+                lines.push(await toHtml(line));
+            }
+            result += lines.join('');
+        }
+
         switch(obj.type) {
             case 'paragraph': {
                 result += `<div class="wiki-paragraph">${await toHtml(obj.lines)}</div>`;
@@ -186,6 +194,9 @@ const topToHtml = async (parsed, options = {}) => {
             case 'wikiSyntax':
                 result += `<div${obj.style ? ` style="${obj.style}"` : ''}${obj.darkStyle ? ` data-dark-style="${obj.darkStyle}"` : ''}>${await toHtml(obj.content)}</div>`;
                 break;
+            case 'htmlSyntax':
+                result += obj.safeHtml;
+                break;
 
             case 'text':
                 result += utils.escapeHtml(obj.text).replaceAll('\n', '<br>');
@@ -210,6 +221,9 @@ const topToHtml = async (parsed, options = {}) => {
                 break;
             case 'scaleText':
                 result += `<span class="wiki-size-${obj.isSizeUp ? 'up' : 'down'}-${obj.size}">${await toHtml(obj.content)}</span>`;
+                break;
+            case 'colorText':
+                result += `<span${obj.color ? ` style="color:${obj.color}"` : ''}${obj.darkColor ? ` data-dark-style="color:${obj.darkColor}"` : ''}>${await toHtml(obj.content)}</span>`;
                 break;
             case 'literal': {
                 const hasNewline = obj.text.includes('\n');
@@ -240,7 +254,7 @@ const topToHtml = async (parsed, options = {}) => {
             }
 
             default:
-                // console.trace();
+                console.trace();
                 console.error('missing implementation:', obj.type);
         }
     }

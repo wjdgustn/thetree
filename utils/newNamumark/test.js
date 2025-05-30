@@ -6,13 +6,15 @@ const fs = require('fs');
 // `.trim();
 // const doc = `
 // {{{+5 {{{+5 large text}}}}}}
+// // `.trim();
+// const doc = `
+// ||table
+// >asdf
+// ||
 // `.trim();
-const doc = `
-{{{#!wiki
-text
-|| table ||}}}
-`.trim();
+const doc = `>asdf\n\n\n`;
 // const doc = ` *list\n *second\n\ntext\nwow`;
+// const doc = `sans\n`;
 
 const parser = require('./parser');
 const { tokens, result, data } = parser(doc);

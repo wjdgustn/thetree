@@ -259,7 +259,7 @@ module.exports = async (obj, toHtml) => {
                 paramStr = paramStr.slice(closeIndex + '>'.length);
             }
 
-            if(paramStr) firstTextObj.text = originalParamStr.slice(prevParamStrLength - paramStr.length);
+            if(paramStr != null) firstTextObj.text = originalParamStr.slice(prevParamStrLength - paramStr.length);
 
             const startsWithSpace = firstTextObj?.text.startsWith(' ');
             const endsWithSpace = lastTextObj?.text.endsWith(' ');

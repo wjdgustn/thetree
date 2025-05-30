@@ -3,11 +3,44 @@ const {
     Lexer,
     EmbeddedActionsParser
 } = require('chevrotain');
+const {
+    validateHTMLColorHex
+} = require('validate-color');
+const sanitizeHtml = require('sanitize-html');
+
 const utils = require('./utils');
 
 // TODO: editor comment
 
 const MAXIMUM_DEPTH = 10;
+
+const sanitizeHtmlOptions = {
+    allowedTags: sanitizeHtml.defaults.allowedTags.filter(a => ![
+        'code'
+    ].includes(a)),
+    allowedAttributes: {
+        '*': ['style'],
+        a: ['href', 'class', 'rel', 'target']
+    },
+    allowedSchemes: ['http', 'https', 'ftp'],
+    transformTags: {
+        '*': (tagName, attribs) => {
+            if(!attribs.style) return { tagName, attribs };
+
+            const style = utils.cssFilter(attribs.style);
+
+            return {
+                tagName,
+                attribs: { ...attribs, style }
+            }
+        },
+        a: sanitizeHtml.simpleTransform('a', {
+            class: 'wiki-link-external',
+            rel: 'nofollow noopener ugc',
+            target: '_blank'
+        })
+    }
+}
 
 const fullLineRegex = (regex, { laterRegex } = {}) => {
     const regexStr = regex.toString();
@@ -233,7 +266,7 @@ const WikiSyntax = createToken({
 });
 const HtmlSyntax = createToken({
     name: 'HtmlSyntax',
-    pattern: /{{{#!html([\s\S]*)}}}/,
+    pattern: /{{{#!html([\s\S]*?)}}}/,
     line_breaks: true
 });
 const Folding = createToken({
@@ -338,7 +371,7 @@ const allTokens = [
 const modeGenerator = tokens => ({
     modes: {
         default: tokens.filter(a => !['TableRowClose', 'TableSplit'].includes(a.name)),
-        tableMode: tokens
+        tableMode: tokens.filter(a => !['TableRowOpen'].includes(a.name))
     },
     defaultMode: 'default'
 });
@@ -578,7 +611,7 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('paragraph', () => {
             const lines = [];
             $.AT_LEAST_ONE(() => {
-                lines.push($.SUBRULE($.line));
+                lines.push($.SUBRULE($.inline));
             });
 
             const firstText = lines[0][0];
@@ -595,13 +628,13 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
-        $.RULE('line', () => {
-            const result = $.SUBRULE($.inline);
-            // $.OPTION(() => {
-            //     $.CONSUME(Newline);
-            // });
-            return result;
-        });
+        // $.RULE('line', () => {
+        //     const result = $.SUBRULE($.inline);
+        //     // $.OPTION(() => {
+        //     //     $.CONSUME(Newline);
+        //     // });
+        //     return result;
+        // });
 
         $.RULE('inline', () => {
             const result = [];
@@ -640,6 +673,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 { ALT: () => $.CONSUME(Text) },
                 { ALT: () => $.CONSUME(Newline) }
             ]);
+            console.log(tok);
             return {
                 type: 'text',
                 text: tok.image
@@ -714,9 +748,11 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('htmlSyntax', () => {
             const tok = $.CONSUME(HtmlSyntax);
             const text = tok.image.slice(9, -3).trim();
+            const safeHtml = sanitizeHtml(text.trim(), sanitizeHtmlOptions);
             return {
                 type: 'htmlSyntax',
-                text
+                text,
+                safeHtml
             }
         });
 
@@ -761,6 +797,42 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('literal', () => {
             const tok = $.CONSUME(Literal);
             const text = tok.image.slice(3, -3);
+
+            const splittedText = text.split(' ');
+            if(text.startsWith('#') && splittedText.length > 1) {
+                const colorParams = splittedText[0].split(',');
+
+                let color;
+                let darkColor;
+
+                if(validateHTMLColorHex(colorParams[0]))
+                    color = colorParams[0];
+                else if(utils.validateHTMLColorName(colorParams[0].slice(1)))
+                    color = colorParams[0].slice(1);
+                if(color && (!colorParams[1] || colorParams[1].startsWith('#'))) {
+                    if(colorParams[1]) {
+                        if(validateHTMLColorHex(colorParams[1]))
+                            darkColor = colorParams[1];
+                        else if(utils.validateHTMLColorName(colorParams[1].slice(1)))
+                            darkColor = colorParams[1].slice(1);
+                    }
+
+                    if(!colorParams[1] || darkColor) {
+                        let content = splittedText.slice(1).join(' ');
+                        $.ACTION(() => {
+                            content = parseBlock(content, true);
+                        });
+
+                        return {
+                            type: 'colorText',
+                            color,
+                            darkColor,
+                            content
+                        }
+                    }
+                }
+            }
+
             return {
                 type: 'literal',
                 text
@@ -798,7 +870,7 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('link', () => {
             const tok = $.CONSUME(Link);
             const content = tok.image.slice(2, -2);
-            const splitted = content.split(/(?<!\\)\|/).map(a => a.replace(/\\./g, ''));
+            const splitted = content.split(/(?<!\\)\|/).map(a => a.replaceAll('\\|', '|'));
             let link = splitted[0];
             const origParsedText = splitted.slice(1).join('|');
             let parsedText = origParsedText;

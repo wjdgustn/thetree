@@ -75,7 +75,10 @@ module.exports = {
         return { value, unit };
     },
     validateColor(color) {
-        return color === 'transparent' || validateHTMLColorHex(color) || validateHTMLColorName(color);
+        return this.validateHTMLColorName(color) || validateHTMLColorHex(color);
+    },
+    validateHTMLColorName(color) {
+        return color === 'transparent' || validateHTMLColorName(color);
     },
     parseIncludeParams(text, includeData = {}) {
         let newText = '';
