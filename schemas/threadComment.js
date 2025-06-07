@@ -79,6 +79,7 @@ newSchema.pre('save', async function() {
     if (!last) last = await model.findOne({ thread: this.thread }).sort({ id: -1 });
 
     locks.forEach(r => r());
+    delete lockPromise[this.thread];
 
     if(this.id == null) {
         this.id = last ? last.id + 1 : 1;

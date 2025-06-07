@@ -145,6 +145,7 @@ newSchema.pre('save', async function() {
     if(!last) last = await model.findOne({ document: this.document }).sort({ rev: -1 });
 
     locks.forEach(r => r());
+    delete lockPromise[this.document];
 
     if(this.rev == null) {
         this.rev = last ? last.rev + 1 : 1;
