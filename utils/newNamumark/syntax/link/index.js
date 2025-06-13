@@ -126,13 +126,13 @@ module.exports = async (obj, options = {}) => {
             if(link.startsWith('문서:')) link = link.slice(3);
             if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}`;
             else link = `/w/${globalUtils.encodeSpecialChars(link, ['#'])}`;
-        }
 
-        const document = mainUtils.parseDocumentName(title);
-        // titleDocument = document;
-        const cache = Store.dbDocuments.find(cache => cache.namespace === document.namespace && cache.title === document.title);
-        if(cache) notExist = !cache.contentExists;
-        else notExist = true;
+            const document = mainUtils.parseDocumentName(title);
+            // titleDocument = document;
+            const cache = Store.dbDocuments.find(cache => cache.namespace === document.namespace && cache.title === document.title);
+            if(cache) notExist = !cache.contentExists;
+            else notExist = true;
+        }
     }
 
     const classList = [];
