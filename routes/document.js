@@ -374,6 +374,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         delete require.cache[toHtmlPath];
         const toHtml = require(toHtmlPath);
 
+        console.time('totalNewParser');
         console.time('parser');
         const result = parser(content);
         console.timeEnd('parser');
@@ -396,6 +397,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             return res.status(500).send('toHtml 실패');
         }
         console.timeEnd('toHtml');
+        console.timeEnd('totalNewParser');
     }
 
     res.renderSkin(undefined, {

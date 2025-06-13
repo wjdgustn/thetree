@@ -12,9 +12,12 @@ const fs = require('fs');
 // >asdf
 // ||
 // `.trim();
-const doc = `>asdf\n\n\n`;
+const doc = `||
+content||
+`.trimEnd();
+// const doc = ` * '''테이블 정렬''': {{{#14F,#4AF (정렬 위치)}}}`;
 // const doc = ` *list\n *second\n\ntext\nwow`;
-// const doc = `sans\n`;
+// const doc = ` *asdf\n\nhi`;
 
 const parser = require('./parser');
 const { tokens, result, data } = parser(doc);

@@ -42,6 +42,7 @@ const sanitizeHtmlOptions = {
     }
 }
 
+let noCheckStartAtFirst = false;
 const fullLineRegex = (regex, { laterRegex } = {}) => {
     const regexStr = regex.toString();
     const checkStart = regexStr[1] === '^';
@@ -54,6 +55,8 @@ const fullLineRegex = (regex, { laterRegex } = {}) => {
                 if(prevChar !== '\r' && prevChar !== '\n')
                     return null;
             }
+            else if(checkStart && !startOffset && noCheckStartAtFirst)
+                return null;
 
             const str = text.slice(startOffset);
             const result = str.match(regex);
@@ -144,11 +147,11 @@ const Escape = createToken({
     name: 'Escape',
     pattern: /\\./
 });
-const Comment = createToken({
-    name: 'Comment',
-    ...fullLineRegex(/^##(.*)/),
-    group: Lexer.SKIPPED
-});
+// const Comment = createToken({
+//     name: 'Comment',
+//     ...fullLineRegex(/^##(.*)/),
+//     group: Lexer.SKIPPED
+// });
 const Newline = createToken({
     name: 'Newline',
     pattern: /\r?\n/
@@ -161,7 +164,7 @@ const List = createToken({
             if(prevChar !== '\r' && prevChar !== '\n')
                 return null;
         }
-        let str = text.slice(startOffset);
+        const str = text.slice(startOffset);
 
         const listRegex = /^ [1aAiI]\.|^ \*/;
         const listMatch = str.match(listRegex);
@@ -172,26 +175,91 @@ const List = createToken({
         const spaces = ' '.repeat(level);
 
         const lineRegex = /[^\r\n]*(\r?\n|\r|$)/g;
+        let openCount = 0;
         const getLine = () => {
-            let result = lineRegex.exec(str)[0];
+            const asdf = lineRegex.exec(str);
+            let result = asdf[0];
+            let newOpenCount = openCount;
             if(result.endsWith('\n')) result = result.slice(0, -1);
-            return result;
+            else if(!result) result = null;
+            if(result != null) {
+                const openOrCloses = (result.match(/{{{|}}}/g) || []);
+                for(let match of openOrCloses) {
+                    if(match[0] === '{')
+                        newOpenCount++;
+                    else if(newOpenCount)
+                        newOpenCount--;
+                }
+            }
+            return { result, newOpenCount };
         }
-        const lines = [getLine()];
+        const firstLine = getLine();
+        const lines = [firstLine.result];
+        const slicedLines = [firstLine.result.slice(1)];
+        openCount = firstLine.newOpenCount;
 
         while(true) {
-            const line = getLine();
-            if(!line || !line.startsWith(spaces) || listRegex.test(line)) break;
-            lines.push(line);
+            const { result, newOpenCount } = getLine();
+            const inLiteral = !!openCount;
+            if(result == null || (!inLiteral && (!result.startsWith(spaces) || listRegex.test(result)))) break;
+            openCount = newOpenCount;
+            lines.push(result);
+            slicedLines.push(result.slice(inLiteral ? 0 : 1));
         }
 
-        return [lines.join('\n')];
+        const result = [lines.join('\n')];
+        result.payload = { slicedResult: slicedLines.join('\n') };
+        return result;
     },
     line_breaks: true
 });
 const Indent = createToken({
     name: 'Indent',
-    ...fullLineRegex(/^ (.*)/)
+    // ...fullLineRegex(/^ (.*)/),
+    pattern: (text, startOffset) => {
+        if(startOffset > 0) {
+            const prevChar = text[startOffset - 1];
+            if(prevChar !== '\r' && prevChar !== '\n')
+                return null;
+        }
+        else if(noCheckStartAtFirst) return null;
+        const str = text.slice(startOffset);
+
+        if(!str.startsWith(' ')) return null;
+
+        const lineRegex = /[^\r\n]*(\r?\n|\r|$)/g;
+        let openCount = 0;
+        const getLine = () => {
+            let result = lineRegex.exec(str)[0];
+            if(result.endsWith('\n')) result = result.slice(0, -1);
+            else if(!result) result = null;
+            let newOpenCount = openCount;
+            if(result != null) {
+                const openOrCloses = (result.match(/{{{|}}}/g) || []);
+                for(let match of openOrCloses) {
+                    if(match[0] === '{')
+                        newOpenCount++;
+                    else if(newOpenCount)
+                        newOpenCount--;
+                }
+            }
+            return { result, newOpenCount };
+        }
+        const firstLine = getLine();
+        const lines = [firstLine.result];
+        openCount = firstLine.newOpenCount;
+
+        while(true) {
+            const { result, newOpenCount } = getLine();
+            const inLiteral = !!openCount;
+            if(result == null || !inLiteral) break;
+            openCount = newOpenCount;
+            lines.push(result);
+        }
+
+        return [lines.join('\n')];
+    },
+    line_breaks: true
 });
 const Text = createToken({
     name: 'Text',
@@ -208,53 +276,149 @@ const Hr = createToken({
 });
 const BlockQuote = createToken({
     name: 'BlockQuote',
-    ...fullLineRegex(/^>(.+?)$/m)
+    ...fullLineRegex(/^>(({{{[\s\S]*}}}|.)+?)$/m)
 });
 
-const TableRowOpen = createToken({
-    name: 'TableRowOpen',
-    ...fullLineRegex(/^\|\|/, { laterRegex: /\|\|$/m }),
-    push_mode: 'tableMode'
-});
-const TableRowClose = createToken({
-    name: 'TableRowClose',
-    ...fullLineRegex(/\|\|$/m),
-    pop_mode: true
-});
+// const TableRowOpen = createToken({
+//     name: 'TableRowOpen',
+//     ...fullLineRegex(/^\|\|/, { laterRegex: /\|\|$/m, isTable: true }),
+//     push_mode: 'tableMode'
+// });
+// const TableRowClose = createToken({
+//     name: 'TableRowClose',
+//     ...fullLineRegex(/\|\|$/m, { isTable: true }),
+//     pop_mode: true
+// });
 const TableSplit = createToken({
     name: 'TableSplit',
     pattern: /\|\|/
 });
+// {{{}}} 안 * 뒤에 ? 있었음, 넓게 잡으려고 빼 둠
+const TableRow = createToken({
+    name: 'TableRow',
+    // ...fullLineRegex(/^\|\|({{{[\s\S]*}}}|[\s\S])*?\|\|$/m)
+    pattern: (text, startOffset) => {
+        if(startOffset > 0) {
+            const prevChar = text[startOffset - 1];
+            if(prevChar !== '\r' && prevChar !== '\n')
+                return null;
+        }
+
+        const str = text.slice(startOffset);
+        if(!str.startsWith('||')) return null;
+
+        const lineRegex = /[^\r\n]*(\r?\n|\r|$)/g;
+        let openCount = 0;
+        const getLine = () => {
+            let result = lineRegex.exec(str)[0];
+            if(result.endsWith('\n')) result = result.slice(0, -1);
+            if(result != null) {
+                const openOrCloses = (result.match(/{{{|}}}/g) || []);
+                for(let match of openOrCloses) {
+                    if(match[0] === '{')
+                        openCount++;
+                    else if(openCount)
+                        openCount--;
+                }
+            }
+            return result;
+        }
+        const result = [];
+        let breaked = false;
+        while(true) {
+            const item = getLine();
+            if(item == null) break;
+
+            result.push(item);
+            if(!openCount
+                && item.endsWith('||')
+                && !item.endsWith('\\||')
+                && (result.length > 1 || item.length > 2)) {
+                breaked = true;
+                break;
+            }
+        }
+        if(!breaked) return null;
+
+        return [result.join('\n')];
+    },
+    line_breaks: true
+});
+
+const inlineRegex = (openRegex, closeRegex) => {
+    let openCloseSame = false;
+    if(!closeRegex) {
+        openCloseSame = true;
+        closeRegex = openRegex;
+    }
+    openRegex = new RegExp((openRegex.source.startsWith('^') ? '' : '^') + openRegex.source, 'i');
+    closeRegex = new RegExp('(?<!\\\\)(?:\\\\\\\\)*' + closeRegex.source, 'i');
+
+    return ({
+        pattern: (text, startOffset) => {
+            const str = text.slice(startOffset);
+            const openMatch = str.match(openRegex);
+            if(!openMatch) return null;
+
+            const closeMatch = str.slice(openMatch[0].length).match(closeRegex);
+            if(!closeMatch || (openCloseSame && openMatch[0] !== closeMatch[0]))
+                return null;
+
+            const content = str.slice(openMatch[0].length, closeMatch.index + openMatch[0].length);
+            if(!content || content.replace(/(?<!\\)(?:\\\\)*{{{[\s\S]*}}}/g, '').includes('\n'))
+                return null;
+
+            const fullMatch = openMatch[0] + content + closeMatch[0];
+            return [fullMatch];
+        },
+        line_breaks: true
+    })
+}
 
 const Bold = createToken({
     name: 'Bold',
-    pattern: /'''([\s\S]+?)'''/,
-    line_breaks: true
+    // pattern: /'''([\s\S]+?)'''/,
+    // line_breaks: true
+    ...inlineRegex(/'''/)
 });
 const Italic = createToken({
     name: 'Italic',
-    pattern: /''([\s\S]+?)''/,
-    line_breaks: true
+    // pattern: /''([\s\S]+?)''/,
+    // line_breaks: true
+    ...inlineRegex(/''/)
 });
 const Strike = createToken({
     name: 'Strike',
-    pattern: /(~~|--)([\s\S]+?)\1/,
-    line_breaks: true
+    // pattern: (text, startOffset) => {
+    //     const str = text.slice(startOffset);
+    //     const match = str.match(/(~~|--)([\s\S]+?)\1/);
+    //     if(!match || match.index > 0) return null;
+    //     if(match?.[0][0] === '-') {
+    //         const content = match[0].slice(2, -2);
+    //         if(!content.replaceAll('-', '').trim()) return null;
+    //     }
+    //     return match;
+    // },
+    // line_breaks: true
+    ...inlineRegex(/^~~|^--/)
 });
 const Underline = createToken({
     name: 'Underline',
-    pattern: /__([\s\S]+?)__/,
-    line_breaks: true
+    // pattern: /__([\s\S]+?)__/,
+    // line_breaks: true
+    ...inlineRegex(/__/)
 });
 const Sup = createToken({
     name: 'Sup',
-    pattern: /\^\^([\s\S]+?)\^\^/,
-    line_breaks: true
+    // pattern: /\^\^([\s\S]+?)\^\^/,
+    // line_breaks: true
+    ...inlineRegex(/\^\^/)
 });
 const Sub = createToken({
     name: 'Sub',
-    pattern: /,,([\s\S]+?),,/,
-    line_breaks: true
+    // pattern: /,,([\s\S]+?),,/,
+    // line_breaks: true
+    ...inlineRegex(/,,/)
 });
 const ScaleText = createToken({
     name: 'ScaleText',
@@ -326,7 +490,7 @@ const Macro = createToken({
 
 const importantTokens = [
     Escape
-]
+];
 
 const inlineTokens = [
     ScaleText,
@@ -335,7 +499,7 @@ const inlineTokens = [
     Folding,
     IfSyntax,
     Literal,
-    Comment,
+    // Comment,
     Bold,
     Italic,
     Strike,
@@ -359,9 +523,10 @@ const allTokens = [
     Indent,
 
     Heading,
-    TableRowOpen,
-    TableRowClose,
-    TableSplit,
+    // TableRowOpen,
+    // TableRowClose,
+    // TableSplit,
+    TableRow,
     Hr,
     BlockQuote,
 
@@ -370,14 +535,22 @@ const allTokens = [
 
 const modeGenerator = tokens => ({
     modes: {
-        default: tokens.filter(a => !['TableRowClose', 'TableSplit'].includes(a.name)),
-        tableMode: tokens.filter(a => !['TableRowOpen'].includes(a.name))
+        default: tokens
+        // default: tokens.filter(a => !['TableRowClose', 'TableSplit'].includes(a.name)),
+        // tableMode: tokens.filter(a => !['TableRowOpen'].includes(a.name))
     },
     defaultMode: 'default'
 });
 
 const blockLexer = new Lexer(modeGenerator(allTokens.filter(a => !['Heading'].includes(a.name))));
 const lexer = new Lexer(modeGenerator(allTokens));
+
+const tableRowLexer = new Lexer([
+    ...importantTokens,
+    Newline,
+    TableSplit,
+    ...inlineTokens
+]);
 
 const instances = [];
 let currDepth = 0;
@@ -416,11 +589,22 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('blockDocument', () => {
             const result = [];
+            let lastIsBr = false;
             $.AT_LEAST_ONE(() => {
                 const tok = $.SUBRULE($.block);
                 if(Array.isArray(tok)) result.push(...tok);
                 else result.push(tok);
+
+                if(this.noTopParagraph && tok.type && tok.type !== 'text') {
+                    result.push({
+                        type: 'text',
+                        text: '\n'
+                    });
+                    lastIsBr = true;
+                }
+                else lastIsBr = false;
             });
+            if(lastIsBr) result.pop();
             return result;
         });
 
@@ -493,21 +677,41 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('table', () => {
             const rows = [];
+            // $.AT_LEAST_ONE(() => {
+            //     const items = [];
+            //     $.CONSUME(TableRowOpen);
+            //     const noTopParagraphBak = this.noTopParagraph;
+            //     this.noTopParagraph = false;
+            //     $.AT_LEAST_ONE_SEP({
+            //         SEP: TableSplit,
+            //         DEF: () => items.push([$.SUBRULE($.block)])
+            //     });
+            //     this.noTopParagraph = noTopParagraphBak;
+            //     $.CONSUME(TableRowClose);
+            //     $.OPTION(() => {
+            //         $.CONSUME(Newline);
+            //     });
+            //     rows.push(items);
+            // });
             $.AT_LEAST_ONE(() => {
+                const tok = $.CONSUME(TableRow);
+                const sliced = tok.image.slice(2);
+                const { tokens } = tableRowLexer.tokenize(sliced);
                 const items = [];
-                $.CONSUME(TableRowOpen);
-                const noTopParagraphBak = this.noTopParagraph;
-                this.noTopParagraph = false;
-                $.AT_LEAST_ONE_SEP({
-                    SEP: TableSplit,
-                    DEF: () => items.push([$.SUBRULE($.block)])
-                });
-                this.noTopParagraph = noTopParagraphBak;
-                $.CONSUME(TableRowClose);
-                $.OPTION(() => {
-                    $.CONSUME(Newline);
+                $.ACTION(() => {
+                    let lastIdx = 0;
+                    for(let t of tokens) {
+                        if(t.tokenType !== TableSplit) continue;
+                        const str = sliced.slice(lastIdx, t.startOffset);
+                        items.push(parseBlock(str, false, true));
+                        lastIdx = t.endOffset + 1;
+                    }
                 });
                 rows.push(items);
+                $.OPTION({
+                    GATE: () => $.LA(2).tokenType === TableRow,
+                    DEF: () => $.CONSUME(Newline)
+                });
             });
             return {
                 type: 'table',
@@ -526,8 +730,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             const lines = [];
             $.AT_LEAST_ONE(() => {
                 lines.push($.CONSUME(BlockQuote).image.slice(1));
-                $.OPTION(() => {
-                    $.CONSUME(Newline);
+                $.OPTION({
+                    GATE: () => $.LA(2).tokenType === BlockQuote,
+                    DEF: () => $.CONSUME(Newline)
                 });
             });
             let content;
@@ -555,12 +760,12 @@ class NamumarkParser extends EmbeddedActionsParser {
                     const tok = $.CONSUME(List);
 
                     const isFirst = !listType;
-                    let content = tok.image.split('\n').map(a => a.slice(1)).join('\n');
+                    let content = tok.payload?.slicedResult ?? tok.image;
                     listType ??= content[0];
-                    content = content.slice(listType.length);
+                    content = content.slice(listType === '*' ? 1 : 2);
 
                     if(isFirst) {
-                        const match = content.match(/#\d+/);
+                        const match = content.match(/^#\d+/);
                         if(match) {
                             startNum = parseInt(match[0].slice(1));
                             content = content.slice(match[0].length);
@@ -575,9 +780,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                     items.push(content);
                     $.OPTION({
                         GATE: checkNext(2),
-                        DEF: () => {
-                            $.CONSUME(Newline);
-                        }
+                        DEF: () => $.CONSUME(Newline)
                     });
                 }
             });
@@ -585,7 +788,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'list',
                 listType,
-                startNum,
+                ...(listType === '*' ? {} : { startNum }),
                 items
             }
         });
@@ -594,8 +797,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             const lines = [];
             $.AT_LEAST_ONE(() => {
                 lines.push($.CONSUME(Indent).image.slice(1));
-                $.OPTION(() => {
-                    $.CONSUME(Newline);
+                $.OPTION({
+                    GATE: () => $.LA(2).tokenType === Indent,
+                    DEF: () => $.CONSUME(Newline)
                 });
             });
             let content;
@@ -673,7 +877,6 @@ class NamumarkParser extends EmbeddedActionsParser {
                 { ALT: () => $.CONSUME(Text) },
                 { ALT: () => $.CONSUME(Newline) }
             ]);
-            console.log(tok);
             return {
                 type: 'text',
                 text: tok.image
@@ -734,7 +937,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
 
             $.ACTION(() => {
-                content = parseBlock(content, true)
+                content = parseBlock(content, true);
             });
 
             return {
@@ -846,21 +1049,21 @@ class NamumarkParser extends EmbeddedActionsParser {
             $.ACTION(() => {
                 parsedContent = parseInline(content);
             });
-            if(content.replace(/{{{[\s\S]*}}}/g, '').includes('\n'))
-                return {
-                    success: false,
-                    content: [
-                        {
-                            type: 'text',
-                            text: tok.image.slice(0, sliceStart)
-                        },
-                        parsedContent,
-                        {
-                            type: 'text',
-                            text: tok.image.slice(sliceEnd)
-                        }
-                    ]
-                }
+            // if(content.replace(/{{{[\s\S]*}}}/g, '').includes('\n'))
+            //     return {
+            //         success: false,
+            //         content: [
+            //             {
+            //                 type: 'text',
+            //                 text: tok.image.slice(0, sliceStart)
+            //             },
+            //             parsedContent,
+            //             {
+            //                 type: 'text',
+            //                 text: tok.image.slice(sliceEnd)
+            //             }
+            //         ]
+            //     }
             return {
                 success: true,
                 content: parsedContent
@@ -993,8 +1196,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'footnote',
                 name,
                 value,
-                index,
-                startOffset: tok.startOffset
+                index
             }
         });
 
@@ -1038,7 +1240,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'macro',
                 name,
                 params,
-                startOffset: tok.startOffset
+                image: tok.image
             }
         });
 
@@ -1085,8 +1287,10 @@ const parseInline = text => {
     return result;
 }
 
-const parseBlock = (text, noTopParagraph = false) => {
+const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
+    noCheckStartAtFirst = noLineStart;
     const lexed = blockLexer.tokenize(text);
+    noCheckStartAtFirst = false;
     const blockParser = getParser();
     if(!blockParser) {
         const lines = text.split('\n').map(text => [{
@@ -1131,6 +1335,9 @@ module.exports = (text, { thread = false, includeParams = {} } = {}) => {
     const paragraphNum = [...Array(6 + 1 - Store.heading.lowestLevel)].map(_ => 0);
     for(let heading of Store.heading.list) {
         const paragraphNumTextArr = [];
+        for(let i = paragraphNum.length - 1; i > heading.level - Store.heading.lowestLevel; i--) {
+            paragraphNum[i] = 0;
+        }
         for(let i = 0; i <= heading.level - Store.heading.lowestLevel; i++) {
             if(i === heading.level - Store.heading.lowestLevel) paragraphNum[i]++;
 

@@ -45,7 +45,7 @@ module.exports = async (obj, options) => {
     const name = obj.name;
     const params = obj.params;
 
-    if(!macros[name]) return;
+    if(!macros[name]) return obj.image;
 
     // if(namumark.thread && !threadMacros.includes(name)) return '';
 

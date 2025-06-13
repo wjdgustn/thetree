@@ -13,6 +13,8 @@ const Document = require('../../schemas/document');
 const History = require('../../schemas/history');
 
 const topToHtml = async (parsed, options = {}) => {
+    if(!parsed) return '';
+
     options.originalDocument ??= options.document;
     const {
         document,
@@ -135,6 +137,7 @@ const topToHtml = async (parsed, options = {}) => {
                 lines.push(await toHtml(line));
             }
             result += lines.join('');
+            continue;
         }
 
         switch(obj.type) {
@@ -168,7 +171,7 @@ const topToHtml = async (parsed, options = {}) => {
                 result += `<div class="wiki-indent">${await toHtml(obj.content)}</div>`;
                 break;
             case 'blockquote':
-                result = `<blockquote class="wiki-quote">${await toHtml(obj.content)}</blockquote>`;
+                result += `<blockquote class="wiki-quote">${await toHtml(obj.content)}</blockquote>`;
                 break;
             case 'hr':
                 result += '<hr>';
@@ -183,7 +186,7 @@ const topToHtml = async (parsed, options = {}) => {
                     'i': 'wiki-list-roman',
                     'I': 'wiki-list-upper-roman'
                 }[obj.listType];
-                result += `<${tagName} class="wiki-list${listClass ? ` ${listClass}` : ''}">`;
+                result += `<${tagName} class="wiki-list${listClass ? ` ${listClass}` : ''}"${tagName === 'ol' ? ` start="${obj.startNum}"` : ''}>`;
                 for(let item of obj.items) {
                     result += `<li>${await toHtml(item)}</li>`;
                 }
@@ -196,6 +199,9 @@ const topToHtml = async (parsed, options = {}) => {
                 break;
             case 'htmlSyntax':
                 result += obj.safeHtml;
+                break;
+            case 'folding':
+                result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(obj.content)}</dd></dl>`;
                 break;
 
             case 'text':
