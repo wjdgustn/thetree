@@ -250,7 +250,11 @@ const topToHtml = async (parsed, options = {}) => {
                 });
                 break;
             case 'macro':
-                result += await macro(obj, { includeData });
+                result += await macro(obj, {
+                    includeData,
+                    commentPrefix,
+                    toHtml
+                });
                 break;
             case 'footnote': {
                 const name = obj.name;

@@ -158,7 +158,7 @@ const Newline = createToken({
 });
 const ListRegex = /^ [1aAiI]\.|^ \*/;
 const LineRegex = /[^\r\n]*(\r?\n|\r|$)/g;
-const OpenOrClosesRegex = /(?<!\\)(?:\\\\)*({{{|}}})/g;
+const OpenOrClosesRegex = /(?<!\\)(?:\\\\)*{{{|}}}/g;
 const List = createToken({
     name: 'List',
     pattern: (text, startOffset) => {
@@ -570,7 +570,7 @@ let Store = {
     },
     footnote: {
         index: 0,
-        values: {},
+        values: [],
         list: []
     }
 }
@@ -588,6 +588,15 @@ class NamumarkParser extends EmbeddedActionsParser {
             $.AT_LEAST_ONE(() => {
                 result.push($.SUBRULE($.rootBlock));
             });
+
+            if(Object.keys(Store.footnote.values).length)
+                result.push({
+                    type: 'macro',
+                    name: 'footnote',
+                    footnoteValues: [...Store.footnote.values],
+                    footnoteList: [...Store.footnote.list]
+                });
+
             return result;
         });
 
@@ -1184,14 +1193,17 @@ class NamumarkParser extends EmbeddedActionsParser {
             const index = Store.footnote.index;
             const name = splitted[0] || index.toString();
 
-            let value = Store.footnote.values[name];
-            if(!value) {
+            let value = Store.footnote.values.find(a => a.name === name)?.content;
+            if(value == null) {
                 value = valueInput;
                 $.ACTION(() => {
                     value = parseInline(value);
                 });
+                Store.footnote.values.push({
+                    name,
+                    content: value
+                });
             }
-            Store.footnote.values[name] ??= value;
 
             Store.footnote.list.push({
                 name,
@@ -1244,8 +1256,10 @@ class NamumarkParser extends EmbeddedActionsParser {
                 Store.includes.push(includeParams[0]);
             }
             else if(name === 'footnote' || name === '각주') {
-                data.footnoteValues = { ...Store.footnote.values };
-                Store.footnote.values = {};
+                data.footnoteValues = [...Store.footnote.values];
+                data.footnoteList = [...Store.footnote.list];
+                Store.footnote.values.length = 0;
+                Store.footnote.list.length = 0;
             }
 
             return {
@@ -1366,8 +1380,7 @@ module.exports = (text, { thread = false, includeParams = {} } = {}) => {
             links: Store.links,
             categories: Store.categories,
             includes: Store.includes,
-            headings,
-            footnoteList: Store.footnote.list
+            headings
         }
     }
 }
