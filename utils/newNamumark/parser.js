@@ -158,6 +158,7 @@ const Newline = createToken({
 });
 const ListRegex = /^ [1aAiI]\.|^ \*/;
 const LineRegex = /[^\r\n]*(\r?\n|\r|$)/g;
+const OpenOrClosesRegex = /(?<!\\)(?:\\\\)*({{{|}}})/g;
 const List = createToken({
     name: 'List',
     pattern: (text, startOffset) => {
@@ -184,9 +185,9 @@ const List = createToken({
             if(result.endsWith('\n')) result = result.slice(0, -1);
             else if(!result) result = null;
             if(result != null) {
-                const openOrCloses = (result.match(/{{{|}}}/g) || []);
+                const openOrCloses = (result.match(OpenOrClosesRegex) || []);
                 for(let match of openOrCloses) {
-                    if(match[0] === '{')
+                    if(match.endsWith('{'))
                         newOpenCount++;
                     else if(newOpenCount)
                         newOpenCount--;
@@ -236,9 +237,9 @@ const Indent = createToken({
             else if(!result) result = null;
             let newOpenCount = openCount;
             if(result != null) {
-                const openOrCloses = (result.match(/{{{|}}}/g) || []);
+                const openOrCloses = (result.match(OpenOrClosesRegex) || []);
                 for(let match of openOrCloses) {
-                    if(match[0] === '{')
+                    if(match.endsWith('{'))
                         newOpenCount++;
                     else if(newOpenCount)
                         newOpenCount--;
@@ -295,7 +296,6 @@ const TableSplit = createToken({
     pattern: /\|\|/
 });
 // {{{}}} 안 * 뒤에 ? 있었음, 넓게 잡으려고 빼 둠
-const OpenOrClosesRegex = /(?<!\\)(?:\\\\)*({{{|}}})/g;
 const TableRow = createToken({
     name: 'TableRow',
     // ...fullLineRegex(/^\|\|({{{[\s\S]*}}}|[\s\S])*?\|\|$/m)
@@ -314,10 +314,11 @@ const TableRow = createToken({
         const getLine = () => {
             let result = LineRegex.exec(str)[0];
             if(result.endsWith('\n')) result = result.slice(0, -1);
+            else if(!result) result = null;
             if(result != null) {
                 const openOrCloses = (result.match(OpenOrClosesRegex) || []);
                 for(let match of openOrCloses) {
-                    if(match[0] === '{')
+                    if(match.endsWith('{'))
                         openCount++;
                     else if(openCount)
                         openCount--;
