@@ -684,7 +684,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 text,
                 content
             }
-            Store.heading.list.push(obj);
+            $.ACTION(() => {
+                Store.heading.list.push(obj);
+            });
             return obj;
         });
 
@@ -1357,8 +1359,6 @@ module.exports = (text, { thread = false, includeParams = {} } = {}) => {
     const result = parser.document();
     console.timeEnd('cst');
 
-    const headings = [];
-
     const paragraphNum = [...Array(6 + 1 - Store.heading.lowestLevel)].map(_ => 0);
     for(let heading of Store.heading.list) {
         const paragraphNumTextArr = [];
@@ -1371,6 +1371,7 @@ module.exports = (text, { thread = false, includeParams = {} } = {}) => {
             paragraphNumTextArr.push(paragraphNum[i]);
         }
         heading.numText = paragraphNumTextArr.join('.');
+        heading.actualLevel = heading.level - Store.heading.lowestLevel + 1;
     }
 
     return {
@@ -1380,7 +1381,7 @@ module.exports = (text, { thread = false, includeParams = {} } = {}) => {
             links: Store.links,
             categories: Store.categories,
             includes: Store.includes,
-            headings
+            headings: Store.heading.list
         }
     }
 }

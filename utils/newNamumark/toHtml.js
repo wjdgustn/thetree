@@ -31,7 +31,8 @@ const topToHtml = async (parsed, options = {}) => {
     const Store = options.Store ??= {
         dbDocuments: [],
         revDocCache: [],
-        categories: []
+        categories: [],
+        headings: []
     }
 
     const toHtml = doc => topToHtml(doc, options);
@@ -53,6 +54,8 @@ const topToHtml = async (parsed, options = {}) => {
     const commentPrefix = commentId ? `tc${commentId}-` : '';
 
     if(parsed.data) {
+        Store.headings = parsed.data.headings;
+
         const parsedDocs = [];
         for(let link of [
             ...parsed.data.links,
@@ -253,7 +256,8 @@ const topToHtml = async (parsed, options = {}) => {
                 result += await macro(obj, {
                     includeData,
                     commentPrefix,
-                    toHtml
+                    toHtml,
+                    headings: Store.headings
                 });
                 break;
             case 'footnote': {
