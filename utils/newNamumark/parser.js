@@ -486,9 +486,38 @@ const Footnote = createToken({
     // line_breaks: true
     ...nestedRegex(/\[\*/, /]/, true, /\[/)
 });
+const MacroRegex = /\[\S+?]|\[\S+?\([\s\S]*?\)]/y;
+const ParamSplitRegex = /(?<!\\),/;
 const Macro = createToken({
     name: 'Macro',
-    pattern: /\[\S+?]|\[\S+?\([\s\S]*?\)]/,
+    // pattern: /\[\S+?]|\[\S+?\([\s\S]*?\)]/,
+    pattern: (text, startOffset) => {
+        MacroRegex.lastIndex = startOffset;
+        const execResult = MacroRegex.exec(text);
+        if(execResult != null) {
+            const content = execResult[0].slice(1, -1);
+
+            const openParamIndex = content.indexOf('(');
+
+            let name;
+            let params = '';
+            let splittedParams = [];
+            if(openParamIndex === -1) name = content;
+            else {
+                if(!content.endsWith(')'))
+                    return null;
+                name = content.slice(0, openParamIndex);
+                params = content.slice(openParamIndex + 1, content.length - 1);
+                splittedParams = params.split(ParamSplitRegex).map(a => a.replaceAll('\\,', ','));
+            }
+            execResult.payload = {
+                name,
+                params,
+                splittedParams
+            }
+        }
+        return execResult;
+    },
     line_breaks: true
 });
 
@@ -631,6 +660,13 @@ class NamumarkParser extends EmbeddedActionsParser {
                 { ALT: () => $.SUBRULE($.blockquote) },
                 { ALT: () => $.SUBRULE($.list) },
                 { ALT: () => $.SUBRULE($.indent) },
+                {
+                    GATE: () => {
+                        const tok = $.LA(1);
+                        return tok.tokenType === Macro && tok.payload?.name === 'include';
+                    },
+                    ALT: () => $.SUBRULE($.include)
+                },
                 { ALT: () => $.SUBRULE($.paragraph) }
             ]);
         });
@@ -828,10 +864,20 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
+        const ParagraphGate = () => {
+            const lastTok = $.LA(0);
+            const tok = $.LA(1);
+
+            const isInclude = tok.tokenType === Macro && tok.payload.name === 'include';
+            return !isInclude || (lastTok.tokenType !== Newline);
+        }
         $.RULE('paragraph', () => {
             const lines = [];
-            $.AT_LEAST_ONE(() => {
-                lines.push($.SUBRULE($.inline));
+            $.AT_LEAST_ONE({
+                GATE: ParagraphGate,
+                DEF: () => {
+                    lines.push($.SUBRULE($.inline));
+                }
             });
 
             const firstText = lines[0][0];
@@ -858,32 +904,35 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('inline', () => {
             const result = [];
-            $.AT_LEAST_ONE(() => {
-                const tok = $.OR([
-                    { ALT: () => $.SUBRULE($.bold) },
-                    { ALT: () => $.SUBRULE($.italic) },
-                    { ALT: () => $.SUBRULE($.strike) },
-                    { ALT: () => $.SUBRULE($.underline) },
-                    { ALT: () => $.SUBRULE($.sup) },
-                    { ALT: () => $.SUBRULE($.sub) },
-                    { ALT: () => $.SUBRULE($.scaleText) },
-                    { ALT: () => $.SUBRULE($.wikiSyntax) },
-                    { ALT: () => $.SUBRULE($.htmlSyntax) },
-                    { ALT: () => $.SUBRULE($.folding) },
-                    { ALT: () => $.SUBRULE($.ifSyntax) },
-                    { ALT: () => $.SUBRULE($.literal) },
-                    { ALT: () => $.SUBRULE($.link) },
-                    { ALT: () => $.SUBRULE($.footnote) },
-                    { ALT: () => $.SUBRULE($.macro) },
-                    { ALT: () => $.SUBRULE($.legacyMath) },
-                    { ALT: () => $.SUBRULE($.escape) },
-                    { ALT: () => $.SUBRULE($.text) }
-                ]);
-                if(result.at(-1)?.type === 'text' && tok.type === 'text') {
-                    result.at(-1).text += tok.text;
-                    return;
+            $.AT_LEAST_ONE({
+                GATE: ParagraphGate,
+                DEF: () => {
+                    const tok = $.OR([
+                        { ALT: () => $.SUBRULE($.bold) },
+                        { ALT: () => $.SUBRULE($.italic) },
+                        { ALT: () => $.SUBRULE($.strike) },
+                        { ALT: () => $.SUBRULE($.underline) },
+                        { ALT: () => $.SUBRULE($.sup) },
+                        { ALT: () => $.SUBRULE($.sub) },
+                        { ALT: () => $.SUBRULE($.scaleText) },
+                        { ALT: () => $.SUBRULE($.wikiSyntax) },
+                        { ALT: () => $.SUBRULE($.htmlSyntax) },
+                        { ALT: () => $.SUBRULE($.folding) },
+                        { ALT: () => $.SUBRULE($.ifSyntax) },
+                        { ALT: () => $.SUBRULE($.literal) },
+                        { ALT: () => $.SUBRULE($.link) },
+                        { ALT: () => $.SUBRULE($.footnote) },
+                        { ALT: () => $.SUBRULE($.macro) },
+                        { ALT: () => $.SUBRULE($.legacyMath) },
+                        { ALT: () => $.SUBRULE($.escape) },
+                        { ALT: () => $.SUBRULE($.text) }
+                    ]);
+                    if(result.at(-1)?.type === 'text' && tok.type === 'text') {
+                        result.at(-1).text += tok.text;
+                        return;
+                    }
+                    result.push(tok);
                 }
-                result.push(tok);
             });
             return result;
         });
@@ -1220,56 +1269,42 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
-        const ParamSplitRegex = /(?<!\\),/;
         $.RULE('macro', () => {
             const tok = $.CONSUME(Macro);
-            const content = tok.image.slice(1, -1);
-
-            const openParamIndex = content.indexOf('(');
-
-            let name;
-            let params = '';
-            if(openParamIndex === -1) name = content;
-            else {
-                if(!content.endsWith(')')) {
-                    let parsedContent = content;
-                    $.ACTION(() => {
-                        parsedContent = parseInline(content);
-                    });
-                    return [
-                        {
-                            type: 'text',
-                            text: tok.image.slice(0, 1)
-                        },
-                        parsedContent,
-                        {
-                            type: 'text',
-                            text: tok.image.slice(-1)
-                        }
-                    ]
-                }
-                name = content.slice(0, openParamIndex);
-                params = content.slice(openParamIndex + 1, content.length - 1);
-            }
+            const { name, splittedParams } = tok.payload || {};
 
             const data = {};
-            if(name === 'include') {
-                const includeParams = params.split(ParamSplitRegex).map(a => a.replaceAll('\\,', ','));
-                Store.includes.push(includeParams[0]);
-            }
-            else if(name === 'footnote' || name === '각주') {
-                data.footnoteValues = [...Store.footnote.values];
-                data.footnoteList = [...Store.footnote.list];
-                Store.footnote.values.length = 0;
-                Store.footnote.list.length = 0;
-            }
+            $.ACTION(() => {
+                if(name === 'include') {
+                    Store.includes.push(splittedParams[0]);
+                    data.topParagraph = false;
+                }
+                else if(name === 'footnote' || name === '각주') {
+                    data.footnoteValues = [...Store.footnote.values];
+                    data.footnoteList = [...Store.footnote.list];
+                    Store.footnote.values.length = 0;
+                    Store.footnote.list.length = 0;
+                }
+            });
 
             return {
                 type: 'macro',
-                name,
-                params,
+                ...tok.payload,
                 image: tok.image,
                 ...data
+            }
+        });
+
+        $.RULE('include', () => {
+            const tok = $.CONSUME(Macro);
+            $.ACTION(() => {
+                Store.includes.push(tok.payload.splittedParams[0]);
+            });
+            return {
+                type: 'macro',
+                ...tok.payload,
+                image: tok.image,
+                topParagraph: true
             }
         });
 
@@ -1344,7 +1379,7 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
 
 const parser = new NamumarkParser();
 
-module.exports = (text, { thread = false, includeParams = {} } = {}) => {
+module.exports = (text, { thread = false, includeParams = {}, noTopParagraph = false } = {}) => {
     Store = {
         ...originalStore,
         thread,
@@ -1354,6 +1389,7 @@ module.exports = (text, { thread = false, includeParams = {} } = {}) => {
     console.time('tokenize');
     const lexed = lexer.tokenize(text);
     console.timeEnd('tokenize');
+    parser.noTopParagraph = noTopParagraph;
     parser.input = lexed.tokens;
     console.time('cst');
     const result = parser.document();

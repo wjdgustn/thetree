@@ -1,7 +1,7 @@
 const utils = require('../../utils');
 
-module.exports = params => {
-    params = utils.escapedSplit(params);
+module.exports = (params, options, obj) => {
+    params = obj.splittedParams;
 
     const text = params.shift();
 

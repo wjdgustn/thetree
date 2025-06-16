@@ -12,8 +12,7 @@ const fs = require('fs');
 // >asdf
 // ||
 // `.trim();
-const doc = `||
-content||
+const doc = `d[include(사용자:hyonsu/include)]d
 `.trimEnd();
 // const doc = ` * '''테이블 정렬''': {{{#14F,#4AF (정렬 위치)}}}`;
 // const doc = ` *list\n *second\n\ntext\nwow`;

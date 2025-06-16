@@ -94,7 +94,8 @@ const topToHtml = async (parsed, options = {}) => {
         }
 
         const revDocs = Store.dbDocuments
-            .filter(a => a.namespace.includes('파일') || parsed.data.includes.includes(globalUtils.doc_fulltitle(a)));
+            .filter(a => a.namespace.includes('파일')
+                || parsed.data.includes.includes(globalUtils.doc_fulltitle(mainUtils.dbDocumentToDocument(a))));
         const docRevs = await History.find({
             document: {
                 $in: revDocs.map(a => a.uuid)
@@ -257,7 +258,8 @@ const topToHtml = async (parsed, options = {}) => {
                     includeData,
                     commentPrefix,
                     toHtml,
-                    headings: Store.headings
+                    headings: Store.headings,
+                    revDocCache: Store.revDocCache
                 });
                 break;
             case 'footnote': {
