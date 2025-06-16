@@ -6,7 +6,7 @@ module.exports = async (params, { toHtml, includeData, revDocCache }, obj) => {
 
     const docName = mainUtils.parseDocumentName(obj.splittedParams[0]);
     const doc = revDocCache.find(a => a.namespace === docName.namespace && a.title === docName.title);
-    if(doc.rev.content == null) return '';
+    if(doc.rev?.content == null) return '';
 
     const result = parser(doc.rev.content, {
         noTopParagraph: !obj.topParagraph
