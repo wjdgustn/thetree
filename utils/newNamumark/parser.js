@@ -81,35 +81,6 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
 
     return ({
         pattern: (text, startOffset) => {
-            // const newlineIndex = text.indexOf('\n', startOffset);
-            // const str = text.slice(startOffset, (allowNewline || newlineIndex === -1) ? undefined : newlineIndex);
-            // const firstOpen = str.match(openRegex);
-            // if(!firstOpen || firstOpen.index) return null;
-            //
-            // let tokIndex = firstOpen.index + firstOpen[0].length;
-            // let openCount = 0;
-            // while(true) {
-            //     const sliced = str.slice(tokIndex);
-            //     const open = sliced.match(openRegex);
-            //     const close = sliced.match(closeRegex);
-            //     const openIndex = open?.index + tokIndex;
-            //     const closeIndex = close?.index + tokIndex;
-            //
-            //     if(!close) return null;
-            //
-            //     if(openIndex < closeIndex) openCount++;
-            //     else if(openCount) openCount--;
-            //
-            //     if(!openCount) return [str.slice(firstOpen.index, closeIndex + close[0].length)];
-            //
-            //     const openEndIndex = openIndex + open?.[0].length;
-            //     const closeEndIndex = closeIndex + close[0].length;
-            //     if(openEndIndex > closeEndIndex) console.log('openEndIndex is bigger');
-            //     tokIndex = openEndIndex ? Math.max(openEndIndex, closeEndIndex) : closeEndIndex;
-            //
-            //     if(tokIndex > closeIndex) openCount--;
-            // }
-
             const str = text.slice(startOffset);
             const openMatch = str.match(openRegex);
             if(!openMatch) return null;
@@ -130,7 +101,12 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
                 if(openIndex >= 0 && openIndex < closeIndex) openCount++;
                 else openCount--;
 
-                if(openCount < 0) return [str.slice(0, closeIndex + closeMatch[0].length)];
+                if(openCount < 0) {
+                    const content = str.slice(0, closeIndex + closeMatch[0].length);
+                    if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
+                        return null;
+                    return [content];
+                }
 
                 tokIndex = (
                     openIndex >= 0
@@ -484,7 +460,7 @@ const Footnote = createToken({
     //     }
     // },
     // line_breaks: true
-    ...nestedRegex(/\[\*/, /]/, true, /\[/)
+    ...nestedRegex(/\[\*/, /]/, false, /\[/)
 });
 const MacroRegex = /\[\S+?]|\[\S+?\([\s\S]*?\)]/y;
 const ParamSplitRegex = /(?<!\\),/;
@@ -1114,21 +1090,6 @@ class NamumarkParser extends EmbeddedActionsParser {
             $.ACTION(() => {
                 parsedContent = parseInline(content);
             });
-            // if(content.replace(/{{{[\s\S]*}}}/g, '').includes('\n'))
-            //     return {
-            //         success: false,
-            //         content: [
-            //             {
-            //                 type: 'text',
-            //                 text: tok.image.slice(0, sliceStart)
-            //             },
-            //             parsedContent,
-            //             {
-            //                 type: 'text',
-            //                 text: tok.image.slice(sliceEnd)
-            //             }
-            //         ]
-            //     }
             return {
                 success: true,
                 content: parsedContent
@@ -1220,23 +1181,6 @@ class NamumarkParser extends EmbeddedActionsParser {
             const splitted = content.split(' ');
 
             const valueInput = splitted.slice(1).join(' ');
-            if(valueInput.replace(LiteralRegex, '').includes('\n')) {
-                let parsedValue;
-                $.ACTION(() => {
-                    parsedValue = parseInline(valueInput);
-                });
-                return [
-                    {
-                        name: 'text',
-                        text: tok.image.slice(0, 2)
-                    },
-                    parsedValue,
-                    {
-                        name: 'text',
-                        text: tok.image.slice(-1)
-                    }
-                ]
-            }
 
             $.ACTION(() => {
                 Store.footnote.index++;
@@ -1249,16 +1193,18 @@ class NamumarkParser extends EmbeddedActionsParser {
                 value = valueInput;
                 $.ACTION(() => {
                     value = parseInline(value);
-                });
-                Store.footnote.values.push({
-                    name,
-                    content: value
+                    Store.footnote.values.push({
+                        name,
+                        content: value
+                    });
                 });
             }
 
-            Store.footnote.list.push({
-                name,
-                index
+            $.ACTION(() => {
+                Store.footnote.list.push({
+                    name,
+                    index
+                });
             });
 
             return {

@@ -12,13 +12,8 @@ const fs = require('fs');
 // >asdf
 // ||
 // `.trim();
-const doc = `##normal
-{{{
-##literal comment
-}}}
-{{{#!wiki
-##wiki comment
-}}}
+const doc = `[* mul[]
+line]
 `.trimEnd();
 // const doc = ` * '''테이블 정렬''': {{{#14F,#4AF (정렬 위치)}}}`;
 // const doc = ` *list\n *second\n\ntext\nwow`;
