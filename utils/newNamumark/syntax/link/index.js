@@ -75,7 +75,7 @@ module.exports = async (obj, options = {}) => {
         link = parsedLink.href;
         title = link;
 
-        if(imageDocNames.length) {
+        if(imageDocNames.length && !obj.parsedText.some(a => a.type !== 'link' || !a.link.startsWith('파일:'))) {
             let passedCount = 0;
             for(let docName of imageDocNames) {
                 let linkRules = config.external_link_icons?.[docName];
