@@ -12,7 +12,13 @@ const fs = require('fs');
 // >asdf
 // ||
 // `.trim();
-const doc = `d[include(사용자:hyonsu/include)]d
+const doc = `##normal
+{{{
+##literal comment
+}}}
+{{{#!wiki
+##wiki comment
+}}}
 `.trimEnd();
 // const doc = ` * '''테이블 정렬''': {{{#14F,#4AF (정렬 위치)}}}`;
 // const doc = ` *list\n *second\n\ntext\nwow`;

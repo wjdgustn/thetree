@@ -1379,7 +1379,7 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
 
 const parser = new NamumarkParser();
 
-module.exports = (text, { thread = false, includeParams = {}, noTopParagraph = false } = {}) => {
+module.exports = (text, { editorComment = false, thread = false, includeParams = {}, noTopParagraph = false } = {}) => {
     Store = {
         ...originalStore,
         thread,
@@ -1387,6 +1387,26 @@ module.exports = (text, { thread = false, includeParams = {}, noTopParagraph = f
     }
 
     console.time('tokenize');
+    const preLexed = editorComment ? null : lexer.tokenize(text);
+    const lines = text.split('\n');
+    const newLines = [];
+    for(let i in lines) {
+        i = parseInt(i);
+        const line = lines[i];
+        if(editorComment) {
+            if(line.startsWith('##@')) newLines.push(line.slice(3));
+            continue;
+        }
+
+        if(!line.startsWith('##')) {
+            newLines.push(line);
+            continue;
+        }
+        const tok = preLexed.tokens.find(a => a.startLine <= i + 1 && a.endLine >= i + 1);
+        if(tok?.tokenType.name === 'Literal')
+            newLines.push(line);
+    }
+    text = newLines.join('\n');
     const lexed = lexer.tokenize(text);
     console.timeEnd('tokenize');
     parser.noTopParagraph = noTopParagraph;
