@@ -81,6 +81,8 @@ module.exports = {
         return color === 'transparent' || validateHTMLColorName(color);
     },
     parseIncludeParams(text, includeData = {}) {
+        includeData ??= {};
+
         let newText = '';
         let textPos = 0;
         while(true) {
@@ -88,23 +90,6 @@ module.exports = {
             if(startPos === -1) break;
             const endPos = text.indexOf('@', startPos + 1);
             if(endPos === -1) break;
-
-            const htmlTagStartPos = text.indexOf('<', textPos);
-            if(htmlTagStartPos !== -1 && htmlTagStartPos < endPos) {
-                const htmlTagEndPos = text.indexOf('>', htmlTagStartPos);
-                if(htmlTagEndPos !== -1) {
-                    newText += text.slice(textPos, htmlTagEndPos + 1);
-                    textPos = htmlTagEndPos + 1;
-                    continue;
-                }
-            }
-
-            const newLinePos = text.indexOf('<newLine/>', startPos);
-            if(newLinePos !== -1 && newLinePos < endPos) {
-                newText += text.slice(textPos, newLinePos + '<newLine/>'.length);
-                textPos = newLinePos + '<newLine/>'.length;
-                continue;
-            }
 
             newText += text.slice(textPos, startPos);
             textPos = endPos + 1;
@@ -119,8 +104,7 @@ module.exports = {
                 continue;
             }
 
-            let finalText = includeData[key] ?? value;
-            if(finalText.startsWith(' ')) finalText = '<!s>' + finalText.slice(1);
+            const finalText = includeData[key] ?? value;
             newText += finalText;
         }
 

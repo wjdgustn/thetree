@@ -35,7 +35,10 @@ const topToHtml = async (parsed, options = {}) => {
         headings: []
     }
 
-    const toHtml = doc => topToHtml(doc, options);
+    const toHtml = (doc, newOptions) => topToHtml(doc, {
+        ...options,
+        ...newOptions
+    });
 
     const isTop = !!parsed.result;
     let doc = isTop ? parsed.result : parsed;
@@ -199,6 +202,8 @@ const topToHtml = async (parsed, options = {}) => {
             }
 
             case 'wikiSyntax':
+                obj.style = utils.parseIncludeParams(obj.style, includeData);
+                obj.darkStyle = utils.parseIncludeParams(obj.darkStyle, includeData);
                 result += `<div${obj.style ? ` style="${obj.style}"` : ''}${obj.darkStyle ? ` data-dark-style="${obj.darkStyle}"` : ''}>${await toHtml(obj.content)}</div>`;
                 break;
             case 'htmlSyntax':
@@ -209,7 +214,7 @@ const topToHtml = async (parsed, options = {}) => {
                 break;
 
             case 'text':
-                result += utils.escapeHtml(obj.text).replaceAll('\n', '<br>');
+                result += utils.escapeHtml(utils.parseIncludeParams(obj.text, includeData)).replaceAll('\n', '<br>');
                 break;
             case 'bold':
                 result += `<strong>${await toHtml(obj.content)}</strong>`;
@@ -244,6 +249,7 @@ const topToHtml = async (parsed, options = {}) => {
                 break;
             }
             case 'link':
+                obj.text = utils.parseIncludeParams(obj.text, includeData);
                 result += await link(obj, {
                     document: originalDocument,
                     dbDocument,
@@ -254,6 +260,7 @@ const topToHtml = async (parsed, options = {}) => {
                 });
                 break;
             case 'macro':
+                obj.params = utils.parseIncludeParams(obj.params, includeData);
                 result += await macro(obj, {
                     includeData,
                     commentPrefix,

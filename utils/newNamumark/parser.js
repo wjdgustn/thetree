@@ -1325,11 +1325,10 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
 
 const parser = new NamumarkParser();
 
-module.exports = (text, { editorComment = false, thread = false, includeParams = {}, noTopParagraph = false } = {}) => {
+module.exports = (text, { editorComment = false, thread = false, noTopParagraph = false } = {}) => {
     Store = {
         ...originalStore,
-        thread,
-        includeParams
+        thread
     }
 
     console.time('tokenize');
