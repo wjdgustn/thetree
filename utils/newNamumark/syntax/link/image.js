@@ -27,7 +27,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
     }
     else {
         // let dbDocument;
-        let readable = false;
+        // let readable = false;
         if(namespace === docDbDocument?.namespace
             && title === docDbDocument?.title
             && docRev?.fileKey) {
