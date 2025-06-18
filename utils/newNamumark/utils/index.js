@@ -81,6 +81,8 @@ module.exports = {
         return color === 'transparent' || validateHTMLColorName(color);
     },
     parseIncludeParams(text, includeData = {}) {
+        if(!text) return text;
+
         includeData ??= {};
 
         let newText = '';
