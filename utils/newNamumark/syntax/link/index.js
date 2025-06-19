@@ -13,9 +13,10 @@ module.exports = async (obj, options = {}) => {
 
     let link = obj.link;
     let text = obj.text;
+    const hash = obj.hash;
     let notExist = false;
 
-    let isImage = false;
+    // let isImage = false;
     const image = await processImage(obj, link, options);
     if(typeof image === 'string') {
         return image;
@@ -27,7 +28,7 @@ module.exports = async (obj, options = {}) => {
             obj.textExists = false;
         }
         notExist = true;
-        isImage = true;
+        // isImage = true;
     }
 
     if(link.startsWith('분류:') && !thread)
@@ -46,11 +47,11 @@ module.exports = async (obj, options = {}) => {
     link = link.trim();
     text = text.trim();
 
-    if(!isImage && !obj.textExists && link.slice(1).includes('#')) {
-        const splittedText = link.split('#');
-        splittedText.pop();
-        text = splittedText.join('#');
-    }
+    // if(!isImage && !obj.textExists && link.slice(1).includes('#')) {
+    //     const splittedText = link.split('#');
+    //     splittedText.pop();
+    //     text = splittedText.join('#');
+    // }
 
     const imageDocNames = obj.parsedText.filter(a => a.type === 'link' && a.link.startsWith('파일:')).map(a => a.link);
 
@@ -107,25 +108,27 @@ module.exports = async (obj, options = {}) => {
 
         if(link.startsWith('/')) link = docTitle + link;
 
-        if(link.startsWith('#')) {
+        if(!link && hash) {
             title = docTitle;
             notExist = false;
             hasHash = true;
         }
         else {
-            const splittedLink = link.split('#');
-            if(splittedLink.length >= 2) {
-                const hash = splittedLink.pop();
-                const front = splittedLink.join('#').replaceAll('#', '%23');
-                link = `${front}#${hash}`;
-                title = front;
-                hasHash = true;
-            }
-            else title = link;
+            // const splittedLink = link.split('#');
+            // if(splittedLink.length >= 2) {
+            //     const hash = splittedLink.pop();
+            //     const front = splittedLink.join('#').replaceAll('#', '%23');
+            //     link = `${front}#${hash}`;
+            //     title = front;
+            //     hasHash = true;
+            // }
+            // else title = link;
+            if(hash) hasHash = true;
+            title = link;
 
             if(link.startsWith('문서:')) link = link.slice(3);
-            if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}`;
-            else link = `/w/${globalUtils.encodeSpecialChars(link, ['#'])}`;
+            if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}${hash ? `#${hash}` : ''}`;
+            else link = `/w/${globalUtils.encodeSpecialChars(link)}${hash ? `#${hash}` : ''}`;
 
             const document = mainUtils.parseDocumentName(title);
             // titleDocument = document;

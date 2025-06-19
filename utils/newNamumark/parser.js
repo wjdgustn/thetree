@@ -1099,11 +1099,19 @@ class NamumarkParser extends EmbeddedActionsParser {
         const LinkSplitRegex = /(?<!\\)\|/;
         $.RULE('link', () => {
             const tok = $.CONSUME(Link);
-            const content = tok.image.slice(2, -2);
+            const content = tok.image.slice(2, -2).trim();
             const splitted = content.split(LinkSplitRegex).map(a => a.replaceAll('\\|', '|'));
             let link = splitted[0];
             const origParsedText = splitted.slice(1).join('|');
             let parsedText = origParsedText;
+            let hash;
+
+            if(/(?<!\\)#/.test(link)) {
+                const arr = link.split(/(?<!\\)#/);
+                hash = arr.pop();
+                link = arr.join('#').trim();
+            }
+            link = link.replaceAll('\\#', '#');
 
             const text = parsedText || link;
             $.ACTION(() => {
@@ -1170,6 +1178,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 content,
                 link,
                 text,
+                hash,
                 textExists: !!origParsedText,
                 parsedText
             }
