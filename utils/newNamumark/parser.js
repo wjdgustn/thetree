@@ -10,8 +10,6 @@ const sanitizeHtml = require('sanitize-html');
 
 const utils = require('./utils');
 
-// TODO: editor comment
-
 const MAXIMUM_DEPTH = 10;
 
 const sanitizeHtmlOptions = {
