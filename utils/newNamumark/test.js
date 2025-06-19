@@ -12,15 +12,15 @@ const fs = require('fs');
 // >asdf
 // ||
 // `.trim();
-const doc = `[[sans \\#1]]
-`.trimEnd();
-// const doc = `[목차]
-// == '''[[1]]2'''3 ==
-// [[link]]
-// [[파일:홈페이지 아이콘.svg]]
-// [include(include)]
-// [[분류:테스트#blur]]
+// const doc = `[[sans \\#1]]
 // `.trimEnd();
+const doc = `[목차]
+== '''[[1]]2'''3 ==
+[[link]]
+[[파일:홈페이지 아이콘.svg]]
+[include(include)]
+[[분류:테스트#blur]]
+`.trimEnd();
 // const doc = ` * '''테이블 정렬''': {{{#14F,#4AF (정렬 위치)}}}`;
 // const doc = ` *list\n *second\n\ntext\nwow`;
 // const doc = ` *asdf\n\nhi`;

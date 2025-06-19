@@ -657,6 +657,19 @@ class NamumarkParser extends EmbeddedActionsParser {
             ]);
         });
 
+        const filterInline = (content, allowLink = false) => {
+            const result = [];
+            if(!Array.isArray(content)) content = [content];
+            for(let item of content) {
+                if(item.type === 'text' || (allowLink && item.type === 'link'))
+                    result.push(item);
+                else {
+                    const value = item.parsedText ?? item.content;
+                    if(value) result.push(...filterInline(value, allowLink));
+                }
+            }
+            return result;
+        }
         $.RULE('heading', () => {
             const result = $.CONSUME(Heading);
             let str = result.image;
@@ -679,9 +692,13 @@ class NamumarkParser extends EmbeddedActionsParser {
             });
 
             let text = str.slice(1, -(level + 1 + (closed ? 1 : 0)));
+            let linkText;
+            let pureText;
             let sectionNum;
             $.ACTION(() => {
                 text = parseInline(text);
+                linkText = filterInline(text, true);
+                pureText = filterInline(text, false);
                 if(level < Store.heading.lowestLevel)
                     Store.heading.lowestLevel = level;
                 sectionNum = ++Store.heading.sectionNum;
@@ -694,6 +711,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 sectionNum,
                 numText: null,
                 text,
+                linkText,
+                pureText,
                 content
             }
             $.ACTION(() => {
@@ -1384,6 +1403,12 @@ module.exports = (text, { editorComment = false, thread = false, noTopParagraph 
         heading.actualLevel = heading.level - Store.heading.lowestLevel + 1;
     }
 
+    console.log({
+        links: Store.links,
+        categories: Store.categories,
+        includes: Store.includes,
+        headings: Store.heading.list
+    });
     return {
         tokens: lexed.tokens,
         result,
