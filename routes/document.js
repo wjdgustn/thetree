@@ -1221,12 +1221,12 @@ app.get('/edit_request/:url', async (req, res) => {
             .lean();
 
         if(latestRev?.content) {
-            const parser = new NamumarkParser({
+            const parseResult = parser(latestRev.content, { editorComment: true });
+            const { html } = await toHtml(parseResult, {
                 document,
                 aclData: req.aclData,
                 req
             });
-            const { html } = await parser.parseEditorComment(latestRev.content);
             contentHtml = html;
 
             conflict = !utils.mergeText(baseRev.content, editRequest.content, latestRev.content);
