@@ -1487,13 +1487,13 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     })
         .sort({ rev: -1 })
         .lean();
-    const parser = new NamumarkParser({
-        document,
-        aclData: req.aclData,
-        req
-    });
     if(latestRev.content) {
-        const { html } = await parser.parseEditorComment(latestRev.content);
+        const parseResult = parser(latestRev.content, { editorComment: true });
+        const { html } = await toHtml(parseResult, {
+            document,
+            aclData: req.aclData,
+            req
+        });
         if(html) contentHtml = html;
     }
 
