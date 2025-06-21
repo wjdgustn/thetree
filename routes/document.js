@@ -943,14 +943,14 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         title: document.title
     });
 
-    const parser = new NamumarkParser({
+    const parseResult = parser(content);
+    let { html: contentHtml, categories } = await toHtml(parseResult, {
         document,
         dbDocument,
         aclData: req.aclData,
         thread: isThread,
         req
     });
-    let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml = '';
     if(!isThread && !req.backendMode) try {
         categoryHtml = await utils.renderCategory(categories);
