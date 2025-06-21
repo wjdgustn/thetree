@@ -12,6 +12,9 @@ const ACL = require('../../class/acl');
 const Document = require('../../schemas/document');
 const History = require('../../schemas/history');
 
+const MAXIMUM_LENGTH = 1000000;
+const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
+
 const topToHtml = async (parsed, options = {}) => {
     if(!parsed) return '';
 
@@ -31,13 +34,14 @@ const topToHtml = async (parsed, options = {}) => {
     const Store = options.Store ??= {
         dbDocuments: [],
         revDocCache: [],
+        links: [],
+        files: [],
         categories: [],
         heading: {
             list: [],
             html: ''
         },
-        links: [],
-        files: []
+        error: null
     }
 
     const toHtml = (doc, newOptions) => topToHtml(doc, {
@@ -166,10 +170,22 @@ const topToHtml = async (parsed, options = {}) => {
                 rev: docRevs.find(a => a.document === doc.uuid)
             });
         }
+
+        Store.categories = parsed.data.categories;
+        for(let obj of Store.categories) {
+            const cache = Store.dbDocuments.find(cache => cache.namespace === '분류' && cache.title === obj.document);
+            obj.notExist = !cache?.contentExists;
+        }
     }
 
     let result = '';
     for(let obj of doc) {
+        if(Store.error) break;
+        if(result.length > MAXIMUM_LENGTH) {
+            Store.error = MAXIMUM_LENGTH_HTML;
+            break;
+        }
+
         if(Array.isArray(obj)) {
             const lines = [];
             for(let line of obj) {
@@ -318,11 +334,16 @@ const topToHtml = async (parsed, options = {}) => {
         }
     }
 
+    if(Store.error)
+        result = Store.error;
+
     if(isTop) return {
         html: result,
         links: Store.links,
         files: Store.files,
-        headings: Store.heading.list
+        categories: Store.categories,
+        headings: Store.heading.list,
+        hasError: !!Store.error
     }
     return result;
 }
