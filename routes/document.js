@@ -803,12 +803,12 @@ const editAndEditRequest = async (req, res) => {
 
     let contentHtml;
     if(rev?.content) {
-        const parser = new NamumarkParser({
+        const parseResult = parser(rev.content, { editorComment: true });
+        const { html } = await toHtml(parseResult, {
             document,
             aclData: req.aclData,
             req
         });
-        const { html } = await parser.parseEditorComment(rev.content);
         contentHtml = html;
     }
 
