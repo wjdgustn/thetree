@@ -1166,10 +1166,11 @@ class NamumarkParser extends EmbeddedActionsParser {
                         link = link.slice(3);
 
                         let blur;
-                        if(link.endsWith('#blur')) {
-                            link = link.slice(0, -'#blur'.length);
+                        if(hash === 'blur') {
+                            // link = link.slice(0, -'#blur'.length);
                             blur = true;
                         }
+                        else hash = undefined;
                         const newCategory = {
                             document: link,
                             text: origParsedText ? text : undefined,
