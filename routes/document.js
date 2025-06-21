@@ -2,7 +2,8 @@ const express = require('express');
 const { Address4, Address6 } = require('ip-address');
 const { getChoseong } = require('es-hangul');
 
-const NamumarkParser = require('../utils/namumark');
+const parser = require('../utils/newNamumark/parser');
+const toHtml = require('../utils/newNamumark/toHtml');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
@@ -178,18 +179,17 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             }
     }
 
-    const parser = new NamumarkParser({
+    let content = rev.content;
+    if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
+
+    const parseResult = parser(content);
+    let { html: contentHtml, categories, hasError, headings } = await toHtml(parseResult, {
         document,
         dbDocument,
         rev,
         aclData: req.aclData,
         req
     });
-
-    let content = rev.content;
-    if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
-
-    let { html: contentHtml, categories, hasError, tocContentHtml, headings } = await parser.parse(content);
     if(hasError) return res.renderSkin(undefined, {
         ...defaultData,
         date: null,
@@ -364,43 +364,6 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         user: req.user.uuid
     });
 
-    if(req.query.np) {
-        console.log('testing new parser');
-        const parserPath = require.resolve('../utils/newNamumark/parser');
-        delete require.cache[parserPath];
-        const parser = require(parserPath);
-
-        const toHtmlPath = require.resolve('../utils/newNamumark/toHtml');
-        delete require.cache[toHtmlPath];
-        const toHtml = require(toHtmlPath);
-
-        console.time('totalNewParser');
-        console.time('parser');
-        const result = parser(content);
-        console.timeEnd('parser');
-
-        if(req.query.np === 'tok') return res.json(result.tokens);
-        if(req.query.np === 'cst') return res.json(result.result);
-
-        console.time('toHtml');
-        try {
-            const htmlResult = await toHtml(result, {
-                document,
-                dbDocument,
-                rev,
-                aclData: req.aclData,
-                req
-            });
-            console.log(htmlResult);
-            contentHtml = htmlResult.html;
-        } catch (e) {
-            console.error(e);
-            return res.status(500).send('toHtml 실패');
-        }
-        console.timeEnd('toHtml');
-        console.timeEnd('totalNewParser');
-    }
-
     res.renderSkin(undefined, {
         ...defaultData,
         headings,
@@ -408,7 +371,6 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             contentName: 'wiki'
         } : {}),
         serverData: {
-            tocContentHtml,
             ...(req.backendMode ? {
                 categories: categories.map(a => ({
                     ...a,
