@@ -319,7 +319,10 @@ const topToHtml = async (parsed, options = {}) => {
     }
 
     if(isTop) return {
-        html: result
+        html: result,
+        links: Store.links,
+        files: Store.files,
+        headings: Store.heading.list
     }
     return result;
 }

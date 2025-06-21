@@ -1401,12 +1401,6 @@ module.exports = (text, { editorComment = false, thread = false, noTopParagraph 
         heading.actualLevel = heading.level - Store.heading.lowestLevel + 1;
     }
 
-    console.log({
-        links: Store.links,
-        categories: Store.categories,
-        includes: Store.includes,
-        headings: Store.heading.list
-    });
     return {
         tokens: lexed.tokens,
         result,

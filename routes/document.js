@@ -384,14 +384,15 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
 
         console.time('toHtml');
         try {
-            const { html } = await toHtml(result, {
+            const htmlResult = await toHtml(result, {
                 document,
                 dbDocument,
                 rev,
                 aclData: req.aclData,
                 req
             });
-            contentHtml = html;
+            console.log(htmlResult);
+            contentHtml = htmlResult.html;
         } catch (e) {
             console.error(e);
             return res.status(500).send('toHtml 실패');

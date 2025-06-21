@@ -16,9 +16,10 @@ module.exports = async (obj, options = {}) => {
     const hash = obj.hash;
     let notExist = false;
 
-    // let isImage = false;
+    let isImage = false;
     const image = await processImage(obj, link, options);
     if(typeof image === 'string') {
+        Store.files.push(link);
         return image;
     }
     else if(typeof image === 'object') {
@@ -27,8 +28,9 @@ module.exports = async (obj, options = {}) => {
             text = image.text;
             obj.textExists = false;
         }
+        Store.files.push(link);
         notExist = true;
-        // isImage = true;
+        isImage = true;
     }
 
     if(link.startsWith('분류:') && !thread)
@@ -69,7 +71,7 @@ module.exports = async (obj, options = {}) => {
     }
 
     let title;
-    // let titleDocument;
+    let titleDocument;
     let hideExternalLinkIcon = false;
     let hasHash = false;
     if(parsedLink) {
@@ -131,7 +133,7 @@ module.exports = async (obj, options = {}) => {
             else link = `/w/${globalUtils.encodeSpecialChars(link)}${hash ? `#${hash}` : ''}`;
 
             const document = mainUtils.parseDocumentName(title);
-            // titleDocument = document;
+            titleDocument = document;
             const cache = Store.dbDocuments.find(cache => cache.namespace === document.namespace && cache.title === document.title);
             if(cache) notExist = !cache.contentExists;
             else notExist = true;
@@ -166,9 +168,12 @@ module.exports = async (obj, options = {}) => {
 
     const html = `<a href="${safeLink}" title="${globalUtils.removeHtmlTags(parsedTitle)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
 
-    // const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
-    // if(!parsedLink
-    //     && titleDocName !== docTitle
-    //     && !namumark.redirect) namumark.links.push(titleDocName);
+    const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
+    if(!parsedLink
+        && titleDocName !== docTitle
+        && !isImage
+        && !Store.links.includes(titleDocName)
+    )
+        Store.links.push(titleDocName);
     return html;
 }
