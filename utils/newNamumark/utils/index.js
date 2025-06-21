@@ -5,9 +5,6 @@ const {
 const katex = require('katex');
 const jsep = require('jsep');
 const CSSFilter = require('cssfilter');
-const mongoose = require('mongoose');
-
-const mainUtils = require('../..');
 
 const allowedNames = require('./allowedNames.json');
 
@@ -42,6 +39,22 @@ const filter = new CSSFilter.FilterCSS({
         if(value.startsWith('url(')) return '';
     }
 });
+
+function parsedToTextObj(content) {
+    const result = [];
+    if(!Array.isArray(content)) content = [content];
+    for(let item of content) {
+        if(item.type === 'text')
+            result.push(item);
+        else {
+            const value = Array.isArray(item)
+                ? item
+                : item.lines ?? item.parsedText ?? item.content;
+            if(value) result.push(...parsedToTextObj(value));
+        }
+    }
+    return result;
+}
 
 module.exports = {
     escapeHtml: text => (text ?? '')
@@ -215,30 +228,8 @@ module.exports = {
         }
     },
     cssFilter: css => filter.process(css),
-    bulkFindDocuments: async docNames => {
-        const parsedDocs = docNames.map(a => mainUtils.parseDocumentName(a));
-        const namespaces = [...new Set(parsedDocs.map(a => a.namespace))];
-
-        const query = { $or: [] };
-        for(let namespace of namespaces) {
-            query.$or.push({
-                namespace,
-                title: {
-                    $in: parsedDocs.filter(a => a.namespace === namespace).map(a => a.title)
-                }
-            });
-        }
-        if(!query.$or.length) return [];
-
-        const result = await mongoose.Models.Document.find(query);
-        return [
-            ...result,
-            ...parsedDocs
-                .map(a => !result.some(b => a.namespace === b.namespace && a.title === b.title) ? {
-                    ...a,
-                    contentExists: false
-                } : null)
-                .filter(a => a)
-        ]
+    parsedToText(content) {
+        const obj = parsedToTextObj(content);
+        return obj.map(a => a.text).join('');
     }
 }
