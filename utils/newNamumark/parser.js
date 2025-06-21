@@ -1354,7 +1354,7 @@ const parser = new NamumarkParser();
 
 module.exports = (text, { editorComment = false, thread = false, noTopParagraph = false } = {}) => {
     Store = {
-        ...originalStore,
+        ...structuredClone(originalStore),
         thread
     }
 
