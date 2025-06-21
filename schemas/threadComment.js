@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
+const parser = require('../utils/newNamumark/parser');
+
 const docUtils = require('../utils/docUtils');
 const globalUtils = require('../utils/global');
 const { ThreadCommentTypes, NotificationTypes } = require('../utils/types');
@@ -103,16 +105,7 @@ newSchema.post('save', async function() {
     });
     if(!dbDocument) return;
 
-    const parser = new global.NamumarkParser({
-        document: dbDocument,
-        aclData: {
-            alwaysAllow: true
-        },
-        dbComment: this,
-        thread: true,
-        commentId: this.id
-    });
-    const { links } = await parser.parse(this.content);
+    const { data: { links } } = parser(this.content);
     const mentions = links.filter(a => a.startsWith('사용자:')).map(a => a.slice(4));
     const users = await mongoose.models.User.find({
         name: {
