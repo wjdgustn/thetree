@@ -169,7 +169,8 @@ module.exports = async (obj, options = {}) => {
     const html = `<a href="${safeLink}" title="${globalUtils.removeHtmlTags(parsedTitle)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
 
     const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
-    if(!parsedLink
+    if(titleDocName
+        && !parsedLink
         && titleDocName !== docTitle
         && !isImage
         && !Store.links.includes(titleDocName)
