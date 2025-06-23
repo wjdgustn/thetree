@@ -180,11 +180,14 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     let content = rev.content;
     if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
 
+    if(!debug) console.time(`parse ${document.title}`);
     const parseResult = parser(content);
+    if(!debug) console.timeEnd(`parse ${document.title}`);
     if(debug && req.query.np) {
         if(req.query.np === 'tok') return res.json(parseResult.tokens);
         if(req.query.np === 'cst') return res.json(parseResult.result);
     }
+    if(!debug) console.time(`toHtml ${document.title}`);
     let { html: contentHtml, categories, hasError, headings } = await toHtml(parseResult, {
         document,
         dbDocument,
@@ -192,6 +195,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         aclData: req.aclData,
         req
     });
+    if(!debug) console.timeEnd(`toHtml ${document.title}`);
     if(hasError) return res.renderSkin(undefined, {
         ...defaultData,
         date: null,
