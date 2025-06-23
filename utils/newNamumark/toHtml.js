@@ -98,7 +98,7 @@ const topToHtml = async (parsed, options = {}) => {
         const parsedDocs = [];
         for(let link of [
             ...parsed.data.links,
-            ...parsed.data.categories.map(a => '분류:' + a),
+            ...parsed.data.categories.map(a => '분류:' + a.document),
             ...parsed.data.includes
         ]) {
             if(link.startsWith(':')) {
