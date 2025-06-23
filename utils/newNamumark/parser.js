@@ -575,7 +575,8 @@ let Store = {
         index: 0,
         values: [],
         list: []
-    }
+    },
+    commentLines: []
 }
 const originalStore = { ...Store };
 
@@ -704,6 +705,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             const obj = {
                 type: 'heading',
+                line: result.startLine + Store.commentLines.filter(a => a < result.startLine).length,
                 level,
                 closed,
                 sectionNum,
@@ -1377,6 +1379,8 @@ module.exports = (text, { editorComment = false, thread = false, noTopParagraph 
         const tok = preLexed.tokens.find(a => a.startLine <= i + 1 && a.endLine >= i + 1);
         if(tok?.tokenType.name === 'Literal')
             newLines.push(line);
+        else
+            Store.commentLines.push(i);
     }
     text = newLines.join('\n');
     const lexed = lexer.tokenize(text);

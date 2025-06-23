@@ -21,8 +21,6 @@ const {
     AuditLogTypes
 } = require('../utils/types');
 
-const headingSyntax = require('../utils/namumark/syntax/heading');
-
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
@@ -795,7 +793,9 @@ const editAndEditRequest = async (req, res) => {
         content = rev.content;
         if(req.query.section) {
             const lines = content.split('\n');
-            const headingLines = headingSyntax.getHeadingLines(rev.content);
+            const parseResult = parser(rev.content);
+            const headings = parseResult.result.filter(a => a.type === 'heading');
+            const headingLines = headings.map(a => a.line - 1);
             if(section > headingLines.length) return invalidSection();
 
             const start = headingLines[section - 1];
@@ -1083,7 +1083,9 @@ const postEditAndEditRequest = async (req, res) => {
         const newLines = [];
 
         const fullLines = editedRev.content.split('\n');
-        const headingLines = headingSyntax.getHeadingLines(rev.content);
+        const parseResult = parser(rev.content);
+        const headings = parseResult.result.filter(a => a.type === 'heading');
+        const headingLines = headings.map(a => a.line - 1);
         if(section > headingLines.length) return invalidSection();
 
         const start = headingLines[section - 1];
