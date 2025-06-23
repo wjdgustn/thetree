@@ -377,7 +377,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
                 categories: categories.map(a => ({
                     ...a,
                     text: undefined,
-                    document: utils.parseDocumentName(a.document)
+                    document: utils.parseDocumentName('분류:' + a.document)
                 })),
                 contentHtml,
                 userboxData: {
