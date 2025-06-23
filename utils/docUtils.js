@@ -121,7 +121,7 @@ module.exports = {
 
         addBacklinks(BacklinkFlags.Link, htmlResult.links);
         addBacklinks(BacklinkFlags.File, htmlResult.files);
-        addBacklinks(BacklinkFlags.Include, parseResult.includes);
+        addBacklinks(BacklinkFlags.Include, parseResult.data.includes);
         if(rev.content.startsWith('#redirect ')) {
             let redirectName = rev.content.split('\n')[0].slice('#redirect '.length);
             const hashSplitted = redirectName.split('#');
@@ -133,7 +133,7 @@ module.exports = {
         // return backlinks.sort((a, b) => Intl.Collator('en').compare(a.docName, b.docName));
         return {
             backlinks,
-            categories: parseResult.categories.map(a => ({
+            categories: parseResult.data.categories.map(a => ({
                 document: a.document.slice('분류:'.length),
                 text: a.text
             }))
@@ -160,7 +160,7 @@ module.exports = {
 
         const document = utils.dbDocumentToDocument(dbDocument);
 
-        const parseResult = global.NamumarkParser.parser(rev,content);
+        const parseResult = global.NamumarkParser.parser(rev.content);
         const htmlResult = await global.NamumarkParser.toHtml(parseResult);
 
         const contentExists = rev.content != null;
