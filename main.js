@@ -387,8 +387,12 @@ global.reloadPlugins = () => {
 }
 reloadPlugins();
 
-const NamumarkParser = require('./utils/namumark');
-global.NamumarkParser = NamumarkParser;
+const parser = require('./utils/newNamumark/parser');
+const toHtml = require('./utils/newNamumark/toHtml');
+global.NamumarkParser = {
+    parser,
+    toHtml
+};
 global.ACLClass = ACL;
 
 require('./schemas')();

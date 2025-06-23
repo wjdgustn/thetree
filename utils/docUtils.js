@@ -86,18 +86,12 @@ module.exports = {
 
         return this.lineArrToBlame(newLineArr);
     },
-    async generateBacklink(document, rev, parseResult) {
+    async generateBacklink(document, rev, parseResult, htmlResult) {
         if(!rev?.content) return { backlinks: [], categories: [] };
 
         if(!parseResult) {
-            const parser = new global.NamumarkParser({
-                document,
-                aclData: {
-                    alwaysAllow: true
-                }
-            });
-
-            parseResult = await parser.parse(rev.content);
+            parseResult = global.NamumarkParser.parser(rev.content);
+            htmlResult = await global.NamumarkParser.toHtml(parseResult);
         }
 
         let backlinks = [];
@@ -125,10 +119,16 @@ module.exports = {
             }
         }
 
-        addBacklinks(BacklinkFlags.Link, parseResult.links);
-        addBacklinks(BacklinkFlags.File, parseResult.files);
+        addBacklinks(BacklinkFlags.Link, htmlResult.links);
+        addBacklinks(BacklinkFlags.File, htmlResult.files);
         addBacklinks(BacklinkFlags.Include, parseResult.includes);
-        addBacklinks(BacklinkFlags.Redirect, parseResult.redirect);
+        if(rev.content.startsWith('#redirect ')) {
+            let redirectName = rev.content.split('\n')[0].slice('#redirect '.length);
+            const hashSplitted = redirectName.split('#');
+            if(hashSplitted.length >= 2)
+                redirectName = hashSplitted.join('#');
+            addBacklinks(BacklinkFlags.Redirect, redirectName);
+        }
 
         // return backlinks.sort((a, b) => Intl.Collator('en').compare(a.docName, b.docName));
         return {
@@ -160,17 +160,12 @@ module.exports = {
 
         const document = utils.dbDocumentToDocument(dbDocument);
 
-        const parser = new global.NamumarkParser({
-            document: dbDocument,
-            aclData: {
-                alwaysAllow: true
-            }
-        });
-        const parseResult = await parser.parse(rev.content);
+        const parseResult = global.NamumarkParser.parser(rev,content);
+        const htmlResult = await global.NamumarkParser.toHtml(parseResult);
 
         const contentExists = rev.content != null;
         if(backlink) {
-            const { backlinks, categories } = await this.generateBacklink(dbDocument, rev, parseResult);
+            const { backlinks, categories } = await this.generateBacklink(dbDocument, rev, parseResult, htmlResult);
 
             let lastReadACL = dbDocument.lastReadACL;
             if(rev.type === HistoryTypes.ACL) {
@@ -209,7 +204,7 @@ module.exports = {
                 choseong: getChoseong(document.title),
                 namespace: dbDocument.namespace,
                 title: dbDocument.title,
-                content: globalUtils.removeHtmlTags(parseResult.html),
+                content: globalUtils.removeHtmlTags(htmlResult.html),
                 raw: rev.content,
                 anyoneReadable
             }, {
