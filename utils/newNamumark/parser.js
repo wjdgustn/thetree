@@ -323,14 +323,14 @@ const TableRow = createToken({
 });
 
 const LiteralRegex = /(?<!\\)(?:\\\\)*{{{[\s\S]*}}}/g;
-const inlineRegex = (openRegex, closeRegex) => {
+const inlineRegex = (openRegex, closeRegex, keepOriginal = false) => {
     let openCloseSame = false;
     if(!closeRegex) {
         openCloseSame = true;
         closeRegex = openRegex;
     }
-    openRegex = new RegExp((openRegex.source.startsWith('^') ? '' : '^') + openRegex.source, 'i');
-    closeRegex = new RegExp('(?<!\\\\)(?:\\\\\\\\)*' + closeRegex.source, 'i');
+    openRegex = new RegExp((keepOriginal || (openRegex.source.startsWith('^')) ? '' : '^') + openRegex.source, 'i');
+    closeRegex = new RegExp((keepOriginal ? '' : '(?<!\\\\)(?:\\\\\\\\)*') + closeRegex.source, 'i');
 
     return ({
         pattern: (text, startOffset) => {
@@ -378,7 +378,7 @@ const Strike = createToken({
     //     return match;
     // },
     // line_breaks: true
-    ...inlineRegex(/^~~|^--/)
+    ...inlineRegex(/^~~|^--/, /(?<!\\)(?:\\\\)*~~|(?<!\\)(?:\\\\)*--/, true)
 });
 const Underline = createToken({
     name: 'Underline',
