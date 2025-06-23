@@ -1360,7 +1360,7 @@ module.exports = (text, { editorComment = false, thread = false, noTopParagraph 
         thread
     }
 
-    console.time('tokenize');
+    if(debug) console.time('tokenize');
     const preLexed = editorComment ? null : inlineLexer.tokenize(text);
     const lines = text.split('\n');
     const newLines = [];
@@ -1384,12 +1384,12 @@ module.exports = (text, { editorComment = false, thread = false, noTopParagraph 
     }
     text = newLines.join('\n');
     const lexed = lexer.tokenize(text);
-    console.timeEnd('tokenize');
+    if(debug) console.timeEnd('tokenize');
     parser.noTopParagraph = noTopParagraph;
     parser.input = lexed.tokens;
-    console.time('cst');
+    if(debug) console.time('cst');
     const result = parser.input.length ? parser.document() : [];
-    console.timeEnd('cst');
+    if(debug) console.timeEnd('cst');
 
     const paragraphNum = [...Array(6 + 1 - Store.heading.lowestLevel)].map(_ => 0);
     for(let heading of Store.heading.list) {
