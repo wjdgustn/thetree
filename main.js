@@ -32,7 +32,7 @@ global.debug = process.env.NODE_ENV === 'development';
 
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
-const namumarkUtils = require('./utils/namumark/utils');
+const namumarkUtils = require('./utils/newNamumark/utils');
 const types = require('./utils/types');
 const {
     UserTypes,

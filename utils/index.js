@@ -970,5 +970,8 @@ module.exports = {
             resolve();
         })));
         return items;
+    },
+    insertText: (text, index, insertText) => {
+        return text.slice(0, index) + insertText + text.slice(index);
     }
 }
