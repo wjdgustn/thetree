@@ -16,8 +16,6 @@ const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
 
 const topToHtml = async (parsed, options = {}) => {
-    if(!parsed || (parsed.data && !parsed.result)) return '';
-
     options.originalDocument ??= options.document;
     const {
         document,
@@ -55,6 +53,8 @@ const topToHtml = async (parsed, options = {}) => {
 
     if(!isTop && !Array.isArray(doc))
         doc = [doc];
+
+    if(!isTop && !parsed) return '';
 
     // if(Array.isArray(doc[0])) {
     //     const lines = [];
