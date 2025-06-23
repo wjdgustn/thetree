@@ -91,7 +91,9 @@ module.exports = {
 
         if(!parseResult) {
             parseResult = global.NamumarkParser.parser(rev.content);
-            htmlResult = await global.NamumarkParser.toHtml(parseResult);
+            htmlResult = await global.NamumarkParser.toHtml(parseResult, {
+                document
+            });
         }
 
         let backlinks = [];
@@ -161,7 +163,9 @@ module.exports = {
         const document = utils.dbDocumentToDocument(dbDocument);
 
         const parseResult = global.NamumarkParser.parser(rev.content);
-        const htmlResult = await global.NamumarkParser.toHtml(parseResult);
+        const htmlResult = await global.NamumarkParser.toHtml(parseResult, {
+            document
+        });
 
         const contentExists = rev.content != null;
         if(backlink) {
