@@ -21,6 +21,7 @@ module.exports = async (params, { toHtml, includeData, revDocCache }, obj) => {
         noTopParagraph: !obj.topParagraph
     });
     const final = await toHtml(result, {
+        document: docName,
         includeData: newIncludeData
     });
     return final.html;
