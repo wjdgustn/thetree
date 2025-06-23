@@ -183,6 +183,10 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
 
     const parseResult = parser(content);
+    if(debug && req.query.np) {
+        if(req.query.np === 'tok') return res.json(parseResult.tokens);
+        if(req.query.np === 'cst') return res.json(parseResult.result);
+    }
     let { html: contentHtml, categories, hasError, headings } = await toHtml(parseResult, {
         document,
         dbDocument,
