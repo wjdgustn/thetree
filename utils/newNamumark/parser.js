@@ -1361,7 +1361,7 @@ module.exports = (text, { editorComment = false, thread = false, noTopParagraph 
     }
 
     console.time('tokenize');
-    const preLexed = editorComment ? null : lexer.tokenize(text);
+    const preLexed = editorComment ? null : inlineLexer.tokenize(text);
     const lines = text.split('\n');
     const newLines = [];
     for(let i in lines) {
