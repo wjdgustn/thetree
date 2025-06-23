@@ -48,7 +48,7 @@ const topToHtml = async (parsed, options = {}) => {
         skipInit: true
     });
 
-    const isTop = !!parsed.result;
+    const isTop = !!parsed?.result;
     let doc = isTop ? parsed.result : parsed;
 
     if(!isTop && !Array.isArray(doc))
