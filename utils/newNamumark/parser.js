@@ -1178,7 +1178,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                             text: origParsedText ? text : undefined,
                             blur
                         }
-                        if(!Store.categories.includes(link))
+                        if(!Store.categories.some(a => a.document === link))
                             Store.categories.push(newCategory);
                         isCategory = true;
                     }
