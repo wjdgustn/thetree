@@ -128,7 +128,6 @@ const topToHtml = async (parsed, options = {}) => {
                     }
                 }
             }
-            console.log(links);
 
             for(let link of links) {
                 if(link.startsWith(':')) {
