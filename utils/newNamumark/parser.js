@@ -566,6 +566,7 @@ let Store = {
     links: [],
     categories: [],
     includes: [],
+    includeParams: {},
     heading: {
         sectionNum: 0,
         lowestLevel: 6,
@@ -1244,6 +1245,17 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
+        const parseIncludeParams = splittedParams => {
+            const newIncludeData = {};
+            for(let param of splittedParams.slice(1)) {
+                const splittedParam = param.split('=');
+                if(splittedParam.length < 2) continue;
+
+                const key = splittedParam[0].replaceAll(' ', '');
+                newIncludeData[key] = splittedParam.slice(1).join('=');
+            }
+            return newIncludeData;
+        }
         $.RULE('macro', () => {
             const tok = $.CONSUME(Macro);
             const { name, splittedParams } = tok.payload || {};
@@ -1251,8 +1263,12 @@ class NamumarkParser extends EmbeddedActionsParser {
             const data = {};
             $.ACTION(() => {
                 if(name === 'include') {
-                    Store.includes.push(splittedParams[0]);
+                    const docName = splittedParams[0];
+                    Store.includes.push(docName);
                     data.topParagraph = false;
+                    data.includeData = parseIncludeParams(splittedParams);
+                    const arr = Store.includeParams[docName] ??= [];
+                    arr.push(data.includeData);
                 }
                 else if(name === 'footnote' || name === '각주') {
                     data.footnoteValues = [...Store.footnote.values];
@@ -1272,14 +1288,22 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('include', () => {
             const tok = $.CONSUME(Macro);
+
+            let includeData;
             $.ACTION(() => {
-                Store.includes.push(tok.payload.splittedParams[0]);
+                const docName = tok.payload.splittedParams[0];
+                Store.includes.push(docName);
+                includeData = parseIncludeParams(tok.payload.splittedParams);
+                const arr = Store.includeParams[docName] ??= [];
+                arr.push(includeData);
             });
+
             return {
                 type: 'macro',
                 ...tok.payload,
                 image: tok.image,
-                topParagraph: true
+                topParagraph: true,
+                includeData
             }
         });
 
@@ -1418,6 +1442,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
             links: Store.links,
             categories: Store.categories,
             includes: Store.includes,
+            includeParams: Store.includeParams,
             headings: Store.heading.list
         }
     }

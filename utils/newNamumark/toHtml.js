@@ -98,12 +98,39 @@ const topToHtml = async (parsed, options = {}) => {
             Store.heading.html = html;
         }
 
-        const parsedDocAdder = (result, parsedDocs = []) => {
-            for(let link of [...new Set([
+        const includeParams = [];
+        for(let [docName, params] of Object.entries(parsed.data.includeParams)) {
+            const parsedName = mainUtils.parseDocumentName(docName);
+            let doc = includeParams.find(a => a.namespace === parsedName.namespace && a.title === parsedName.title);
+            if(!doc) {
+                doc = {
+                    ...parsedName,
+                    params: []
+                }
+                includeParams.push(doc);
+            }
+            doc.params.push(...params);
+        }
+
+        const parsedDocAdder = (result, parsedDocs = [], includeParams = []) => {
+            const links = [...new Set([
                 ...result.data.links,
                 ...result.data.categories.map(a => '분류:' + a.document),
                 ...result.data.includes
-            ])]) {
+            ])];
+            if(includeParams.length) {
+                const paramLinks = links.filter(a => a.includes('@'));
+                for(let link of paramLinks) {
+                    for(let params of includeParams) {
+                        const newLink = utils.parseIncludeParams(link, params);
+                        if(!links.includes(newLink))
+                            links.push(newLink);
+                    }
+                }
+            }
+            console.log(links);
+
+            for(let link of links) {
                 if(link.startsWith(':')) {
                     const slicedLink = link.slice(1);
                     if(config.namespaces.some(a => slicedLink.startsWith(a + ':')))
@@ -195,8 +222,10 @@ const topToHtml = async (parsed, options = {}) => {
             const doc = Store.revDocCache.find(a => a.namespace === docName.namespace && a.title === docName.title);
             if(!doc) continue;
             if(doc && doc.rev?.content != null) {
+                const params = includeParams
+                    .find(a => a.namespace === docName.namespace && a.title === docName.title)?.params ?? [];
                 doc.parseResult = parser(doc.rev.content);
-                parsedDocAdder(doc.parseResult, includeDocs);
+                parsedDocAdder(doc.parseResult, includeDocs, params);
             }
         }
         await parsedDocFinder(includeDocs);
