@@ -357,13 +357,15 @@ const Bold = createToken({
     name: 'Bold',
     // pattern: /'''([\s\S]+?)'''/,
     // line_breaks: true
-    ...inlineRegex(/'''/)
+    ...inlineRegex(/'''/),
+    start_chars_hint: [`'`]
 });
 const Italic = createToken({
     name: 'Italic',
     // pattern: /''([\s\S]+?)''/,
     // line_breaks: true
-    ...inlineRegex(/''/)
+    ...inlineRegex(/''/),
+    start_chars_hint: [`'`]
 });
 const Strike = createToken({
     name: 'Strike',
@@ -378,33 +380,39 @@ const Strike = createToken({
     //     return match;
     // },
     // line_breaks: true
-    ...inlineRegex(/^~~|^--/, /(?<!\\)(?:\\\\)*~~|(?<!\\)(?:\\\\)*--/, true)
+    ...inlineRegex(/^~~|^--/, /(?<!\\)(?:\\\\)*~~|(?<!\\)(?:\\\\)*--/, true),
+    start_chars_hint: ['-', '~']
 });
 const Underline = createToken({
     name: 'Underline',
     // pattern: /__([\s\S]+?)__/,
     // line_breaks: true
-    ...inlineRegex(/__/)
+    ...inlineRegex(/__/),
+    start_chars_hint: ['_']
 });
 const Sup = createToken({
     name: 'Sup',
     // pattern: /\^\^([\s\S]+?)\^\^/,
     // line_breaks: true
-    ...inlineRegex(/\^\^/)
+    ...inlineRegex(/\^\^/),
+    start_chars_hint: ['^']
 });
 const Sub = createToken({
     name: 'Sub',
     // pattern: /,,([\s\S]+?),,/,
     // line_breaks: true
-    ...inlineRegex(/,,/)
+    ...inlineRegex(/,,/),
+    start_chars_hint: [',']
 });
 const ScaleText = createToken({
     name: 'ScaleText',
-    ...nestedRegex(/{{{[+-][1-5] /, /}}}/, true, /{{{/)
+    ...nestedRegex(/{{{[+-][1-5] /, /}}}/, true, /{{{/),
+    start_chars_hint: ['{']
 });
 const WikiSyntax = createToken({
     name: 'WikiSyntax',
-    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true, /{{{/)
+    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true, /{{{/),
+    start_chars_hint: ['{']
 });
 const HtmlSyntax = createToken({
     name: 'HtmlSyntax',
@@ -413,15 +421,18 @@ const HtmlSyntax = createToken({
 });
 const Folding = createToken({
     name: 'Folding',
-    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true, /{{{/)
+    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true, /{{{/),
+    start_chars_hint: ['{']
 });
 const IfSyntax = createToken({
     name: 'IfSyntax',
-    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, true, /{{{/)
+    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, true, /{{{/),
+    start_chars_hint: ['{']
 });
 const Literal = createToken({
     name: 'Literal',
-    ...nestedRegex(/{{{/, /}}}/, true)
+    ...nestedRegex(/{{{/, /}}}/, true),
+    start_chars_hint: ['{']
 });
 const LegacyMath = createToken({
     name: 'LegacyMath',
@@ -431,7 +442,8 @@ const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
     // line_breaks: true
-    ...nestedRegex(/\[\[/, /]]/, true)
+    ...nestedRegex(/\[\[/, /]]/, true),
+    start_chars_hint: ['[']
 });
 const Footnote = createToken({
     name: 'Footnote',
@@ -458,7 +470,8 @@ const Footnote = createToken({
     //     }
     // },
     // line_breaks: true
-    ...nestedRegex(/\[\*/, /]/, false, /\[/)
+    ...nestedRegex(/\[\*/, /]/, false, /\[/),
+    start_chars_hint: ['[']
 });
 const MacroRegex = /\[\S+?]|\[\S+?\([\s\S]*?\)]/y;
 const ParamSplitRegex = /(?<!\\),/;
@@ -492,7 +505,8 @@ const Macro = createToken({
         }
         return execResult;
     },
-    line_breaks: true
+    line_breaks: true,
+    start_chars_hint: ['[']
 });
 
 const importantTokens = [
