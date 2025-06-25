@@ -14,7 +14,14 @@ const fs = require('fs');
 // `.trim();
 // const doc = `[[sans \\#1]]
 // `.trimEnd();
-const doc = `~~asdf~~
+const doc = `== 1 ==
+sans
+##1
+##2
+##3
+##4
+== 2 ==
+hex
 `.trimEnd();
 // const doc = ` * '''테이블 정렬''': {{{#14F,#4AF (정렬 위치)}}}`;
 // const doc = ` *list\n *second\n\ntext\nwow`;

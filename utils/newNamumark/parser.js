@@ -584,7 +584,8 @@ let Store = {
     heading: {
         sectionNum: 0,
         lowestLevel: 6,
-        list: []
+        list: [],
+        prevLineAdd: 0
     },
     footnote: {
         index: 0,
@@ -684,6 +685,19 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
             return result;
         }
+        const getOriginalLine = (removedLines, newLine) => {
+            let left = 0;
+            let right = removedLines.length;
+            while(left < right) {
+                const mid = Math.floor((left + right) / 2);
+                if (removedLines[mid] - mid <= newLine) {
+                    left = mid + 1;
+                } else {
+                    right = mid;
+                }
+            }
+            return newLine + left;
+        }
         $.RULE('heading', () => {
             const result = $.CONSUME(Heading);
             let str = result.image;
@@ -720,7 +734,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             const obj = {
                 type: 'heading',
-                line: result.startLine + Store.commentLines.filter(a => a < result.startLine).length,
+                line: getOriginalLine(Store.commentLines, result.startLine - 1) + 1,
                 level,
                 closed,
                 sectionNum,
@@ -1401,7 +1415,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
     }
 
     if(!tokens) {
-        if(debug) console.time('tokenize');
+        if(global.debug) console.time('tokenize');
         const preLexed = editorComment ? null : inlineLexer.tokenize(text);
         const lines = text.split('\n');
         const newLines = [];
@@ -1428,13 +1442,13 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         const lexed = lexer.tokenize(text);
         tokens = lexed.tokens;
 
-        if(debug) console.timeEnd('tokenize');
+        if(global.debug) console.timeEnd('tokenize');
     }
     parser.noTopParagraph = noTopParagraph;
     parser.input = tokens;
-    if(debug) console.time('cst');
+    if(global.debug) console.time('cst');
     const result = parser.input.length ? parser.document() : [];
-    if(debug) console.timeEnd('cst');
+    if(global.debug) console.timeEnd('cst');
 
     const paragraphNum = [...Array(6 + 1 - Store.heading.lowestLevel)].map(_ => 0);
     for(let heading of Store.heading.list) {
