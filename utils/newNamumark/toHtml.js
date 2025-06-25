@@ -110,7 +110,7 @@ const topToHtml = async (parsed, options = {}) => {
                         link = slicedLink;
                 }
                 const item = mainUtils.parseDocumentName(link);
-                if(!parsedDocs.some(a => a.namespace === item.namespace && a.document === item.document))
+                if(!parsedDocs.some(a => a.namespace === item.namespace && a.title === item.title))
                     parsedDocs.push(item);
 
                 if(result.data.includes.includes(link))
@@ -119,6 +119,9 @@ const topToHtml = async (parsed, options = {}) => {
             return parsedDocs;
         }
         const parsedDocFinder = async parsedDocs => {
+            parsedDocs = parsedDocs
+                .filter(a => !Store.dbDocuments.some(b => a.namespace === b.namespace && a.title === b.title));
+
             const namespaces = [...new Set(parsedDocs.map(a => a.namespace))];
 
             const query = { $or: [] };
@@ -132,7 +135,7 @@ const topToHtml = async (parsed, options = {}) => {
             }
             if(query.$or.length) {
                 const result = await Document.find(query);
-                Store.dbDocuments = [
+                Store.dbDocuments.push(...[
                     ...result,
                     ...parsedDocs
                         .map(a => !result.some(b => a.namespace === b.namespace && a.title === b.title) ? {
@@ -140,13 +143,13 @@ const topToHtml = async (parsed, options = {}) => {
                             contentExists: false
                         } : null)
                         .filter(a => a)
-                ]
+                ]);
             }
 
             const revDocs = Store.dbDocuments
                 .filter(a => (a.namespace.includes('파일')
-                        || parsedDocs.find(b => a.namespace === b.namespace && a.document === b.document)?.isInclude)
-                    && !Store.revDocCache.some(b => a.namespace === b.namespace && a.document === b.document));
+                        || parsedDocs.find(b => a.namespace === b.namespace && a.title === b.title)?.isInclude)
+                    && !Store.revDocCache.some(b => a.namespace === b.namespace && a.title === b.title));
             const docRevs = await History.find({
                 document: {
                     $in: revDocs.map(a => a.uuid)
@@ -191,8 +194,10 @@ const topToHtml = async (parsed, options = {}) => {
         for(let docName of topDocs.filter(a => a.isInclude)) {
             const doc = Store.revDocCache.find(a => a.namespace === docName.namespace && a.title === docName.title);
             if(!doc) continue;
-            doc.parseResult = parser(doc.rev.content);
-            parsedDocAdder(doc.parseResult, includeDocs);
+            if(doc && doc.rev?.content != null) {
+                doc.parseResult = parser(doc.rev.content);
+                parsedDocAdder(doc.parseResult, includeDocs);
+            }
         }
         await parsedDocFinder(includeDocs);
 
