@@ -3,6 +3,8 @@ const mainUtils = require('../');
 const globalUtils = require('../global');
 const { ACLTypes } = require('../types');
 
+const parser = require('./parser');
+
 const link = require('./syntax/link');
 const macro = require('./syntax/macro');
 const table = require('./syntax/table');
@@ -32,6 +34,7 @@ const topToHtml = async (parsed, options = {}) => {
     const Store = options.Store ??= {
         dbDocuments: [],
         revDocCache: [],
+        parsedIncludes: [],
         links: [],
         files: [],
         categories: [],
@@ -95,81 +98,103 @@ const topToHtml = async (parsed, options = {}) => {
             Store.heading.html = html;
         }
 
-        const parsedDocs = [];
-        for(let link of [
-            ...parsed.data.links,
-            ...parsed.data.categories.map(a => '분류:' + a.document),
-            ...parsed.data.includes
-        ]) {
-            if(link.startsWith(':')) {
-                const slicedLink = link.slice(1);
-                if(config.namespaces.some(a => slicedLink.startsWith(a + ':')))
-                    link = slicedLink;
-            }
-            parsedDocs.push(mainUtils.parseDocumentName(link));
-        }
-        const namespaces = [...new Set(parsedDocs.map(a => a.namespace))];
-
-        const query = { $or: [] };
-        for(let namespace of namespaces) {
-            query.$or.push({
-                namespace,
-                title: {
-                    $in: parsedDocs.filter(a => a.namespace === namespace).map(a => a.title)
+        const parsedDocAdder = (result, parsedDocs = []) => {
+            for(let link of [...new Set([
+                ...result.data.links,
+                ...result.data.categories.map(a => '분류:' + a.document),
+                ...result.data.includes
+            ])]) {
+                if(link.startsWith(':')) {
+                    const slicedLink = link.slice(1);
+                    if(config.namespaces.some(a => slicedLink.startsWith(a + ':')))
+                        link = slicedLink;
                 }
-            });
-        }
-        if(query.$or.length) {
-            const result = await Document.find(query);
-            Store.dbDocuments = [
-                ...result,
-                ...parsedDocs
-                    .map(a => !result.some(b => a.namespace === b.namespace && a.title === b.title) ? {
-                        ...a,
-                        contentExists: false
-                    } : null)
-                    .filter(a => a)
-            ]
-        }
+                const item = mainUtils.parseDocumentName(link);
+                if(!parsedDocs.some(a => a.namespace === item.namespace && a.document === item.document))
+                    parsedDocs.push(item);
 
-        const revDocs = Store.dbDocuments
-            .filter(a => a.namespace.includes('파일')
-                || parsed.data.includes.includes(globalUtils.doc_fulltitle(mainUtils.dbDocumentToDocument(a))));
-        const docRevs = await History.find({
-            document: {
-                $in: revDocs.map(a => a.uuid)
+                if(result.data.includes.includes(link))
+                    item.isInclude = true;
             }
-        }).sort({ rev: -1 });
+            return parsedDocs;
+        }
+        const parsedDocFinder = async parsedDocs => {
+            const namespaces = [...new Set(parsedDocs.map(a => a.namespace))];
 
-        const nsACLResultCache = {};
-        for(let doc of revDocs) {
-            let readable;
-            if(doc.contentExists) {
-                if(doc.lastReadACL === -1) {
-                    if(nsACLResultCache[doc.namespace] == null) {
-                        const acl = await ACL.get({ namespace: doc.namespace }, doc);
+            const query = { $or: [] };
+            for(let namespace of namespaces) {
+                query.$or.push({
+                    namespace,
+                    title: {
+                        $in: parsedDocs.filter(a => a.namespace === namespace).map(a => a.title)
+                    }
+                });
+            }
+            if(query.$or.length) {
+                const result = await Document.find(query);
+                Store.dbDocuments = [
+                    ...result,
+                    ...parsedDocs
+                        .map(a => !result.some(b => a.namespace === b.namespace && a.title === b.title) ? {
+                            ...a,
+                            contentExists: false
+                        } : null)
+                        .filter(a => a)
+                ]
+            }
+
+            const revDocs = Store.dbDocuments
+                .filter(a => (a.namespace.includes('파일')
+                        || parsedDocs.find(b => a.namespace === b.namespace && a.document === b.document)?.isInclude)
+                    && !Store.revDocCache.some(b => a.namespace === b.namespace && a.document === b.document));
+            const docRevs = await History.find({
+                document: {
+                    $in: revDocs.map(a => a.uuid)
+                }
+            }).sort({ rev: -1 });
+
+            const nsACLResultCache = {};
+            for(let doc of revDocs) {
+                let readable;
+                if(doc.contentExists) {
+                    if(doc.lastReadACL === -1) {
+                        if(nsACLResultCache[doc.namespace] == null) {
+                            const acl = await ACL.get({ namespace: doc.namespace }, doc);
+                            const { result } = await acl.check(ACLTypes.Read, aclData);
+                            readable = result;
+                            nsACLResultCache[doc.namespace] = readable;
+                        }
+
+                        readable = nsACLResultCache[doc.namespace];
+                    }
+                    else {
+                        const acl = await ACL.get({ document: doc });
                         const { result } = await acl.check(ACLTypes.Read, aclData);
                         readable = result;
-                        nsACLResultCache[doc.namespace] = readable;
                     }
+                }
+                else readable = false;
 
-                    readable = nsACLResultCache[doc.namespace];
-                }
-                else {
-                    const acl = await ACL.get({ document: doc });
-                    const { result } = await acl.check(ACLTypes.Read, aclData);
-                    readable = result;
-                }
+                Store.revDocCache.push({
+                    namespace: doc.namespace,
+                    title: doc.title,
+                    readable,
+                    rev: docRevs.find(a => a.document === doc.uuid)
+                });
             }
-            else readable = false;
-
-            Store.revDocCache.push({
-                namespace: doc.namespace,
-                title: doc.title,
-                readable,
-                rev: docRevs.find(a => a.document === doc.uuid)
-            });
         }
+
+        const topDocs = parsedDocAdder(parsed);
+        await parsedDocFinder(topDocs);
+
+        const includeDocs = [];
+        for(let docName of topDocs.filter(a => a.isInclude)) {
+            const doc = Store.revDocCache.find(a => a.namespace === docName.namespace && a.title === docName.title);
+            if(!doc) continue;
+            doc.parseResult = parser(doc.rev.content);
+            parsedDocAdder(doc.parseResult, includeDocs);
+        }
+        await parsedDocFinder(includeDocs);
 
         Store.categories = parsed.data.categories;
         for(let obj of Store.categories) {
@@ -318,7 +343,8 @@ const topToHtml = async (parsed, options = {}) => {
                     commentPrefix,
                     toHtml,
                     heading: Store.heading,
-                    revDocCache: Store.revDocCache
+                    revDocCache: Store.revDocCache,
+                    parsedIncludes: Store.parsedIncludes
                 });
                 break;
             case 'footnote': {

@@ -1354,39 +1354,44 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
 
 const parser = new NamumarkParser();
 
-module.exports = (text, { editorComment = false, thread = false, noTopParagraph = false } = {}) => {
+module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false } = {}) => {
     Store = {
         ...structuredClone(originalStore),
         thread
     }
 
-    if(debug) console.time('tokenize');
-    const preLexed = editorComment ? null : inlineLexer.tokenize(text);
-    const lines = text.split('\n');
-    const newLines = [];
-    for(let i in lines) {
-        i = parseInt(i);
-        const line = lines[i];
-        if(editorComment) {
-            if(line.startsWith('##@')) newLines.push(line.slice(3));
-            continue;
-        }
+    if(!tokens) {
+        if(debug) console.time('tokenize');
+        const preLexed = editorComment ? null : inlineLexer.tokenize(text);
+        const lines = text.split('\n');
+        const newLines = [];
+        for(let i in lines) {
+            i = parseInt(i);
+            const line = lines[i];
+            if(editorComment) {
+                if(line.startsWith('##@')) newLines.push(line.slice(3));
+                continue;
+            }
 
-        if(!line.startsWith('##')) {
-            newLines.push(line);
-            continue;
+            if(!line.startsWith('##')) {
+                newLines.push(line);
+                continue;
+            }
+            const tok = preLexed.tokens.find(a => a.startLine <= i + 1 && a.endLine >= i + 1);
+            if(tok?.tokenType.name === 'Literal')
+                newLines.push(line);
+            else
+                Store.commentLines.push(i);
         }
-        const tok = preLexed.tokens.find(a => a.startLine <= i + 1 && a.endLine >= i + 1);
-        if(tok?.tokenType.name === 'Literal')
-            newLines.push(line);
-        else
-            Store.commentLines.push(i);
+        text = newLines.join('\n');
+
+        const lexed = lexer.tokenize(text);
+        tokens = lexed.tokens;
+
+        if(debug) console.timeEnd('tokenize');
     }
-    text = newLines.join('\n');
-    const lexed = lexer.tokenize(text);
-    if(debug) console.timeEnd('tokenize');
     parser.noTopParagraph = noTopParagraph;
-    parser.input = lexed.tokens;
+    parser.input = tokens;
     if(debug) console.time('cst');
     const result = parser.input.length ? parser.document() : [];
     if(debug) console.timeEnd('cst');
@@ -1407,7 +1412,7 @@ module.exports = (text, { editorComment = false, thread = false, noTopParagraph 
     }
 
     return {
-        tokens: lexed.tokens,
+        tokens,
         result,
         data: {
             links: Store.links,
