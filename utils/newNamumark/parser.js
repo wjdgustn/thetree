@@ -414,6 +414,11 @@ const WikiSyntax = createToken({
     ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true, /{{{/),
     start_chars_hint: ['{']
 });
+const SyntaxSyntax = createToken({
+    name: 'SyntaxSyntax',
+    ...nestedRegex(new RegExp(`{{{#!syntax (${utils.AllowedLanguages.join('|')})`), /}}}/, true, /{{{/),
+    start_chars_hint: ['{']
+});
 const HtmlRegex = /{{{#!html([\s\S]*?)}}}/y;
 const HtmlSyntax = createToken({
     name: 'HtmlSyntax',
@@ -534,6 +539,7 @@ const importantTokens = [
 const inlineTokens = [
     ScaleText,
     WikiSyntax,
+    SyntaxSyntax,
     HtmlSyntax,
     CommentNumber,
     Folding,
@@ -959,6 +965,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.sub) },
                         { ALT: () => $.SUBRULE($.scaleText) },
                         { ALT: () => $.SUBRULE($.wikiSyntax) },
+                        { ALT: () => $.SUBRULE($.syntaxSyntax) },
                         { ALT: () => $.SUBRULE($.htmlSyntax) },
                         { ALT: () => $.SUBRULE($.commentNumber) },
                         { ALT: () => $.SUBRULE($.folding) },
@@ -1053,6 +1060,21 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'wikiSyntax',
                 style,
                 darkStyle,
+                content
+            }
+        });
+
+        $.RULE('syntaxSyntax', () => {
+            const tok = $.CONSUME(SyntaxSyntax);
+            const text = tok.image.slice(12, -3).trim();
+            const newLinePos = text.indexOf('\n');
+
+            const lang = text.slice(0, newLinePos);
+            const content = text.slice(newLinePos + 1);
+
+            return {
+                type: 'syntaxSyntax',
+                lang,
                 content
             }
         });

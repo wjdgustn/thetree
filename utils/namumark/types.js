@@ -40,8 +40,7 @@ module.exports = {
         'swift',
         'typescript',
         'xml'
-    ].sort((a,
-b) => b.length - a.length),
+    ].sort((a, b) => b.length - a.length),
     SelfClosingTags: [
         'img',
         'br',

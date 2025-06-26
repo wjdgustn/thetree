@@ -231,5 +231,33 @@ module.exports = {
     parsedToText(content) {
         const obj = parsedToTextObj(content);
         return obj.map(a => a.text).join('');
-    }
+    },
+    AllowedLanguages: [
+        'basic',
+        'cpp',
+        'csharp',
+        'css',
+        'erlang',
+        'go',
+        'html',
+        'java',
+        'javascript',
+        'json',
+        'kotlin',
+        'lisp',
+        'lua',
+        'markdown',
+        'objectivec',
+        'perl',
+        'php',
+        'powershell',
+        'python',
+        'ruby',
+        'rust',
+        'sh',
+        'sql',
+        'swift',
+        'typescript',
+        'xml'
+    ].sort((a, b) => b.length - a.length)
 }

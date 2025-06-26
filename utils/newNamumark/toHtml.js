@@ -1,3 +1,5 @@
+const { highlight } = require('highlight.js');
+
 const utils = require('./utils');
 const mainUtils = require('../');
 const globalUtils = require('../global');
@@ -331,6 +333,9 @@ const topToHtml = async (parsed, options = {}) => {
                 obj.style = utils.cssFilter(utils.parseIncludeParams(obj.style, includeData));
                 obj.darkStyle = utils.cssFilter(utils.parseIncludeParams(obj.darkStyle, includeData));
                 result += `<div${obj.style ? ` style="${obj.style}"` : ''}${obj.darkStyle ? ` data-dark-style="${obj.darkStyle}"` : ''}>${await toHtml(obj.content)}</div>`;
+                break;
+            case 'syntaxSyntax':
+                result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
                 break;
             case 'htmlSyntax':
                 result += obj.safeHtml;
