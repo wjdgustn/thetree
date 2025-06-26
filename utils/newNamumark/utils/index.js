@@ -5,8 +5,37 @@ const {
 const katex = require('katex');
 const jsep = require('jsep');
 const CSSFilter = require('cssfilter');
+const sanitizeHtml = require('sanitize-html');
 
 const allowedNames = require('./allowedNames.json');
+
+const sanitizeHtmlOptions = {
+    allowedTags: sanitizeHtml.defaults.allowedTags.filter(a => ![
+        'code'
+    ].includes(a)),
+    allowedAttributes: {
+        '*': ['style'],
+        a: ['href', 'class', 'rel', 'target']
+    },
+    allowedSchemes: ['http', 'https', 'ftp'],
+    transformTags: {
+        '*': (tagName, attribs) => {
+            if(!attribs.style) return { tagName, attribs };
+
+            const style = utils.cssFilter(attribs.style);
+
+            return {
+                tagName,
+                attribs: { ...attribs, style }
+            }
+        },
+        a: sanitizeHtml.simpleTransform('a', {
+            class: 'wiki-link-external',
+            rel: 'nofollow noopener ugc',
+            target: '_blank'
+        })
+    }
+}
 
 const filter = new CSSFilter.FilterCSS({
     whiteList: {
@@ -259,5 +288,6 @@ module.exports = {
         'swift',
         'typescript',
         'xml'
-    ].sort((a, b) => b.length - a.length)
+    ].sort((a, b) => b.length - a.length),
+    sanitizeHtml: text => sanitizeHtml(text, sanitizeHtmlOptions)
 }

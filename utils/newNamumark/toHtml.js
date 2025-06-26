@@ -330,15 +330,37 @@ const topToHtml = async (parsed, options = {}) => {
             }
 
             case 'wikiSyntax':
-                obj.style = utils.cssFilter(utils.parseIncludeParams(obj.style, includeData));
-                obj.darkStyle = utils.cssFilter(utils.parseIncludeParams(obj.darkStyle, includeData));
-                result += `<div${obj.style ? ` style="${obj.style}"` : ''}${obj.darkStyle ? ` data-dark-style="${obj.darkStyle}"` : ''}>${await toHtml(obj.content)}</div>`;
+                let wikiParamsStr = utils.parseIncludeParams(obj.wikiParamsStr, includeData);
+
+                const styleCloseStr = '"';
+
+                const darkStyleOpenStr = 'dark-style="';
+                const darkStyleIndex = wikiParamsStr.indexOf(darkStyleOpenStr);
+                const darkStyleEndIndex = wikiParamsStr.indexOf(styleCloseStr, darkStyleIndex + darkStyleOpenStr.length);
+                let darkStyle;
+                if(darkStyleIndex >= 0 && darkStyleEndIndex >= 0) {
+                    darkStyle = wikiParamsStr.slice(darkStyleIndex + darkStyleOpenStr.length, darkStyleEndIndex);
+                    wikiParamsStr = wikiParamsStr.slice(0, darkStyleIndex) + wikiParamsStr.slice(darkStyleEndIndex + styleCloseStr.length);
+                }
+
+                const styleOpenStr = 'style="';
+                const styleIndex = wikiParamsStr.indexOf(styleOpenStr);
+                const styleEndIndex = wikiParamsStr.indexOf('"', styleIndex + styleOpenStr.length);
+                let style;
+                if(styleIndex >= 0 && styleEndIndex >= 0) {
+                    style = wikiParamsStr.slice(styleIndex + styleOpenStr.length, styleEndIndex);
+                }
+
+                style = utils.cssFilter(style);
+                darkStyle = utils.cssFilter(darkStyle);
+
+                result += `<div${style ? ` style="${style}"` : ''}${darkStyle ? ` data-dark-style="${darkStyle}"` : ''}>${await toHtml(obj.content)}</div>`;
                 break;
             case 'syntaxSyntax':
                 result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
                 break;
             case 'htmlSyntax':
-                result += obj.safeHtml;
+                result += utils.sanitizeHtml(utils.parseIncludeParams(obj.text, includeData));
                 break;
             case 'folding':
                 result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(obj.content)}</dd></dl>`;

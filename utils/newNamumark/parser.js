@@ -6,39 +6,10 @@ const {
 const {
     validateHTMLColorHex
 } = require('validate-color');
-const sanitizeHtml = require('sanitize-html');
 
 const utils = require('./utils');
 
 const MAXIMUM_DEPTH = 10;
-
-const sanitizeHtmlOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.filter(a => ![
-        'code'
-    ].includes(a)),
-    allowedAttributes: {
-        '*': ['style'],
-        a: ['href', 'class', 'rel', 'target']
-    },
-    allowedSchemes: ['http', 'https', 'ftp'],
-    transformTags: {
-        '*': (tagName, attribs) => {
-            if(!attribs.style) return { tagName, attribs };
-
-            const style = utils.cssFilter(attribs.style);
-
-            return {
-                tagName,
-                attribs: { ...attribs, style }
-            }
-        },
-        a: sanitizeHtml.simpleTransform('a', {
-            class: 'wiki-link-external',
-            rel: 'nofollow noopener ugc',
-            target: '_blank'
-        })
-    }
-}
 
 let noCheckStartAtFirst = false;
 const fullLineRegex = (regex, { laterRegex } = {}) => {
@@ -1033,33 +1004,15 @@ class NamumarkParser extends EmbeddedActionsParser {
             let wikiParamsStr = lines[0].slice(1);
             let content = lines.slice(1).join('\n');
 
-            const styleCloseStr = '"';
-
-            const darkStyleOpenStr = 'dark-style="';
-            const darkStyleIndex = wikiParamsStr.indexOf(darkStyleOpenStr);
-            const darkStyleEndIndex = wikiParamsStr.indexOf(styleCloseStr, darkStyleIndex + darkStyleOpenStr.length);
-            let darkStyle;
-            if(darkStyleIndex >= 0 && darkStyleEndIndex >= 0) {
-                darkStyle = wikiParamsStr.slice(darkStyleIndex + darkStyleOpenStr.length, darkStyleEndIndex);
-                wikiParamsStr = wikiParamsStr.slice(0, darkStyleIndex) + wikiParamsStr.slice(darkStyleEndIndex + styleCloseStr.length);
-            }
-
-            const styleOpenStr = 'style="';
-            const styleIndex = wikiParamsStr.indexOf(styleOpenStr);
-            const styleEndIndex = wikiParamsStr.indexOf('"', styleIndex + styleOpenStr.length);
-            let style;
-            if(styleIndex >= 0 && styleEndIndex >= 0) {
-                style = wikiParamsStr.slice(styleIndex + styleOpenStr.length, styleEndIndex);
-            }
-
             $.ACTION(() => {
                 content = parseBlock(content, true);
             });
 
             return {
                 type: 'wikiSyntax',
-                style,
-                darkStyle,
+                // style,
+                // darkStyle,
+                wikiParamsStr,
                 content
             }
         });
@@ -1082,11 +1035,11 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('htmlSyntax', () => {
             const tok = $.CONSUME(HtmlSyntax);
             const text = tok.image.slice(9, -3).trim();
-            const safeHtml = sanitizeHtml(text.trim(), sanitizeHtmlOptions);
+            // const safeHtml = utils.sanitizeHtml(text);
             return {
                 type: 'htmlSyntax',
                 text,
-                safeHtml
+                // safeHtml
             }
         });
 
