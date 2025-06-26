@@ -2,7 +2,8 @@ const express = require('express');
 const { Address4, Address6 } = require('ip-address');
 const { getChoseong } = require('es-hangul');
 
-const NamumarkParser = require('../utils/namumark');
+const parser = require('../utils/newNamumark/parser');
+const toHtml = require('../utils/newNamumark/toHtml');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
@@ -19,8 +20,6 @@ const {
     EditRequestStatusTypes,
     AuditLogTypes
 } = require('../utils/types');
-
-const headingSyntax = require('../utils/namumark/syntax/heading');
 
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
@@ -178,18 +177,28 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             }
     }
 
-    const parser = new NamumarkParser({
+    let content = rev.content;
+    if(content) {
+        if(isRedirect) content = `#redirect [[${rev.content.split('\n')[0].slice('#redirect '.length)}]]`;
+        if(rev.fileKey) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
+    }
+
+    if(!debug) console.time(`parse ${document.title}`);
+    const parseResult = parser(content);
+    if(!debug) console.timeEnd(`parse ${document.title}`);
+    if(debug && req.query.np) {
+        if(req.query.np === 'tok') return res.json(parseResult.tokens);
+        if(req.query.np === 'cst') return res.json(parseResult.result);
+    }
+    if(!debug) console.time(`toHtml ${document.title}`);
+    let { html: contentHtml, categories, hasError, headings } = await toHtml(parseResult, {
         document,
         dbDocument,
         rev,
         aclData: req.aclData,
         req
     });
-
-    let content = rev.content;
-    if(rev.fileKey && content) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
-
-    let { html: contentHtml, categories, hasError, tocContentHtml, headings } = await parser.parse(content);
+    if(!debug) console.timeEnd(`toHtml ${document.title}`);
     if(hasError) return res.renderSkin(undefined, {
         ...defaultData,
         date: null,
@@ -371,12 +380,11 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             contentName: 'wiki'
         } : {}),
         serverData: {
-            tocContentHtml,
             ...(req.backendMode ? {
                 categories: categories.map(a => ({
                     ...a,
                     text: undefined,
-                    document: utils.parseDocumentName(a.document)
+                    document: utils.parseDocumentName('분류:' + a.document)
                 })),
                 contentHtml,
                 userboxData: {
@@ -792,7 +800,9 @@ const editAndEditRequest = async (req, res) => {
         content = rev.content;
         if(req.query.section) {
             const lines = content.split('\n');
-            const headingLines = headingSyntax.getHeadingLines(rev.content);
+            const parseResult = parser(rev.content);
+            const headings = parseResult.result.filter(a => a.type === 'heading');
+            const headingLines = headings.map(a => a.line - 1);
             if(section > headingLines.length) return invalidSection();
 
             const start = headingLines[section - 1];
@@ -804,12 +814,12 @@ const editAndEditRequest = async (req, res) => {
 
     let contentHtml;
     if(rev?.content) {
-        const parser = new NamumarkParser({
+        const parseResult = parser(rev.content, { editorComment: true });
+        const { html } = await toHtml(parseResult, {
             document,
             aclData: req.aclData,
             req
         });
-        const { html } = await parser.parseEditorComment(rev.content);
         contentHtml = html;
     }
 
@@ -944,14 +954,14 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         title: document.title
     });
 
-    const parser = new NamumarkParser({
+    const parseResult = parser(content, { thread: isThread });
+    let { html: contentHtml, categories } = await toHtml(parseResult, {
         document,
         dbDocument,
         aclData: req.aclData,
         thread: isThread,
         req
     });
-    let { html: contentHtml, categories } = await parser.parse(content);
     let categoryHtml = '';
     if(!isThread && !req.backendMode) try {
         categoryHtml = await utils.renderCategory(categories);
@@ -1080,7 +1090,9 @@ const postEditAndEditRequest = async (req, res) => {
         const newLines = [];
 
         const fullLines = editedRev.content.split('\n');
-        const headingLines = headingSyntax.getHeadingLines(rev.content);
+        const parseResult = parser(rev.content);
+        const headings = parseResult.result.filter(a => a.type === 'heading');
+        const headingLines = headings.map(a => a.line - 1);
         if(section > headingLines.length) return invalidSection();
 
         const start = headingLines[section - 1];
@@ -1222,12 +1234,12 @@ app.get('/edit_request/:url', async (req, res) => {
             .lean();
 
         if(latestRev?.content) {
-            const parser = new NamumarkParser({
+            const parseResult = parser(latestRev.content, { editorComment: true });
+            const { html } = await toHtml(parseResult, {
                 document,
                 aclData: req.aclData,
                 req
             });
-            const { html } = await parser.parseEditorComment(latestRev.content);
             contentHtml = html;
 
             conflict = !utils.mergeText(baseRev.content, editRequest.content, latestRev.content);
@@ -1488,13 +1500,13 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
     })
         .sort({ rev: -1 })
         .lean();
-    const parser = new NamumarkParser({
-        document,
-        aclData: req.aclData,
-        req
-    });
     if(latestRev.content) {
-        const { html } = await parser.parseEditorComment(latestRev.content);
+        const parseResult = parser(latestRev.content, { editorComment: true });
+        const { html } = await toHtml(parseResult, {
+            document,
+            aclData: req.aclData,
+            req
+        });
         if(html) contentHtml = html;
     }
 

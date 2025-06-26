@@ -29,6 +29,8 @@ module.exports = {
         return `/contribution/${uuid}/edit_request`;
     },
     encodeSpecialChars(str, exclude = []) {
+        if(!str) return str;
+
         if(typeof specialChars === 'undefined') specialChars = '?&=+$#%'.split('');
         return str.split('').map(a => specialChars.includes(a) && !exclude.includes(a) ? encodeURIComponent(a) : a).join('');
     },

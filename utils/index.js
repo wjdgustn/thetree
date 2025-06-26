@@ -8,7 +8,7 @@ const querystring = require('querystring');
 const { colorFromUuid } = require('uuid-color');
 
 const globalUtils = require('./global');
-const namumarkUtils = require('./namumark/utils');
+const namumarkUtils = require('./newNamumark/utils');
 const {
     UserTypes,
     HistoryTypes,
@@ -842,7 +842,8 @@ module.exports = {
         {
             req,
             thread,
-            parser,
+            toHtmlParams,
+            lightMode,
             user,
             hideUser
         } = {}
@@ -868,11 +869,12 @@ module.exports = {
 
         if(!comment.hidden || canSeeHidden) {
             if(comment.type === ThreadCommentTypes.Default) {
-                if(parser) {
-                    const { html } = await parser.parse(comment.content);
+                const parseResult = global.NamumarkParser.parser(comment.content, { thread: true });
+                if(lightMode) comment.contentHtml = namumarkUtils.escapeHtml(namumarkUtils.parsedToText(parseResult.result));
+                else {
+                    const { html } = await global.NamumarkParser.toHtml(parseResult, toHtmlParams);
                     comment.contentHtml = html;
                 }
-                else comment.contentHtml = NamumarkParser.remove(comment.content);
             }
             else if(comment.type === ThreadCommentTypes.UpdateStatus) {
                 comment.contentHtml = `스레드 상태를 <b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
@@ -924,14 +926,15 @@ module.exports = {
                     }).lean();
                     item.comment = await this.threadCommentMapper(comment, {
                         req,
-                        parser: lightMode ? null : new NamumarkParser({
+                        lightMode,
+                        toHtmlParams: {
                             document: dbDocument,
                             aclData: req.aclData,
                             dbComment: comment,
                             thread: true,
                             commentId: comment.id,
                             req
-                        })
+                        }
                     });
                     item.comment = await this.findUsers(req, item.comment);
                     item.url = `/thread/${thread.url}`;
@@ -952,14 +955,15 @@ module.exports = {
                     item.document = this.dbDocumentToDocument(dbDocument);
                     item.comment = await this.threadCommentMapper(comment, {
                         req,
-                        parser: lightMode ? null : new NamumarkParser({
+                        lightMode,
+                        toHtmlParams: {
                             document: dbDocument,
                             aclData: req.aclData,
                             dbComment: comment,
                             thread: true,
                             commentId: comment.id,
                             req
-                        })
+                        }
                     });
                     item.comment = await this.findUsers(req, item.comment);
                     item.url = `/thread/${thread.url}#${comment.id}`;
@@ -970,5 +974,8 @@ module.exports = {
             resolve();
         })));
         return items;
+    },
+    insertText: (text, index, insertText) => {
+        return text.slice(0, index) + insertText + text.slice(index);
     }
 }
