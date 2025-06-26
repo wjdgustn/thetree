@@ -137,6 +137,22 @@ const topToHtml = async (parsed, options = {}) => {
                     if(config.namespaces.some(a => slicedLink.startsWith(a + ':')))
                         link = slicedLink;
                 }
+                if(document) {
+                    const docTitle = globalUtils.doc_fulltitle(document);
+                    if(link.startsWith('../')) {
+                        link = link.slice(3);
+
+                        const splittedDocument = docTitle.split('/');
+                        splittedDocument.pop();
+                        const document = splittedDocument.join('/');
+                        link = `${document}${(document && link) ? '/' : ''}${link}`;
+
+                        link ||= docTitle;
+                    }
+                    else if(link.startsWith('/'))
+                        link = docTitle + link;
+                }
+
                 const item = mainUtils.parseDocumentName(link);
                 if(!parsedDocs.some(a => a.namespace === item.namespace && a.title === item.title))
                     parsedDocs.push(item);
