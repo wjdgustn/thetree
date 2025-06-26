@@ -425,7 +425,7 @@ const HtmlSyntax = createToken({
     start_chars_hint: ['{'],
     line_breaks: true
 });
-const CommentNumberRegex = /#\d*/y;
+const CommentNumberRegex = /#\d+/y;
 const CommentNumber = createToken({
     name: 'CommentNumber',
     pattern: (text, startOffset) => {
