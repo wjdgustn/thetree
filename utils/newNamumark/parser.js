@@ -414,9 +414,15 @@ const WikiSyntax = createToken({
     ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true, /{{{/),
     start_chars_hint: ['{']
 });
+const HtmlRegex = /{{{#!html([\s\S]*?)}}}/y;
 const HtmlSyntax = createToken({
     name: 'HtmlSyntax',
-    pattern: /{{{#!html([\s\S]*?)}}}/,
+    pattern: (text, startOffset) => {
+        if(Store.thread) return null;
+        HtmlRegex.lastIndex = startOffset;
+        return HtmlRegex.exec(text);
+    },
+    start_chars_hint: ['{'],
     line_breaks: true
 });
 const Folding = createToken({

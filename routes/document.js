@@ -954,7 +954,7 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         title: document.title
     });
 
-    const parseResult = parser(content);
+    const parseResult = parser(content, { thread: isThread });
     let { html: contentHtml, categories } = await toHtml(parseResult, {
         document,
         dbDocument,
