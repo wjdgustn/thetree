@@ -323,7 +323,7 @@ const topToHtml = async (parsed, options = {}) => {
                 result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(obj.content)}</dd></dl>`;
                 break;
             case 'ifSyntax':
-                const { bool } = utils.parseExpression(obj.expression, includeData);
+                const { bool } = utils.parseExpression(obj.expression, includeData ?? {});
                 if(bool) result += await toHtml(obj.content);
                 break;
 
