@@ -308,8 +308,8 @@ const topToHtml = async (parsed, options = {}) => {
             }
 
             case 'wikiSyntax':
-                obj.style = utils.parseIncludeParams(obj.style, includeData);
-                obj.darkStyle = utils.parseIncludeParams(obj.darkStyle, includeData);
+                obj.style = utils.cssFilter(utils.parseIncludeParams(obj.style, includeData));
+                obj.darkStyle = utils.cssFilter(utils.parseIncludeParams(obj.darkStyle, includeData));
                 result += `<div${obj.style ? ` style="${obj.style}"` : ''}${obj.darkStyle ? ` data-dark-style="${obj.darkStyle}"` : ''}>${await toHtml(obj.content)}</div>`;
                 break;
             case 'htmlSyntax':

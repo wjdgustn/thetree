@@ -1013,7 +1013,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const darkStyleEndIndex = wikiParamsStr.indexOf(styleCloseStr, darkStyleIndex + darkStyleOpenStr.length);
             let darkStyle;
             if(darkStyleIndex >= 0 && darkStyleEndIndex >= 0) {
-                darkStyle = utils.cssFilter(wikiParamsStr.slice(darkStyleIndex + darkStyleOpenStr.length, darkStyleEndIndex));
+                darkStyle = wikiParamsStr.slice(darkStyleIndex + darkStyleOpenStr.length, darkStyleEndIndex);
                 wikiParamsStr = wikiParamsStr.slice(0, darkStyleIndex) + wikiParamsStr.slice(darkStyleEndIndex + styleCloseStr.length);
             }
 
@@ -1022,7 +1022,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const styleEndIndex = wikiParamsStr.indexOf('"', styleIndex + styleOpenStr.length);
             let style;
             if(styleIndex >= 0 && styleEndIndex >= 0) {
-                style = utils.cssFilter(wikiParamsStr.slice(styleIndex + styleOpenStr.length, styleEndIndex));
+                style = wikiParamsStr.slice(styleIndex + styleOpenStr.length, styleEndIndex);
             }
 
             $.ACTION(() => {
