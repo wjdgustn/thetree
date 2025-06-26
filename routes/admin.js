@@ -320,27 +320,29 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         //     console.log(`generated backlink info for ${document.uuid}, ${++completed}/${total}`);
         // }
 
-        await Promise.all(documents.map(document => new Promise(async resolve => {
-            const rev = await History.findOne({
-                document: document.uuid
-            }).sort({ rev: -1 }).lean();
-            if(!rev?.content) {
-                console.log(`no rev for ${document.uuid}`);
-                completed++;
-                return resolve();
-            }
+        for(let smallSet of utils.groupArray(documents, 50)) {
+            await Promise.all(smallSet.map(document => new Promise(async resolve => {
+                const rev = await History.findOne({
+                    document: document.uuid
+                }).sort({ rev: -1 }).lean();
+                if(!rev?.content) {
+                    console.log(`no rev for ${document.uuid}`);
+                    completed++;
+                    return resolve();
+                }
 
-            console.log(`processing ${document.title}`);
+                console.log(`processing ${document.title}`);
 
-            try {
-                await docUtils.postHistorySave(rev, !tool.endsWith('_searchonly'), !tool.endsWith('_backlinkonly'), document);
+                try {
+                    await docUtils.postHistorySave(rev, !tool.endsWith('_searchonly'), !tool.endsWith('_backlinkonly'), document);
 
-                console.log(`generated backlink info for ${document.uuid}, ${++completed}/${total}`);
-            } catch(e) {
-                console.error(`failed to generate backlink info for ${document.uuid}`, e);
-            }
-            resolve();
-        })));
+                    console.log(`generated backlink info for ${document.uuid}, ${++completed}/${total}`);
+                } catch(e) {
+                    console.error(`failed to generate backlink info for ${document.uuid}`, e);
+                }
+                resolve();
+            })));
+        }
     }
 
     else if(tool === 'resetsearchindex') {

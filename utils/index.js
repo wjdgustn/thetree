@@ -977,5 +977,12 @@ module.exports = {
     },
     insertText: (text, index, insertText) => {
         return text.slice(0, index) + insertText + text.slice(index);
+    },
+    groupArray: (array, size) => {
+        const result = [];
+        for(let i = 0; i < array.length; i += size) {
+            result.push(array.slice(i, i + size));
+        }
+        return result;
     }
 }
