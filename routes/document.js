@@ -178,10 +178,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     let content = rev.content;
-    if(content) {
-        if(isRedirect) content = `#redirect [[${rev.content.split('\n')[0].slice('#redirect '.length)}]]`;
-        if(rev.fileKey) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
-    }
+    if(content && isRedirect) content = `#redirect [[${rev.content.split('\n')[0].slice('#redirect '.length)}]]`;
+    if(rev.fileKey) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
 
     if(!debug) console.time(`parse ${document.title}`);
     const parseResult = parser(content);
