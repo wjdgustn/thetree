@@ -27,7 +27,7 @@ const ACL = require('../class/acl');
 
 const app = express.Router();
 
-const COMMENT_LOAD_AMOUNT = 10;
+const COMMENT_LOAD_AMOUNT = 30;
 
 const threadCommentEvent = async ({
     req,
