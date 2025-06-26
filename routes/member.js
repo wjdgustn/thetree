@@ -213,7 +213,7 @@ app.get('/member/signup/:token', async (req, res) => {
     });
     if(!token || Date.now() - token.createdAt > 1000 * 60 * 60 * 24) return res.error('인증 요청이 만료되었거나 올바르지 않습니다.');
 
-    if(token.ip && token.ip !== req.ip) return res.error('보안 상의 이유로 요청한 아이피 주소와 현재 아이피 주소가 같아야 합니다.');
+    // if(token.ip && token.ip !== req.ip) return res.error('보안 상의 이유로 요청한 아이피 주소와 현재 아이피 주소가 같아야 합니다.');
 
     res.renderSkin('계정 만들기', {
         contentName: 'member/signup_final',
