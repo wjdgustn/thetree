@@ -518,7 +518,7 @@ const Macro = createToken({
                     return null;
                 name = content.slice(0, openParamIndex);
                 params = content.slice(openParamIndex + 1, content.length - 1);
-                splittedParams = params.split(ParamSplitRegex).map(a => a.replaceAll('\\,', ','));
+                splittedParams = params.split(ParamSplitRegex).map(a => a.replaceAll('\\,', ',').trim());
             }
             execResult.payload = {
                 name,
