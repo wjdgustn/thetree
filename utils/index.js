@@ -827,15 +827,16 @@ module.exports = {
         });
     },
     async getReadableNamespaces(aclData) {
-        const readableNamespaces = [];
-        for(let namespace of config.namespaces) {
+        const unreadableNamespaces = [];
+        await Promise.all(config.namespaces.map(async namespace => new Promise(async resolve => {
             const acl = await global.ACLClass.get({
                 namespace
             });
             const { result: readable } = await acl.check(ACLTypes.Read, aclData);
-            if(readable) readableNamespaces.push(namespace);
-        }
-        return readableNamespaces;
+            if(!readable) unreadableNamespaces.push(namespace);
+            resolve();
+        })));
+        return config.namespaces.filter(a => !unreadableNamespaces.includes(a));
     },
     async threadCommentMapper(
         comment,
