@@ -69,8 +69,8 @@ Object.defineProperty(global, 'config', {
                 '분류',
                 '파일',
                 '사용자',
-                publicConfig.site_name,
-                '휴지통',
+                // publicConfig.site_name,
+                // '휴지통',
                 ...(global.serverConfig.namespaces ?? [])
             ])]
         }
