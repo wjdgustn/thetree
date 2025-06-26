@@ -1350,7 +1350,14 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('underline', () => inlineHandler('underline', Underline, 2, -2));
         $.RULE('sup', () => inlineHandler('sup', Sup, 2, -2));
         $.RULE('sub', () => inlineHandler('sub', Sub, 2, -2));
-        $.RULE('legacyMath', () => inlineHandler('legacyMath', LegacyMath, 6, -7));
+        $.RULE('legacyMath', () => {
+            const tok = $.CONSUME(LegacyMath);
+            const content = tok.image.slice(6, -7);
+            return {
+                type: 'legacyMath',
+                content
+            }
+        });
 
         this.performSelfAnalysis();
     }

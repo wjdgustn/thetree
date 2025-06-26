@@ -47,7 +47,7 @@ module.exports = async (obj, options) => {
 
     if(!macros[name]) return obj.image;
 
-    // if(namumark.thread && !threadMacros.includes(name)) return '';
+    if(options.thread && !threadMacros.includes(name)) return '';
 
     return await macros[name](params, options, obj);
 }

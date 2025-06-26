@@ -25,6 +25,7 @@ const topToHtml = async (parsed, options = {}) => {
         originalDocument,
         rev,
         thread = false,
+        dbComment,
         aclData = {},
         commentId,
         req,
@@ -42,7 +43,8 @@ const topToHtml = async (parsed, options = {}) => {
             list: [],
             html: ''
         },
-        error: null
+        error: null,
+        voteIndex: -1
     }
 
     const toHtml = (doc, newOptions) => topToHtml(doc, {
@@ -172,44 +174,46 @@ const topToHtml = async (parsed, options = {}) => {
                 ]);
             }
 
-            const revDocs = Store.dbDocuments
-                .filter(a => (a.namespace.includes('파일')
-                        || parsedDocs.find(b => a.namespace === b.namespace && a.title === b.title)?.isInclude)
-                    && !Store.revDocCache.some(b => a.namespace === b.namespace && a.title === b.title));
-            const docRevs = await History.find({
-                document: {
-                    $in: revDocs.map(a => a.uuid)
-                }
-            }).sort({ rev: -1 });
+            if(!thread) {
+                const revDocs = Store.dbDocuments
+                    .filter(a => (a.namespace.includes('파일')
+                            || parsedDocs.find(b => a.namespace === b.namespace && a.title === b.title)?.isInclude)
+                        && !Store.revDocCache.some(b => a.namespace === b.namespace && a.title === b.title));
+                const docRevs = await History.find({
+                    document: {
+                        $in: revDocs.map(a => a.uuid)
+                    }
+                }).sort({ rev: -1 });
 
-            const nsACLResultCache = {};
-            for(let doc of revDocs) {
-                let readable;
-                if(doc.contentExists) {
-                    if(doc.lastReadACL === -1) {
-                        if(nsACLResultCache[doc.namespace] == null) {
-                            const acl = await ACL.get({ namespace: doc.namespace }, doc);
+                const nsACLResultCache = {};
+                for(let doc of revDocs) {
+                    let readable;
+                    if(doc.contentExists) {
+                        if(doc.lastReadACL === -1) {
+                            if(nsACLResultCache[doc.namespace] == null) {
+                                const acl = await ACL.get({ namespace: doc.namespace }, doc);
+                                const { result } = await acl.check(ACLTypes.Read, aclData);
+                                readable = result;
+                                nsACLResultCache[doc.namespace] = readable;
+                            }
+
+                            readable = nsACLResultCache[doc.namespace];
+                        }
+                        else {
+                            const acl = await ACL.get({ document: doc });
                             const { result } = await acl.check(ACLTypes.Read, aclData);
                             readable = result;
-                            nsACLResultCache[doc.namespace] = readable;
                         }
+                    }
+                    else readable = false;
 
-                        readable = nsACLResultCache[doc.namespace];
-                    }
-                    else {
-                        const acl = await ACL.get({ document: doc });
-                        const { result } = await acl.check(ACLTypes.Read, aclData);
-                        readable = result;
-                    }
+                    Store.revDocCache.push({
+                        namespace: doc.namespace,
+                        title: doc.title,
+                        readable,
+                        rev: docRevs.find(a => a.document === doc.uuid)
+                    });
                 }
-                else readable = false;
-
-                Store.revDocCache.push({
-                    namespace: doc.namespace,
-                    title: doc.title,
-                    readable,
-                    rev: docRevs.find(a => a.document === doc.uuid)
-                });
             }
         }
 
@@ -344,6 +348,9 @@ const topToHtml = async (parsed, options = {}) => {
             case 'sub':
                 result += `<sub>${await toHtml(obj.content)}</sub>`;
                 break;
+            case 'legacyMath':
+                result += utils.katex(obj.content);
+                break;
             case 'scaleText':
                 result += `<span class="wiki-size-${obj.isSizeUp ? 'up' : 'down'}-${obj.size}">${await toHtml(obj.content)}</span>`;
                 break;
@@ -373,9 +380,14 @@ const topToHtml = async (parsed, options = {}) => {
             case 'macro':
                 obj.params = utils.parseIncludeParams(obj.params, includeData);
                 result += await macro(obj, {
+                    thread,
+                    dbComment,
                     includeData,
                     commentPrefix,
+                    commentId,
                     toHtml,
+                    aclData,
+                    Store,
                     heading: Store.heading,
                     revDocCache: Store.revDocCache,
                     parsedIncludes: Store.parsedIncludes

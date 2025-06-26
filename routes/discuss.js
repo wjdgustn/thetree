@@ -1,8 +1,6 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 
-const NamumarkParser = require('../utils/namumark');
-
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
 const middleware = require('../utils/middleware');
@@ -38,14 +36,6 @@ const threadCommentEvent = async ({
     dbComment,
     hideUser
 } = {}) => {
-    const parser = new NamumarkParser({
-        document,
-        dbComment,
-        thread: true,
-        commentId: dbComment.id,
-        req
-    });
-
     const commentUser = await User.findOne({
         uuid: dbComment.user
     });
@@ -55,7 +45,13 @@ const threadCommentEvent = async ({
 
     const comment = await utils.threadCommentMapper(dbComment.toJSON(), {
         thread,
-        parser,
+        toHtmlParams: {
+            document,
+            dbComment,
+            thread: true,
+            commentId: dbComment.id,
+            req
+        },
         user: {
             ...commentUser.publicUser,
             userCSS: await utils.getUserCSS(commentUser)
@@ -203,7 +199,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
         comments = await Promise.all(comments.map(c => utils.threadCommentMapper(c, {
             req,
             thread,
-            parser: new NamumarkParser({
+            toHtmlParams: {
                 document,
                 dbDocument,
                 aclData: req.aclData,
@@ -211,7 +207,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
                 thread: true,
                 commentId: c.id,
                 req
-            })
+            }
         })));
 
         thread.recentComments = comments;
@@ -393,7 +389,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
     comments = await Promise.all(comments.map(c => utils.threadCommentMapper(c, {
         req,
         thread,
-        parser: new NamumarkParser({
+        toHtmlParams: {
             document,
             dbDocument,
             aclData: req.aclData,
@@ -401,7 +397,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
             thread: true,
             commentId: c.id,
             req
-        })
+        }
     })));
 
     res.json(comments);
