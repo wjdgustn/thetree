@@ -15,7 +15,7 @@ module.exports = (params, options, obj) => {
         else if(param.startsWith('ruby=')) ruby = param.substring('ruby='.length);
     }
 
-    if(!text || !ruby) return;
+    if(!text || !ruby) return '';
 
     return `<ruby>${text}<rp>(</rp><rt><span${color ? ` style="color:${color}"` : ''}>${ruby}</span></rt><rp>)</rp></ruby>`;
 }
