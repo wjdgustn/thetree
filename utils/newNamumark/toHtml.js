@@ -351,6 +351,9 @@ const topToHtml = async (parsed, options = {}) => {
             case 'legacyMath':
                 result += utils.katex(obj.content);
                 break;
+            case 'commentNumber':
+                result += `<a href="#${obj.num}" class="wiki-self-link">#${obj.num}</a>`;
+                break;
             case 'scaleText':
                 result += `<span class="wiki-size-${obj.isSizeUp ? 'up' : 'down'}-${obj.size}">${await toHtml(obj.content)}</span>`;
                 break;

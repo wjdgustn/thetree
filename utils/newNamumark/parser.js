@@ -239,7 +239,7 @@ const Indent = createToken({
 });
 const Text = createToken({
     name: 'Text',
-    pattern: /[^\\'\r\n_\[\]~\-^,|{]+|['\r\n_\[\]~\-^,|{]/
+    pattern: /[^\\'\r\n_\[\]~\-^,|{#]+|['\r\n_\[\]~\-^,|{#]/
 });
 
 const Heading = createToken({
@@ -425,6 +425,18 @@ const HtmlSyntax = createToken({
     start_chars_hint: ['{'],
     line_breaks: true
 });
+const CommentNumberRegex = /#\d*/y;
+const CommentNumber = createToken({
+    name: 'CommentNumber',
+    pattern: (text, startOffset) => {
+        if(!Store.thread) return null;
+
+        CommentNumberRegex.lastIndex = startOffset;
+        return CommentNumberRegex.exec(text);
+    },
+    start_chars_hint: ['#'],
+    line_breaks: false
+});
 const Folding = createToken({
     name: 'Folding',
     ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true, /{{{/),
@@ -523,6 +535,7 @@ const inlineTokens = [
     ScaleText,
     WikiSyntax,
     HtmlSyntax,
+    CommentNumber,
     Folding,
     IfSyntax,
     Literal,
@@ -947,6 +960,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.scaleText) },
                         { ALT: () => $.SUBRULE($.wikiSyntax) },
                         { ALT: () => $.SUBRULE($.htmlSyntax) },
+                        { ALT: () => $.SUBRULE($.commentNumber) },
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
                         { ALT: () => $.SUBRULE($.literal) },
@@ -1051,6 +1065,15 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'htmlSyntax',
                 text,
                 safeHtml
+            }
+        });
+
+        $.RULE('commentNumber', () => {
+            const tok = $.CONSUME(CommentNumber);
+            const num = parseInt(tok.image.slice(1));
+            return {
+                type: 'commentNumber',
+                num
             }
         });
 
