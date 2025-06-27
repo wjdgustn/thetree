@@ -225,7 +225,7 @@ const Hr = createToken({
 const BlockQuote = createToken({
     name: 'BlockQuote',
     ...fullLineRegex(/^>(({{{[\s\S]*}}}|.)*?)$/m)
-});
+});ㄷ
 
 // const TableRowOpen = createToken({
 //     name: 'TableRowOpen',
@@ -497,7 +497,7 @@ const Macro = createToken({
                     return null;
                 name = content.slice(0, openParamIndex);
                 params = content.slice(openParamIndex + 1, content.length - 1);
-                splittedParams = params.split(ParamSplitRegex).map(a => a.replaceAll('\\,', ',').trim());
+                splittedParams = params.split(ParamSplitRegex).map(a => a.replaceAll(/\\(.)/g, '$1').trim());
             }
             name = name.toLowerCase();
             execResult.payload = {
