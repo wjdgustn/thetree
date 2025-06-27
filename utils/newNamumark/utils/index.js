@@ -22,7 +22,7 @@ const sanitizeHtmlOptions = {
         '*': (tagName, attribs) => {
             if(!attribs.style) return { tagName, attribs };
 
-            const style = utils.cssFilter(attribs.style);
+            const style = module.exports.cssFilter(attribs.style);
 
             return {
                 tagName,
