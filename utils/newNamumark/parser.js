@@ -1425,7 +1425,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         thread
     }
 
-    if(!tokens) {
+    if(!tokens && text) {
         if(global.debug) console.time('tokenize');
         const preLexed = editorComment ? null : inlineLexer.tokenize(text);
         const lines = text.split('\n');
@@ -1456,7 +1456,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         if(global.debug) console.timeEnd('tokenize');
     }
     parser.noTopParagraph = noTopParagraph;
-    parser.input = tokens;
+    parser.input = tokens ?? [];
     if(global.debug) console.time('cst');
     const result = parser.input.length ? parser.document() : [];
     if(global.debug) console.timeEnd('cst');
