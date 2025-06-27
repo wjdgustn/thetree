@@ -242,6 +242,7 @@ const TableSplit = createToken({
     pattern: /\|\|/
 });
 // {{{}}} 안 * 뒤에 ? 있었음, 넓게 잡으려고 빼 둠
+const CaptionRegex = /^\|[\s\S]*?\|/;
 const TableRow = createToken({
     name: 'TableRow',
     // ...fullLineRegex(/^\|\|({{{[\s\S]*}}}|[\s\S])*?\|\|$/m)
@@ -253,7 +254,8 @@ const TableRow = createToken({
         }
 
         const str = text.slice(startOffset);
-        if(!str.startsWith('||')) return null;
+        const captionMatch = str.match(CaptionRegex);
+        if(!captionMatch) return null;
 
         LineRegex.lastIndex = 0;
         let openCount = 0;
@@ -289,9 +291,14 @@ const TableRow = createToken({
         }
         if(!breaked) return null;
 
-        return [result.join('\n')];
+        const arr = [result.join('\n')];
+        arr.payload = {
+            caption: captionMatch[0].slice(1, -1)
+        }
+        return arr;
     },
-    line_breaks: true
+    line_breaks: true,
+    start_chars_hint: ['|']
 });
 
 const LiteralRegex = /(?<!\\)(?:\\\\)*{{{[\s\S]*}}}/g;
@@ -766,28 +773,42 @@ class NamumarkParser extends EmbeddedActionsParser {
             //     });
             //     rows.push(items);
             // });
-            $.AT_LEAST_ONE(() => {
-                const tok = $.CONSUME(TableRow);
-                const sliced = tok.image.slice(2);
-                const { tokens } = tableRowLexer.tokenize(sliced);
-                const items = [];
-                $.ACTION(() => {
-                    let lastIdx = 0;
-                    for(let t of tokens) {
-                        if(t.tokenType !== TableSplit) continue;
-                        const str = sliced.slice(lastIdx, t.startOffset);
-                        items.push(parseBlock(str, false, true));
-                        lastIdx = t.endOffset + 1;
-                    }
-                });
-                rows.push(items);
-                $.OPTION({
-                    GATE: () => $.LA(2).tokenType === TableRow,
-                    DEF: () => $.CONSUME(Newline)
-                });
+            let caption = '';
+            $.AT_LEAST_ONE({
+                GATE: () => !rows.length || !$.LA(1).payload?.caption,
+                DEF: () => {
+                    const tok = $.CONSUME(TableRow);
+                    const captionStr = tok.payload?.caption;
+                    const sliced = tok.image.slice(captionStr?.length + 2);
+                    if(captionStr) caption = captionStr;
+
+                    const { tokens } = tableRowLexer.tokenize(sliced);
+                    const items = [];
+                    $.ACTION(() => {
+                        let lastIdx = 0;
+                        for(let t of tokens) {
+                            if(t.tokenType !== TableSplit) continue;
+                            const str = sliced.slice(lastIdx, t.startOffset);
+                            items.push(parseBlock(str, false, true));
+                            lastIdx = t.endOffset + 1;
+                        }
+                    });
+                    rows.push(items);
+                    $.OPTION({
+                        GATE: () => {
+                            const tok = $.LA(2);
+                            return tok.tokenType === TableRow;
+                        },
+                        DEF: () => $.CONSUME(Newline)
+                    });
+                }
+            });
+            $.ACTION(() => {
+                caption = parseInline(caption);
             });
             return {
                 type: 'table',
+                caption,
                 rows
             }
         });

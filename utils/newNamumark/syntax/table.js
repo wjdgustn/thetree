@@ -318,5 +318,5 @@ module.exports = async (obj, toHtml) => {
     tableStyle = tableStyle.slice(1);
     tableDarkStyle = tableDarkStyle.slice(1);
 
-    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}><tbody>${htmlRows.join('')}</tbody></table></div>`;
+    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}<tbody>${htmlRows.join('')}</tbody></table></div>`;
 }
