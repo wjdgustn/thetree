@@ -225,7 +225,7 @@ const Hr = createToken({
 const BlockQuote = createToken({
     name: 'BlockQuote',
     ...fullLineRegex(/^>(({{{[\s\S]*}}}|.)*?)$/m)
-});ㄷ
+});
 
 // const TableRowOpen = createToken({
 //     name: 'TableRowOpen',
