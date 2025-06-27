@@ -20,7 +20,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 
     let rev;
     const checkCache = Store.revDocCache.find(a => a.namespace === namespace && a.title === title);
-    if(checkCache && checkCache.rev.document !== docRev.document) {
+    if(checkCache && checkCache.rev?.document !== docRev.document) {
         if(!checkCache.readable) return fallback;
         if(!checkCache.rev.fileKey) return fallback;
         rev = checkCache.rev;
