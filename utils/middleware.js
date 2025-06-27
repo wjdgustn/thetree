@@ -29,6 +29,10 @@ module.exports = {
 
         next();
     },
+    internal: (req, res, next) => {
+        if(!req.isInternal) return res.status(400).end();
+        next();
+    },
     parseDocumentName: (req, res, next) => {
         const routeUrl = req.route.path.split('/').slice(0, 2).join('/') + '/';
         if(!req.url.startsWith(routeUrl)) return next('route');

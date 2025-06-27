@@ -133,8 +133,10 @@ app.get('/RecentDiscuss', async (req, res) => {
 });
 
 let sidebarCache = [];
+let discussSidebarCache = [];
 let lastSidebarUpdate = 0;
-app.get('/sidebar.json', async (req, res) => {
+
+const updateSidebar = async () => {
     if(Date.now() - lastSidebarUpdate > 1000 * 10) {
         const documents = await Document.find({
             namespace: '문서'
@@ -156,11 +158,46 @@ app.get('/sidebar.json', async (req, res) => {
             });
         }
 
+        const threads = await Thread.find({
+            status: ThreadStatusTypes.Normal,
+            deleted: false
+        })
+            .sort({
+                lastUpdatedAt: -1
+            })
+            .limit(15);
+
+        let newDiscussSidebar = [];
+        for(let thread of threads) {
+            const doc = await Document.findOne({
+                uuid: thread.document
+            });
+
+            newDiscussSidebar.push({
+                url: thread.url,
+                topic: thread.topic,
+                document: globalUtils.doc_fulltitle(utils.dbDocumentToDocument(doc)),
+                date: Math.floor(thread.lastUpdatedAt / 1000)
+            });
+        }
+
         sidebarCache = newSidebar;
+        discussSidebarCache = newDiscussSidebar;
         lastSidebarUpdate = Date.now();
     }
+}
 
+app.get('/sidebar.json', async (req, res) => {
+    await updateSidebar();
     return res.json(sidebarCache);
+});
+
+app.get('/sidebar', middleware.internal, async (req, res) => {
+    await updateSidebar();
+    return res.json({
+        document: sidebarCache,
+        discuss: discussSidebarCache
+    });
 });
 
 global.skinCommitId = {};
