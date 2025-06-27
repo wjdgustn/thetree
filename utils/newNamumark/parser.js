@@ -47,6 +47,7 @@ const fullLineRegex = (regex, { laterRegex } = {}) => {
 const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex = null) => {
     openCheckRegex ??= openRegex;
     openRegex = new RegExp('^' + openRegex.source, 'i');
+    closeRegex = new RegExp('(?<!\\\\)(?:\\\\\\\\)*' + closeRegex.source, 'i');
 
     return ({
         pattern: (text, startOffset) => {
@@ -294,7 +295,7 @@ const TableRow = createToken({
 });
 
 const LiteralRegex = /(?<!\\)(?:\\\\)*{{{[\s\S]*}}}/g;
-const inlineRegex = (openRegex, closeRegex, keepOriginal = false) => {
+const inlineRegex = (openRegex, closeRegex = null, keepOriginal = false) => {
     let openCloseSame = false;
     if(!closeRegex) {
         openCloseSame = true;
@@ -1154,7 +1155,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(Link);
             const content = tok.image.slice(2, -2).trim();
             const splitted = content.split(LinkSplitRegex).map(a => a.replaceAll('\\|', '|'));
-            let link = splitted[0];
+            let link = splitted[0].replaceAll('\\]', ']');
             const origParsedText = splitted.slice(1).join('|');
             let parsedText = origParsedText;
             let hash;
