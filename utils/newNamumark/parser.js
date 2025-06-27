@@ -1418,7 +1418,7 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
 const parser = new NamumarkParser();
 
 module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false } = {}) => {
-    text = text.replaceAll('\r', '');
+    text = text?.replaceAll('\r', '');
 
     Store = {
         ...structuredClone(originalStore),
