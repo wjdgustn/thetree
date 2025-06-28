@@ -14,8 +14,7 @@ const fs = require('fs');
 // `.trim();
 // const doc = `[[sans \\#1]]
 // `.trimEnd();
-const doc = `|dd| 테이블 || 내용 ||
-|dd| 테이블 || 내용 ||
+const doc = `[[#test]]
 `.trimEnd();
 // const doc = ` * '''테이블 정렬''': {{{#14F,#4AF (정렬 위치)}}}`;
 // const doc = ` *list\n *second\n\ntext\nwow`;

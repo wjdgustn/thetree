@@ -111,6 +111,8 @@ module.exports = async (obj, options = {}) => {
         if(link.startsWith('/')) link = docTitle + link;
 
         if(!link && hash) {
+            link = '#' + hash;
+            text ||= link;
             title = docTitle;
             notExist = false;
             hasHash = true;
@@ -166,7 +168,7 @@ module.exports = async (obj, options = {}) => {
     const safeLink = utils.escapeHtml(globalUtils.removeHtmlTags(link));
     const parsedTitle = obj.textExists ? await toHtml(obj.parsedText) : utils.escapeHtml(text);
 
-    const html = `<a href="${safeLink}" title="${globalUtils.removeHtmlTags(parsedTitle)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
+    const html = `<a href="${safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(obj.link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
 
     const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
     if(titleDocName
