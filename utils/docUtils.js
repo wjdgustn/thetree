@@ -136,7 +136,7 @@ module.exports = {
         return {
             backlinks,
             categories: parseResult.data.categories.map(a => ({
-                document: a.document.slice('분류:'.length),
+                document: a.document,
                 text: a.text
             }))
         }
