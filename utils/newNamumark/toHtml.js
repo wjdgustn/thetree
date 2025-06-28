@@ -94,14 +94,22 @@ const topToHtml = async (parsed, options = {}) => {
                 ...result.data.categories.map(a => '분류:' + a.document),
                 ...result.data.includes
             ])];
+
+            const paramLinks = links.filter(a => a.includes('@'));
             if(includeParams.length) {
-                const paramLinks = links.filter(a => a.includes('@'));
                 for(let link of paramLinks) {
                     for(let params of includeParams) {
                         const newLink = utils.parseIncludeParams(link, params);
                         if(!links.includes(newLink))
                             links.push(newLink);
                     }
+                }
+            }
+            else {
+                for(let link of paramLinks) {
+                    const newLink = utils.parseIncludeParams(link);
+                    if(!links.includes(newLink))
+                        links.push(newLink);
                 }
             }
 
