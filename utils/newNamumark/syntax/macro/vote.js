@@ -8,7 +8,7 @@ module.exports = {
         if(!options.thread || !options.dbComment) return;
 
         params = obj.splittedParams;
-        if(params.length < 2) return;
+        if(params.length < 2) return '';
 
         const title = params.shift();
 
