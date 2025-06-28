@@ -5,7 +5,7 @@ const Vote = require('../../../../schemas/vote');
 module.exports = {
     allowThread: true,
     async format(params, options, obj) {
-        if(!options.thread || !options.dbComment) return;
+        if(!options.thread || !options.dbComment) return '';
 
         params = obj.splittedParams;
         if(params.length < 2) return '';
