@@ -635,7 +635,7 @@ module.exports = {
     mergeText(oldText, newText, targetText) {
         const patch = Diff.structuredPatch('text', 'text', oldText, newText);
         const result = Diff.applyPatch(targetText, patch);
-        if(!result) return null;
+        if(result === false) return null;
 
         return result;
     },

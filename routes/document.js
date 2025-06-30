@@ -780,7 +780,7 @@ const editAndEditRequest = async (req, res) => {
         const baseRev = await History.findOne({
             uuid: editRequest.baseUuid
         }).lean();
-        const conflict = !utils.mergeText(baseRev.content, editRequest.content, rev.content);
+        const conflict = utils.mergeText(baseRev.content, editRequest.content, rev.content) == null;
 
         if(conflict) req.flash.conflict = {
             editedRev: baseRev.rev,
@@ -1115,7 +1115,7 @@ const postEditAndEditRequest = async (req, res) => {
 
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid)) {
         content = utils.mergeText(editedRev.content, content, rev.content);
-        if(content) {
+        if(content != null) {
             if(!isEditRequest) log ||= `자동 병합됨 (r${editedRev.rev})`;
         }
         else {
@@ -1240,7 +1240,7 @@ app.get('/edit_request/:url', async (req, res) => {
             });
             contentHtml = html;
 
-            conflict = !utils.mergeText(baseRev.content, editRequest.content, latestRev.content);
+            conflict = utils.mergeText(baseRev.content, editRequest.content, latestRev.content) == null;
         }
     }
 
@@ -1330,7 +1330,7 @@ app.post('/edit_request/:url/accept', async (req, res) => {
         });
 
         content = utils.mergeText(baseRev.content, editRequest.content, rev.content);
-        if(!content) return res.status(403).send('이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.');
+        if(content == null) return res.status(403).send('이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.');
     }
 
     const newRev = await History.create({
