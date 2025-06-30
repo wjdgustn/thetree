@@ -1174,7 +1174,7 @@ class NamumarkParser extends EmbeddedActionsParser {
         const LinkSplitRegex = /(?<!\\)\|/;
         $.RULE('link', () => {
             const tok = $.CONSUME(Link);
-            const content = tok.image.slice(2, -2).trim();
+            const content = tok.image.slice(2, -2);
             const splitted = content.split(LinkSplitRegex).map(a => a.replaceAll('\\|', '|'));
             let link = splitted[0].replaceAll('\\]', ']');
             const origParsedText = splitted.slice(1).join('|');
