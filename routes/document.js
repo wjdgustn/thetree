@@ -841,7 +841,8 @@ const editAndEditRequest = async (req, res) => {
             useCaptcha,
             editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text,
             conflict: req.flash.conflict,
-            editagreeAgreed: req.session.editagreeAgreed
+            editagreeAgreed: req.session.editagreeAgreed,
+            log: req.editRequest?.log
         }
     });
 }
