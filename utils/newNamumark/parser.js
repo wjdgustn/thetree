@@ -475,7 +475,7 @@ const Footnote = createToken({
     ...nestedRegex(/\[\*/, /]/, false, /\[/),
     start_chars_hint: ['[']
 });
-const MacroRegex = /\[\S+?\([\s\S]*?\)]|\[\S+?]/y;
+const MacroRegex = /\[[^\]]+?\([\s\S]*?\)]|\[\S+?]/y;
 const ParamSplitRegex = /(?<!\\),/;
 const Macro = createToken({
     name: 'Macro',
