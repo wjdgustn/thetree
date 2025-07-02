@@ -428,7 +428,8 @@ const topToHtml = async (parsed, options = {}) => {
                     rev,
                     thread,
                     toHtml,
-                    Store
+                    Store,
+                    includeData
                 });
                 break;
             case 'macro':

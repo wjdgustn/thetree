@@ -19,7 +19,7 @@ module.exports = async (obj, options = {}) => {
     let isImage = false;
     const image = await processImage(obj, link, options);
     if(typeof image === 'string') {
-        Store.files.push(link);
+        if(!options.includeData) Store.files.push(link);
         return image;
     }
     else if(typeof image === 'object') {
@@ -28,7 +28,7 @@ module.exports = async (obj, options = {}) => {
             text = image.text;
             obj.textExists = false;
         }
-        Store.files.push(link);
+        if(!options.includeData) Store.files.push(link);
         notExist = true;
         isImage = true;
     }
@@ -176,6 +176,7 @@ module.exports = async (obj, options = {}) => {
         && titleDocName !== docTitle
         && !isImage
         && !Store.links.includes(titleDocName)
+        && !options.includeData
     )
         Store.links.push(titleDocName);
     return html;
