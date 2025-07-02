@@ -33,6 +33,8 @@ const loadMacros = () => {
         if(macro.allowThread)
             threadMacros.push(plugin.name, ...(macro.aliases ?? []));
     }
+
+    global.__THETREE__.macros = Object.keys(macros);
 }
 
 loadMacros();

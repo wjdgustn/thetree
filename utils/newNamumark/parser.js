@@ -506,6 +506,10 @@ const Macro = createToken({
                 splittedParams
             }
         }
+        if(execResult
+            && global.__THETREE__.macros
+            && !global.__THETREE__.macros.includes(execResult.payload.name))
+            return null;
         return execResult;
     },
     line_breaks: true,

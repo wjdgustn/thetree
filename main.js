@@ -29,6 +29,7 @@ const util = require('util');
 const msgpack = require('@msgpack/msgpack');
 
 global.debug = process.env.NODE_ENV === 'development';
+global.__THETREE__ = {};
 
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
