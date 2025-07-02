@@ -1222,6 +1222,13 @@ class NamumarkParser extends EmbeddedActionsParser {
                 try {
                     parsedUrl = new URL(link);
                 } catch (e) {}
+                if(parsedUrl) {
+                    if(![
+                        'http',
+                        'https',
+                        'ftp'
+                    ].includes(parsedUrl.protocol.slice(0, -1))) parsedUrl = null;
+                }
 
                 if(!parsedUrl) {
                     if(link.startsWith('분류:') && !Store.thread) {
