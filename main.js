@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const passport = require('passport');
 const session = require('express-session');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const querystring = require('querystring');
 const crypto = require('crypto');
@@ -292,6 +292,37 @@ setInterval(checkUpdate, 1000 * 60 * 60);
 if(config.check_update !== false)
     checkUpdate().then();
 
+global.updateSkins = async (names = []) => {
+    const failed = [];
+    await Promise.allSettled(names.map(async name => {
+        const skinPath = path.join('./skins', name);
+
+        try {
+            const opts = {
+                cwd: './frontend',
+                env: {
+                    ...process.env,
+                    SKIN_NAME: name,
+                    METADATA_PATH: path.resolve(skinPath)
+                }
+            }
+            await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
+            await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'client')}" --ssrManifest`, opts);
+        } catch(e) {
+            console.error(e);
+            failed.push(name);
+            return;
+        }
+
+        const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath)));
+        for(let module of ssrModules) delete require.cache[module];
+
+        global.updateSkinInfo();
+    }));
+
+    return { failed };
+}
+
 global.updateEngine = (exit = true) => {
     (async () => {
         try {
@@ -317,7 +348,13 @@ global.updateEngine = (exit = true) => {
             const packageUpdated = oldPackageHash !== newPackageHash;
             const fePackageUpdated = oldFEPackageHash !== newFEPackageHash;
             if(exit) {
-                const onFinish = () => {
+                const onFinish = async () => {
+                    if(doFE) {
+                        const installedSkins = await fs.readdir('./frontend/skins');
+                        if(installedSkins.length)
+                            await global.updateSkins(installedSkins);
+                    }
+
                     if(doEngine) process.exit(0);
                     else updateFEVersionInfo();
                 }
@@ -329,7 +366,7 @@ global.updateEngine = (exit = true) => {
                     console.log('Frontend package.json updated, updating packages...');
                     exec('npm i', { cwd: './frontend' }, onFinish);
                 }
-                else onFinish();
+                else await onFinish();
             }
             else global.skinCommitId = {};
         } catch(e) {}

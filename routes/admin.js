@@ -708,30 +708,8 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
         if(!skinExists) return res.status(400).send('Invalid skin');
     }
 
-    await Promise.allSettled(names.map(async name => {
-        const skinPath = path.join('./skins', name);
-
-        try {
-            const opts = {
-                cwd: './frontend',
-                env: {
-                    ...process.env,
-                    SKIN_NAME: name,
-                    METADATA_PATH: path.resolve(skinPath)
-                }
-            }
-            await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'server')}" --ssr src/server.js`, opts);
-            await execPromise(`npx vite build --emptyOutDir --outDir "${path.resolve(skinPath, 'client')}" --ssrManifest`, opts);
-        } catch(e) {
-            console.error(e);
-            return res.status(400).send('build failed');
-        }
-
-        const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath)));
-        for(let module of ssrModules) delete require.cache[module];
-
-        global.updateSkinInfo();
-    }));
+    const { failed } = await global.updateSkins(names);
+    if(failed.length) return res.status(400).send(`build failed: ${failed.join(', ')}`);
 
     res.reload();
 });
