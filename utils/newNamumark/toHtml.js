@@ -420,8 +420,6 @@ const topToHtml = async (parsed, options = {}) => {
                 break;
             }
             case 'link':
-                obj.link = utils.parseIncludeParams(obj.link, includeData);
-                obj.text = utils.parseIncludeParams(obj.text, includeData);
                 result += await link(obj, {
                     document: originalDocument,
                     dbDocument,

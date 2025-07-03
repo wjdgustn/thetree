@@ -46,8 +46,8 @@ module.exports = async (obj, options = {}) => {
         }
     }
 
-    link = link.trim();
-    text = text.trim();
+    link = utils.parseIncludeParams(link, options.includeData).trim();
+    text = utils.parseIncludeParams(text, options.includeData).trim();
 
     // if(!isImage && !obj.textExists && link.slice(1).includes('#')) {
     //     const splittedText = link.split('#');
