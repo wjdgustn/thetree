@@ -1185,14 +1185,32 @@ class NamumarkParser extends EmbeddedActionsParser {
             let parsedText = origParsedText;
             let hash;
 
+            let parsedUrl;
+            $.ACTION(() => {
+                try {
+                    parsedUrl = new URL(link);
+                } catch (e) {}
+                if(parsedUrl) {
+                    if(![
+                        'http',
+                        'https',
+                        'ftp'
+                    ].includes(parsedUrl.protocol.slice(0, -1))) parsedUrl = null;
+                }
+            });
+
+            let newLink = null;
             if(/(?<!\\)#/.test(link)) {
                 const arr = link.split(/(?<!\\)#/);
                 hash = arr.pop();
-                link = arr.join('#').trim();
+
+                const hashRemoved = arr.join('#').trim();
+                if(parsedUrl) newLink = hashRemoved;
+                else link = hashRemoved;
             }
             link = link.replaceAll('\\#', '#');
 
-            const text = parsedText || link;
+            const text = parsedText || newLink || link;
             $.ACTION(() => {
                 parsedText &&= parseInline(parsedText);
             });
@@ -1218,18 +1236,6 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             let isCategory = false;
             $.ACTION(() => {
-                let parsedUrl;
-                try {
-                    parsedUrl = new URL(link);
-                } catch (e) {}
-                if(parsedUrl) {
-                    if(![
-                        'http',
-                        'https',
-                        'ftp'
-                    ].includes(parsedUrl.protocol.slice(0, -1))) parsedUrl = null;
-                }
-
                 if(!parsedUrl) {
                     if(link.startsWith('분류:') && !Store.thread) {
                         link = link.slice(3);
