@@ -4,11 +4,13 @@ const utils = require('../../utils');
 const mainUtils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 
-module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev }) => {
+module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData }) => {
     const document = mainUtils.parseDocumentName(obj.link);
-    const { namespace, title } = document;
+    let { namespace, title } = document;
 
     if(!namespace.includes('파일')) return;
+
+    title = utils.parseIncludeParams(title, includeData);
 
     const options = !obj.textExists ? {} : querystring.parse(obj.text);
 

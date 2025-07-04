@@ -12,7 +12,7 @@ module.exports = async (obj, options = {}) => {
     const docTitle = globalUtils.doc_fulltitle(document);
 
     let link = obj.link;
-    let text = obj.text;
+    let text = utils.parseIncludeParams(obj.text, options.includeData);
     const hash = obj.hash;
     let notExist = false;
 
@@ -47,7 +47,7 @@ module.exports = async (obj, options = {}) => {
     }
 
     link = utils.parseIncludeParams(link, options.includeData).trim();
-    text = utils.parseIncludeParams(text, options.includeData).trim();
+    text = text.trim();
 
     // if(!isImage && !obj.textExists && link.slice(1).includes('#')) {
     //     const splittedText = link.split('#');
