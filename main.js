@@ -332,7 +332,7 @@ global.updateEngine = (exit = true) => {
             const oldFEPackageHash = fePackageHash();
 
             const doEngine = global.versionInfo.commitId !== global.newVersionInfo.commitId;
-            const doFE = global.versionInfo.feCommitId !== global.newVersionInfo.commitId;
+            const doFE = global.versionInfo.feCommitId !== global.newVersionInfo.feCommitId;
 
             const results = await Promise.all([
                 ...(doEngine ? [execPromise('git pull')] : []),
