@@ -12,7 +12,7 @@ module.exports = async (obj, options = {}) => {
     const docTitle = globalUtils.doc_fulltitle(document);
 
     let link = obj.link;
-    let text = utils.parseIncludeParams(obj.text, options.includeData);
+    let text = obj.text = utils.parseIncludeParams(obj.text, options.includeData);
     const hash = obj.hash;
     let notExist = false;
 
