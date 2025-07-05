@@ -13,7 +13,7 @@ module.exports = async (obj, options = {}) => {
 
     let link = obj.link;
     let text = obj.text = utils.parseIncludeParams(obj.text, options.includeData);
-    const hash = obj.hash;
+    const hash = utils.parseIncludeParams(obj.hash, options.includeData);
     let notExist = false;
 
     let isImage = false;
