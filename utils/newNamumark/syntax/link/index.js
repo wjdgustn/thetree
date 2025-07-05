@@ -168,7 +168,7 @@ module.exports = async (obj, options = {}) => {
     const safeLink = utils.escapeHtml(globalUtils.removeHtmlTags(link));
     const parsedTitle = obj.textExists ? await toHtml(obj.parsedText) : utils.escapeHtml(text);
 
-    const html = `<a href="${safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(obj.link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
+    const html = `<a href="${safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
 
     const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
     if(titleDocName
