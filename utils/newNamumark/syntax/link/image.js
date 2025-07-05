@@ -10,7 +10,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 
     if(!namespace.includes('파일')) return;
 
-    title = utils.parseIncludeParams(title, includeData);
+    title = document.title = utils.parseIncludeParams(title, includeData);
 
     const options = !obj.textExists ? {} : querystring.parse(obj.text);
 
