@@ -264,14 +264,14 @@ module.exports = async (obj, toHtml) => {
 
             if(valueObj.align === 'center' && firstTextObj && lastTextObj) {
                 align ??= 'center';
-                firstTextObj.text = firstTextObj.text.slice(1);
-                lastTextObj.text = lastTextObj.text.slice(0, -1);
+                // firstTextObj.text = firstTextObj.text.slice(1);
+                // lastTextObj.text = lastTextObj.text.slice(0, -1);
             } else if(valueObj.align === 'right' && firstTextObj) {
                 align ??= 'right';
-                firstTextObj.text = firstTextObj.text.slice(1);
+                // firstTextObj.text = firstTextObj.text.slice(1);
             } else if(valueObj.align === 'left' && lastTextObj) {
                 align ??= 'left';
-                lastTextObj.text = lastTextObj.text.slice(0, -1);
+                // lastTextObj.text = lastTextObj.text.slice(0, -1);
             }
             if(align) tdStyle += `text-align:${align};`;
 
