@@ -1,7 +1,7 @@
 const mainUtils = require('../../../');
 const parser = require('../../parser');
 
-module.exports = async (params, { toHtml, includeData, revDocCache }, obj) => {
+module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj) => {
     if(includeData) return '';
 
     const docName = mainUtils.parseDocumentName(obj.splittedParams[0]);
@@ -14,7 +14,14 @@ module.exports = async (params, { toHtml, includeData, revDocCache }, obj) => {
     });
     const final = await toHtml(result, {
         document: docName,
-        includeData: obj.includeData
+        includeData: obj.includeData,
+        Store: {
+            ...Store,
+            heading: {
+                list: [],
+                html: ''
+            }
+        }
     });
     return final.html;
 }

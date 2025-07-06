@@ -231,39 +231,39 @@ const topToHtml = async (parsed, options = {}) => {
         }
         await parsedDocFinder(includeDocs);
 
-        {
-            let html = '<div class="wiki-macro-toc">';
-            let indentLevel = 0;
-            for(let heading of parsed.data.headings) {
-                const prevIndentLevel = indentLevel;
-                indentLevel = heading.actualLevel;
-
-                const indentDiff = Math.abs(indentLevel - prevIndentLevel);
-
-                if(indentLevel !== prevIndentLevel)
-                    for(let i = 0; i < indentDiff; i++)
-                        html += indentLevel > prevIndentLevel ? '<div class="toc-indent">' : '</div>';
-
-                html += `<span class="toc-item"><a href="#${commentPrefix}s-${heading.numText}">${heading.numText}</a>. ${await toHtml(heading.linkText)}</span>`;
-
-                Store.heading.list.push({
-                    level: heading.level,
-                    num: heading.numText,
-                    title: await toHtml(heading.pureText),
-                    anchor: `s-${heading.numText}`
-                });
-            }
-            for(let i = 0; i < indentLevel + 1; i++)
-                html += '</div>';
-
-            Store.heading.html = html;
-        }
-
         Store.categories = parsed.data.categories;
         for(let obj of Store.categories) {
             const cache = Store.dbDocuments.find(cache => cache.namespace === '분류' && cache.title === obj.document);
             obj.notExist = !cache?.contentExists;
         }
+    }
+
+    if(isTop) {
+        let html = '<div class="wiki-macro-toc">';
+        let indentLevel = 0;
+        for(let heading of parsed.data.headings) {
+            const prevIndentLevel = indentLevel;
+            indentLevel = heading.actualLevel;
+
+            const indentDiff = Math.abs(indentLevel - prevIndentLevel);
+
+            if(indentLevel !== prevIndentLevel)
+                for(let i = 0; i < indentDiff; i++)
+                    html += indentLevel > prevIndentLevel ? '<div class="toc-indent">' : '</div>';
+
+            html += `<span class="toc-item"><a href="#${commentPrefix}s-${heading.numText}">${heading.numText}</a>. ${await toHtml(heading.linkText)}</span>`;
+
+            Store.heading.list.push({
+                level: heading.level,
+                num: heading.numText,
+                title: await toHtml(heading.pureText),
+                anchor: `s-${heading.numText}`
+            });
+        }
+        for(let i = 0; i < indentLevel + 1; i++)
+            html += '</div>';
+
+        Store.heading.html = html;
     }
 
     let result = '';
