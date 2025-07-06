@@ -945,7 +945,7 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
         contentName: 'member/withdraw',
         serverData: {
             blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
-            alert: deletable ? null : '마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.',
+            alert: deletable ? null : '마지막 활동으로부터 시간이 경과해야 계정 삭제가 가능합니다.',
             noActivityTime,
             pledge: config.withdraw_pledge
         }
@@ -970,7 +970,7 @@ app.post('/member/withdraw',
         return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
 
     const { deletable, blacklistDuration } = await checkDeletable(req.user);
-    if(!deletable) return res.status(403).send('마지막 활동으로 부터 시간이 경과해야 계정 삭제가 가능합니다.');
+    if(!deletable) return res.status(403).send('마지막 활동으로부터 시간이 경과해야 계정 삭제가 가능합니다.');
 
     if(blacklistDuration == null || blacklistDuration > 0)
         await Blacklist.create({
