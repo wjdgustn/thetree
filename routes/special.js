@@ -291,7 +291,7 @@ app.post('/Upload', (req, res, next) => {
         .isLength({ max: 200 })
         .withMessage('document의 값은 200글자 이하여야 합니다.')
         .custom(value => value.startsWith('파일:'))
-        .withMessage('업로드는 파일 이름 공간에서만 가능합니다.'),
+        .withMessage('업로드는 파일 이름공간에서만 가능합니다.'),
     body('license')
         .notEmpty()
         .withMessage('라이선스를 선택해주세요.'),

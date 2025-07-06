@@ -111,7 +111,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         date: null,
         rev: null,
         uuid: null,
-        contentHtml: `<h2>${rev.hidden ? '숨겨진 리비젼입니다.' : '이 리비젼은 반달로 표시 되었습니다.'}</h2>`
+        contentHtml: `<h2>${rev.hidden ? '숨겨진 리비전입니다.' : '이 리비전은 반달로 표시 되었습니다.'}</h2>`
     });
 
     const { result: editable, aclMessage: edit_acl_message } = await acl.check(ACLTypes.Edit, req.aclData);
@@ -1447,7 +1447,7 @@ app.get('/raw/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(req.query.uuid && !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
-    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
+    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
 
     res.renderSkin(undefined, {
         contentName: 'document/raw',
@@ -1491,8 +1491,8 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         HistoryTypes.Revert
     ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
 
-    if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
-    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
+    if(rev.troll) return res.error('이 리비전은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
+    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
 
     let contentHtml;
     const latestRev = await History.findOne({
@@ -1561,8 +1561,8 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         HistoryTypes.Revert
     ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
 
-    if(rev.troll) return res.error('이 리비젼은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
-    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
+    if(rev.troll) return res.error('이 리비전은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
+    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
 
     const currentRev = await History.findOne({
         document: dbDocument.uuid
@@ -1626,7 +1626,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(!oldRev || oldRev.rev >= rev.rev) return noRev();
 
-    if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
+    if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비전입니다.', 403);
 
     let diff;
     try {
@@ -1673,7 +1673,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
-    if(rev.hidden) return res.error('숨겨진 리비젼입니다.', 403);
+    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
 
     if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
@@ -1980,7 +1980,7 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
     const isUserDoc = document.namespace === '사용자' && !document.title.includes('/');
     const otherIsUserDoc = otherDocument.namespace === '사용자' && (!otherDocument.title.includes('/') || otherDocument.title.startsWith('*'));
     if(isUserDoc || otherIsUserDoc || (document.namespace.includes('파일') !== otherDocument.namespace.includes('파일')))
-        return res.error('이 문서를 해당 이름 공간으로 이동할 수 없습니다.', 403);
+        return res.error('이 문서를 해당 이름공간으로 이동할 수 없습니다.', 403);
 
     const revExists = await History.exists({
         document: dbOtherDocument.uuid
