@@ -38,7 +38,8 @@ module.exports = async (obj, toHtml) => {
         let visualRowIndex = -1;
         for(let rowIndex in row) {
             rowIndex = parseInt(rowIndex);
-            const value = row[rowIndex];
+            const valueObj = row[rowIndex];
+            const value = valueObj?.value;
             if(!value) {
                 colspan++;
                 continue;
@@ -261,17 +262,14 @@ module.exports = async (obj, toHtml) => {
 
             if(paramStr != null) firstTextObj.text = originalParamStr.slice(prevParamStrLength - paramStr.length);
 
-            const startsWithSpace = firstTextObj?.text.startsWith(' ');
-            const endsWithSpace = lastTextObj?.text.endsWith(' ');
-
-            if(startsWithSpace && endsWithSpace) {
+            if(valueObj.align === 'center' && firstTextObj && lastTextObj) {
                 align ??= 'center';
                 firstTextObj.text = firstTextObj.text.slice(1);
                 lastTextObj.text = lastTextObj.text.slice(0, -1);
-            } else if(startsWithSpace) {
+            } else if(valueObj.align === 'right' && firstTextObj) {
                 align ??= 'right';
                 firstTextObj.text = firstTextObj.text.slice(1);
-            } else if(endsWithSpace) {
+            } else if(valueObj.align === 'left' && lastTextObj) {
                 align ??= 'left';
                 lastTextObj.text = lastTextObj.text.slice(0, -1);
             }
