@@ -871,7 +871,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const checkNext = (howMuch = 1) => () => {
                 const next = $.LA(howMuch);
                 if(next.tokenType !== List) return false;
-                return !listType || (next.image[1] === listType && !/#\d+/.test(next.image.slice(3)));
+                return !listType || (next.image[1] === listType && !/^#\d+/.test(next.image.slice(3)));
             }
             $.AT_LEAST_ONE({
                 GATE: checkNext,
