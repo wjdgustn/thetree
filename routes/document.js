@@ -765,7 +765,8 @@ const editAndEditRequest = async (req, res) => {
     const { result: editRequestable, aclMessage: editRequestAclMessage } = await acl.check(ACLTypes.EditRequest, req.aclData);
 
     if(!isEditRequest && !editable && editRequestable) return res.redirect(globalUtils.doc_action_link(document, 'new_edit_request', {
-        redirected: 1
+        redirected: 1,
+        section
     }));
 
     if(isEditRequest && !editRequestable) return res.error(editRequestAclMessage, 403);
