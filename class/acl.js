@@ -107,7 +107,8 @@ module.exports = class ACL {
             member_signup_15days_ago: '가입한지 15일 지난 사용자',
             document_contributor: '해당 문서 기여자',
             contributor: '위키 기여자',
-            match_username_and_document_title: '문서 제목과 사용자 이름이 일치'
+            match_username_and_document_title: '문서 제목과 사용자 이름이 일치',
+            auto_verified_member: '자동 인증된 사용자'
         }[permission] ?? permission;
 
         return `${withPrefix && permission === result ? 'perm:' : ''}${result}`;
