@@ -44,8 +44,9 @@ const fullLineRegex = (regex, { laterRegex } = {}) => {
     });
 }
 
-const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex = null) => {
+const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex = null, closeCheckRegex = null) => {
     openCheckRegex ??= openRegex;
+    closeCheckRegex ??= closeRegex;
     openRegex = new RegExp('^' + openRegex.source, 'i');
     closeRegex = new RegExp('(?<!\\\\)(?:\\\\\\\\)*' + closeRegex.source, 'i');
 
@@ -63,7 +64,7 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
                 const openMatch = sliced.match(openCheckRegex);
                 const openIndex = openMatch ? openMatch.index + tokIndex : -1;
                 // const closeIndex = str.indexOf(']', tokIndex);
-                const closeMatch = sliced.match(closeRegex);
+                const closeMatch = sliced.match(openCount > 0 ? closeCheckRegex : closeRegex);
                 const closeIndex = closeMatch ? closeMatch.index + tokIndex : -1;
                 // if(openIndex < 0) break;
                 if(closeIndex < 0) return null;
@@ -444,7 +445,7 @@ const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
     // line_breaks: true
-    ...nestedRegex(/\[\[/, /]]/, true),
+    ...nestedRegex(/\[\[/, /]]/, true, /\[/, /\]/),
     start_chars_hint: ['[']
 });
 const Footnote = createToken({
