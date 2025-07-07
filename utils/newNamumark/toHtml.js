@@ -256,7 +256,7 @@ const topToHtml = async (parsed, options = {}) => {
             Store.heading.list.push({
                 level: heading.level,
                 num: heading.numText,
-                title: await toHtml(heading.pureText),
+                title: utils.unescapeHtml(await toHtml(heading.pureText)),
                 anchor: `s-${heading.numText}`
             });
         }
