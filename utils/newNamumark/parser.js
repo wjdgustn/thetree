@@ -794,21 +794,22 @@ class NamumarkParser extends EmbeddedActionsParser {
                         for(let t of tokens) {
                             if(t.tokenType !== TableSplit) continue;
 
-                            let str = sliced.slice(lastIdx, t.startOffset);
+                            const str = sliced.slice(lastIdx, t.startOffset);
+                            const testStr = str.replace(/^(<(.*?)>)*/, '');
                             let align;
-                            const startsWithSpace = str.startsWith(' ');
-                            const endsWithSpace = str.endsWith(' ');
+                            const startsWithSpace = testStr.startsWith(' ');
+                            const endsWithSpace = testStr.endsWith(' ');
 
                             if(startsWithSpace && endsWithSpace) {
                                 align ??= 'center';
-                                str = str.slice(1);
-                                str = str.slice(0, -1);
+                                // str = str.slice(1);
+                                // str = str.slice(0, -1);
                             } else if(startsWithSpace) {
                                 align ??= 'right';
-                                str = str.slice(1);
+                                // str = str.slice(1);
                             } else if(endsWithSpace) {
                                 align ??= 'left';
-                                str = str.slice(0, -1);
+                                // str = str.slice(0, -1);
                             }
 
                             items.push({
