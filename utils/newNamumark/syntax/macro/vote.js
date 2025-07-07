@@ -1,11 +1,9 @@
-const utils = require('../../utils');
-
 const Vote = require('../../../../schemas/vote');
 
 module.exports = {
     allowThread: true,
     async format(params, options, obj) {
-        if(!options.thread || !options.dbComment) return '';
+        if(!options.thread) return '';
 
         params = await Promise.all(obj.parsedSplittedParams.map(a => options.toHtml(a)));
         if(params.length < 2) return '';
@@ -14,13 +12,13 @@ module.exports = {
 
         options.Store.voteIndex++;
 
-        const baseData = {
+        const baseData = options.dbComment ? {
             comment: options.dbComment.uuid,
             voteIndex: options.Store.voteIndex
-        }
+        } : null;
 
         let prevVote;
-        if(options.aclData?.user) {
+        if(options.aclData?.user && baseData) {
             prevVote = await Vote.findOne({
                 ...baseData,
                 user: options.aclData.user.uuid
@@ -30,14 +28,14 @@ module.exports = {
         let result = `
 <fieldset class="wiki-macro-vote">
 <legend>${title}</legend>
-<form id="vote-${options.commentId}-${options.Store.voteIndex}" action="/vote/${options.dbComment.uuid}/${options.Store.voteIndex}" method="post">
+<form id="vote-${options.commentId}-${options.Store.voteIndex}" action="/vote/${options.dbComment?.uuid ?? 'null'}/${options.Store.voteIndex}" method="post">
         `;
 
         for(let i in params) {
-            const voteCount = await Vote.countDocuments({
+            const voteCount = baseData ? await Vote.countDocuments({
                 ...baseData,
                 value: parseInt(i)
-            });
+            }) : 0;
 
             const option = params[i];
             result += `
