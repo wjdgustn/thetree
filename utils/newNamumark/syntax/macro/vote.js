@@ -7,7 +7,7 @@ module.exports = {
     async format(params, options, obj) {
         if(!options.thread || !options.dbComment) return '';
 
-        params = obj.splittedParams;
+        params = await Promise.all(obj.parsedSplittedParams.map(a => options.toHtml(a)));
         if(params.length < 2) return '';
 
         const title = params.shift();

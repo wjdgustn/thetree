@@ -1369,6 +1369,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                     Store.footnote.values.length = 0;
                     Store.footnote.list.length = 0;
                 }
+                else if(name === 'vote') {
+                    data.parsedSplittedParams = splittedParams.map(a => parseInline(a));
+                }
             });
 
             return {
