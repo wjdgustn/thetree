@@ -1302,6 +1302,7 @@ app.post('/member/deactivate_otp',
             min: 6,
             max: 6
         }).withMessage('pin의 값은 6글자여야 합니다.'),
+    middleware.fieldErrors,
     async (req, res) => {
     if(!req.user.totpToken) return res.error('not_activated_otp');
 
