@@ -1241,13 +1241,17 @@ app.get('/member/activate_otp', middleware.isLogin, async (req, res) => {
         issuer: config.site_name,
         label: req.user.name
     });
-    req.session.totpToken = totp.secret.base32;
+    const secret = totp.secret.base32;
+    req.session.totpToken = secret;
 
-    const qrcode = await QRCode.toDataURL(totp.toString());
+    const qrUrl = totp.toString();
+    const qrcode = await QRCode.toDataURL(qrUrl);
 
     res.renderSkin('OTP 활성화', {
         contentName: 'member/activate_otp',
         serverData: {
+            secret,
+            qrUrl,
             qrcode
         }
     });
