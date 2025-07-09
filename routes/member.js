@@ -521,7 +521,6 @@ app.post('/member/login/pin',
     }
 
     delete req.session.pinUser;
-    delete req.session.redirect;
 
     if(req.body.trust) {
         req.session.trustedAccounts ??= [];
@@ -544,7 +543,8 @@ app.post('/member/login/pin',
         if(!res.headersSent) {
             req.session.fullReload = true;
             delete req.session.contributor;
-            return res.redirect(req.session.redirect || '/');
+            res.redirect(req.session.redirect || '/');
+            delete req.session.redirect;
         }
     });
 
