@@ -290,7 +290,10 @@ app.post('/Upload', (req, res, next) => {
         .withMessage('문서 제목을 입력해주세요.')
         .isLength({ max: 200 })
         .withMessage('document의 값은 200글자 이하여야 합니다.')
-        .custom(value => value.startsWith('파일:'))
+        .custom((value, { req }) => {
+            req.document = utils.parseDocumentName(value);
+            return req.document.namespace.includes('파일');
+        })
         .withMessage('업로드는 파일 이름공간에서만 가능합니다.'),
     body('license')
         .notEmpty()
@@ -299,7 +302,7 @@ app.post('/Upload', (req, res, next) => {
         .notEmpty()
         .withMessage('카테고리를 선택해주세요.'),
     body('log')
-        .isLength({ max: 200 })
+        .isLength({ max: 255 })
         .withMessage('요약의 값은 255글자 이하여야 합니다.'),
     middleware.fieldErrors,
     async (req, res) => {
@@ -325,7 +328,7 @@ app.post('/Upload', (req, res, next) => {
     if(!licenses.includes(req.body.license)) return res.status(400).send('잘못된 라이선스입니다.');
     if(!categories.includes(req.body.category)) return res.status(400).send('잘못된 분류입니다.');
 
-    const document = utils.parseDocumentName(req.body.document);
+    const document = req.document;
     const { namespace, title } = document;
 
     const { ext } = path.parse(req.file.originalname);
