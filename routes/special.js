@@ -589,4 +589,8 @@ app.get('/opensearch.xml', (req, res) => {
     `.trim());
 });
 
+app.get('/ip', (req, res) => {
+    res.send(req.ip);
+});
+
 module.exports = app;
