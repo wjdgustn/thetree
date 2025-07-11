@@ -376,7 +376,8 @@ global.updateEngine = (exit = true) => {
 global.plugins = {
     macro: [],
     skinData: [],
-    editor: []
+    editor: [],
+    page: []
 };
 global.pluginPaths = {};
 const pluginStaticPaths = [];
@@ -833,11 +834,12 @@ app.use(async (req, res, next) => {
 
     const makeConfigAndSession = () => {
         const sessionMenus = [];
-        for(let [key, value] of Object.entries(permissionMenus)) {
-            if(req.permissions.includes(key)) {
-                sessionMenus.push(...value);
+        for(let permMenus of [...plugins.page.map(a => a.menus).filter(a => a), permissionMenus])
+            for(let [key, value] of Object.entries(permMenus)) {
+                if(req.permissions.includes(key)) {
+                    sessionMenus.push(...value);
+                }
             }
-        }
 
         session = {
             menus: sessionMenus,
@@ -1192,6 +1194,14 @@ document.getElementById('initScript')?.remove();
 
     req.flash = Object.keys(req.session.flash ?? {}).length ? req.session.flash : {};
     req.session.flash = {};
+
+    if(req.method === 'GET') {
+        let urlPath = req.path;
+        if(urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
+        if(urlPath.startsWith('/internal/')) urlPath = urlPath.slice('/internal'.length);
+        const pagePlugin = plugins.page.find(a => a.url === urlPath);
+        if(pagePlugin) return pagePlugin.handler(req, res);
+    }
 
     next();
 
