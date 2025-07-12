@@ -899,7 +899,7 @@ app.use(async (req, res, next) => {
         const userClientVersion = req.get('X-Chika');
         const clientVersion = skinInfo?.versionHeader;
 
-        if(isBackendMode && userClientVersion !== clientVersion && ((!debug && !config.testwiki) || userClientVersion !== 'bypass')) {
+        if(req.url !== '/sidebar' && isBackendMode && userClientVersion !== clientVersion && ((!debug && !config.testwiki) || userClientVersion !== 'bypass')) {
             res.originalStatus(400).end();
             return;
         }
