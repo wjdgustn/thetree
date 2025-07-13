@@ -992,7 +992,7 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
         categories: categories.map(a => ({
             ...a,
             text: undefined,
-            document: utils.parseDocumentName(a.document)
+            document: utils.parseDocumentName('분류:' + a.document)
         }))
     });
     else res.send(categoryHtml + contentHtml);
