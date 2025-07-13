@@ -713,7 +713,9 @@ app.use(async (req, res, next) => {
             ip: req.ip
         }).lean();
 
-        if(!req.session.ipUser && req.method === 'POST' && !['/member/', '/preview/'].some(a => req.url.startsWith(a))) {
+        if(!req.session.ipUser
+            && req.method === 'POST'
+            && !['/member/', '/preview/'].some(a => req.url.startsWith(a) || req.url.startsWith('/internal' + a))) {
             const newUser = new User({
                 ip: req.ip,
                 type: UserTypes.IP
