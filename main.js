@@ -377,7 +377,8 @@ global.plugins = {
     macro: [],
     skinData: [],
     editor: [],
-    page: []
+    page: [],
+    preHook: []
 };
 global.pluginPaths = {};
 const pluginStaticPaths = [];
@@ -1175,23 +1176,50 @@ document.getElementById('initScript')?.remove();
     }
 
     let url = req.url;
-    if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) for(let item of global.disabledFeatures) {
-        if(item.method !== 'ALL' && item.method !== req.method) continue;
+    if(url.startsWith('/internal/')) url = url.replace('/internal', '');
+    if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) {
+        for(let item of global.disabledFeatures) {
+            if(item.method !== 'ALL' && item.method !== req.method) continue;
 
-        if(url.startsWith('/internal/')) url = url.replace('/internal', '');
-        if(item.type === 'string' && !url.startsWith(item.condition)) continue;
-        if(item.type === 'js' && !eval(item.condition)) continue;
+            if(item.type === 'string' && !url.startsWith(item.condition)) continue;
+            if(item.type === 'js' && !eval(item.condition)) continue;
 
-        const msg = (item.message || '비활성화된 기능입니다.')
-            .replaceAll('{cspNonce}', res.locals.cspNonce);
+            const msg = (item.message || '비활성화된 기능입니다.')
+                .replaceAll('{cspNonce}', res.locals.cspNonce);
 
-        let messageType = item.messageType;
-        if(messageType === 'flexible') {
-            if(req.method === 'GET') messageType = 'res.error';
-            else messageType = 'plaintext';
+            let messageType = item.messageType;
+            if(messageType === 'flexible') {
+                if(req.method === 'GET') messageType = 'res.error';
+                else messageType = 'plaintext';
+            }
+            if(messageType === 'res.error') return res.error(msg, 403);
+            if(messageType === 'plaintext') return res.status(403).send(msg);
         }
-        if(messageType === 'res.error') return res.error(msg, 403);
-        if(messageType === 'plaintext') return res.status(403).send(msg);
+
+        for(let item of global.plugins.preHook) {
+            if(item.url) {
+                if(item.method && item.method !== req.method) continue;
+                if(!url.startsWith(item.url)) continue;
+            }
+            else if(item.condition) {
+                try {
+                    if(!item.condition(req)) continue;
+                } catch(e) {
+                    console.error('error from preHook plugin condition:', e);
+                    continue;
+                }
+            }
+            else {
+                console.warn('invalid preHook plugin detected:', item);
+                continue;
+            }
+            try {
+                await item.handler(req, res);
+            } catch (e) {
+                console.error('error from preHook plugin action:', e);
+            }
+            if(item.blockRequest) return;
+        }
     }
 
     req.flash = Object.keys(req.session.flash ?? {}).length ? req.session.flash : {};
