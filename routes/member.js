@@ -943,7 +943,7 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
 
     const { deletable, blacklistDuration, noActivityTime } = await checkDeletable(req.user);
 
-    res.renderSkin('회원 탈퇴', {
+    res.renderSkin('계정 삭제', {
         contentName: 'member/withdraw',
         serverData: {
             blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
