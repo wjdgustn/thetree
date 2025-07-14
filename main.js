@@ -1218,7 +1218,7 @@ document.getElementById('initScript')?.remove();
             } catch (e) {
                 console.error('error from preHook plugin action:', e);
             }
-            if(item.blockRequest) return;
+            if(res.headersSent) return;
         }
     }
 
