@@ -9,7 +9,7 @@ const {
 
 const utils = require('./utils');
 
-const MAXIMUM_DEPTH = 10;
+const MAXIMUM_DEPTH = 15;
 
 let noCheckStartAtFirst = false;
 const fullLineRegex = (regex, { laterRegex } = {}) => {
