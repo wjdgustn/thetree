@@ -220,7 +220,8 @@ module.exports = class ACL {
 
             if([
                 ACLActionTypes.Allow,
-                ...(nsResult?.result ? [ACLActionTypes.GotoNS] : [])
+                // ...(nsResult?.result ? [ACLActionTypes.GotoNS] : [])
+                ACLActionTypes.GotoNS
             ].includes(rule.actionType)) allowedRules.push(rule);
             else if(rule.actionType === ACLActionTypes.GotoOtherNS
                 && otherNSResults[rule.actionContent]?.result) allowedRules.push(rule);
