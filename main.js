@@ -916,7 +916,7 @@ app.use(async (req, res, next) => {
         return {
             ...(userConfigHash !== configHash ? {
                 configHash,
-                config: configJSON
+                config: Object.fromEntries(Object.entries(configJSON).map(([k, v]) => [k, v.replaceAll('{cspNonce}', res.locals.cspNonce)]))
             } : {}),
             ...(userSessionHash !== sessionHash ? {
                 sessionHash,
