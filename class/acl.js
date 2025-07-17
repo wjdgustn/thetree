@@ -234,12 +234,12 @@ module.exports = class ACL {
                 if(aclGroupItem) {
                     if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
                     aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
-                    aclMessage += `<br>사유 : ${aclGroupItem.note ?? '없음'}`;
+                    aclMessage += `<br>\n사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
 
                     if(rule.aclGroup.isWarn) {
                         aclMessage = rule.aclGroup.aclMessage || '경고를 받았습니다.';
                         aclMessage += `<br><br><a href="/self_unblock?id=${aclGroupItem.id}">[확인했습니다. #${aclGroupItem.id}]</a>`;
-                        aclMessage += `<br>사유: ${aclGroupItem.note ?? '없음'}`;
+                        aclMessage += `<br>\n사유: ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
                     }
                 }
 
