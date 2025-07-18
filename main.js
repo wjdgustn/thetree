@@ -193,20 +193,20 @@ if(!fs.existsSync('./cache/lastNotificationCheck.json')) {
         timestamp: fs.existsSync('./cache/minifyCache.json') ? 0 : Date.now()
     }));
 }
-if(!fs.existsSync('./cache/lastMigrationCheck.json')) {
-    fs.writeFileSync('./cache/lastMigrationCheck.json', JSON.stringify({
-        timestamp: Date.now() + (fs.existsSync('./cache/minifyCache.json') ? (1000 * 60 * 60 * 24) : 0)
+if(!fs.existsSync('./cache/lastMigrationTime.json')) {
+    fs.writeFileSync('./cache/lastMigrationTime.json', JSON.stringify({
+        timestamp: fs.existsSync('./cache/minifyCache.json') ? 0 : Date.now()
     }));
 }
 
 setTimeout(() => {
-    const lastMigrationTime = JSON.parse(fs.readFileSync('./cache/lastMigrationCheck.json').toString()).timestamp;
-    for(let code of migrateCodes.filter(a => a.timestamp < lastMigrationTime)) {
+    const lastMigrationTime = JSON.parse(fs.readFileSync('./cache/lastMigrationTime.json').toString()).timestamp;
+    for(let code of migrateCodes.filter(a => a.timestamp > lastMigrationTime)) {
         (async () => {
             await code.code();
         })()
     }
-    fs.writeFileSync('./cache/lastMigrationCheck.json', JSON.stringify({
+    fs.writeFileSync('./cache/lastMigrationTime.json', JSON.stringify({
         timestamp: Date.now()
     }));
 }, 1000 * 10);
