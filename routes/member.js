@@ -1001,19 +1001,25 @@ app.post('/member/withdraw',
         ]
     });
     for(let dbDocument of userDocs) {
-        const newDbDocument = await Document.findOneAndUpdate({
-            uuid: dbDocument.uuid
-        }, {
-            title: dbDocument.title.replace(`${req.user.name}`, `*${req.user.uuid}`)
-        }, {
-            new: true
-        });
+        let newDbDocument;
+        try {
+            newDbDocument = await Document.findOneAndUpdate({
+                uuid: dbDocument.uuid
+            }, {
+                namespace: '삭제된사용자',
+                title: dbDocument.title.replace(req.user.name, req.user.uuid)
+            }, {
+                new: true
+            });
+        } catch(e) {
+            continue;
+        }
         await History.create({
             user: req.user.uuid,
             type: HistoryTypes.Move,
             document: dbDocument.uuid,
             moveOldDoc: `사용자:${dbDocument.title}`,
-            moveNewDoc: `사용자:${newDbDocument.title}`
+            moveNewDoc: `삭제된사용자:${newDbDocument.title}`
         });
         await History.create({
             user: req.user.uuid,

@@ -52,7 +52,7 @@ app.get('/RecentChanges', async (req, res) => {
 
     const logTypeText = logType != null ? req.query.logtype : 'all';
     if(logTypeText === 'all'
-        && (!req.permissions.includes('admin') || req.query.userDoc !== '1')) revs = revs.filter(a => a.document.parsedName.namespace !== '사용자');
+        && (!req.permissions.includes('admin') || req.query.userDoc !== '1')) revs = revs.filter(a => !['사용자', '삭제된사용자'].includes(a.document.parsedName.namespace));
 
     res.renderSkin('최근 변경내역', {
         contentName: 'special/recentChanges',

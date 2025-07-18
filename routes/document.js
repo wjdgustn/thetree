@@ -1148,7 +1148,7 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
-    if(namespace === '사용자' && isCreate && (!title.includes('/') || title.startsWith('*'))) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+    if((namespace === '사용자' || namespace === '삭제된사용자') && isCreate && (!title.includes('/') || title.startsWith('*'))) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
 
     if(isEditRequest) {
         const editRequest = await EditRequest.findOneAndUpdate({
@@ -1568,7 +1568,7 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
-    if(currentRev.content == null && namespace === '사용자' && (!title.includes('/') || title.startsWith('*')))
+    if(currentRev.content == null && (namespace === '사용자' || namespace === '삭제된사용자') && (!title.includes('/') || title.startsWith('*')))
         return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
 
     if(rev.content === currentRev.content) return res.error('문서 내용이 같습니다.');
@@ -1876,7 +1876,7 @@ app.post('/delete/?*', middleware.parseDocumentName, middleware.captcha, async (
 
     const { namespace, title } = document;
 
-    if(namespace === '사용자' && !title.includes('/')) return res.status(403).send('disable_user_document');
+    if((namespace === '사용자' || namespace === '삭제된사용자') && !title.includes('/')) return res.status(403).send('disable_user_document');
 
     const dbDocument = await Document.findOne({
         namespace,
