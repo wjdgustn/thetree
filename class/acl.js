@@ -181,7 +181,7 @@ module.exports = class ACL {
     async check(aclType = ACLTypes.None, data = {}, noReadCheck = false) {
         if(data.alwaysAllow) return { result: true };
 
-        const nsaclPerm = data?.permissions?.includes('nsacl');
+        const nsaclPerm = data?.permissions?.includes('nsacl') || data?.permissions?.includes('developer');
         const nsaclPermValid = nsaclPerm && (!this.document || !config.protected_namespaces?.includes(this.document.namespace));
         const configPerm = data?.permissions?.includes('config');
         if(aclType === ACLTypes.ACL && (nsaclPermValid || (nsaclPerm && configPerm))) return { result: true };
