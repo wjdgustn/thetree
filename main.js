@@ -1123,8 +1123,8 @@ document.getElementById('initScript')?.remove();
         }
     });
 
-    res.reload = anchor => {
-        if(req.backendMode) {
+    res.reload = (anchor, usingUrl = false) => {
+        if(req.backendMode && !usingUrl) {
             res.json({
                 action: 'reloadView'
             });

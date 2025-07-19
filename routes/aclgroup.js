@@ -413,7 +413,7 @@ app.get('/self_unblock', async (req, res) => {
         content: '확인했습니다.'
     });
 
-    res.reload();
+    res.reload(null, true);
 });
 
 module.exports = app;
