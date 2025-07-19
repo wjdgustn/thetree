@@ -97,14 +97,17 @@ global.S3 = new aws.S3Client({
     }
 });
 
-global.MeiliSearch = new meiliSearch.MeiliSearch({
-    host: process.env.MEILISEARCH_HOST,
-    apiKey: process.env.MEILISEARCH_KEY
-});
-
-global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
+if(process.env.MEILISEARCH_HOST)  {
+    global.MeiliSearch = new meiliSearch.MeiliSearch({
+        host: process.env.MEILISEARCH_HOST,
+        apiKey: process.env.MEILISEARCH_KEY
+    });
+    global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);
+}
 
 global.resetSearchIndex = async () => {
+    if(!global.MeiliSearch) return;
+
     await MeiliSearch.deleteIndex(process.env.MEILISEARCH_INDEX);
     await MeiliSearch.createIndex(process.env.MEILISEARCH_INDEX);
     global.documentIndex = MeiliSearch.index(process.env.MEILISEARCH_INDEX);

@@ -203,18 +203,20 @@ module.exports = {
                 anyoneReadable = readable;
             }
 
-            if(contentExists) await documentIndex.addDocuments({
-                uuid: dbDocument.uuid,
-                choseong: getChoseong(document.title),
-                namespace: dbDocument.namespace,
-                title: dbDocument.title,
-                content: globalUtils.removeHtmlTags(htmlResult.html),
-                raw: rev.content,
-                anyoneReadable
-            }, {
-                primaryKey: 'uuid'
-            });
-            else await documentIndex.deleteDocument(dbDocument.uuid);
+            if(global.documentIndex) {
+                if(contentExists) await documentIndex.addDocuments({
+                    uuid: dbDocument.uuid,
+                    choseong: getChoseong(document.title),
+                    namespace: dbDocument.namespace,
+                    title: dbDocument.title,
+                    content: globalUtils.removeHtmlTags(htmlResult.html),
+                    raw: rev.content,
+                    anyoneReadable
+                }, {
+                    primaryKey: 'uuid'
+                });
+                else await documentIndex.deleteDocument(dbDocument.uuid);
+            }
         }
     },
     async checkMemberContribution(uuid) {
