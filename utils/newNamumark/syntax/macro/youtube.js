@@ -1,4 +1,4 @@
-module.exports = params => {
+module.exports = (params, { Store }) => {
     params = params.split(',').map(param => param.trim());
 
     const videoId = params.shift();
@@ -37,5 +37,7 @@ module.exports = params => {
         if(end) queryStr += `${start ? '&' : ''}end=${end}`;
     }
 
-    return `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="//www.youtube.com/embed/${videoId}${queryStr ?? ''}" loading="lazy"></iframe>`;
+    return Store.macro.counts.youtube >= 3
+        ? `<div class="wiki-media-wrapper"><lite-youtube class="wiki-media" videoid="${videoId}"${start ? ` videostartat=${start}` : ''}${end ? ` params="end=${end}"` : ''} style="width:${width}px;height:${height}px"></lite-youtube></div>`
+        : `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="//www.youtube.com/embed/${videoId}${queryStr ?? ''}" loading="lazy"></iframe>`;
 }

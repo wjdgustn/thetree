@@ -46,7 +46,10 @@ const topToHtml = async (parsed, options = {}) => {
             html: ''
         },
         error: null,
-        voteIndex: -1
+        voteIndex: -1,
+        macro: {
+            counts: {}
+        }
     }
 
     const toHtml = (doc, newOptions) => topToHtml(doc, {
