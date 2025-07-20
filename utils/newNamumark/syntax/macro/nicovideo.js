@@ -1,3 +1,5 @@
+const utils = require('../../utils');
+
 module.exports = params => {
     params = params.split(',').map(param => param.trim());
 
@@ -23,6 +25,10 @@ module.exports = params => {
     if(!videoId) return;
 
     if(!videoId.startsWith('sm')) videoId = `sm${videoId}`;
+
+    videoId = utils.escapeHtml(videoId);
+    width = utils.escapeHtml(width);
+    height = utils.escapeHtml(height);
 
     return `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="//embed.nicovideo.jp/watch/${videoId}" loading="lazy"></iframe>`;
 }

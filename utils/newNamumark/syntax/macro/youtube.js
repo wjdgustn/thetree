@@ -1,7 +1,9 @@
+const utils = require('../../utils');
+
 module.exports = (params, { Store }) => {
     params = params.split(',').map(param => param.trim());
 
-    const videoId = params.shift();
+    let videoId = params.shift();
 
     let width = '640';
     let height = '360';
@@ -29,6 +31,12 @@ module.exports = (params, { Store }) => {
     }
 
     if(!videoId) return;
+
+    videoId = utils.escapeHtml(videoId);
+    width = utils.escapeHtml(width);
+    height = utils.escapeHtml(height);
+    start = utils.escapeHtml(start);
+    end = utils.escapeHtml(end);
 
     let queryStr;
     if(start || end) {

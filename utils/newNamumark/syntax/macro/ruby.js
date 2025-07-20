@@ -3,7 +3,7 @@ const utils = require('../../utils');
 module.exports = (params, options, obj) => {
     params = obj.splittedParams;
 
-    const text = params.shift();
+    let text = params.shift();
 
     let ruby;
     let color;
@@ -16,6 +16,9 @@ module.exports = (params, options, obj) => {
     }
 
     if(!text || !ruby) return '';
+
+    text = utils.escapeHtml(text);
+    ruby = utils.escapeHtml(ruby);
 
     return `<ruby>${text}<rp>(</rp><rt><span${color ? ` style="color:${color}"` : ''}>${ruby}</span></rt><rp>)</rp></ruby>`;
 }
