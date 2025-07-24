@@ -144,7 +144,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     const isRedirect = rev.content?.startsWith('#redirect ');
-    if(!req.query.noredirect && !req.query.from && isRedirect) {
+    if(!req.query.noredirect && !req.query.from && !req.query.uuid && isRedirect) {
         let anchor = undefined;
         let redirectName = rev.content.split('\n')[0].slice('#redirect '.length);
         const hashSplitted = redirectName.split('#');
