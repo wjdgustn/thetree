@@ -42,7 +42,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
     }
 
     const imgUrl = new URL(rev.fileKey, process.env.S3_PUBLIC_HOST);
-    Store.embed.image ??= imgUrl.toString();
+    if(!includeData) Store.embed.image ??= imgUrl.toString();
 
     options.borderRadius = options['border-radius'];
     delete options['border-radius'];
