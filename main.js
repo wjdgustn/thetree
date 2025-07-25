@@ -1252,7 +1252,7 @@ document.getElementById('initScript')?.remove();
         let urlPath = req.path;
         if(urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
         if(urlPath.startsWith('/internal/')) urlPath = urlPath.slice('/internal'.length);
-        const pagePlugin = plugins.page.find(a => a.url === urlPath);
+        const pagePlugin = plugins.page.find(a => typeof a.url === 'string' ? a.url === urlPath : a.url(urlPath));
         if(pagePlugin) return pagePlugin.handler(req, res);
     }
 
