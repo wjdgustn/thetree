@@ -78,7 +78,7 @@ function parsedToTextObj(content) {
         else {
             const value = Array.isArray(item)
                 ? item
-                : item.lines ?? item.parsedText ?? item.content;
+                : item.lines ?? item.parsedText ?? item.items ?? item.content;
             if(value) result.push(...parsedToTextObj(value));
         }
     }
@@ -257,9 +257,9 @@ module.exports = {
         }
     },
     cssFilter: css => filter.process(css),
-    parsedToText(content) {
+    parsedToText(content, putSpace = false) {
         const obj = parsedToTextObj(content);
-        return obj.map(a => a.text).join('');
+        return obj.map(a => a.text).join(putSpace ? ' ' : '');
     },
     AllowedLanguages: [
         'basic',

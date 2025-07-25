@@ -49,6 +49,10 @@ const topToHtml = async (parsed, options = {}) => {
         voteIndex: -1,
         macro: {
             counts: {}
+        },
+        embed: {
+            text: null,
+            image: null
         }
     }
 
@@ -465,13 +469,36 @@ const topToHtml = async (parsed, options = {}) => {
     if(Store.error)
         result = Store.error;
 
-    if(isTop) return {
-        html: result,
-        links: Store.links,
-        files: Store.files,
-        categories: Store.categories,
-        headings: Store.heading.list,
-        hasError: !!Store.error
+    if(isTop) {
+        if(!includeData) {
+            const hasHeading = parsed.result.some(a => a.type === 'heading');
+            console.log('hasHeading:', hasHeading);
+            const target = hasHeading ? parsed.result.filter(a => a.type === 'heading').map((a, i) => {
+                const result = [];
+                if(i) result.push(a.text);
+                result.push(a.content);
+                return result;
+            }) : parsed.result;
+            const embedText = utils.parsedToText(target, true);
+            console.log('embedText:', embedText);
+            Store.embed.text = embedText
+                .replaceAll('\n', ' ')
+                .replaceAll('  ', ' ')
+                .trim()
+                .slice(0, 200);
+            console.log('embed.text:', Store.embed.text);
+        }
+
+
+        return {
+            html: result,
+            links: Store.links,
+            files: Store.files,
+            categories: Store.categories,
+            headings: Store.heading.list,
+            hasError: !!Store.error,
+            embed: Store.embed
+        }
     }
     return result;
 }
