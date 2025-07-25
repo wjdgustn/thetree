@@ -1070,7 +1070,7 @@ document.getElementById('initScript')?.remove();
                     .replace('<!--app-body-->', body);
 
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-                res.send(html);
+                res.status(status).send(html);
             }
         }
         else app.render('main', {
