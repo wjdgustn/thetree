@@ -472,7 +472,6 @@ const topToHtml = async (parsed, options = {}) => {
     if(isTop) {
         if(!includeData) {
             const hasHeading = parsed.result.some(a => a.type === 'heading');
-            console.log('hasHeading:', hasHeading);
             const target = hasHeading ? parsed.result.filter(a => a.type === 'heading').map((a, i) => {
                 const result = [];
                 if(i) result.push(a.text);
@@ -480,13 +479,11 @@ const topToHtml = async (parsed, options = {}) => {
                 return result;
             }) : parsed.result;
             const embedText = utils.parsedToText(target, true);
-            console.log('embedText:', embedText);
             Store.embed.text = embedText
                 .replaceAll('\n', ' ')
                 .replaceAll('  ', ' ')
                 .trim()
                 .slice(0, 200);
-            console.log('embed.text:', Store.embed.text);
         }
 
 
