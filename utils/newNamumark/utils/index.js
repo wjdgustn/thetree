@@ -73,6 +73,7 @@ function parsedToTextObj(content) {
     const result = [];
     if(!Array.isArray(content)) content = [content];
     for(let item of content) {
+        if(!item) continue;
         if(item.type === 'text')
             result.push(item);
         else {
