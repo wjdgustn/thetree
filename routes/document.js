@@ -184,7 +184,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     if(!debug) console.time(`parse ${document.title}`);
     const parseResult = parser(content);
     if(!debug) console.timeEnd(`parse ${document.title}`);
-    if(debug && req.query.np) {
+    if((debug || req.permissions.includes('engine_developer')) && req.query.np) {
         if(req.query.np === 'tok') return res.json(parseResult.tokens);
         if(req.query.np === 'cst') return res.json(parseResult.result);
     }
