@@ -10,6 +10,7 @@ const parseDuration = require('parse-duration');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 const execPromise = util.promisify(exec);
+const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 // openNAMU migration things
 const sqlite3 = require('sqlite3').verbose();
@@ -891,6 +892,32 @@ app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentN
             uuid: history.uuid
         }, {
             hidden: action === 'hide'
+        });
+
+        return res.reload();
+    }
+
+    else if(action === 'delete_file') {
+        if(!req.permissions.includes('config')) return res.status(403).send('missing config permission');
+
+        try {
+            await S3.send(new DeleteObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: history.fileKey
+            }));
+        } catch(e) {
+            console.error(e);
+            return res.status(500).send((debug || req.permissions.includes('developer'))
+                ? e.toString()
+                : '파일 삭제 중 오류가 발생했습니다.');
+        }
+
+        await History.updateMany({
+            fileKey: history.fileKey
+        }, {
+            $unset: {
+                fileKey: 1
+            }
         });
 
         return res.reload();

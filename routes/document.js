@@ -1381,10 +1381,13 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         if(!isNaN(req.query.until)) query.rev = { $gte: parseInt(req.query.until) };
         else if(!isNaN(req.query.from)) query.rev = { $lte: parseInt(req.query.from) };
 
+        const revKeys = 'type rev uuid user createdAt diffLength log revertRev moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id'.split(' ');
+        if(req.permissions.includes('config'))
+            revKeys.push('fileKey');
         revs = await History.find(query)
             .sort({ rev: query.rev?.$gte ? 1 : -1 })
             .limit(30)
-            .select('type rev uuid user createdAt diffLength log revertRev moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id')
+            .select(revKeys)
             .lean();
 
         if(query.rev?.$gte) revs.reverse();
@@ -1417,7 +1420,8 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
             permissions: {
                 troll: req.permissions.includes('mark_troll_revision'),
                 log: req.permissions.includes('hide_document_history_log'),
-                hide: req.permissions.includes('hide_revision')
+                hide: req.permissions.includes('hide_revision'),
+                config: req.permissions.includes('config')
             }
         },
         contentName: 'document/history'
