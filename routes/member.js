@@ -995,7 +995,7 @@ app.post('/member/withdraw',
             },
             {
                 title: {
-                    $regex: new RegExp(`^사용자:${utils.escapeRegExp(req.user.name)}/`)
+                    $regex: new RegExp(`^${utils.escapeRegExp(req.user.name)}/`)
                 }
             }
         ]
@@ -1079,7 +1079,7 @@ app.post('/member/change_name',
             },
             {
                 title: {
-                    $regex: new RegExp(`^사용자:${utils.escapeRegExp(req.user.name)}/`)
+                    $regex: new RegExp(`^${utils.escapeRegExp(req.user.name)}/`)
                 }
             }
         ]
