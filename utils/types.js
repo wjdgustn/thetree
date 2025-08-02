@@ -80,7 +80,8 @@ module.exports = {
     NotificationTypes: {
         UserDiscuss: 0,
         Mention: 1,
-        Owner: 2
+        Owner: 2,
+        Plugin: 3
     },
     AllPermissions: [
         'delete_thread',
