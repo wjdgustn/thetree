@@ -56,6 +56,10 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
             const openMatch = str.match(openRegex);
             if(!openMatch) return null;
 
+            const openLineIndex = text.lastIndexOf('\n', startOffset);
+            const openLine = text.slice(openLineIndex + 1, text.indexOf('\n', openLineIndex + 1));
+            if(openLine.startsWith('##')) return null;
+
             let tokIndex = openMatch[0].length;
             let openCount = 0;
             while(true) {
