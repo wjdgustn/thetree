@@ -439,7 +439,7 @@ global.reloadPlugins = () => {
                     middleware: express.static(folder)
                 });
             }
-            else if(!f.includes('.')) {
+            else if(!f.includes('.') && f !== 'node_modules' && f !== 'lib') {
                 const nextPath = path.join(dir, f);
                 const isDir = fs.lstatSync(nextPath).isDirectory();
                 if(isDir) loadPlugins(nextPath);
