@@ -799,7 +799,7 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_co
 
     const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
-    if(!readable) return res.error(aclMessage, 403);
+    if(!readable) return res.status(403).send(aclMessage);
 
     let dbComment = await ThreadComment.findOne({
         thread: thread.uuid,
@@ -842,7 +842,7 @@ app.get('/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) 
 
     const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
-    if(!readable) return res.error(aclMessage, 403);
+    if(!readable) return res.status(403).send(aclMessage);
 
     const dbComment = await ThreadComment.findOne({
         thread: thread.uuid,
