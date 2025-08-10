@@ -12,6 +12,10 @@ const newSchema = new Schema({
         index: true,
         default: crypto.randomUUID
     },
+    thread: {
+        type: String,
+        index: true
+    },
     document: {
         type: String,
         index: true
@@ -62,6 +66,7 @@ newSchema.pre('save', async function() {
         let query = {};
         if(this.document) query.document = this.document;
         else if(this.namespace) query.namespace = this.namespace;
+        else if(this.thread) query.thread = this.thread;
 
         const last = await model.findOne({
             ...query,

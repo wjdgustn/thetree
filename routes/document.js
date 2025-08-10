@@ -428,13 +428,8 @@ app.get('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     let aclData = aclMapper(acl);
     let nsaclData = aclMapper(namespaceACL);
     if(req.backendMode) {
-        const strMapper = a => ({
-            ...utils.onlyKeys(a, ['uuid', 'expiresAt']),
-            condition: ACL.ruleToConditionString(a, false),
-            action: ACL.actionToString(a)
-        });
-        aclData = aclData.map(a => a.map(b => strMapper(b)));
-        nsaclData = nsaclData.map(a => a.map(b => strMapper(b)));
+        aclData = aclData.map(a => a.map(b => utils.aclStrMapper(b)));
+        nsaclData = nsaclData.map(a => a.map(b => utils.aclStrMapper(b)));
     }
 
     res.renderSkin(undefined, {
@@ -459,18 +454,23 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     if(!title && target === 'document') return res.status(400).send('문서 이름이 없습니다.');
 
     let dbDocument;
-    if(target === 'document') {
+    let dbThread;
+    if(target === 'thread') {
+        dbThread = await Thread.findOne({
+            url: req.body.thread
+        });
+        if(!dbThread) return res.status(404).send('존재하지 않는 thread');
+    }
+    if(target === 'document' || target === 'thread') {
         dbDocument = await Document.findOne({
             namespace,
             title
         });
 
-        if(dbDocument) {
-            const acl = await ACL.get({document: dbDocument}, document);
-            const {result: editable, aclMessage} = await acl.check(ACLTypes.ACL, req.aclData);
+        const acl = await ACL.get({ document: dbDocument }, document);
+        const { result: editable, aclMessage } = await acl.check(ACLTypes.ACL, req.aclData);
 
-            if(!editable) return res.status(403).send(aclMessage);
-        }
+        if(!editable) return res.status(403).send(aclMessage);
     }
     else if(target === 'namespace') {
         if(!req.permissions.includes('nsacl')) return res.status(403).send('이름공간 ACL 수정은 nsacl 권한이 필요합니다!');
@@ -564,13 +564,18 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
             document: dbDocument.uuid
         });
     }
+    else if(target === 'thread') aclExists = await ACLModel.exists({
+        ...existsCheck,
+        thread: dbThread.uuid
+    });
     else aclExists = await ACLModel.exists({
         ...existsCheck,
         namespace
     });
     if(aclExists) return res.status(409).send('acl_already_exists');
 
-    if(target === 'document') {
+    if(target === 'thread') newACL.thread = dbThread.uuid;
+    else if(target === 'document') {
         if(!dbDocument) {
             dbDocument = new Document({
                 namespace,
@@ -622,9 +627,13 @@ app.get('/action/acl/delete', async (req, res) => {
     if(dbACL.type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
 
     let dbDocument;
-    if(dbACL.document) {
+    let dbThread;
+    if(dbACL.document || dbACL.thread) {
+        if(dbACL.thread) dbThread = await Thread.findOne({
+            uuid: dbACL.thread
+        });
         dbDocument = await Document.findOne({
-            uuid: dbACL.document
+            uuid: dbThread.document || dbACL.document
         });
 
         const acl = await ACL.get({ document: dbDocument }, {

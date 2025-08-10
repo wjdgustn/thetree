@@ -985,5 +985,12 @@ module.exports = {
             result.push(array.slice(i, i + size));
         }
         return result;
+    },
+    aclStrMapper(a) {
+        return {
+            ...this.onlyKeys(a, ['uuid', 'expiresAt']),
+            condition: global.ACLClass.ruleToConditionString(a, false),
+            action: global.ACLClass.actionToString(a)
+        }
     }
 }

@@ -79,7 +79,7 @@ SocketIO.of('/thread').use(async (socket, next) => {
     });
     const document = utils.dbDocumentToDocument(dbDocument);
 
-    const acl = await ACL.get({ document: dbDocument }, document);
+    const acl = await ACL.get({ thread }, document);
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return next(new Error(readAclMessage));
 
@@ -311,7 +311,7 @@ app.get('/thread/:url', async (req, res) => {
     });
     const document = utils.dbDocumentToDocument(dbDocument);
 
-    const acl = await ACL.get({ document: dbDocument }, document);
+    const acl = await ACL.get({ thread }, document);
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(readAclMessage, 403);
 
@@ -356,6 +356,47 @@ app.get('/thread/:url', async (req, res) => {
     });
 });
 
+app.get('/thread/:url/acl', async (req, res) => {
+    const thread = await Thread.findOne({
+        url: req.params.url,
+        deleted: false
+    });
+    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+
+    const dbDocument = await Document.findOne({
+        uuid: thread.document
+    });
+    const document = utils.dbDocumentToDocument(dbDocument);
+
+    const acl = await ACL.get({ thread }, document);
+    const documentACL = acl.documentACL;
+    const namespaceACL = acl.namespaceACL;
+
+    const { result: editableACL } = await acl.check(ACLTypes.ACL, req.aclData);
+    const editableNSACL = req.permissions.includes('nsacl');
+
+    const aclData = acl.aclTypes.map(a => a.map(b => utils.aclStrMapper(b)));
+    const docaclData = documentACL.aclTypes.map(a => a.map(b => utils.aclStrMapper(b)));
+    const nsaclData = namespaceACL.aclTypes.map(a => a.map(b => utils.aclStrMapper(b)));
+
+    res.renderSkin(undefined, {
+        viewName: 'acl',
+        document,
+        serverData: {
+            thread: {
+                url: thread.url,
+                topic: thread.topic
+            },
+            threadACL: aclData,
+            acl: docaclData,
+            namespaceACL: nsaclData,
+            editableACL,
+            editableNSACL
+        },
+        contentName: 'document/acl'
+    });
+});
+
 app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
@@ -368,7 +409,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
     });
     const document = utils.dbDocumentToDocument(dbDocument);
 
-    const acl = await ACL.get({ document: dbDocument }, document);
+    const acl = await ACL.get({ thread }, document);
     const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(readAclMessage, 403);
 
@@ -421,7 +462,7 @@ app.post('/thread/:url', async (req, res) => {
         uuid: thread.document
     });
 
-    const acl = await ACL.get({ document });
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: writable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!writable) return res.status(403).send(aclMessage);
 
@@ -487,7 +528,7 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
         uuid: thread.document
     });
 
-    const acl = await ACL.get({ document });
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
@@ -570,7 +611,7 @@ app.post('/admin/thread/:url/topic', middleware.permission('update_thread_topic'
         uuid: thread.document
     });
 
-    const acl = await ACL.get({ document });
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
@@ -626,7 +667,7 @@ app.post('/admin/thread/:url/document', middleware.permission('update_thread_doc
     });
     const document = utils.dbDocumentToDocument(dbDocument);
 
-    const acl = await ACL.get({ document: dbDocument });
+    const acl = await ACL.get({ thread }, document);
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
@@ -718,7 +759,7 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
         uuid: thread.document
     });
 
-    const acl = await ACL.get({ document });
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
@@ -756,7 +797,7 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_co
         uuid: thread.document
     });
 
-    const acl = await ACL.get({ document });
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
@@ -799,7 +840,7 @@ app.get('/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) 
         uuid: thread.document
     });
 
-    const acl = await ACL.get({ document });
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(aclMessage, 403);
 
@@ -834,7 +875,7 @@ app.post('/vote/:commentId/:voteIndex', async (req, res) => {
         uuid: thread.document
     });
 
-    const acl = await ACL.get({ document });
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
     const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
     if(!readable) return res.status(403).send(aclMessage);
 

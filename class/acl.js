@@ -15,7 +15,19 @@ const checkDefaultData = {
 
 module.exports = class ACL {
     static async get(filter = {}, document = null, noOtherNS = false) {
-        if(typeof filter.document?.uuid === 'string') {
+        let thread;
+        if(typeof filter.thread?.uuid === 'string') {
+            thread = filter.thread;
+            filter.thread = filter.thread.uuid;
+
+            if(!document) {
+                const doc = await models.Document.findOne({
+                    uuid: thread.document
+                });
+                if(doc) document = utils.dbDocumentToDocument(doc);
+            }
+        }
+        else if(typeof filter.document?.uuid === 'string') {
             if(document == null) document = filter.document;
             filter.document = filter.document.uuid;
         }
@@ -35,6 +47,11 @@ module.exports = class ACL {
                 }
             ]
         }).sort({ order: 1 }).lean();
+
+        let documentACL;
+        if(document && thread?.document) documentACL = await this.get({
+            document: thread.document
+        });
 
         let namespaceACL;
         if(document?.namespace && !filter.namespace) namespaceACL = await this.get({
@@ -64,10 +81,10 @@ module.exports = class ACL {
             }
         }
 
-        return new this(rules, document, namespaceACL, noOtherNS);
+        return new this(rules, document, { thread, documentACL, namespaceACL }, noOtherNS);
     }
 
-    constructor(rules = [], document = null, namespaceACL = null, noOtherNS = false) {
+    constructor(rules = [], document = null, { thread, documentACL, namespaceACL }, noOtherNS = false) {
         this.aclTypes = [...Array(Object.keys(ACLTypes).length)].map(_ => []);
 
         for(let rule of rules) {
@@ -76,9 +93,10 @@ module.exports = class ACL {
 
         if(document) {
             this.document = document;
-            this.aclTabMessage = ` 해당 문서의 <a href="${globalUtils.doc_action_link(document, 'acl')}">ACL 탭</a>을 확인하시기 바랍니다.`;
+            this.aclTabMessage = ` 해당 문서의 <a href="${thread ? `/thread/${thread.url}/acl` : globalUtils.doc_action_link(document, 'acl')}">ACL 탭</a>을 확인하시기 바랍니다.`;
         }
 
+        if(documentACL) this.documentACL = documentACL;
         if(namespaceACL) this.namespaceACL = namespaceACL;
 
         this.noOtherNS = noOtherNS;
@@ -205,6 +223,7 @@ module.exports = class ACL {
         }
 
         let rules = this.aclTypes[aclType];
+        if(!rules.length && this.documentACL) rules = this.documentACL.aclTypes[aclType];
         if(!rules.length && this.namespaceACL) rules = this.namespaceACL.aclTypes[aclType];
 
         let nsResult;
