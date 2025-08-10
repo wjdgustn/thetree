@@ -93,7 +93,7 @@ module.exports = class ACL {
 
         if(document) {
             this.document = document;
-            this.aclTabMessage = ` 해당 문서의 <a href="${thread ? `/thread/${thread.url}/acl` : globalUtils.doc_action_link(document, 'acl')}">ACL 탭</a>을 확인하시기 바랍니다.`;
+            this.aclTabMessage = ` 해당 ${thread ? '토론' : '문서'}의 <a href="${thread ? `/thread/${thread.url}/acl` : globalUtils.doc_action_link(document, 'acl')}">ACL 탭</a>을 확인하시기 바랍니다.`;
         }
 
         if(documentACL) this.documentACL = documentACL;
