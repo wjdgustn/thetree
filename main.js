@@ -628,8 +628,10 @@ app.use(express.json({
 let store;
 if(process.env.USE_REDIS === 'true') {
     const client = redis.createClient({
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
+        socket: {
+            host: process.env.REDIS_HOST,
+            port: process.env.REDIS_PORT
+        },
         password: process.env.REDIS_PASSWORD
     });
     client.connect().catch(console.error);
