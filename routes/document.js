@@ -599,13 +599,13 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
         req.body.conditionType.toLowerCase() + ':' + rawConditionContent
     ].join(',');
 
-    if(dbDocument) await History.create({
+    if(dbDocument && target === 'document') await History.create({
         user: req.user.uuid,
         type: HistoryTypes.ACL,
         document: dbDocument.uuid,
         log
     });
-    else await AuditLog.create({
+    else if(target === namespace) await AuditLog.create({
         user: req.user.uuid,
         action: AuditLogTypes.NamespaceACL,
         target: namespace,
@@ -677,13 +677,13 @@ app.get('/action/acl/delete', async (req, res) => {
         utils.getKeyFromObject(ACLConditionTypes, conditionType).toLowerCase() + ':' + conditionContent
     ].join(',');
 
-    if(dbDocument) await History.create({
+    if(dbDocument && dbACL.document) await History.create({
         user: req.user.uuid,
         type: HistoryTypes.ACL,
         document: dbDocument.uuid,
         log
     });
-    else await AuditLog.create({
+    else if(dbACL.namespace) await AuditLog.create({
         user: req.user.uuid,
         action: AuditLogTypes.NamespaceACL,
         target: dbACL.namespace,
