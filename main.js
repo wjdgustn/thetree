@@ -800,6 +800,13 @@ app.use(async (req, res, next) => {
 
     await utils.makeACLData(req);
 
+    const isDev = req.permissions.includes('developer');
+    app.locals.isDev = isDev;
+
+    if(isDev) for(let perm of AllPermissions) {
+        if(!req.permissions.includes(perm)) req.permissions.push(perm);
+    }
+
     if(req.user?.type === UserTypes.Account) {
         if(!req.permissions.includes('hideip') && req.session.lastIp !== req.ip) {
             req.session.lastIp = req.ip;
@@ -816,13 +823,6 @@ app.use(async (req, res, next) => {
                 });
             }, 0);
         }
-    }
-
-    const isDev = req.permissions.includes('developer');
-    app.locals.isDev = isDev;
-
-    if(isDev) for(let perm of AllPermissions) {
-        if(!req.permissions.includes(perm)) req.permissions.push(perm);
     }
 
     let skin = req.user?.skin;
