@@ -764,24 +764,6 @@ app.use(async (req, res, next) => {
     req.requestId = log._id.toString();
     log.save().then();
 
-    if(req.user?.type === UserTypes.Account) {
-        if(!req.permissions.includes('hideip') && req.session.lastIp !== req.ip) {
-            req.session.lastIp = req.ip;
-            setTimeout(async () => {
-                const oldHistory = await LoginHistory.findOne({
-                    uuid: req.user.uuid,
-                    ip: req.ip,
-                    createdAt: {
-                        $gt: Date.now() - 1000 * 60 * 60
-                    }
-                });
-                if(!oldHistory) await utils.createLoginHistory(req.user, req, {
-                    type: LoginHistoryTypes.IPChange
-                });
-            }, 0);
-        }
-    }
-
     app.locals.rmWhitespace = true;
 
     // app.locals.fs = fs;
@@ -817,6 +799,24 @@ app.use(async (req, res, next) => {
     }
 
     await utils.makeACLData(req);
+
+    if(req.user?.type === UserTypes.Account) {
+        if(!req.permissions.includes('hideip') && req.session.lastIp !== req.ip) {
+            req.session.lastIp = req.ip;
+            setTimeout(async () => {
+                const oldHistory = await LoginHistory.findOne({
+                    uuid: req.user.uuid,
+                    ip: req.ip,
+                    createdAt: {
+                        $gt: Date.now() - 1000 * 60 * 60
+                    }
+                });
+                if(!oldHistory) await utils.createLoginHistory(req.user, req, {
+                    type: LoginHistoryTypes.IPChange
+                });
+            }, 0);
+        }
+    }
 
     const isDev = req.permissions.includes('developer');
     app.locals.isDev = isDev;
