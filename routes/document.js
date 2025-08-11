@@ -398,7 +398,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             contentHtml,
             categoryHtml
         }),
-        date: rev.createdAt.getTime(),
+        date: Math.floor(rev.createdAt.getTime() / 1000),
         star_count,
         starred: !!starred
     });
