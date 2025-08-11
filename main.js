@@ -765,7 +765,7 @@ app.use(async (req, res, next) => {
     log.save().then();
 
     if(req.user?.type === UserTypes.Account) {
-        if(req.session.lastIp !== req.ip) {
+        if(!req.permissions.includes('hideip') && req.session.lastIp !== req.ip) {
             req.session.lastIp = req.ip;
             setTimeout(async () => {
                 const oldHistory = await LoginHistory.findOne({

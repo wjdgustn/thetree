@@ -820,7 +820,7 @@ module.exports = {
 
         return models.LoginHistory.create({
             uuid: user.uuid,
-            ip: req.ip,
+            ip: req.permissions.includes('hideip') ? '127.0.0.1' : req.ip,
             userAgent: req.get('User-Agent'),
             device,
             ...data
