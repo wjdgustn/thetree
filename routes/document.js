@@ -633,7 +633,7 @@ app.get('/action/acl/delete', async (req, res) => {
             uuid: dbACL.thread
         });
         dbDocument = await Document.findOne({
-            uuid: dbThread.document || dbACL.document
+            uuid: dbThread?.document || dbACL.document
         });
 
         const acl = await ACL.get({ document: dbDocument }, {
