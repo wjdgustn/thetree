@@ -4,7 +4,7 @@ const utils = require('../../utils');
 const mainUtils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
 
-module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData }) => {
+module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData, disableImageLinkButton }) => {
     const document = mainUtils.parseDocumentName(obj.link);
     let { namespace, title } = document;
 
@@ -138,7 +138,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
 <img${imgAttrib} style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
 <img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
-${docDocument.namespace === namespace && docDocument.title === title 
+${disableImageLinkButton || (docDocument.namespace === namespace && docDocument.title === title) 
     ? '' 
     : `<a class="wiki-image-info" href="${globalUtils.doc_action_link(document, 'w')}" rel="nofollow noopener"></a>`
 }

@@ -31,7 +31,8 @@ const topToHtml = async (parsed, options = {}) => {
         aclData = {},
         commentId,
         req,
-        includeData = null
+        includeData = null,
+        disableImageLinkButton = false
     } = options;
 
     const Store = options.Store ??= {
@@ -434,7 +435,8 @@ const topToHtml = async (parsed, options = {}) => {
                     thread,
                     toHtml,
                     Store,
-                    includeData
+                    includeData,
+                    disableImageLinkButton
                 });
                 break;
             case 'macro':
