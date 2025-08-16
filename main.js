@@ -401,7 +401,8 @@ global.plugins = {
     skinData: [],
     editor: [],
     page: [],
-    preHook: []
+    preHook: [],
+    code: []
 };
 global.pluginPaths = {};
 const pluginStaticPaths = [];
@@ -428,6 +429,10 @@ global.reloadPlugins = () => {
                 plugins[plugin.type].push(plugin);
 
                 if(plugin.name) pluginPaths[plugin.name] = path.resolve(dir);
+
+                if(plugin.type === 'code') setTimeout(async () => {
+                    await plugin.code();
+                }, 0);
             }
             else if(f === 'public') {
                 if(dir.split(path.sep).length !== 2) continue;
