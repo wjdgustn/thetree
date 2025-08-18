@@ -4,12 +4,16 @@ const { Address4, Address6 } = require('ip-address');
 
 const utils = require('../utils');
 const middleware = require('../utils/middleware');
-const { BlockHistoryTypes } = require('../utils/types');
+const {
+    BlockHistoryTypes,
+    AuditLogTypes
+} = require('../utils/types');
 
 const User = require('../schemas/user');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLGroupItem = require('../schemas/aclGroupItem');
 const BlockHistory = require('../schemas/blockHistory');
+const AuditLog = require('../schemas/auditLog');
 
 const app = express.Router();
 
@@ -160,6 +164,11 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
     }
 
     await ACLGroup.create(newGroup);
+    await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.ACLGroupCreate,
+        target: name
+    });
 
     if(req.backendMode) res.reload();
     else res.redirect(`/aclgroup?group=${encodeURIComponent(name)}`);
@@ -174,7 +183,12 @@ app.post('/aclgroup/group_remove', async (req, res) => {
         ? !target.deleteGroupPerms.some(a => req.permissions.includes(a))
         : !req.permissions.includes('aclgroup')) return res.status(403).send('권한이 부족합니다.');
 
-    await ACLGroup.deleteOne({ uuid });
+    const deleted = await ACLGroup.findOneAndDelete({ uuid });
+    await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.ACLGroupDelete,
+        target: deleted.name
+    });
 
     if(req.backendMode) res.reload();
     else res.redirect('/aclgroup');

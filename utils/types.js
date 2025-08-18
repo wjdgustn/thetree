@@ -71,7 +71,9 @@ module.exports = {
     AuditLogTypes: {
         NamespaceACL: 0,
         DeleteThread: 1,
-        DevSupport: 2
+        DevSupport: 2,
+        ACLGroupCreate: 3,
+        ACLGroupDelete: 4
     },
     LoginHistoryTypes: {
         Login: 0,
