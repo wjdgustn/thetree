@@ -422,7 +422,7 @@ app.get('/acl/?*', middleware.parseDocumentName, async (req, res) => {
     const editableNSACL = req.permissions.includes('nsacl');
 
     const aclMapper = a => utils.onlyKeys(a.aclTypes, [
-        'uuid', 'type', 'expiresAt', 'conditionType', 'conditionContent', 'user', 'aclGroup', 'actionType', 'actionContent'
+        'uuid', 'type', 'expiresAt', 'not', 'conditionType', 'conditionContent', 'user', 'aclGroup', 'actionType', 'actionContent'
     ]);
 
     let aclData = aclMapper(acl);
@@ -537,6 +537,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
 
     const newACL = {
         type: aclType,
+        not: req.body.not === 'Y',
         conditionType,
         conditionContent,
         actionType
@@ -596,7 +597,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
         'insert',
         utils.camelToSnakeCase(req.body.aclType),
         req.body.actionType.toLowerCase(),
-        req.body.conditionType.toLowerCase() + ':' + rawConditionContent
+        (req.body.not === 'Y' ? 'not ' : '') + req.body.conditionType.toLowerCase() + ':' + rawConditionContent
     ].join(',');
 
     if(dbDocument && target === 'document') await History.create({
@@ -674,7 +675,7 @@ app.get('/action/acl/delete', async (req, res) => {
         'delete',
         aclTypeStr,
         utils.getKeyFromObject(ACLActionTypes, dbACL.actionType).toLowerCase(),
-        utils.getKeyFromObject(ACLConditionTypes, conditionType).toLowerCase() + ':' + conditionContent
+        (dbACL.not ? 'not ' : '') + utils.getKeyFromObject(ACLConditionTypes, conditionType).toLowerCase() + ':' + conditionContent
     ].join(',');
 
     if(dbDocument && dbACL.document) await History.create({

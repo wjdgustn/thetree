@@ -35,6 +35,10 @@ const newSchema = new Schema({
         type: Number,
         min: 0
     },
+    not: {
+        type: Boolean,
+        default: false
+    },
     conditionType: {
         type: Number,
         required: true,

@@ -143,21 +143,23 @@ module.exports = class ACL {
     }
 
     static ruleToRequiredString(rule) {
+        let str = rule.not ? 'NOT ' : '';
         if(rule.conditionType === ACLConditionTypes.Perm) {
-            return ACL.permissionToString(rule.conditionContent, true)
+            str += ACL.permissionToString(rule.conditionContent, true)
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
-            return `특정 사용자`
+            str += `특정 사용자`
         }
         else if(rule.conditionType === ACLConditionTypes.IP) {
-            return `특정 IP`
+            str += `특정 IP`
         }
         else if(rule.conditionType === ACLConditionTypes.GeoIP) {
-            return `geoip:${rule.conditionContent}`
+            str += `geoip:${rule.conditionContent}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `ACL그룹 ${rule.aclGroup?.name ?? rule.conditionContent}에 속해 있는 사용자`
+            str += `ACL그룹 ${rule.aclGroup?.name ?? rule.conditionContent}에 속해 있는 사용자`
         }
+        return str;
     }
 
     static ruleToDenyString(rule, aclGroupId = 0, isIp = false) {
@@ -170,18 +172,20 @@ module.exports = class ACL {
     }
 
     static ruleToConditionString(rule, formatPerm = true) {
+        let str = rule.not ? 'NOT ' : '';
         if(rule.conditionType === ACLConditionTypes.Perm) {
-            return `${ACL.permissionToString(rule.conditionContent, !formatPerm)}`
+            str += `${ACL.permissionToString(rule.conditionContent, !formatPerm)}`
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
-            return `user:${rule.user?.name ?? rule.conditionContent}`
+            str += `user:${rule.user?.name ?? rule.conditionContent}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `aclgroup:${rule.aclGroup?.name ?? rule.conditionContent}`
+            str += `aclgroup:${rule.aclGroup?.name ?? rule.conditionContent}`
         }
         else {
-            return `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${rule.conditionContent}`;
+            str += `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${rule.conditionContent}`;
         }
+        return str;
     }
 
     static actionToString(ruleOrActionType) {
@@ -299,40 +303,50 @@ module.exports = class ACL {
     }
 
     async testRule(rule, data = {}) {
+        const action = rule.actionType;
+        if(action >= ACLActionTypes.Allow
+            && data?.permissions?.includes('developer')) return { action };
+
+        const result = await this.actualTestRule(rule, data);
+        if(rule.not) result.result = !result.result;
+        if(result.result) {
+            delete result.result;
+            result.action = action;
+            return result;
+        }
+        else return { action: ACLActionTypes.Skip };
+    }
+
+    async actualTestRule(rule, data = {}) {
         data = {
             ...checkDefaultData,
             ...data
         }
 
-        const action = rule.actionType;
-
-        if(action >= ACLActionTypes.Allow
-            && data?.permissions?.includes('developer')) return { action };
-
         if(rule.conditionType === ACLConditionTypes.Perm) {
-            if(rule.conditionContent === 'any') return { action };
+            if(rule.conditionContent === 'any') return { result: true };
 
             if(data.user && rule.document && rule.conditionContent === 'document_contributor') {
                 const contribution = await models.History.exists({
                     document: rule.document,
                     user: data.user.uuid
                 });
-                if(contribution) return { action };
+                if(contribution) return { result: true };
                 else return { action: ACLActionTypes.Skip };
             }
             if(data.user && this.document && rule.conditionContent === 'match_username_and_document_title') {
                 const docName = this.document.title.split('/')[0];
-                if(data.user.name === docName) return { action };
+                if(data.user.name === docName) return { result: true };
                 else return { action: ACLActionTypes.Skip };
             }
 
             if(!data.permissions) return { action: ACLActionTypes.Skip };
-            if(data.permissions.includes(rule.conditionContent)) return { action };
+            if(data.permissions.includes(rule.conditionContent)) return { result: true };
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
             if(!rule.user) return { action: ACLActionTypes.Skip };
 
-            if(data.user?.uuid === rule.user.uuid) return { action };
+            if(data.user?.uuid === rule.user.uuid) return { result: true };
         }
         else if(rule.conditionType === ACLConditionTypes.IP) {
             if(!data.ip) return { action: ACLActionTypes.Skip };
@@ -346,13 +360,13 @@ module.exports = class ACL {
                 const request = new Address4(data.ip);
                 const target = new Address4(rule.conditionContent);
 
-                if(request.isInSubnet(target)) return { action };
+                if(request.isInSubnet(target)) return { result: true };
             }
             else {
                 const request = new Address6(data.ip);
                 const target = new Address6(rule.conditionContent);
 
-                if(request.isInSubnet(target)) return { action };
+                if(request.isInSubnet(target)) return { result: true };
             }
         }
         else if(rule.conditionType === ACLConditionTypes.GeoIP) {
@@ -361,7 +375,7 @@ module.exports = class ACL {
             const lookupResult = ipLookup(data.ip);
             if(!lookupResult) return { action: ACLActionTypes.Skip };
 
-            if(lookupResult.country === rule.conditionContent) return { action };
+            if(lookupResult.country === rule.conditionContent) return { result: true };
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
             if(!rule.aclGroup) return { action: ACLActionTypes.Skip };
@@ -381,7 +395,7 @@ module.exports = class ACL {
                     ],
                     user: data.user.uuid
                 });
-                if(userTest) return { action, aclGroupItem: userTest };
+                if(userTest) return { result: true, aclGroupItem: userTest };
             }
 
             if(data.ip) {
@@ -408,7 +422,7 @@ module.exports = class ACL {
                         $gte: ipArr
                     }
                 });
-                if(ipTest) return { action, aclGroupItem: ipTest };
+                if(ipTest) return { result: true, aclGroupItem: ipTest };
             }
         }
 
