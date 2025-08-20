@@ -54,7 +54,8 @@ const topToHtml = async (parsed, options = {}) => {
         embed: {
             text: null,
             image: null
-        }
+        },
+        ...(options.StorePatch ?? {})
     }
 
     const toHtml = (doc, newOptions) => topToHtml(doc, {
