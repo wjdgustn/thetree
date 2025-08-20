@@ -464,7 +464,7 @@ const topToHtml = async (parsed, options = {}) => {
                 console.error('missing implementation:', obj.type);
         }
 
-        if(result.length > MAXIMUM_LENGTH) {
+        if(result.length > config.document_maximum_length ?? MAXIMUM_LENGTH) {
             Store.error = MAXIMUM_LENGTH_HTML;
             break;
         }

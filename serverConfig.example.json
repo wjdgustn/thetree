@@ -7,6 +7,7 @@
   "protected_namespaces": [],
 
   "max_file_size": 10,
+  "document_maximum_length": 1000000,
 
   "can_withdraw": true,
   "withdraw_last_activity_hours": 24,
