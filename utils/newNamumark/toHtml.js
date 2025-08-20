@@ -278,10 +278,6 @@ const topToHtml = async (parsed, options = {}) => {
     let result = '';
     for(let obj of doc) {
         if(Store.error) break;
-        if(result.length > MAXIMUM_LENGTH) {
-            Store.error = MAXIMUM_LENGTH_HTML;
-            break;
-        }
 
         if(Array.isArray(obj)) {
             const lines = [];
@@ -466,6 +462,11 @@ const topToHtml = async (parsed, options = {}) => {
             default:
                 console.trace();
                 console.error('missing implementation:', obj.type);
+        }
+
+        if(result.length > MAXIMUM_LENGTH) {
+            Store.error = MAXIMUM_LENGTH_HTML;
+            break;
         }
     }
 
