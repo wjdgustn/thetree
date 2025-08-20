@@ -2,9 +2,12 @@ const fs = require('fs');
 
 const utils = require('../../utils');
 
-const macros = {};
-const threadMacros = [];
-const loadMacros = () => {
+let macros = {};
+let threadMacros = [];
+global.loadMacros = () => {
+    macros = {};
+    threadMacros = [];
+
     const files = fs.readdirSync(__dirname);
     for(let file of files) {
         if(file === 'index.js') continue;
