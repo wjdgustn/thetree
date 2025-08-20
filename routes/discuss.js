@@ -175,6 +175,13 @@ app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     for(let thread of openThreads) {
+        const acl = await ACL.get({ thread }, document);
+        const { result: readable } = await acl.check(ACLTypes.Read, req.aclData);
+        if(!readable) {
+            thread.recentComments = [];
+            continue;
+        }
+
         let comments = await ThreadComment.find({
             thread: thread.uuid
         })
