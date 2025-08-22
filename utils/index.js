@@ -640,7 +640,7 @@ module.exports = {
         return result;
     },
     async validateCaptcha(req) {
-        if(!config.captcha.enabled || req.permissions.includes('no_force_captcha')) return true;
+        if(!config.captcha.enabled || req.permissions.includes('skip_captcha')) return true;
 
         const response = req.body[{
             recaptcha: 'g-recaptcha-response',

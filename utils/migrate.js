@@ -2,6 +2,7 @@ const fs = require('fs');
 
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
+const User = require('../schemas/user');
 
 module.exports = [
     {
@@ -49,6 +50,21 @@ module.exports = [
                 }
             }]);
             console.log('migrated deleted user histories');
+        }
+    },
+    {
+        timestamp: 1755836434142,
+        code: async () => {
+            await User.updateMany({
+                permissions: 'no_force_captcha'
+            }, {
+                $addToSet: {
+                    permissions: 'skip_captcha'
+                },
+                $pullAll: {
+                    permissions: 'no_force_captcha'
+                }
+            });
         }
     }
 ]
