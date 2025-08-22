@@ -53,14 +53,18 @@ module.exports = [
         }
     },
     {
-        timestamp: 1755836893854,
+        timestamp: 1755837033735,
         code: async () => {
             await User.updateMany({
                 permissions: 'no_force_captcha'
             }, {
                 $addToSet: {
                     permissions: 'skip_captcha'
-                },
+                }
+            });
+            await User.updateMany({
+                permissions: 'no_force_captcha'
+            }, {
                 $pull: {
                     permissions: 'no_force_captcha'
                 }
