@@ -190,7 +190,7 @@ module.exports = {
                         botrows.push(node2 = document.createElement("tr"));
                         if (wordlevel) {
                             var baseTextLine = baseTextLines[b] || '';
-                            var newTextLine = newTextLines[n];
+                            var newTextLine = newTextLines[n] || '';
                             var wordrule = /([^\S]+|[a-zA-Z0-9_-]+|.)(?:(?!<)[^\S])?/;
                             var bw = baseTextLine.split(wordrule);
                             var nw = newTextLine.split(wordrule);
