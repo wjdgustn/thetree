@@ -142,7 +142,11 @@ module.exports = {
             row.appendChild(ctelt("td", change, textLines[tidx != null ? tidx : tidx2].replace(/\t/g, "\u00a0\u00a0\u00a0\u00a0")));
             // if(change !== 'equal') console.log('change', change, tidx, tidx2, isNew);
             if(change === 'delete' && tidx != null) deletedLines.push(tidx);
-            else if(change !== 'equal' && tidx2 != null) ((change === 'insert' && !deletedLines.includes(tidx2)) ? addedLines : changedLines).push(tidx2);
+            else if(change !== 'equal' && tidx2 != null) {
+                const isAdded = (change === 'insert' && !deletedLines.includes(tidx2));
+                (isAdded ? addedLines : changedLines).push(tidx2);
+                if(!isAdded) deletedLines.splice(deletedLines.indexOf(tidx2), 1);
+            }
         }
 
         function addCellsNode (row, tidx, tidx2, node, change) {
