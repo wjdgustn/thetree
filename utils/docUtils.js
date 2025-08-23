@@ -40,11 +40,11 @@ module.exports = {
         return result;
     },
     generateBlame(last, curr) {
-        const { addedLines, changedLines, newLines } = utils.generateDiff(last?.content, curr?.content, true);
+        const { addedLines, deletedLines, changedLines, newLines } = utils.generateDiff(last?.content, curr?.content, true);
         // console.log('addedLines', addedLines);
         // console.log('changedLines', changedLines);
 
-        const lineArr = this.blameToLineArr(last?.blame || []);
+        const lineArr = this.blameToLineArr(last?.blame || []).filter((_, i) => !deletedLines.includes(i));
         const newLineArr = newLines.map((_, i) => addedLines.includes(i) ? curr.uuid : lineArr.shift());
         for(let line of changedLines) newLineArr[line] = curr.uuid;
 

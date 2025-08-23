@@ -257,6 +257,7 @@ module.exports = {
 
         return {
             addedLines,
+            deletedLines,
             changedLines,
             diffHtml: node.innerHTML
         }
