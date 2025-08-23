@@ -41,6 +41,8 @@ module.exports = {
     },
     generateBlame(last, curr) {
         const { addedLines, changedLines, newLines } = utils.generateDiff(last?.content, curr?.content, true);
+        // console.log('addedLines', addedLines);
+        // console.log('changedLines', changedLines);
 
         const lineArr = this.blameToLineArr(last?.blame || []);
         const newLineArr = newLines.map((_, i) => addedLines.includes(i) ? curr.uuid : lineArr.shift());

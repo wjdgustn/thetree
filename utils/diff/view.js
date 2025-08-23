@@ -134,19 +134,21 @@ module.exports = {
         }
 
         const addedLines = [];
+        const deletedLines = [];
         const changedLines = [];
-        function addCellsInline (row, tidx, tidx2, textLines, change, isNew = false) {
+        function addCellsInline (row, tidx, tidx2, textLines, change) {
             row.appendChild(telt("th", tidx == null ? "" : (tidx + 1).toString()));
             row.appendChild(telt("th", tidx2 == null ? "" : (tidx2 + 1).toString()));
             row.appendChild(ctelt("td", change, textLines[tidx != null ? tidx : tidx2].replace(/\t/g, "\u00a0\u00a0\u00a0\u00a0")));
-            if(change !== 'equal' && tidx2 != null) (isNew ? addedLines : changedLines).push(tidx2);
+            // if(change !== 'equal') console.log('change', change, tidx, tidx2, isNew);
+            if(change === 'delete' && tidx != null) deletedLines.push(tidx);
+            else if(change !== 'equal' && tidx2 != null) ((change === 'insert' && !deletedLines.includes(tidx2)) ? addedLines : changedLines).push(tidx2);
         }
 
         function addCellsNode (row, tidx, tidx2, node, change) {
             row.appendChild(telt("th", tidx == null ? "" : (tidx + 1).toString()));
             row.appendChild(telt("th", tidx2 == null ? "" : (tidx2 + 1).toString()));
             row.appendChild(ctel("td", change, node));
-            if(change !== 'equal' && tidx2 != null) changedLines.push(tidx2);
         }
 
         for (var idx = 0; idx < opcodes.length; idx++) {
@@ -186,7 +188,7 @@ module.exports = {
                 toprows.push(node = document.createElement("tr"));
                 if (inline) {
                     if (change == "insert") {
-                        addCellsInline(node, null, n++, newTextLines, change, true);
+                        addCellsInline(node, null, n++, newTextLines, change);
                     } else if (change == "replace") {
                         botrows.push(node2 = document.createElement("tr"));
                         if (wordlevel) {
