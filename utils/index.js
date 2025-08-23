@@ -454,7 +454,11 @@ module.exports = {
             viewType: 2
         });
         if(debug) console.timeEnd('generateDiff');
-        return result;
+        return {
+            ...result,
+            oldLines: oldText,
+            newLines: newText
+        }
     },
     generateUrl() {
         return generateSlug(4, {
