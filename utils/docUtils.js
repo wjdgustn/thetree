@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const Diff = require('diff');
 const { getChoseong } = require('es-hangul');
 
 const utils = require('./');
@@ -41,48 +40,11 @@ module.exports = {
         return result;
     },
     generateBlame(last, curr) {
-        const lineDiff = Diff.diffLines(last?.content || '', curr.content || '');
-        if(!lineDiff.length) lineDiff.push({
-            count: 1,
-            added: true,
-            removed: false,
-            value: ''
-        });
+        const { changedLines } = utils.generateDiff(last?.content, curr?.content);
 
-        const lastChange = lineDiff.at(-1);
-        if(lastChange.value.endsWith('\n')) lastChange.count += 1;
-
-        const newLineArr = [];
         const lineArr = this.blameToLineArr(last?.blame || []);
-
-        let offset = 0;
-        for(let i in lineDiff) {
-            i = parseInt(i);
-            const diff = lineDiff[i];
-            const prevDiff = lineDiff[i - 1];
-
-            if(diff.removed) {
-                // offset -= diff.count;
-                continue;
-            }
-
-            if(diff.added) {
-                for(let i = 0; i < diff.count; i++) {
-                    newLineArr.push(curr.uuid);
-                }
-                // if(prevDiff?.removed && prevDiff.count === diff.count) offset += diff.count;
-                // else if(prevDiff?.removed && prevDiff.count < diff.count) {
-                //     offset += diff.count - prevDiff.count;
-                // }
-                if(prevDiff?.removed) offset += prevDiff.count;
-            }
-            else {
-                for(let i = 0; i < diff.count; i++) {
-                    newLineArr.push(lineArr[offset + i]);
-                }
-                offset += diff.count;
-            }
-        }
+        const newLineArr = [...lineArr];
+        for(let line of changedLines) newLineArr[line] = curr.uuid;
 
         return this.lineArrToBlame(newLineArr);
     },

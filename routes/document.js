@@ -1645,7 +1645,7 @@ app.get('/diff/?*', middleware.parseDocumentName, async (req, res) => {
 
     let diff;
     try {
-        diff = await utils.generateDiff(oldRev.content, rev.content, !req.backendMode);
+        diff = await utils.generateDiff(oldRev.content, rev.content);
     } catch(e) {
         return res.status(500).send(e.message);
     }
