@@ -440,7 +440,7 @@ module.exports = {
 
         return arr;
     },
-    generateDiff(oldText, newText) {
+    generateDiff(oldText, newText, blameMode = false) {
         if(debug) console.time('generateDiff');
         oldText = diffLib.stringAsLines(oldText || '');
         newText = diffLib.stringAsLines(newText || '');
@@ -451,7 +451,7 @@ module.exports = {
             baseTextLines: oldText,
             newTextLines: newText,
             opcodes,
-            viewType: 2
+            viewType: blameMode ? 1 : 2
         });
         if(debug) console.timeEnd('generateDiff');
         return {

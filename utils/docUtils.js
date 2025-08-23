@@ -40,7 +40,7 @@ module.exports = {
         return result;
     },
     generateBlame(last, curr) {
-        const { addedLines, changedLines, newLines } = utils.generateDiff(last?.content, curr?.content);
+        const { addedLines, changedLines, newLines } = utils.generateDiff(last?.content, curr?.content, true);
 
         const lineArr = this.blameToLineArr(last?.blame || []);
         const newLineArr = newLines.map((_, i) => addedLines.includes(i) ? curr.uuid : lineArr.shift());
