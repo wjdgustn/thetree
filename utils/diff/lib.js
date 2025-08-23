@@ -38,6 +38,8 @@ const difflib = module.exports = {
     stripLinebreaks: function (str) { return str.replace(/^[\n\r]*|[\n\r]*$/g, ""); },
 
     stringAsLines: function (str) {
+        if(!str) return [];
+
         var lfpos = str.indexOf("\n");
         var crpos = str.indexOf("\r");
         var linebreak = ((lfpos > -1 && crpos > -1) || crpos < 0) ? "\n" : "\r";
