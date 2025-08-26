@@ -451,6 +451,7 @@ module.exports = {
             baseTextLines: oldText,
             newTextLines: newText,
             opcodes,
+            contextSize: 3,
             viewType: blameMode ? 1 : 2
         });
         if(debug) console.timeEnd('generateDiff');
