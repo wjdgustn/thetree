@@ -198,7 +198,7 @@ module.exports = {
                         if (wordlevel) {
                             var baseTextLine = baseTextLines[b] || '';
                             var newTextLine = newTextLines[n] || '';
-                            var wordrule = /([^\S]+|[a-zA-Z0-9_-]+|.)(?:(?!<)[^\S])?/;
+                            var wordrule = /([^\S]+|[\p{Extended_Pictographic}]|[a-zA-Z0-9_-]+|.)(?:(?!<)[^\S])?/u;
                             var bw = baseTextLine.split(wordrule);
                             var nw = newTextLine.split(wordrule);
                             var wsm = new difflib.SequenceMatcher(bw, nw);
