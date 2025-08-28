@@ -198,9 +198,9 @@ module.exports = {
                         if (wordlevel) {
                             var baseTextLine = baseTextLines[b] || '';
                             var newTextLine = newTextLines[n] || '';
-                            var wordrule = /([^\S]+|[\p{Extended_Pictographic}]|[a-zA-Z0-9_-]+|.)(?:(?!<)[^\S])?/u;
-                            var bw = baseTextLine.split(wordrule);
-                            var nw = newTextLine.split(wordrule);
+                            // var wordrule = /([^\S]+|[\p{Extended_Pictographic}]|[a-zA-Z0-9_-]+|.)(?:(?!<)[^\S])?/u;
+                            var bw = [...baseTextLine];
+                            var nw = [...newTextLine];
                             var wsm = new difflib.SequenceMatcher(bw, nw);
                             var wopcodes = wsm.get_opcodes();
                             var bnode = document.createElement('span');
