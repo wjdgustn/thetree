@@ -39,8 +39,8 @@ module.exports = {
 
         return result;
     },
-    generateBlame(last, curr) {
-        const { addedLines, deletedLines, changedLines, newLines } = utils.generateDiff(last?.content, curr?.content, true);
+    async generateBlame(last, curr) {
+        const { addedLines, deletedLines, changedLines, newLines } = await utils.generateDiff(last?.content, curr?.content, true);
         // console.log('addedLines', addedLines);
         // console.log('changedLines', changedLines);
 

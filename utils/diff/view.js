@@ -29,6 +29,7 @@ authors and should not be interpreted as representing official policies, either 
 or implied, of Chas Emerick.
 */
 
+const Diff = require('diff');
 const { JSDOM } = require('jsdom');
 const difflib = require('./lib');
 
@@ -49,7 +50,7 @@ module.exports = {
      * - viewType: if 0, a side-by-side diff view is generated (default); if 1, an inline diff view is
      *	   generated
      */
-    buildView: function (params) {
+    buildView: async function (params) {
         const document = (new JSDOM('')).window.document;
 
         var baseTextLines = params.baseTextLines;
@@ -196,39 +197,60 @@ module.exports = {
                     } else if (change == "replace") {
                         botrows.push(node2 = document.createElement("tr"));
                         if (wordlevel) {
-                            var baseTextLine = baseTextLines[b] || '';
-                            var newTextLine = newTextLines[n] || '';
+                            const baseTextLine = baseTextLines[b] || '';
+                            const newTextLine = newTextLines[n] || '';
                             // var wordrule = /([^\S]+|[\p{Extended_Pictographic}]|[a-zA-Z0-9_-]+|.)(?:(?!<)[^\S])?/u;
-                            var bw = [...baseTextLine];
-                            var nw = [...newTextLine];
-                            var wsm = new difflib.SequenceMatcher(bw, nw);
-                            var wopcodes = wsm.get_opcodes();
+                            // var bw = [...baseTextLine];
+                            // var nw = [...newTextLine];
+                            // var wsm = new difflib.SequenceMatcher(bw, nw);
+                            // var wopcodes = wsm.get_opcodes();
                             var bnode = document.createElement('span');
                             var nnode = document.createElement('span');
-                            for (var k = 0; k < wopcodes.length; k++) {
-                                var wcode = wopcodes[k];
-                                var wchange = wcode[0];
-                                var wb = wcode[1];
-                                var wbe = wcode[2];
-                                var wn = wcode[3];
-                                var wne = wcode[4];
-                                var wcnt = Math.max(wbe - wb, wne - wn);
 
-                                for (var m = 0; m < wcnt; m++) {
-                                    if (wchange == "insert") {
-                                        nnode.appendChild(ctelt("ins", "diff", nw[wn++]));
-                                    } else if (wchange == "replace") {
-                                        if (wb < wbe) bnode.appendChild(ctelt("del", "diff", bw[wb++]));
-                                        if (wn < wne) nnode.appendChild(ctelt("ins", "diff", nw[wn++]));
-                                    } else if (wchange == "delete") {
-                                        bnode.appendChild(ctelt("del", "diff", bw[wb++]));
-                                    } else {
-                                        // equal
-                                        bnode.appendChild(ctelt("span", wchange, bw[wb]));
-                                        nnode.appendChild(ctelt("span", wchange, bw[wb++]));
-                                    }
+                            // for (var k = 0; k < wopcodes.length; k++) {
+                            //     var wcode = wopcodes[k];
+                            //     var wchange = wcode[0];
+                            //     var wb = wcode[1];
+                            //     var wbe = wcode[2];
+                            //     var wn = wcode[3];
+                            //     var wne = wcode[4];
+                            //     var wcnt = Math.max(wbe - wb, wne - wn);
+                            //
+                            //     for (var m = 0; m < wcnt; m++) {
+                            //         if (wchange == "insert") {
+                            //             nnode.appendChild(ctelt("ins", "diff", nw[wn++]));
+                            //         } else if (wchange == "replace") {
+                            //             if (wb < wbe) bnode.appendChild(ctelt("del", "diff", bw[wb++]));
+                            //             if (wn < wne) nnode.appendChild(ctelt("ins", "diff", nw[wn++]));
+                            //         } else if (wchange == "delete") {
+                            //             bnode.appendChild(ctelt("del", "diff", bw[wb++]));
+                            //         } else {
+                            //             // equal
+                            //             bnode.appendChild(ctelt("span", wchange, bw[wb]));
+                            //             nnode.appendChild(ctelt("span", wchange, bw[wb++]));
+                            //         }
+                            //     }
+                            // }
+
+                            let diff = [];
+                            diff = await new Promise(callback => {
+                                Diff.diffChars(baseTextLine, newTextLine, {
+                                    timeout: 500,
+                                    callback
+                                });
+                            });
+
+                            for(let d of diff) {
+                                if(d.added)
+                                    nnode.appendChild(ctelt("ins", "diff", d.value));
+                                else if(d.removed)
+                                    bnode.appendChild(ctelt("del", "diff", d.value));
+                                else {
+                                    bnode.appendChild(ctelt("span", "equal", d.value));
+                                    nnode.appendChild(ctelt("span", "equal", d.value));
                                 }
                             }
+
                             if (b < be) addCellsNode(node, b++, null, bnode, "delete");
                             if (n < ne) addCellsNode(node2, null, n++, nnode, "insert");
                         } else {

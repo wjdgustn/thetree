@@ -171,7 +171,7 @@ newSchema.pre('save', async function() {
         HistoryTypes.Revert,
         HistoryTypes.Delete
     ].includes(this.type)) {
-        this.blame = docUtils.generateBlame(last, this);
+        this.blame = await docUtils.generateBlame(last, this);
     }
     else this.blame = last ? last.blame : [];
 

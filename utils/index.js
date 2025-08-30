@@ -440,14 +440,14 @@ module.exports = {
 
         return arr;
     },
-    generateDiff(oldText, newText, blameMode = false) {
+    async generateDiff(oldText, newText, blameMode = false) {
         if(debug) console.time('generateDiff');
         oldText = diffLib.stringAsLines(oldText || '');
         newText = diffLib.stringAsLines(newText || '');
 
         const seqMatcher = new diffLib.SequenceMatcher(oldText, newText);
         const opcodes = seqMatcher.get_opcodes();
-        const result = diffView.buildView({
+        const result = await diffView.buildView({
             baseTextLines: oldText,
             newTextLines: newText,
             opcodes,
