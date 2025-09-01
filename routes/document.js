@@ -1695,7 +1695,7 @@ app.get('/blame/?*', middleware.parseDocumentName, async (req, res) => {
     let blame = await utils.findHistories(req, rev.blame, req.permissions.includes('admin'));
     blame = await utils.findUsers(req, blame, 'user', { getColor: true });
 
-    const lines = rev.content?.split('\n') ?? [];
+    const lines = rev.content?.split('\n') ?? [''];
 
     const blameLines = [];
     if(req.backendMode) {
