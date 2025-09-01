@@ -30,7 +30,7 @@ module.exports = {
         for(let uuid of input) {
             const lastResult = result[result.length - 1];
 
-            if(lastResult?.uuid === uuid) lastResult.count++;
+            if(lastResult && lastResult.uuid === uuid) lastResult.count++;
             else result.push({
                 uuid: uuid,
                 count: 1
