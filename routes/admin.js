@@ -254,7 +254,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
                 rev: rev.rev - 1
             });
 
-            const newBlame = docUtils.generateBlame(prevRev, rev);
+            const newBlame = await docUtils.generateBlame(prevRev, rev);
             await History.updateOne({
                 uuid: rev.uuid
             }, {

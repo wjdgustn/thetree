@@ -40,7 +40,7 @@ module.exports = {
         return result;
     },
     async generateBlame(last, curr) {
-        const { addedLines, deletedLines, changedLines, newLines } = await utils.generateDiff(last?.content, curr?.content, true);
+        let { addedLines, deletedLines, changedLines, newLines } = await utils.generateDiff(last?.content || '', curr?.content || ' ', true);
         // console.log('addedLines', addedLines);
         // console.log('changedLines', changedLines);
 
@@ -48,6 +48,7 @@ module.exports = {
         const newLineArr = newLines.map((_, i) => addedLines.includes(i) ? curr.uuid : lineArr.shift());
         for(let line of changedLines) newLineArr[line] = curr.uuid;
 
+        // console.log('newLineArr', newLineArr, this.lineArrToBlame(newLineArr));
         return this.lineArrToBlame(newLineArr);
     },
     async generateBacklink(document, rev, parseResult, htmlResult) {
