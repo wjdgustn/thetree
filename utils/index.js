@@ -478,13 +478,15 @@ module.exports = {
 
         const response = req.body[{
             recaptcha: 'g-recaptcha-response',
-            turnstile: 'cf-turnstile-response'
+            turnstile: 'cf-turnstile-response',
+            hcaptcha: 'h-captcha-response'
         }[config.captcha.type]];
         if(!response) return false;
 
         const { data } = await axios.post({
             recaptcha: 'https://www.google.com/recaptcha/api/siteverify',
-            turnstile: 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+            turnstile: 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            hcaptcha: 'https://api.hcaptcha.com/siteverify'
         }[config.captcha.type], querystring.stringify({
             secret: config.captcha.secret_key,
             response,
