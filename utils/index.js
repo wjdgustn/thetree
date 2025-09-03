@@ -402,7 +402,6 @@ module.exports = {
         // if(req.user) req.user.permissions = req.permissions;
         req.displayPermissions = req.permissions.filter(a => ![
             'any',
-            'member',
             'contributor',
             'member_signup_15days_ago'
         ].includes(a));
