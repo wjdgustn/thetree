@@ -60,7 +60,9 @@ module.exports = {
         Default: 0,
         UpdateStatus: 1,
         UpdateTopic: 2,
-        UpdateDocument: 3
+        UpdateDocument: 3,
+        PinComment: 4,
+        UnpinComment: 5
     },
     EditRequestStatusTypes: {
         Open: 0,

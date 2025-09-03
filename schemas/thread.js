@@ -57,6 +57,12 @@ const newSchema = new Schema({
     },
     specialType: {
         type: String
+    },
+    pinnedComment: {
+        type: Number,
+        required: true,
+        default: 0,
+        min: 0
     }
 });
 

@@ -339,24 +339,48 @@ app.get('/thread/:url', async (req, res) => {
         ])
         .lean();
 
+    if(thread.pinnedComment) {
+        const comment = comments.find(a => a.id === thread.pinnedComment);
+        if(comment) {
+            let pinnedComment = await ThreadComment.findOne({
+                thread: thread.uuid,
+                id: comment.id
+            }).lean();
+            pinnedComment = await utils.findUsers(req, pinnedComment);
+            pinnedComment = await utils.findUsers(req, pinnedComment, 'hiddenBy');
+            pinnedComment = await utils.threadCommentMapper(pinnedComment, {
+                req,
+                thread,
+                toHtmlParams: {
+                    document,
+                    dbDocument,
+                    aclData: req.aclData,
+                    dbComment: pinnedComment,
+                    thread: true,
+                    commentId: pinnedComment.id,
+                    req
+                }
+            });
+            Object.assign(comment, pinnedComment);
+        }
+    }
+
     res.renderSkin(undefined, {
         viewName: 'thread',
         contentName: 'thread',
         document,
         comments,
         commentLoadAmount: COMMENT_LOAD_AMOUNT,
-        thread: {
-            url: thread.url,
-            topic: thread.topic,
-            createdUser: thread.createdUser,
-            status: thread.status
-        },
+        thread: utils.onlyKeys(thread, [
+            'url',
+            'topic',
+            'createdUser',
+            'status',
+            'pinnedComment'
+        ]),
         permissions: {
             delete: checkPerm('delete_thread'),
-            status: checkPerm('manage_thread'),
-            document: checkPerm('manage_thread'),
-            topic: checkPerm('manage_thread'),
-            hide: checkPerm('manage_thread')
+            manage: checkPerm('manage_thread')
         },
         hideHiddenComments: true
         // hideHiddenComments: !req.permissions.includes('manage_thread')
@@ -785,6 +809,68 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
     const referer = new URL(req.get('referer'));
     if(referer.pathname.startsWith('/discuss/')) res.reload();
     else res.status(204).end();
+});
+
+app.post('/admin/thread/:url/:id/pin', middleware.permission('manage_thread'), async (req, res) => {
+    const thread = await Thread.findOne({
+        url: req.params.url,
+        deleted: false
+    });
+    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+
+    const document = await Document.findOne({
+        uuid: thread.document
+    });
+
+    const acl = await ACL.get({ thread }, utils.dbDocumentToDocument(document));
+    const { result: readable, aclMessage } = await acl.check(ACLTypes.WriteThreadComment, req.aclData);
+    if(!readable) return res.error(aclMessage, 403);
+
+    const commentId = parseInt(req.params.id);
+    if(commentId === 0) {
+        if(!thread.pinnedComment) return res.status(409).send('고정된 댓글이 없습니다.');
+    }
+    else {
+        if(thread.pinnedComment === commentId) return res.status(409).send('이미 고정된 댓글입니다.');
+
+        const comment = await ThreadComment.findOne({
+            thread: thread.uuid,
+            id: commentId
+        });
+        if(!comment) return res.status(404).send('댓글이 존재하지 않습니다.');
+        if(comment.type !== ThreadCommentTypes.Default) return res.status(400).send('고정할 수 없는 댓글입니다.');
+
+        await threadCommentEvent({
+            req,
+            thread,
+            document,
+            dbComment: comment
+        });
+    }
+
+    await Thread.updateOne({
+        uuid: thread.uuid
+    }, {
+        pinnedComment: commentId
+    });
+
+    const dbComment = await ThreadComment.create({
+        thread: thread.uuid,
+        user: req.user.uuid,
+        admin: req.permissions.includes('admin'),
+        type: commentId ? ThreadCommentTypes.PinComment : ThreadCommentTypes.UnpinComment,
+        content: commentId
+    });
+    await threadCommentEvent({
+        req,
+        thread,
+        document,
+        dbComment
+    });
+
+    SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { pinnedComment: commentId });
+
+    res.status(204).end();
 });
 
 app.post('/admin/thread/:url/:id/:action', middleware.permission('manage_thread'), async (req, res) => {

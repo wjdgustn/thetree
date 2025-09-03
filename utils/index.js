@@ -722,6 +722,12 @@ module.exports = {
             else if(comment.type === ThreadCommentTypes.UpdateDocument) {
                 comment.contentHtml = `스레드를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 이동`;
             }
+            else if(comment.type === ThreadCommentTypes.PinComment) {
+                comment.contentHtml = `<b><a href="#${comment.content}">#${comment.content}</a></b> 댓글을 고정`;
+            }
+            else if(comment.type === ThreadCommentTypes.UnpinComment) {
+                comment.contentHtml = `댓글 고정 해제`;
+            }
         }
 
         // if(typeof comment.user === 'object')
