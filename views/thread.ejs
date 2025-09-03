@@ -83,7 +83,7 @@ const isFrontPage = docTitle === config.front_page;
                 </div>
                 <div x-show="comment.userHtml && comment.hidden && !comment.forceShow" class="comment-block-content hidden-comment">
                     [<span x-html="comment.hideUserHtml"></span>에 의해 숨겨진 글입니다.]
-                    <%if(req.permissions.includes('hide_thread_comment')) {%><button @click="comment.forceShow = true" class="thetree-square-button thetree-danger-button">[ADMIN] SHOW</button><%}%>
+                    <%if(req.permissions.includes('manage_thread')) {%><button @click="comment.forceShow = true" class="thetree-square-button thetree-danger-button">[ADMIN] SHOW</button><%}%>
                 </div>
             </div>
         </div>
@@ -92,7 +92,7 @@ const isFrontPage = docTitle === config.front_page;
 
 <h3 class="comment-title">댓글 달기</h3>
 <%-include('components/alert', { alert: '' })%>
-<%if(req.permissions.includes('update_thread_status')) {%>
+<%if(req.permissions.includes('manage_thread')) {%>
     <form method="post" action="/admin/thread/<%=thread.url%>/status">
         [ADMIN] 스레드 상태 변경
         <select name="status">
@@ -103,14 +103,14 @@ const isFrontPage = docTitle === config.front_page;
         <button class="thetree-square-button">변경</button>
     </form>
 <%}%>
-<%if(req.permissions.includes('update_thread_document')) {%>
+<%if(req.permissions.includes('manage_thread')) {%>
     <form method="post" action="/admin/thread/<%=thread.url%>/document">
         [ADMIN] 스레드 이동
         <input name="document" value="<%=doc_fulltitle(document)%>">
         <button class="thetree-square-button">변경</button>
     </form>
 <%}%>
-<%if(req.permissions.includes('update_thread_topic')) {%>
+<%if(req.permissions.includes('manage_thread')) {%>
     <form method="post" action="/admin/thread/<%=thread.url%>/topic">
         [ADMIN] 스레드 주제 변경
         <input name="topic" value="<%=thread.topic%>">
@@ -150,7 +150,7 @@ const isFrontPage = docTitle === config.front_page;
     <div>
         <div>
             <a @click.prevent="$store.state.threadPopup.toggleRaw()" role="button" href="#" class="thetree-button" x-text="$store.state.threadPopup.comment?.seeRaw ? '위키 보기' : '원문 보기'"></a>
-            <%if(req.permissions.includes('hide_thread_comment')) {%>
+            <%if(req.permissions.includes('manage_thread')) {%>
                 <hr>
                 <a x-show="!$store.state.threadPopup.comment?.hidden" @click.prevent="$store.state.threadPopup.hide()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기</a>
                 <a x-show="$store.state.threadPopup.comment?.hidden" @click.prevent="$store.state.threadPopup.show()" role="button" href="#" class="thetree-button thetree-block-button">[ADMIN] 숨기기 해제</a>

@@ -353,13 +353,13 @@ app.get('/thread/:url', async (req, res) => {
         },
         permissions: {
             delete: checkPerm('delete_thread'),
-            status: checkPerm('update_thread_status'),
-            document: checkPerm('update_thread_document'),
-            topic: checkPerm('update_thread_topic'),
-            hide: checkPerm('hide_thread_comment')
+            status: checkPerm('manage_thread'),
+            document: checkPerm('manage_thread'),
+            topic: checkPerm('manage_thread'),
+            hide: checkPerm('manage_thread')
         },
         hideHiddenComments: true
-        // hideHiddenComments: !req.permissions.includes('hide_thread_comment')
+        // hideHiddenComments: !req.permissions.includes('manage_thread')
     });
 });
 
@@ -519,7 +519,7 @@ app.post('/thread/:url', async (req, res) => {
     res.status(204).end();
 });
 
-app.post('/admin/thread/:url/status', middleware.permission('update_thread_status'),
+app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
     body('status')
         .isIn(Object.keys(ThreadStatusTypes))
         .withMessage('status의 값이 올바르지 않습니다.'),
@@ -596,7 +596,7 @@ app.post('/admin/thread/:url/status', middleware.permission('update_thread_statu
     res.status(204).end();
 });
 
-app.post('/admin/thread/:url/topic', middleware.permission('update_thread_topic'),
+app.post('/admin/thread/:url/topic', middleware.permission('manage_thread'),
     body('topic')
         .notEmpty({
             ignore_whitespace: true
@@ -651,7 +651,7 @@ app.post('/admin/thread/:url/topic', middleware.permission('update_thread_topic'
     res.status(204).end();
 });
 
-app.post('/admin/thread/:url/document', middleware.permission('update_thread_document'),
+app.post('/admin/thread/:url/document', middleware.permission('manage_thread'),
     body('document')
         .notEmpty({
             ignore_whitespace: true
@@ -787,7 +787,7 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
     else res.status(204).end();
 });
 
-app.post('/admin/thread/:url/:id/:action', middleware.permission('hide_thread_comment'), async (req, res) => {
+app.post('/admin/thread/:url/:id/:action', middleware.permission('manage_thread'), async (req, res) => {
     if(![
         'hide',
         'show'
@@ -857,7 +857,7 @@ app.get('/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) 
     });
     if(!dbComment) return res.status(404).send('댓글이 존재하지 않습니다.');
     if(dbComment.hidden
-        && !req.permissions.includes('hide_thread_comment'))
+        && !req.permissions.includes('manage_thread'))
         return res.status(403).send('권한이 부족합니다.');
     if(dbComment.type !== ThreadCommentTypes.Default) return res.status(400).send('원문을 볼 수 없는 댓글입니다.');
 

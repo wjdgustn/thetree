@@ -691,7 +691,7 @@ module.exports = {
             threadAdmin: comment.admin
         });
 
-        const canSeeHidden = req?.permissions.includes('hide_thread_comment');
+        const canSeeHidden = req?.permissions.includes('manage_thread');
         if(comment.hidden) {
             hideUser ??= comment.hiddenBy;
             comment.hideUser = hideUser;

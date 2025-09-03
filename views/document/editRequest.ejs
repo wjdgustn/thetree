@@ -91,7 +91,7 @@
                     let disabled = false;
                     let tooltip = '이 편집 요청을 다시 엽니다.';
 
-                    const updateThreadStatusPerm = req.permissions.includes('update_thread_status');
+                    const updateThreadStatusPerm = req.permissions.includes('manage_thread');
 
                     if(editRequest.status === EditRequestStatusTypes.Locked) {
                         if(!updateThreadStatusPerm) {
@@ -141,7 +141,7 @@
                     <p>사유:</p>
                     <input type="text" name="close_reason">
                 </div>
-                <%if(req.permissions.includes('update_thread_status')) {%>
+                <%if(req.permissions.includes('manage_thread')) {%>
                     <div>
                         <p>이 편집 요청을 다시 열수 없게 잠금</p>
                         <input type="checkbox" name="lock" value="Y">

@@ -86,40 +86,36 @@ module.exports = {
         Plugin: 3
     },
     AllPermissions: [
-        'delete_thread',
-        'admin',
-        'update_thread_status',
-        'nsacl',
-        'hide_thread_comment',
-        'grant',
-        'disable_two_factor_login',
-        'login_history',
-        'update_thread_document',
-        'update_thread_topic',
-        'aclgroup',
-        'hide_document_history_log',
-        'hide_revision',
-        'mark_troll_revision',
-        'batch_revert',
-        'api_access',
+        'auto_verified_member',
         'developer',
-        'hideip',
+        'nsacl',
+        'admin',
         'config',
-        'skip_captcha',
+        'delete_thread',
+        'aclgroup',
+        'hideip',
         'aclgroup_hidelog',
         'grant_hidelog',
         'login_history_hidelog',
         'batch_revert_hidelog',
+        'skip_captcha',
+        'disable_two_factor_login',
+        'manage_thread',
+        'grant',
+        'login_history',
+        'api_access',
+        'hide_document_history_log',
+        'hide_revision',
+        'mark_troll_revision',
+        'batch_revert',
         'edit_protected_file',
-        'engine_developer',
-        'auto_verified_member'
+        'engine_developer'
     ],
     ProtectedPermissions: [
         'developer'
     ],
     NoGrantPermissions: [
-        'engine_developer',
-        'auto_verified_member'
+        'engine_developer'
     ],
     ACLPermissions: [
         'any',

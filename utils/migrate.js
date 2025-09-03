@@ -70,5 +70,30 @@ module.exports = [
                 }
             });
         }
+    },
+    {
+        timestamp: 1756890112548,
+        code: async () => {
+            const threadPerms = ['update_thread_status', 'hide_thread_comment', 'update_thread_document', 'update_thread_topic'];
+
+            await User.updateMany({
+                permissions: {
+                    $in: threadPerms
+                }
+            }, {
+                $addToSet: {
+                    permissions: 'manage_thread'
+                }
+            });
+            await User.updateMany({
+                permissions: {
+                    $in: threadPerms
+                }
+            }, {
+                $pullAll: {
+                    permissions: threadPerms
+                }
+            });
+        }
     }
 ]
