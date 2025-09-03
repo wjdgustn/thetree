@@ -21,6 +21,7 @@
     "disable_two_factor_login",
     "login_history",
     "aclgroup",
+    "manage_thread",
     "hide_document_history_log",
     "hide_revision",
     "mark_troll_revision",
