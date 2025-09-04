@@ -11,6 +11,7 @@ const {
     ThreadCommentTypes,
     BlockHistoryTypes
 } = require('./types');
+const diffLib = require('./diff/lib');
 
 const ACL = require('../class/acl');
 
@@ -41,6 +42,9 @@ module.exports = {
     },
     async generateBlame(last, curr) {
         let { addedLines, deletedLines, changedLines, newLines } = await utils.generateDiff(last?.content || '', curr?.content || ' ', true);
+        if(!last) {
+            addedLines = diffLib.stringAsLines(curr.content).map((_, i) => i);
+        }
         // console.log('addedLines', addedLines);
         // console.log('changedLines', changedLines);
 
