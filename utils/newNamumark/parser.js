@@ -449,7 +449,7 @@ const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
     // line_breaks: true
-    ...nestedRegex(/\[\[/, /]]/, true, /\[/, /\]/),
+    ...nestedRegex(/\[\[/, /]]/, true, /(?<!\[)\[(?!\[)/, /(?<!])](?!])/),
     start_chars_hint: ['[']
 });
 const Footnote = createToken({
