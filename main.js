@@ -126,7 +126,7 @@ global.resetSearchIndex = async () => {
 }
 
 global.updateConfig = () => {
-    const configPath = str =>  process.env.IS_DOCKER ? `./config/${str}` : `./${str}`;
+    const configPath = str => process.env.IS_DOCKER ? `./config/${str}` : `./${str}`;
 
     const configs = [
         'publicConfig.json',

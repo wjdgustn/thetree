@@ -147,6 +147,8 @@ app.post('/admin/developer/eval', middleware.permission('developer'), async (req
 app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware.referer('/admin/'), async (req, res) => {
     const tool = req.params.tool;
 
+    const configPath = str => process.env.IS_DOCKER ? `./config/${str}` : `./${str}`;
+
     if(tool === 'deletedisabledfeature') {
         const index = parseInt(req.query.index);
         global.disabledFeatures.splice(index, 1);
@@ -177,7 +179,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         for(let [key, value] of additionalEntries) {
             newStringConfig[key] = value;
         }
-        await fs.writeFile('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        await fs.writeFile(configPath('stringConfig.json'), JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
         return res.reload();
@@ -186,7 +188,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool === 'removestringconfig') {
         const newStringConfig = { ...global.stringConfig };
         delete newStringConfig[req.query.key];
-        await fs.writeFile('./stringConfig.json', JSON.stringify(newStringConfig, null, 2));
+        await fs.writeFile(configPath('stringConfig.json'), JSON.stringify(newStringConfig, null, 2));
         updateConfig();
 
         return res.reload();
@@ -603,7 +605,7 @@ app.post('/admin/config/stringconfig', middleware.permission('config'), async (r
 
     const newObj = { ...global.stringConfig };
     newObj[req.body.key] = req.body.value;
-    await fs.writeFile('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    await fs.writeFile(process.env.IS_DOCKER ? `./config/stringConfig.json` : `./stringConfig.json`, JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.status(204).end();
 });
@@ -611,7 +613,7 @@ app.post('/admin/config/stringconfig', middleware.permission('config'), async (r
 app.post('/admin/config/stringconfig/add', middleware.permission('config'), async (req, res) => {
     const newObj = { ...global.stringConfig };
     newObj[req.body.key] = '';
-    await fs.writeFile('./stringConfig.json', JSON.stringify(newObj, null, 2));
+    await fs.writeFile(process.env.IS_DOCKER ? `./config/stringConfig.json` : `./stringConfig.json`, JSON.stringify(newObj, null, 2));
     updateConfig();
     return res.reload();
 });
