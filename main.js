@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const { instrument } = require('@socket.io/admin-ui');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const passport = require('passport');
@@ -140,11 +139,11 @@ global.updateConfig = () => {
 const versionData = JSON.parse(fs.readFileSync('./version.json').toString());
 global.versionData = versionData;
 global.updateSkinInfo = () => {
-    if(!fs.existsSync('./frontend')) {
+    if(!fs.existsSync('./frontend/.git')) {
         console.log('Downloading frontend...');
         const result = execSync(`git clone ${new URL(versionData.feRepo, 'https://github.com')} frontend`);
         console.log(result.toString());
-        const npmResult = execSync('npm i', { cwd: './frontend' });
+        const npmResult = execSync('npm i --production=false', { cwd: './frontend' });
         console.log(npmResult.toString());
     }
     if(!fs.existsSync('./skins')) fs.mkdirSync('./skins');
@@ -172,9 +171,9 @@ try {
     process.exit(1);
 }
 global.versionInfo = {
-    branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(),
-    commitId: execSync('git rev-parse HEAD').toString().trim(),
-    commitDate: new Date(Number(execSync('git log -1 --format="%at"').toString().trim()) * 1000),
+    branch: (process.env.GIT_BRANCH ?? execSync('git rev-parse --abbrev-ref HEAD')).toString().trim(),
+    commitId: (process.env.GIT_COMMIT_ID ?? execSync('git rev-parse HEAD')).toString().trim(),
+    commitDate: new Date(Number((process.env.GIT_COMMIT_DATE ?? execSync('git log -1 --format="%at"').toString()).trim()) * 1000),
     versionData,
     updateRequired: false
 };
@@ -249,7 +248,7 @@ global.checkUpdate = async (manually = false) => {
     let newCommits = [];
     let newFECommits = [];
     let newVersionData;
-    try {
+    if(!process.env.IS_DOCKER) try {
         const { data: newCommitData } = await githubAPI.get(`${global.versionInfo.versionData.repo}/compare/${global.versionInfo.commitId}...${global.versionInfo.branch}`);
         newCommits = newCommitData.commits;
         const { data: newVersionFile } = await githubAPI.get(`${global.versionInfo.versionData.repo}/contents/version.json`, {
@@ -345,6 +344,8 @@ global.updateSkins = async (names = []) => {
 
     return { failed };
 }
+if(!global.skins.length)
+    updateSkins(['plain']).then();
 
 global.updateEngine = (exit = true) => {
     (async () => {
@@ -487,10 +488,13 @@ global.SocketIO = new Server(server, {
         }
     } : {})
 });
-if(debug) instrument(SocketIO, {
-    auth: false,
-    mode: 'development'
-});
+if(debug) {
+    const { instrument } = require('@socket.io/admin-ui');
+    instrument(SocketIO, {
+        auth: false,
+        mode: 'development'
+    });
+}
 
 SocketIO.on('new_namespace', namespace => {
     namespace.use(async (socket, next) => {

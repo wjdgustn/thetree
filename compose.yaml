@@ -1,0 +1,58 @@
+services:
+  app:
+    build:
+      context: .
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    env_file:
+      - .env
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./skins:/usr/src/app/skins
+      - ./plugins:/usr/src/app/plugins
+      - ./cache:/usr/src/app/cache
+      - ./frontend:/usr/src/app/frontend
+      - ./publicConfig.json:/usr/src/app/publicConfig.json
+      - ./serverConfig.json:/usr/src/app/serverConfig.json
+      - ./stringConfig.json:/usr/src/app/stringConfig.json
+      - ./devConfig.json:/usr/src/app/devConfig.json
+    environment:
+      MONGODB_HOST: db
+      MONGODB_PORT: 27017
+      MONGODB_USER: root
+      MONGODB_PASSWORD: thetreetest
+      MONGODB_DATABASE: TheTree
+
+      USE_REDIS: true
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      MEILISEARCH_HOST: http://search:7700
+      MEILISEARCH_KEY: thetreetest
+      MEILISEARCH_INDEX: TheTreeDocument
+  db:
+    image: mongo:latest
+    restart: unless-stopped
+    volumes:
+      - db:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: thetreetest
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+  search:
+    image: getmeili/meilisearch:latest
+    restart: unless-stopped
+    volumes:
+      - search:/meili_data
+    environment:
+      MEILI_MASTER_KEY: thetreetest
+
+volumes:
+  db:
+  redis:
+  search:

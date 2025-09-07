@@ -4,8 +4,9 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node main.js",
-    "test": "cross-env NODE_ENV=development nodemon main.js"
+    "start": "npx cross-env NODE_ENV=production node main.js",
+    "test": "npx cross-env NODE_ENV=development nodemon main.js",
+    "dockertest": "docker compose up --build"
   },
   "repository": {
     "type": "git",

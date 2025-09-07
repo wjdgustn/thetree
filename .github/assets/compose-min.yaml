@@ -1,0 +1,42 @@
+services:
+  app:
+    image: ghcr.io/wjdgustn/thetree:main
+    restart: unless-stopped
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    labels:
+      com.centurylinklabs.watchtower.enable: true
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./skins:/usr/src/app/skins
+      - ./cache:/usr/src/app/cache
+      - ./frontend:/usr/src/app/frontend
+      - ./publicConfig.json:/usr/src/app/publicConfig.json
+      - ./serverConfig.json:/usr/src/app/serverConfig.json
+      - ./stringConfig.json:/usr/src/app/stringConfig.json
+      - ./devConfig.json:/usr/src/app/devConfig.json
+    environment:
+      IP_HEADER: cf-connecting-ip
+      SESSION_SECRET: secret
+
+      S3_ENDPOINT:
+      S3_ACCESS_KEY_ID:
+      S3_SECRET_ACCESS_KEY:
+      S3_BUCKET_NAME: thetree
+      S3_REGION: auto
+      S3_PUBLIC_HOST: https://cdn.example.com
+
+      MONGODB_HOST: host.docker.internal
+      MONGODB_PORT: 27017
+      MONGODB_USER: root
+      MONGODB_PASSWORD:
+      MONGODB_DATABASE: TheTree
+
+      USE_REDIS: true
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+
+      MEILISEARCH_HOST: http://host.docker.internal:7700
+      MEILISEARCH_KEY:
+      MEILISEARCH_INDEX: TheTreeDocument

@@ -575,7 +575,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
     res.renderSkin('내 정보', {
         contentName: 'member/mypage',
         serverData: {
-            skins: global.skins,
+            skins: global.skins.filter(a => a !== 'plain'),
             passkeys,
             user: utils.onlyKeys(req.user, ['name', 'email', 'skin']),
             permissions: req.displayPermissions,
@@ -587,7 +587,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
 
 app.post('/member/mypage', middleware.isLogin,
     body('skin')
-        .custom(value => ['default', ...global.skins].includes(value))
+        .custom(value => ['default', ...global.skins.filter(a => a !== 'plain')].includes(value))
         .withMessage('invalid_skin'),
     middleware.fieldErrors,
     async (req, res) => {
