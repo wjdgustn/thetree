@@ -700,6 +700,7 @@ app.get('/contribution/:uuid/document',
     const query = { ...baseQuery };
 
     const total = await History.countDocuments(query);
+    if(!total) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const pageQuery = req.query.until || req.query.from;
     if(pageQuery) {
@@ -774,6 +775,7 @@ app.get('/contribution/:uuid/discuss',
     }, 'uuid', 'createdAt', {
         getTotal: true
     });
+    if(!data.total) return res.error('계정을 찾을 수 없습니다.', 404);
     data.items = await utils.findThreads(data.items);
     data.items = utils.onlyKeys(data.items, ['thread', 'id', 'createdAt']);
 
@@ -809,6 +811,7 @@ app.get('/contribution/:uuid/edit_request',
     const query = { ...baseQuery };
 
     const total = await EditRequest.countDocuments(query);
+    if(!total) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const pageQuery = req.query.until || req.query.from;
     if(pageQuery) {
@@ -880,6 +883,7 @@ app.get('/contribution/:uuid/accepted_edit_request',
     }, 'uuid', '_id', {
         getTotal: true
     });
+    if(!data.total) return res.error('계정을 찾을 수 없습니다.', 404);
     data.items = await utils.findDocuments(data.items);
     data.items = utils.onlyKeys(data.items, ['url', 'document', 'status', 'lastUpdatedAt', 'diffLength']);
 
