@@ -126,10 +126,24 @@ global.resetSearchIndex = async () => {
 }
 
 global.updateConfig = () => {
-    global.publicConfig = JSON.parse(fs.readFileSync('./publicConfig.json').toString());
-    global.serverConfig = JSON.parse(fs.readFileSync('./serverConfig.json').toString());
-    global.devConfig = JSON.parse(fs.readFileSync('./devConfig.json').toString());
-    global.stringConfig = JSON.parse(fs.readFileSync('./stringConfig.json').toString());
+    const configPath = str =>  process.env.IS_DOCKER ? `./config/${str}` : `./${str}`;
+
+    const configs = [
+        'publicConfig.json',
+        'serverConfig.json',
+        'devConfig.json',
+        'stringConfig.json'
+    ];
+    for(let c of configs) {
+        if(fs.existsSync(configPath(c))) continue;
+
+        fs.copyFileSync(c.replace('.json', '.example.json'), configPath(c));
+    }
+
+    global.publicConfig = JSON.parse(fs.readFileSync(configPath('publicConfig.json')).toString());
+    global.serverConfig = JSON.parse(fs.readFileSync(configPath('serverConfig.json')).toString());
+    global.devConfig = JSON.parse(fs.readFileSync(configPath('devConfig.json')).toString());
+    global.stringConfig = JSON.parse(fs.readFileSync(configPath('stringConfig.json')).toString());
 
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 

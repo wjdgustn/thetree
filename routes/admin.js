@@ -57,7 +57,7 @@ const app = express.Router();
 app.get('/admin/config', middleware.permission('config'), async (req, res) => {
     const jsonConfigs = await Promise.all(['publicConfig.json', 'serverConfig.json'].map(async name => ({
         name,
-        content: (await fs.readFile(name)).toString()
+        content: (await fs.readFile(process.env.IS_DOCKER ? `./config/${name}` : `./${name}`)).toString()
     })));
 
     res.renderSkin('Config', {
@@ -93,7 +93,7 @@ app.get('/admin/developer', middleware.permission('developer'), async (req, res)
 
     const jsonConfigs = await Promise.all(['devConfig.json'].map(async name => ({
         name,
-        content: (await fs.readFile(name)).toString()
+        content: (await fs.readFile(process.env.IS_DOCKER ? `./config/${name}` : `./${name}`)).toString()
     })));
 
     let skinCommitIds = [];
@@ -587,7 +587,7 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
         if(global.devConfig.hasOwnProperty(key)) return res.status(400).send(`Invalid key "${key}"`);
     }
 
-    await fs.writeFile(config, req.body.content);
+    await fs.writeFile(process.env.IS_DOCKER ? `./config/${config}` : `./${config}`, req.body.content);
     updateConfig();
     return res.status(204).end();
 });

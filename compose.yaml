@@ -13,10 +13,7 @@ services:
       - ./plugins:/usr/src/app/plugins
       - ./cache:/usr/src/app/cache
       - ./frontend:/usr/src/app/frontend
-      - ./publicConfig.json:/usr/src/app/publicConfig.json
-      - ./serverConfig.json:/usr/src/app/serverConfig.json
-      - ./stringConfig.json:/usr/src/app/stringConfig.json
-      - ./devConfig.json:/usr/src/app/devConfig.json
+      - ./config:/usr/src/app/config
     environment:
       MONGODB_HOST: db
       MONGODB_PORT: 27017

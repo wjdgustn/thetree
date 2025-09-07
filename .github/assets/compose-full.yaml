@@ -12,10 +12,7 @@ services:
       - ./skins:/usr/src/app/skins
       - ./cache:/usr/src/app/cache
       - ./frontend:/usr/src/app/frontend
-      - ./publicConfig.json:/usr/src/app/publicConfig.json
-      - ./serverConfig.json:/usr/src/app/serverConfig.json
-      - ./stringConfig.json:/usr/src/app/stringConfig.json
-      - ./devConfig.json:/usr/src/app/devConfig.json
+      - ./config:/usr/src/app/config
     environment:
       IP_HEADER: cf-connecting-ip
       SESSION_SECRET: secret
