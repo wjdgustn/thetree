@@ -7,6 +7,7 @@ services:
     labels:
       com.centurylinklabs.watchtower.enable: true
     ports:
+      # 앞 3000을 원하는 포트로 수정
       - '3000:3000'
     volumes:
       - ./skins:/usr/src/app/skins
@@ -24,6 +25,7 @@ services:
       S3_REGION: auto
       S3_PUBLIC_HOST: https://cdn.example.com
 
+      # compose-full 사용 시 아래 부분 건들 필요 없음
       MONGODB_HOST: db
       MONGODB_PORT: 27017
       MONGODB_USER: root
