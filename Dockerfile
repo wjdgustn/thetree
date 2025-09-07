@@ -2,7 +2,7 @@ ARG NODE_VERSION=20.19.3
 
 FROM node:${NODE_VERSION}-alpine AS builder
 
-USER node
+#USER node
 WORKDIR /usr/src/app
 
 RUN --mount=type=bind,source=package.json,target=package.json \
@@ -26,7 +26,7 @@ ENV ILA_DATA_DIR /usr/src/app/cache/geoip-db
 
 RUN apk add --no-cache git
 
-USER node
+#USER node
 WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app/node_modules ./node_modules
