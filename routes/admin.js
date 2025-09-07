@@ -684,7 +684,7 @@ app.post('/admin/developer/skin/update', middleware.permission('developer'), asy
 
 app.post('/admin/developer/skin/delete', middleware.permission('developer'), async (req, res) => {
     const name = req.body.name;
-    if(name.includes('..')) return res.status(400).send('Invalid name');
+    if(name.includes('..') || name === 'plain') return res.status(400).send('Invalid name');
     const dir = path.join('./frontend/skins', name);
     const skinExists = await fs.exists(dir);
     if(!skinExists) return res.status(400).send('Invalid skin');
