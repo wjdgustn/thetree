@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/wjdgustn/thetree:main
+    image: ghcr.io/wjdgustn/thetree:master
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
