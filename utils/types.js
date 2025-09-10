@@ -117,8 +117,7 @@ module.exports = {
         'developer'
     ],
     NoGrantPermissions: [
-        'engine_developer',
-        'auto_verified_member'
+        'engine_developer'
     ],
     ACLPermissions: [
         'any',

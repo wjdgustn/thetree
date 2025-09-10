@@ -756,7 +756,7 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
         });
     }
 
-    const grantPerms = config.grant_permissions.filter(a => AllPermissions.includes(a));
+    const grantPerms = AllPermissions.filter(a => config.grant_permissions.includes(a) || req.permissions.includes(a));
     const configPerms = AllPermissions.filter(a => !grantPerms.includes(a));
     const grantablePermissions = [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])]
         .filter(a => !NoGrantPermissions.includes(a)
@@ -770,6 +770,7 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
                 permissions: targetUser.permissions
             } : null,
             grantablePermissions: grantablePermissions,
+            allPermissions: AllPermissions.filter(a => !NoGrantPermissions.includes(a)),
             hidelogPerm: req.permissions.includes('grant_hidelog')
         }
     });
@@ -792,7 +793,7 @@ app.post('/admin/grant',
     const grantablePermissions = AllPermissions.filter(a =>
         !NoGrantPermissions.includes(a)
         && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
-        && (req.permissions.includes('config') || config.grant_permissions.includes(a)));
+        && (req.permissions.includes('config') || config.grant_permissions.includes(a) || req.permissions.includes(a)));
 
     let newPerm = [];
     for(let perm of AllPermissions) {

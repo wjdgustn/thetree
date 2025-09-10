@@ -39,6 +39,7 @@ const {
     UserTypes,
     permissionMenus,
     AllPermissions,
+    NoGrantPermissions,
     LoginHistoryTypes,
     NotificationTypes
 } = types;
@@ -827,7 +828,8 @@ app.use(async (req, res, next) => {
     app.locals.isDev = isDev;
 
     if(isDev) for(let perm of AllPermissions) {
-        if(!req.permissions.includes(perm)) req.permissions.push(perm);
+        if(!req.permissions.includes(perm) && !NoGrantPermissions.includes(perm))
+            req.permissions.push(perm);
     }
 
     if(req.user?.type === UserTypes.Account) {
