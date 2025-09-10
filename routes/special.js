@@ -408,6 +408,7 @@ app.post('/Upload', (req, res, next) => {
 
     await History.create({
         user: req.user.uuid,
+        sessionId: req.session.sessionId,
         type: HistoryTypes.Create,
         document: dbDocument.uuid,
         content,

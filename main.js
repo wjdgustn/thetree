@@ -756,6 +756,8 @@ app.use(async (req, res, next) => {
     const mobileHeader = req.get('Sec-CH-UA-Mobile');
     req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
 
+    req.session.sessionId ??= crypto.randomUUID();
+
     if(req.session.ipUser?.ip !== req.ip)
         req.session.ipUser = null;
     if(!req.session.ipUser) {

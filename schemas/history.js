@@ -125,6 +125,9 @@ const newSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    sessionId: {
+        type: String
     }
 });
 

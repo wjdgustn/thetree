@@ -602,6 +602,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
 
     if(dbDocument && target === 'document') await History.create({
         user: req.user.uuid,
+        sessionId: req.session.sessionId,
         type: HistoryTypes.ACL,
         document: dbDocument.uuid,
         log
@@ -680,6 +681,7 @@ app.get('/action/acl/delete', async (req, res) => {
 
     if(dbDocument && dbACL.document) await History.create({
         user: req.user.uuid,
+        sessionId: req.session.sessionId,
         type: HistoryTypes.ACL,
         document: dbDocument.uuid,
         log
@@ -1181,6 +1183,7 @@ const postEditAndEditRequest = async (req, res) => {
     else {
         const rev = await History.create({
             user: req.user.uuid,
+            sessionId: req.session.sessionId,
             type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
             document: dbDocument.uuid,
             content,
@@ -1348,6 +1351,7 @@ app.post('/edit_request/:url/accept', async (req, res) => {
 
     const newRev = await History.create({
         user: editRequest.createdUser,
+        sessionId: req.session.sessionId,
         type: isCreate ? HistoryTypes.Create : HistoryTypes.Modify,
         document: dbDocument.uuid,
         content,
@@ -1391,7 +1395,7 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         if(!isNaN(req.query.until)) query.rev = { $gte: parseInt(req.query.until) };
         else if(!isNaN(req.query.from)) query.rev = { $lte: parseInt(req.query.from) };
 
-        const revKeys = 'type rev uuid user createdAt diffLength log revertRev moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest -_id'.split(' ');
+        const revKeys = 'type rev uuid user createdAt diffLength log revertRev moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest sessionId -_id'.split(' ');
         if(req.permissions.includes('config'))
             revKeys.push('fileKey');
         revs = await History.find(query)
@@ -1419,6 +1423,9 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         rev.editRequest &&= await EditRequest.findOne({
             uuid: rev.editRequest
         }).select('url -_id');
+        if(rev.user.type === UserTypes.IP && rev.sessionId === req.session.sessionId)
+            rev.transfer = true;
+        delete rev.sessionId;
     }
 
     res.renderSkin(undefined, {
@@ -1590,6 +1597,7 @@ app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
 
     await History.create({
         user: req.user.uuid,
+        sessionId: req.session.sessionId,
         type: HistoryTypes.Revert,
         document: dbDocument.uuid,
         revertRev: rev.revertRev || rev.rev,
@@ -1907,6 +1915,7 @@ app.post('/delete/?*', middleware.parseDocumentName, middleware.captcha, async (
 
     await History.create({
         user: req.user.uuid,
+        sessionId: req.session.sessionId,
         type: HistoryTypes.Delete,
         document: dbDocument.uuid,
         content: null,
@@ -2048,6 +2057,7 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
 
     await History.create({
         user: req.user.uuid,
+        sessionId: req.session.sessionId,
         type: HistoryTypes.Move,
         document: dbDocument.uuid,
         log: req.body.log,
@@ -2056,6 +2066,7 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
     });
     if(isSwap) await History.create({
         user: req.user.uuid,
+        sessionId: req.session.sessionId,
         type: HistoryTypes.Move,
         document: dbOtherDocument.uuid,
         log: req.body.log,
@@ -2064,6 +2075,41 @@ app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (re
     });
 
     res.redirect(globalUtils.doc_action_link(otherDocument, 'w'));
+});
+
+app.post('/transfer_contribution/?*', middleware.parseDocumentName, async (req, res) => {
+    const document = req.document;
+    const { namespace, title } = document;
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+    const acl = await ACL.get({ document: dbDocument }, document);
+
+    const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+    if(!result) return res.status(400).send(aclMessage, 403);
+
+    if(!dbDocument?.contentExists) return res.status(400).send('문서를 찾을 수 없습니다.', 404);
+
+    const rev = await History.findOne({
+        document: dbDocument.uuid,
+        uuid: req.body.uuid
+    });
+    if(!rev) return res.status(404).send('rev를 찾을 수 없습니다.');
+
+    const user = await User.findOne({
+        uuid: rev.user
+    });
+    if(user.type !== UserTypes.IP || rev.sessionId !== req.session.sessionId)
+        return res.status(400).send('not_transferable');
+
+    await History.updateOne({
+        _id: rev._id
+    }, {
+        user: req.user.uuid
+    });
+
+    res.reload();
 });
 
 module.exports.router = app;
