@@ -1207,9 +1207,10 @@ document.getElementById('initScript')?.remove();
             const basicData = getFEBasicData();
             if(!basicData) return;
 
+            const responseData = JSON.parse(JSON.stringify(data));
             res.originalSend(Buffer.from(msgpack.encode({
                 ...basicData,
-                ...JSON.parse(JSON.stringify(data))
+                ...responseData
             })));
 
             (async () => {
@@ -1233,7 +1234,7 @@ document.getElementById('initScript')?.remove();
                         continue;
                     }
                     try {
-                        await item.handler(req);
+                        await item.handler(req, responseData);
                     } catch (e) {
                         console.error('error from postHook plugin action:', e);
                     }
