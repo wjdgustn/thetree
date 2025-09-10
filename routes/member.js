@@ -891,8 +891,9 @@ app.get('/contribution/:uuid/accepted_edit_request',
     }, 'uuid', '_id', {
         getTotal: true
     });
+    data.items = await utils.findUsers(req, data.items, 'createdUser');
     data.items = await utils.findDocuments(data.items);
-    data.items = utils.onlyKeys(data.items, ['url', 'document', 'status', 'lastUpdatedAt', 'diffLength']);
+    data.items = utils.onlyKeys(data.items, ['url', 'document', 'status', 'lastUpdatedAt', 'diffLength', 'createdUser']);
 
     res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution_edit_request',
