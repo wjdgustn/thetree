@@ -1230,7 +1230,7 @@ app.post('/admin/login_history',
         }
     });
     if(!targetUser) return res.status(404).send('사용자 이름이 올바르지 않습니다.');
-    if(!req.permissions.includes('developer')
+    if(!req.permissions.includes('hideip')
         && (targetUser.permissions.includes('developer') || targetUser.permissions.includes('hideip')))
         return res.status(403).send('invalid_permission');
 
