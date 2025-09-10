@@ -1215,7 +1215,7 @@ document.getElementById('initScript')?.remove();
 
             (async () => {
                 for(let item of global.plugins.postHook) {
-                    if(!item.includeError && (data.code && !data.code.toString().startsWith('2'))) continue;
+                    if(!item.includeError && (data.code && !['2', '3'].includes(data.code.toString()[0]))) continue;
 
                     if(item.method && item.method !== req.method) continue;
                     if(item.url) {
