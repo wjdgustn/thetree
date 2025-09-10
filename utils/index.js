@@ -40,7 +40,7 @@ module.exports = {
     },
     getGravatar(email) {
         const hash = crypto.createHash('sha256').update(email).digest('hex');
-        return `//secure.gravatar.com/avatar/${hash}?d=retro`;
+        return `https://secure.gravatar.com/avatar/${hash}?d=retro`;
     },
     parseDocumentName(name, getNamespaceExists = false) {
         name = name.slice(0, 255);
