@@ -13,21 +13,7 @@
   "withdraw_last_activity_hours": 24,
   "withdraw_save_days": 0,
 
-  "grant_permissions": [
-    "delete_thread",
-    "admin",
-    "nsacl",
-    "grant",
-    "disable_two_factor_login",
-    "login_history",
-    "aclgroup",
-    "manage_thread",
-    "hide_document_history_log",
-    "hide_revision",
-    "mark_troll_revision",
-    "batch_revert",
-    "api_access"
-  ],
+  "grant_permissions": [],
 
   "email_whitelist": [],
   "use_email_verification": false,
