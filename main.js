@@ -418,6 +418,7 @@ global.plugins = {
     editor: [],
     page: [],
     preHook: [],
+    postHook: [],
     code: []
 };
 global.pluginPaths = {};
@@ -1182,6 +1183,8 @@ document.getElementById('initScript')?.remove();
         else res.originalRedirect(...args, finalUrl);
     }
 
+    let url = req.url;
+    if(url.startsWith('/internal/')) url = url.replace('/internal', '');
     if(req.isInternal) {
         res.originalStatus = res.status;
         res.status = code => ({
@@ -1204,10 +1207,38 @@ document.getElementById('initScript')?.remove();
             const basicData = getFEBasicData();
             if(!basicData) return;
 
-            return res.originalSend(Buffer.from(msgpack.encode({
+            res.originalSend(Buffer.from(msgpack.encode({
                 ...basicData,
                 ...JSON.parse(JSON.stringify(data))
             })));
+
+            (async () => {
+                for(let item of global.plugins.postHook) {
+                    if(!item.includeError && (data.code && !data.code.toString().startsWith('2'))) continue;
+
+                    if(item.method && item.method !== req.method) continue;
+                    if(item.url) {
+                        if(!url.startsWith(item.url)) continue;
+                    }
+                    else if(item.condition) {
+                        try {
+                            if(!item.condition(req)) continue;
+                        } catch(e) {
+                            console.error('error from postHook plugin condition:', e);
+                            continue;
+                        }
+                    }
+                    else {
+                        console.warn('invalid postHook plugin detected:', item);
+                        continue;
+                    }
+                    try {
+                        await item.handler(req);
+                    } catch (e) {
+                        console.error('error from postHook plugin action:', e);
+                    }
+                }
+            })()
         }
         res.send = data => res.json({ data });
 
@@ -1227,8 +1258,6 @@ document.getElementById('initScript')?.remove();
         }
     }
 
-    let url = req.url;
-    if(url.startsWith('/internal/')) url = url.replace('/internal', '');
     if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) {
         for(let item of global.disabledFeatures) {
             if(item.method !== 'ALL' && item.method !== req.method) continue;
