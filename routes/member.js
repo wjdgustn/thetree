@@ -700,7 +700,7 @@ app.get('/contribution/:uuid/document',
     const query = { ...baseQuery };
 
     const total = await History.countDocuments(query);
-    if(!total) return res.error('계정을 찾을 수 없습니다.', 404);
+    // if(!total) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const pageQuery = req.query.until || req.query.from;
     if(pageQuery) {
@@ -771,7 +771,7 @@ app.get('/contribution/:uuid/discuss',
     const hasContribution = await History.exists({
         user: req.params.uuid
     });
-    if(!hasContribution) return res.error('계정을 찾을 수 없습니다.', 404);
+    // if(!hasContribution) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const data = await utils.pagination(req, ThreadComment, {
         user: req.params.uuid
@@ -808,7 +808,7 @@ app.get('/contribution/:uuid/edit_request',
     const hasContribution = await History.exists({
         user: req.params.uuid
     });
-    if(!hasContribution) return res.error('계정을 찾을 수 없습니다.', 404);
+    // if(!hasContribution) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const baseQuery = {
         createdUser: req.params.uuid
@@ -884,7 +884,7 @@ app.get('/contribution/:uuid/accepted_edit_request',
     const hasContribution = await History.exists({
         user: req.params.uuid
     });
-    if(!hasContribution) return res.error('계정을 찾을 수 없습니다.', 404);
+    // if(!hasContribution) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const data = await utils.pagination(req, EditRequest, {
         lastUpdateUser: req.params.uuid
