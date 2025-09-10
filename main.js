@@ -1249,8 +1249,8 @@ document.getElementById('initScript')?.remove();
         }
 
         for(let item of global.plugins.preHook) {
+            if(item.method && item.method !== req.method) continue;
             if(item.url) {
-                if(item.method && item.method !== req.method) continue;
                 if(!url.startsWith(item.url)) continue;
             }
             else if(item.condition) {
