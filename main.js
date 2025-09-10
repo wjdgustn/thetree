@@ -403,7 +403,7 @@ global.updateEngine = (exit = true) => {
                 }
                 else if(fePackageUpdated) {
                     console.log('Frontend package.json updated, updating packages...');
-                    exec('npm i', { cwd: './frontend' }, onFinish);
+                    exec('npm i --production=false', { cwd: './frontend' }, onFinish);
                 }
                 else await onFinish();
             }
