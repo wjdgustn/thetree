@@ -858,6 +858,8 @@ app.use(async (req, res, next) => {
     if(!global.skins.includes(skin)) skin = global.skins[0];
     const skinInfo = global.skinInfos[skin];
 
+    if(!skin) return res.status(500).send('skin not installed');
+
     req.isInternal = req.url.split('/')[1] === 'internal';
     req.backendMode = skinInfo || req.isInternal;
 
