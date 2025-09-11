@@ -10,7 +10,7 @@ services:
       - '3000:3000'
     volumes:
       - ./skins:/usr/src/app/skins
-      - ./skins:/usr/src/app/customStatic
+      - ./customStatic:/usr/src/app/customStatic
       - ./plugins:/usr/src/app/plugins
       - ./cache:/usr/src/app/cache
       - ./frontend:/usr/src/app/frontend
