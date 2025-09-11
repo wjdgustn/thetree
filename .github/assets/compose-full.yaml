@@ -39,7 +39,7 @@ services:
 
       MEILISEARCH_HOST: http://search:7700
       MEILISEARCH_KEY: thetreepass
-      MEILISEARCH_INDEX: TheTreeDocument
+      MEILISEARCH_INDEX: TheTreeDocuments
   db:
     image: mongo:latest
     restart: unless-stopped

@@ -38,4 +38,4 @@ services:
 
       MEILISEARCH_HOST: http://host.docker.internal:7700
       MEILISEARCH_KEY:
-      MEILISEARCH_INDEX: TheTreeDocument
+      MEILISEARCH_INDEX: TheTreeDocuments
