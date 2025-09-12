@@ -232,13 +232,13 @@ module.exports = {
                             //     }
                             // }
 
-                            let diff = [];
-                            diff = await new Promise(callback => {
+                            let diff = await new Promise(callback => {
                                 Diff.diffChars(baseTextLine, newTextLine, {
                                     timeout: 500,
                                     callback
                                 });
                             });
+                            diff ??= [];
 
                             for(let d of diff) {
                                 if(d.added)
