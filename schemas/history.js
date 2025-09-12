@@ -91,6 +91,9 @@ const newSchema = new Schema({
     editRequest: {
         type: String
     },
+    editRequestAcceptedBy: {
+        type: String
+    },
     troll: {
         type: Boolean,
         required: true,

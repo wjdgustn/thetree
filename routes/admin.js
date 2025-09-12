@@ -1036,8 +1036,9 @@ app.post('/admin/batch_revert',
     const closeEditRequests = req.body.closeEditRequests === 'Y';
     const hideThreadComments = req.body.hideThreadComments === 'Y';
     const revertContributions = req.body.revertContributions === 'Y';
+    const revertEditRequests = req.body.revertEditRequests === 'Y';
 
-    if(!closeEditRequests && !hideThreadComments && !revertContributions)
+    if(!closeEditRequests && !hideThreadComments && !revertContributions && !revertEditRequests)
         return res.status(400).send('아무 작업도 선택하지 않았습니다.');
 
     const resultText = [];
@@ -1076,9 +1077,17 @@ app.post('/admin/batch_revert',
         resultText.push(`숨긴 토론 댓글 수 : ${result.modifiedCount}`);
     }
 
-    if(revertContributions) {
+    if(revertContributions || revertEditRequests) {
+        const orFilters = [];
+        if(revertContributions) orFilters.push({
+            user: user.uuid
+        });
+        if(revertEditRequests) orFilters.push({
+            editRequestAcceptedBy: user.uuid
+        });
+
         const query = {
-            user: user.uuid,
+            $or: orFilters,
             createdAt: {
                 $gte: date - duration
             },

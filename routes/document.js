@@ -1356,7 +1356,8 @@ app.post('/edit_request/:url/accept', async (req, res) => {
         document: dbDocument.uuid,
         content,
         log: editRequest.log,
-        editRequest: editRequest.uuid
+        editRequest: editRequest.uuid,
+        editRequestAcceptedBy: req.user.uuid
     });
 
     await EditRequest.updateOne({
