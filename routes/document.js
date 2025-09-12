@@ -1423,7 +1423,7 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
         rev.editRequest &&= await EditRequest.findOne({
             uuid: rev.editRequest
         }).select('url -_id');
-        if(req.user.type === UserTypes.Account
+        if(req.user?.type === UserTypes.Account
             && rev.user.type === UserTypes.IP
             && rev.sessionId === req.session.sessionId)
             rev.transfer = true;
