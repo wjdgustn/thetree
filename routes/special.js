@@ -7,6 +7,8 @@ const multer = require('multer');
 const crypto = require('crypto');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const sharp = require('sharp');
+const { JSDOM } = require('jsdom');
+const createDOMPurify = require('dompurify');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
@@ -357,15 +359,17 @@ app.post('/Upload', (req, res, next) => {
     }).sort({ rev: -1 });
     if(rev?.content != null) return res.status(409).send('문서가 이미 존재합니다.');
 
+    let metadata;
+    let buffer = req.file.buffer;
     let fileWidth = 0;
     let fileHeight = 0;
     try {
-        const metadata = await sharp(req.file.buffer).metadata();
+        metadata = await sharp(buffer).metadata();
         fileWidth = metadata.width;
         fileHeight = metadata.height;
     } catch(e) {}
 
-    const hash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex');
     const Key = 'i/' + hash + ext;
 
     const checkExists = await History.findOne({
@@ -386,11 +390,19 @@ app.post('/Upload', (req, res, next) => {
         }
     }
 
+    if(metadata.format === 'svg') {
+        const svgCode = buffer.toString();
+        const window = new JSDOM('').window;
+        const DOMPurify = createDOMPurify(window);
+        const clean = DOMPurify.sanitize(svgCode);
+        buffer = Buffer.from(clean);
+    }
+
     if(!checkExists) try {
         await S3.send(new PutObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
             Key,
-            Body: req.file.buffer,
+            Body: buffer,
             ContentType: req.file.mimetype
         }));
     } catch(e) {
