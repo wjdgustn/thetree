@@ -13,7 +13,7 @@ const execPromise = util.promisify(exec);
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 // openNAMU migration things
-const sqlite3 = require('sqlite3').verbose();
+let sqlite3;
 const { Address4, Address6 } = require('ip-address');
 const bcrypt = require('bcrypt');
 const sharp = require('sharp');
@@ -355,6 +355,12 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
     else if(tool === 'migrateopennamu') {
         if(!(await fs.exists('./opennamu_data/data.db'))) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
+
+        try {
+            sqlite3 ??= require('sqlite3').verbose();
+        } catch(e) {
+            return res.status(400).send('sqlite3 import 중 오류가 발생하였습니다. sqlite3 라이브러리 설치 후 시도하세요.');
+        }
 
         res.status(204).end();
 
