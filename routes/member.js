@@ -798,7 +798,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
             permissions: req.displayPermissions,
             hasTotp: !!req.user.totpToken,
             canWithdraw: config.can_withdraw !== false,
-            externalProviders: Object.entries(config.oauth2_providers || {}).map(([name, value]) => ({
+            externalProviders: Object.entries(config.oauth2_providers || {}).filter(([name, value]) => !value.hidden).map(([name, value]) => ({
                 name,
                 displayName: value.display_name
             })),
