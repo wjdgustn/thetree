@@ -46,7 +46,7 @@ const AuditLog = require('../schemas/auditLog');
 const app = express.Router();
 
 app.get('/member/signup', middleware.isLogout, (req, res) => {
-    if(config.disable_signup || disable_internal_login) return res.error('가입이 비활성화되어 있습니다.');
+    if(config.disable_signup || config.disable_internal_login) return res.error('가입이 비활성화되어 있습니다.');
 
     res.renderSkin('계정 만들기', {
         contentName: 'member/signup',
@@ -610,7 +610,7 @@ app.get('/member/login/oauth2/:provider', async (req, res) => {
     const provider = config.oauth2_providers?.[req.params.provider];
     if(!provider) return res.error('provider config를 찾을 수 없습니다.', 404);
 
-    if(req.user) {
+    if(req.user?.type === UserTypes.Account) {
         const map = await OAuth2Map.exists({
             provider: req.params.provider,
             user: req.user.uuid
@@ -679,12 +679,12 @@ app.get('/member/login/oauth2/:provider/callback',
         return res.error('사용자 정보를 불러오지 못했습니다.');
     }
 
-    const map = await OAuth2Map.exists({
+    const map = await OAuth2Map.findOne({
         provider: req.params.provider,
         sub: userData.sub
     });
 
-    if(req.user) {
+    if(req.user?.type === UserTypes.Account) {
         if(map) return res.error('이미 다른 내부 계정에 연결된 외부 계정입니다.', 409);
         const providerCheck = await OAuth2Map.exists({
             provider: req.params.provider,
@@ -733,7 +733,7 @@ app.get('/member/login/oauth2/:provider/callback',
         else return res.error('연결되지 않은 외부 계정입니다. 내부 계정과 연결 후 사용해 주세요.');
     }
 
-    req.session.loginUser = user.uuid;
+    req.session.loginUser = map.user;
     req.session.oauth2Provider = req.params.provider;
 
     res.redirect(req.session.redirect || '/');
