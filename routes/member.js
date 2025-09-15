@@ -318,6 +318,11 @@ app.post('/member/signup/:token',
     const newUser = new User(newUserJson);
     await newUser.save();
 
+    if(token.oauth2Map) await OAuth2Map.create({
+        user: newUser.uuid,
+        ...token.oauth2Map
+    });
+
     await SignupToken.deleteMany({
         email: token.email
     });
@@ -725,7 +730,9 @@ app.get('/member/login/oauth2/:provider/callback',
                 ip: req.ip,
                 oauth2Map: {
                     provider: req.params.provider,
-                    sub: userData.sub
+                    sub: userData.sub,
+                    name: userData.name,
+                    email: userData.email
                 }
             });
             return res.redirect(`/member/signup/${newToken.token}`);
