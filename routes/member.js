@@ -712,7 +712,7 @@ app.get('/member/login/oauth2/:provider/callback',
 
     if(!map) {
         const email = userData[provider.email_key || 'email'];
-        if(email && userData[provier.email_verified_key || 'email_verified'] !== false) {
+        if(email && userData[provider.email_verified_key || 'email_verified'] !== false) {
             const checkUser = await User.exists({ email });
             if(checkUser) return res.error('연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.');
 
