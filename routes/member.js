@@ -391,18 +391,17 @@ app.get('/member/login', middleware.isLogout, async (req, res) => {
 
 app.post('/member/login',
     middleware.isLogout,
-    oneOf([
-        [
-            body('email')
-                .notEmpty()
-                .withMessage('이메일의 값은 필수입니다.'),
-            body('password')
-                .notEmpty()
-                .withMessage('비밀번호의 값은 필수입니다.')
-        ],
-        body('challenge')
-            .notEmpty()
-    ]),
+    body('email')
+        .if(body('challenge').isEmpty())
+        .notEmpty()
+        .withMessage('이메일의 값은 필수입니다.'),
+    body('password')
+        .if(body('challenge').isEmpty())
+        .notEmpty()
+        .withMessage('비밀번호의 값은 필수입니다.'),
+    body('challenge')
+        .if(body('email').isEmpty())
+        .notEmpty(),
     middleware.fieldErrors,
     middleware.captcha,
     async (req, res) => {
