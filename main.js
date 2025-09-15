@@ -389,7 +389,7 @@ global.updateEngine = (exit = true) => {
             if(exit) {
                 const onFinish = async () => {
                     if(doFE) {
-                        const installedSkins = await fs.readdir('./frontend/skins').filter(a => a !== 'plain');
+                        const installedSkins = (await fs.readdir('./frontend/skins')).filter(a => a !== 'plain');
                         if(installedSkins.length)
                             await global.updateSkins(installedSkins);
                     }
