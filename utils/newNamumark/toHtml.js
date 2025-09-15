@@ -18,6 +18,8 @@ const History = require('../../schemas/history');
 
 const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
+const MAXIMUM_TIME = 10000;
+const MAXIMUM_TIME_HTML = '<h2>문서 렌더링이 너무 오래 걸립니다.</h2>';
 
 const topToHtml = async (parsed, options = {}) => {
     options.originalDocument ??= options.document;
@@ -504,4 +506,18 @@ const topToHtml = async (parsed, options = {}) => {
     return result;
 }
 
-module.exports = topToHtml;
+module.exports = async (...params) => await Promise.race([
+    topToHtml(...params),
+    new Promise(resolve => setTimeout(() => resolve({
+        html: MAXIMUM_TIME_HTML,
+        links: [],
+        files: [],
+        categories: [],
+        headings: [],
+        hasError: true,
+        embed: {
+            text: null,
+            image: null
+        }
+    }), config.document_maximum_time ?? MAXIMUM_TIME))
+]);
