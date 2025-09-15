@@ -715,6 +715,8 @@ app.get('/member/login/oauth2/:provider/callback',
         if(email && userData[provider.email_verified_key || 'email_verified'] !== false) {
             const checkUser = await User.findOne({ email });
             if(checkUser) {
+                if(provider.disable_auto_register)
+                    return res.error('연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.');
                 map = await OAuth2Map.create({
                     provider: req.params.provider,
                     sub: userData[provider.sub_key || 'sub'],

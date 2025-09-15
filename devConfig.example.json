@@ -37,6 +37,7 @@
   "oauth2_providers": {
     "example": {
       "display_name": "example",
+      "disable_auto_register": false,
       "client_id": "",
       "client_secret": "",
       "authorization_endpoint": "",
