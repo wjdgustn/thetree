@@ -415,7 +415,7 @@ app.post('/member/login',
         if(exUser != null) {
             const result = await bcrypt.compare(password, exUser.password);
             if(result) {
-                if(config.user_identifier && !exUser.permissions.includes('developer'))
+                if(config.disable_internal_login && !exUser.permissions.includes('developer'))
                     return res.status(400).send('internal_login이 비활성화되어 있습니다.');
 
                 user = exUser;
