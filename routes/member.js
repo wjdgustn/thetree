@@ -726,6 +726,12 @@ app.get('/member/login/oauth2/:provider/callback',
                 });
             }
             else {
+                if(!provider.disable_email_whitelist) {
+                    const emailDomain = email.split('@').pop();
+                    if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
+                        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
+                }
+
                 const checkBlacklist = await Blacklist.exists({
                     email: crypto.createHash('sha256').update(email).digest('hex')
                 });

@@ -38,6 +38,7 @@
     "example": {
       "display_name": "example",
       "disable_auto_register": false,
+      "disable_email_whitelist": false,
       "client_id": "",
       "client_secret": "",
       "authorization_endpoint": "",
