@@ -46,6 +46,7 @@
       "sub_key": "",
       "email_key": "",
       "name_key": "",
+      "email_verified_key": "",
       "scopes": [],
       "authorization_query": {},
       "button": {
