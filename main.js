@@ -3,7 +3,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
-const passport = require('passport');
 const session = require('express-session');
 const fs = require('fs-extra');
 const path = require('path');
@@ -531,18 +530,6 @@ global.permTokens = Object.fromEntries(AllPermissions.map(a => [a, crypto.random
 app.set('views', './views');
 app.set('view engine', 'ejs');
 
-passport.serializeUser((user, done) => {
-    done(null, user.uuid);
-});
-passport.deserializeUser(async (uuid, done) => {
-    const user = await User.findOne({ uuid }).lean();
-    if(!user) return done(null, false);
-    done(null, {
-        ...user,
-        avatar: utils.getGravatar(user.email)
-    });
-});
-
 app.use(cookieParser());
 
 app.use((req, res, next) => {
@@ -681,13 +668,11 @@ SocketIO.engine.use(onlyForHandshake(sessionMiddleware));
 
 app.use(async (req, res, next) => {
     if(req.cookies?.honoka) {
-        if(!req.session?.passport) {
+        if(!req.session?.loginUser) {
             const token = await AutoLoginToken.findOne({
                 token: req.cookies.honoka
             });
-            if(token) req.session.passport = {
-                user: token.uuid
-            }
+            if(token) req.session.loginUser = token.uuid;
         }
 
         res.cookie('honoka', req.cookies.honoka, {
@@ -700,13 +685,18 @@ app.use(async (req, res, next) => {
     next();
 });
 
-app.use(passport.initialize());
-app.use(passport.session());
-SocketIO.engine.use(onlyForHandshake(passport.session()));
-
-for(let f of fs.readdirSync('./login')) {
-    require(`./login/${f}`)(passport);
+const getUserMiddleware = async (req, res, next) => {
+    if(req.session?.loginUser) {
+        const user = await User.findOne({ uuid: req.session.loginUser }).lean();
+        if(user) req.user = {
+            ...user,
+            avatar: utils.getGravatar(user.email)
+        }
+    }
+    next();
 }
+app.use(getUserMiddleware);
+SocketIO.engine.use(onlyForHandshake(getUserMiddleware));
 
 app.use(useragent.express());
 

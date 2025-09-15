@@ -4,7 +4,7 @@ const {validationResult} = require('express-validator');
 
 module.exports = {
     isLogin(req, res, next) {
-        if(!req.isAuthenticated() || req.user?.type !== UserTypes.Account)
+        if(req.user?.type !== UserTypes.Account)
             return res.redirect(`/member/login?redirect=${encodeURIComponent(req.url)}`);
         next();
     },

@@ -2,7 +2,6 @@ const express = require('express');
 const { body, param, validationResult, oneOf } = require('express-validator');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const passport = require('passport');
 const { Address4, Address6 } = require('ip-address');
 const randomstring = require('randomstring');
 const { TOTP } = require('otpauth');
@@ -322,22 +321,21 @@ app.post('/member/signup/:token',
         content: ''
     });
 
-    return req.login({
+    req.user = {
         ...newUser.toJSON(),
         avatar: utils.getGravatar(newUser.email)
-    }, { keepSessionInfo: true }, async err => {
-        if(err) console.error(err);
+    }
+    req.session.loginUser = req.user.uuid;
 
-        await utils.createLoginHistory(newUser, req);
+    await utils.createLoginHistory(newUser, req);
 
-        if(!res.headersSent) {
-            req.session.fullReload = true;
-            delete req.session.contributor;
-            return res.renderSkin('계정 만들기', {
-                contentHtml: `<p>환영합니다! <b>${newUser.name}</b>님 계정 생성이 완료되었습니다.</p>`
-            });
-        }
-    });
+    if(!res.headersSent) {
+        req.session.fullReload = true;
+        delete req.session.contributor;
+        return res.renderSkin('계정 만들기', {
+            contentHtml: `<p>환영합니다! <b>${newUser.name}</b>님 계정 생성이 완료되었습니다.</p>`
+        });
+    }
 });
 
 app.get('/member/login', middleware.isLogout, (req, res) => {
@@ -362,79 +360,105 @@ app.post('/member/login',
         .withMessage('비밀번호의 값은 필수입니다.'),
     middleware.fieldErrors,
     middleware.captcha,
-    (req, res, next) => {
-    passport.authenticate('local', async (err, user, info) => {
-        if(err) {
-            console.error(err);
-            return res.status(500).send('서버 오류');
-        }
-        if(!user) return res.status(400).send(info.message);
+    async (req, res) => {
+    const email = req.body.email;
+    const password = req.body.password;
 
-        let trusted = req.session.trustedAccounts?.includes(user.uuid);
+    const wrongCredentials = () => res.status(400).send('이메일 혹은 패스워드가 틀립니다.');
 
-        if((!user.totpToken && !config.use_email_verification) || user.permissions.includes('disable_two_factor_login')) {
-            trusted = true;
-        }
-
-        if(trusted) {
-            if(req.body.autologin === 'Y') {
-                const token = await AutoLoginToken.create({
-                    uuid: user.uuid
-                });
-                res.cookie('honoka', token.token, {
-                    httpOnly: true,
-                    maxAge: 1000 * 60 * 60 * 24 * 365,
-                    sameSite: 'lax'
-                });
+    let user;
+    try {
+        const exUser = await User.findOneAndUpdate({
+            $or: [
+                { email },
+                { name: email }
+            ]
+        }, {
+            emailPin: utils.getRandomInt(0, 999999).toString().padStart(6, '0'),
+            lastLoginRequest: new Date()
+        }, {
+            new: true
+        });
+        if(exUser != null) {
+            const result = await bcrypt.compare(password, exUser.password);
+            if(result) {
+                user = exUser;
             }
+            else {
+                return wrongCredentials();
+            }
+        }
+        else {
+            return wrongCredentials();
+        }
+    } catch(err) {
+        console.error(err);
+        return res.status(500).send('서버 오류');
+    }
 
-            await utils.createLoginHistory(user, req)
+    let trusted = req.session.trustedAccounts?.includes(user.uuid);
 
-            return req.login(user, { keepSessionInfo: true }, err => {
-                if(err) console.error(err);
-                if(!res.headersSent) {
-                    req.session.fullReload = true;
-                    delete req.session.contributor;
-                    return res.redirect(req.body.redirect || '/');
-                }
+    if((!user.totpToken && !config.use_email_verification) || user.permissions.includes('disable_two_factor_login')) {
+        trusted = true;
+    }
+
+    if(trusted) {
+        if(req.body.autologin === 'Y') {
+            const token = await AutoLoginToken.create({
+                uuid: user.uuid
+            });
+            res.cookie('honoka', token.token, {
+                httpOnly: true,
+                maxAge: 1000 * 60 * 60 * 24 * 365,
+                sameSite: 'lax'
             });
         }
 
-        const passkeys = await Passkey.find({
-            user: user.uuid
-        });
-        const hasPasskey = user.totpToken && passkeys.length;
+        await utils.createLoginHistory(user, req)
 
-        let passkeyData = null;
-        if(hasPasskey) {
-            passkeyData = await generateAuthenticationOptions({
-                rpID: new URL(config.base_url).hostname,
-                allowCredentials: passkeys.map(a => ({
-                    id: a.id,
-                    transports: a.transports
-                }))
-            });
-            req.session.passkeyAuthOptions = passkeyData;
+        req.session.loginUser = user.uuid;
+        if(!res.headersSent) {
+            req.session.fullReload = true;
+            delete req.session.contributor;
+            return res.redirect(req.body.redirect || '/');
         }
+    }
 
-        req.session.pinUser = user.uuid;
-        req.session.redirect = req.body.redirect;
-        res.renderSkin('로그인', {
-            contentName: 'member/pin_verification',
-            passkeyData,
-            serverData: {
-                email: user.email,
-                useTotp: !!user.totpToken,
-                autologin: req.body.autologin,
-                hasPasskey
-            }
+    const passkeys = await Passkey.find({
+        user: user.uuid
+    });
+    const hasPasskey = user.totpToken && passkeys.length;
+
+    let passkeyData = null;
+    if(hasPasskey) {
+        passkeyData = await generateAuthenticationOptions({
+            rpID: new URL(config.base_url).hostname,
+            allowCredentials: passkeys.map(a => ({
+                id: a.id,
+                transports: a.transports
+            }))
         });
+        req.session.passkeyAuthOptions = passkeyData;
+    }
 
-        if(!user.totpToken) await mailTransporter.sendMail({
-            from: config.smtp_sender,
-            to: user.email,
-            subject: `[${config.site_name}] 확인되지 않은 기기에서 로그인`,
-            html: `
+    req.session.pinUser = user.uuid;
+    req.session.redirect = req.body.redirect;
+    res.renderSkin('로그인', {
+        contentName: 'member/pin_verification',
+        passkeyData,
+        serverData: {
+            email: user.email,
+            useTotp: !!user.totpToken,
+            autologin: req.body.autologin,
+            hasPasskey
+        }
+    });
+
+    if(!user.totpToken) await mailTransporter.sendMail({
+        from: config.smtp_sender,
+        to: user.email,
+        subject: `[${config.site_name}] 확인되지 않은 기기에서 로그인`,
+        html: `
 안녕하세요. ${config.site_name} 입니다.
 확인되지 않은 기기에서 로그인을 시도하셨습니다.
 본인이 맞다면 아래 PIN 번호를 입력해주세요.
@@ -442,9 +466,8 @@ PIN: <b>${user.emailPin}</b>
 
 이 메일은 10분동안 유효합니다.
 요청 아이피: ${req.ip}
-        `.trim().replaceAll('\n', '<br>')
-        });
-    })(req, res, next);
+    `.trim().replaceAll('\n', '<br>')
+    });
 });
 
 app.post('/member/login/pin',
@@ -540,15 +563,13 @@ app.post('/member/login/pin',
         });
     }
 
-    req.login(user, { keepSessionInfo: true }, err => {
-        if(err) console.error(err);
-        if(!res.headersSent) {
-            req.session.fullReload = true;
-            delete req.session.contributor;
-            res.redirect(req.session.redirect || '/');
-            delete req.session.redirect;
-        }
-    });
+    req.session.loginUser = user.uuid;
+    if(!res.headersSent) {
+        req.session.fullReload = true;
+        delete req.session.contributor;
+        res.redirect(req.session.redirect || '/');
+        delete req.session.redirect;
+    }
 
     await utils.createLoginHistory(user, req);
 });
@@ -558,13 +579,11 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
         uuid: req.user.uuid,
         token: req.cookies.honoka
     });
-    req.logout({ keepSessionInfo: true }, err => {
-        if(err) console.error(err);
-        req.session.fullReload = true;
-        delete req.session.contributor;
-        res.clearCookie('honoka');
-        res.redirect(req.query.redirect || req.get('Referer') || '/');
-    });
+    delete req.session.loginUser;
+    req.session.fullReload = true;
+    delete req.session.contributor;
+    res.clearCookie('honoka');
+    res.redirect(req.query.redirect || req.get('Referer') || '/');
 });
 
 app.get('/member/mypage', middleware.isLogin, async (req, res) => {
@@ -1041,13 +1060,11 @@ app.post('/member/withdraw',
         });
     }
 
-    req.logout({ keepSessionInfo: true }, err => {
-        if(err) console.error(err);
-        req.session.fullReload = true;
-        delete req.session.contributor;
-        res.clearCookie('honoka');
-        res.redirect('/member/login');
-    });
+    delete req.session.loginUser;
+    req.session.fullReload = true;
+    delete req.session.contributor;
+    res.clearCookie('honoka');
+    res.redirect('/member/login');
 });
 
 app.get('/member/change_name', middleware.isLogin, (req, res) => {
