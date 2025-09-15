@@ -686,7 +686,7 @@ app.get('/member/login/oauth2/:provider/callback',
 
     const map = await OAuth2Map.findOne({
         provider: req.params.provider,
-        sub: userData.sub
+        sub: userData[provider.sub_key || 'sub']
     });
 
     if(req.user?.type === UserTypes.Account) {
@@ -699,16 +699,16 @@ app.get('/member/login/oauth2/:provider/callback',
 
         await OAuth2Map.create({
             provider: req.params.provider,
-            sub: userData.sub,
+            sub: userData[provider.sub_key || 'sub'],
             user: req.user.uuid,
             name: userData.name,
-            email: userData.email
+            email: userData[provider.email_key || 'email']
         });
         return res.redirect('/member/mypage');
     }
 
     if(!map) {
-        const email = userData.email;
+        const email = userData[provider.email_key || 'email'];
         if(email) {
             const checkUser = await User.exists({ email });
             if(checkUser) return res.error('연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.');
@@ -730,9 +730,9 @@ app.get('/member/login/oauth2/:provider/callback',
                 ip: req.ip,
                 oauth2Map: {
                     provider: req.params.provider,
-                    sub: userData.sub,
+                    sub: userData[provider.sub_key || 'sub'],
                     name: userData.name,
-                    email: userData.email
+                    email: userData[provider.email_key || 'email']
                 }
             });
             return res.redirect(`/member/signup/${newToken.token}`);
