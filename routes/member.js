@@ -729,7 +729,7 @@ app.get('/member/login/oauth2/:provider/callback',
                 if(!provider.disable_email_whitelist) {
                     const emailDomain = email.split('@').pop();
                     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
-                        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
+                        return res.error('이메일 허용 목록에 있는 이메일이 아닙니다.');
                 }
 
                 const checkBlacklist = await Blacklist.exists({
