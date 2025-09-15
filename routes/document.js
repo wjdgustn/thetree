@@ -723,6 +723,29 @@ app.patch('/action/acl/reorder', async (req, res) => {
 
     if(acls[0].type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
 
+    let dbDocument;
+    let dbThread;
+    if(acls[0].document || acls[0].thread) {
+        if(acls[0].thread) dbThread = await Thread.findOne({
+            uuid: acls[0].thread
+        });
+        dbDocument = await Document.findOne({
+            uuid: dbThread?.document || acls[0].document
+        });
+
+        const acl = await ACL.get({ document: dbDocument }, {
+            namespace: dbDocument.namespace,
+            title: dbDocument.title
+        });
+        const { result: editable, aclMessage } = await acl.check(ACLTypes.ACL, req.aclData);
+
+        if(!editable) return res.status(403).send(aclMessage);
+    }
+    else {
+        if(!req.permissions.includes('nsacl')) return res.status(403).send('이름공간 ACL 수정은 nsacl 권한이 필요합니다!');
+        if(!req.permissions.includes('config') && config.protected_namespaces?.includes(acls[0].namespace)) return res.status(403).send('protected_namespace');
+    }
+
     const actions = [];
     for(let i in uuids) {
         const uuid = uuids[i];
