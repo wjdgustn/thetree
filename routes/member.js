@@ -403,10 +403,11 @@ app.post('/member/login',
         .if(body('email').isEmpty())
         .notEmpty(),
     middleware.fieldErrors,
-    middleware.captcha,
     async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
+
+    if(!req.body.challenge && !await utils.middleValidateCaptcha(req, res)) return;
 
     const wrongCredentials = () => res.status(400).send('이메일 혹은 패스워드가 틀립니다.');
 
