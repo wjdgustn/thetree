@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param, validationResult, oneOf } = require('express-validator');
+const { body, param, query, validationResult, oneOf } = require('express-validator');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { Address4, Address6 } = require('ip-address');
@@ -30,6 +30,7 @@ const {
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
 const AutoLoginToken = require('../schemas/autoLoginToken');
+const OAuth2Map = require('../schemas/oauth2Map');
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const ACLGroup = require('../schemas/aclGroup');
@@ -45,6 +46,8 @@ const AuditLog = require('../schemas/auditLog');
 const app = express.Router();
 
 app.get('/member/signup', middleware.isLogout, (req, res) => {
+    if(config.disable_signup || disable_internal_login) return res.error('가입이 비활성화되어 있습니다.');
+
     res.renderSkin('계정 만들기', {
         contentName: 'member/signup',
         serverData: {
@@ -64,6 +67,8 @@ app.post('/member/signup',
     middleware.fieldErrors,
     middleware.captcha,
     async (req, res) => {
+    if(config.disable_signup || config.disable_internal_login) return res.status(400).send('가입이 비활성화되어 있습니다.');
+
     const emailDomain = req.body.email.split('@').pop();
     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
         return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
@@ -218,7 +223,8 @@ app.get('/member/signup/:token', async (req, res) => {
         contentName: 'member/signup_final',
         serverData: {
             email: token.email,
-            name: token.name
+            name: token.name,
+            fromOAuth2: !!token.fromOAuth2
         }
     });
 });
@@ -248,12 +254,22 @@ const nameChecker = field => body(field)
         });
         if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
     });
+const passwordChecker = field => body(field)
+    .if((value, { req }) => !!req.user.password)
+    .notEmpty().withMessage(`${field === 'password' ? '비밀번호' : field}의 값은 필수입니다.`)
+    .custom(async (value, {req}) => {
+        const result = await bcrypt.compare(value, req.user.password);
+        if(!result) throw new Error('패스워드가 올바르지 않습니다.');
+        return true;
+    });
 app.post('/member/signup/:token',
     nameChecker('username'),
     body('password')
+        .if(body('from_oauth2').not().equals('Y'))
         .notEmpty()
         .withMessage('비밀번호의 값은 필수입니다.'),
     body('password_confirm')
+        .if(body('from_oauth2').not().equals('Y'))
         .notEmpty()
         .withMessage('비밀번호 확인의 값은 필수입니다.')
         .custom((value, { req }) => value === req.body.password)
@@ -287,10 +303,9 @@ app.post('/member/signup/:token',
     });
 
     const name = token.name || req.body.username;
-    const hash = await bcrypt.hash(req.body.password, 12);
     const newUserJson = {
         email: token.email,
-        password: hash,
+        password: req.body.password ? (await bcrypt.hash(req.body.password, 12)) : undefined,
         name
     }
 
@@ -345,8 +360,21 @@ app.get('/member/login', middleware.isLogout, (req, res) => {
         return res.redirect(url.pathname + url.search);
     }
 
+    const disableInternal = config.disable_internal_login || false;
+    const externalProviders = Object.entries(config.oauth2_providers || {}).map(([name, value]) => ({
+        name,
+        ...(value.button || {})
+    }));
+    if(disableInternal && externalProviders.length === 1 && !req.query.internal)
+        return res.redirect(`/member/login/oauth2/${externalProviders[0].name}`);
+
     res.renderSkin('로그인', {
-        contentName: 'member/login'
+        contentName: 'member/login',
+        serverData: {
+            disableSignup: !!config.disable_signup,
+            disableInternal,
+            externalProviders
+        }
     });
 });
 
@@ -382,6 +410,9 @@ app.post('/member/login',
         if(exUser != null) {
             const result = await bcrypt.compare(password, exUser.password);
             if(result) {
+                if(config.user_identifier && !exUser.permissions.includes('developer'))
+                    return res.status(400).send('internal_login이 비활성화되어 있습니다.');
+
                 user = exUser;
             }
             else {
@@ -564,6 +595,7 @@ app.post('/member/login/pin',
     }
 
     req.session.loginUser = user.uuid;
+    delete req.session.oauth2Provider;
     if(!res.headersSent) {
         req.session.fullReload = true;
         delete req.session.contributor;
@@ -572,6 +604,152 @@ app.post('/member/login/pin',
     }
 
     await utils.createLoginHistory(user, req);
+});
+
+app.get('/member/login/oauth2/:provider', async (req, res) => {
+    const provider = config.oauth2_providers?.[req.params.provider];
+    if(!provider) return res.error('provider config를 찾을 수 없습니다.', 404);
+
+    if(req.user) {
+        const map = await OAuth2Map.exists({
+            provider: req.params.provider,
+            user: req.user.uuid
+        });
+        if(map) return res.error('이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.', 409);
+    }
+
+    const redirect = req.query.redirect;
+    if(redirect) req.session.redirect = redirect;
+
+    req.session.oauth2State = crypto.randomUUID();
+
+    const url = new URL(provider.authorization_endpoint);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('client_id', provider.client_id);
+    url.searchParams.set('redirect_uri', new URL(`/member/login/oauth2/${req.params.provider}/callback`, config.base_url).toString());
+    url.searchParams.set('scope', typeof provider.scopes === 'string' ? provider.scopes : provider.scopes.join(' '));
+    url.searchParams.set('state', req.session.oauth2State);
+
+    res.redirect(url.toString());
+});
+
+app.get('/member/login/oauth2/:provider/callback',
+    query('code')
+        .notEmpty(),
+    query('state')
+        .isUUID(),
+    middleware.singleFieldError,
+    async (req, res) => {
+    const provider = config.oauth2_providers?.[req.params.provider];
+    if(!provider) return res.error('provider config를 찾을 수 없습니다.', 404);
+
+    if(req.session.oauth2State !== req.query.state)
+        return res.error('state가 유효하지 않습니다.');
+
+    let tokenData;
+    try {
+        const { data } = await axios.post(provider.token_endpoint, new URLSearchParams({
+            client_id: provider.client_id,
+            client_secret: provider.client_secret,
+            grant_type: 'authorization_code',
+            code: req.query.code,
+            redirect_uri: `${new URL(req.path, config.base_url).toString()}`
+        }));
+        tokenData = data;
+    } catch(e) {
+        if(debug) console.error(e);
+        return res.error('code가 유효하지 않습니다.');
+    }
+
+    const scopes = tokenData.scope.split(' ');
+    const missingScope = provider.scopes.find(a => !scopes.includes(a));
+    if(missingScope)
+        return res.error(`${missingScope} scope가 누락되었습니다.`);
+
+    let userData;
+    try {
+        const { data } = await axios.get(provider.userinfo_endpoint, {
+            headers: {
+                Authorization: `Bearer ${tokenData.access_token}`
+            }
+        });
+        userData = data;
+    } catch(e) {
+        if(debug) console.error(e);
+        return res.error('사용자 정보를 불러오지 못했습니다.');
+    }
+
+    const map = await OAuth2Map.exists({
+        provider: req.params.provider,
+        sub: userData.sub
+    });
+
+    if(req.user) {
+        if(map) return res.error('이미 다른 내부 계정에 연결된 외부 계정입니다.', 409);
+        const providerCheck = await OAuth2Map.exists({
+            provider: req.params.provider,
+            user: req.user.uuid
+        });
+        if(providerCheck) return res.error('이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.', 409);
+
+        await OAuth2Map.create({
+            provider: req.params.provider,
+            sub: userData.sub,
+            user: req.user.uuid,
+            name: userData.name,
+            email: userData.email
+        });
+        return res.redirect('/member/mypage');
+    }
+
+    if(!map) {
+        const email = userData.email;
+        if(email) {
+            const checkUser = await User.exists({ email });
+            if(checkUser) return res.error('연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.');
+
+            const checkBlacklist = await Blacklist.exists({
+                email: crypto.createHash('sha256').update(email).digest('hex')
+            });
+            if(checkBlacklist) return res.error('재가입 대기 기간 입니다.', 403);
+
+            await SignupToken.deleteMany({
+                email
+            });
+            await SignupToken.deleteMany({
+                ip: req.ip
+            });
+
+            const newToken = await SignupToken.create({
+                email,
+                ip: req.ip,
+                oauth2Map: {
+                    provider: req.params.provider,
+                    sub: userData.sub
+                }
+            });
+            return res.redirect(`/member/signup/${newToken.token}`);
+        }
+        else return res.error('연결되지 않은 외부 계정입니다. 내부 계정과 연결 후 사용해 주세요.');
+    }
+
+    req.session.loginUser = user.uuid;
+    req.session.oauth2Provider = req.params.provider;
+
+    res.redirect(req.session.redirect || '/');
+});
+
+app.delete('/member/login/oauth2/:provider', middleware.isLogin, async (req, res) => {
+    const provider = config.oauth2_providers?.[req.params.provider];
+    if(!provider) return res.status(404).send('provider config를 찾을 수 없습니다.');
+
+    const deleted = await OAuth2Map.findOneAndDelete({
+        user: req.user.uuid,
+        provider: req.params.provider
+    });
+    if(!deleted) return res.status(404).send('해당 provider에 등록된 계정이 없습니다.');
+
+    res.reload();
 });
 
 app.get('/member/logout', middleware.isLogin, async (req, res) => {
@@ -589,8 +767,11 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
 app.get('/member/mypage', middleware.isLogin, async (req, res) => {
     const passkeys = await Passkey.find({
         user: req.user.uuid
-    })
-        .select('name createdAt lastUsedAt -_id');
+    }).select('name createdAt lastUsedAt -_id');
+    const oauth2Maps = await OAuth2Map.find({
+        user: req.user.uuid
+    }).select('provider name email -_id');
+
     res.renderSkin('내 정보', {
         contentName: 'member/mypage',
         serverData: {
@@ -599,7 +780,12 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
             user: utils.onlyKeys(req.user, ['name', 'email', 'skin']),
             permissions: req.displayPermissions,
             hasTotp: !!req.user.totpToken,
-            canWithdraw: config.can_withdraw !== false
+            canWithdraw: config.can_withdraw !== false,
+            externalProviders: Object.entries(config.oauth2_providers || {}).map(([name, value]) => ({
+                name,
+                displayName: value.display_name
+            })),
+            oauth2Maps: Object.fromEntries(oauth2Maps.map(a => [a.provider, a]))
         }
     });
 });
@@ -624,13 +810,7 @@ app.post('/member/mypage', middleware.isLogin,
 
 app.post('/member/generate_api_token',
     middleware.isLogin,
-    body('password')
-        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
-        .custom(async (value, {req}) => {
-            const result = await bcrypt.compare(value, req.user.password);
-            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
-            return true;
-        }),
+    passwordChecker('password'),
     middleware.singleFieldError,
     async (req, res) => {
     const apiToken = crypto.randomBytes(128).toString('base64');
@@ -660,13 +840,7 @@ app.get('/member/change_password', middleware.isLogin, (req, res) => {
 
 app.post('/member/change_password',
     middleware.isLogin,
-    body('old_password')
-        .notEmpty().withMessage('old_password의 값은 필수입니다.')
-        .custom(async (value, {req}) => {
-            const result = await bcrypt.compare(value, req.user.password);
-            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
-            return true;
-        }),
+    passwordChecker('old_password'),
     body('password')
         .notEmpty().withMessage('비밀번호의 값은 필수입니다.'),
     body('password_confirm')
@@ -987,13 +1161,7 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
 
 app.post('/member/withdraw',
     middleware.isLogin,
-    body('password')
-        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
-        .custom(async (value, {req}) => {
-            const result = await bcrypt.compare(value, req.user.password);
-            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
-            return true;
-        }),
+    passwordChecker('password'),
     body('pledge')
         .notEmpty().withMessage('pledge의 값은 필수입니다.')
         .equals(config.withdraw_pledge).withMessage('동일하게 입력해주세요.'),
@@ -1080,13 +1248,7 @@ app.get('/member/change_name', middleware.isLogin, (req, res) => {
 
 app.post('/member/change_name',
     middleware.isLogin,
-    body('password')
-        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
-        .custom(async (value, {req}) => {
-            const result = await bcrypt.compare(value, req.user.password);
-            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
-            return true;
-        }),
+    passwordChecker('password'),
     nameChecker('name'),
     middleware.fieldErrors,
     async (req, res) => {
@@ -1149,13 +1311,7 @@ app.get('/member/change_email', middleware.isLogin, (req, res) => {
 
 app.post('/member/change_email',
     middleware.isLogin,
-    body('password')
-        .notEmpty().withMessage('비밀번호의 값은 필수입니다.')
-        .custom(async (value, {req}) => {
-            const result = await bcrypt.compare(value, req.user.password);
-            if(!result) throw new Error('패스워드가 올바르지 않습니다.');
-            return true;
-        }),
+    passwordChecker('password'),
     body('email')
         .notEmpty().withMessage('이메일의 값은 필수입니다.')
         .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')

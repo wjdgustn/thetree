@@ -1164,10 +1164,17 @@ document.getElementById('initScript')?.remove();
     res.originalRedirect = res.redirect;
     res.redirect = (...args) => {
         const target = args.pop();
-        const url = new URL(target, 'http://' + req.hostname);
-        if(req.query.f) url.searchParams.set('f', req.query.f);
 
-        const finalUrl = url.pathname + url.search + url.hash;
+        let finalUrl;
+        if(target.startsWith('/')) {
+            const url = new URL(target, 'http://' + req.hostname);
+            if(req.query.f) url.searchParams.set('f', req.query.f);
+
+            finalUrl = url.pathname + url.search + url.hash;
+        }
+        else {
+            finalUrl = target;
+        }
         if(req.isInternal) res.json({
             code: 302,
             url: finalUrl

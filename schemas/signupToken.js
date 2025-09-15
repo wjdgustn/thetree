@@ -15,9 +15,9 @@ const newSchema = new Schema({
     },
     email: {
         type: String,
-        required: true,
-        unique: true,
-        index: true
+        // required: true,
+        // unique: true,
+        // index: true
     },
     ip: {
         type: String
@@ -29,9 +29,20 @@ const newSchema = new Schema({
     },
     name: {
         type: String
+    },
+    oauth2Map: {
+        type: Object
     }
 });
 
+newSchema.index({
+    email: 1
+}, {
+    unique: true,
+    partialFilterExpression: {
+        email: { $exists: true }
+    }
+});
 newSchema.index({
     createdAt: 1
 }, {
