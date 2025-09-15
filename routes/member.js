@@ -768,6 +768,13 @@ app.get('/member/logout', middleware.isLogin, async (req, res) => {
     req.session.fullReload = true;
     delete req.session.contributor;
     res.clearCookie('honoka');
+
+    if(req.session.oauth2Provider) {
+        const provider = config.oauth2_providers?.[req.session.oauth2Provider];
+        if(provider?.end_session_endpoint)
+            return res.redirect(provider.end_session_endpoint);
+    }
+
     res.redirect(req.query.redirect || req.get('Referer') || '/');
 });
 
