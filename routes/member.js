@@ -358,7 +358,7 @@ app.post('/member/signup/:token',
     }
 });
 
-app.get('/member/login', middleware.isLogout, (req, res) => {
+app.get('/member/login', middleware.isLogout, async (req, res) => {
     if(!req.query.redirect && req.referer) {
         const url = new URL(req.url, config.base_url);
         url.searchParams.set('redirect', req.referer.pathname + req.referer.search);
@@ -373,24 +373,36 @@ app.get('/member/login', middleware.isLogout, (req, res) => {
     if(disableInternal && externalProviders.length === 1 && !req.query.internal)
         return res.redirect(`/member/login/oauth2/${externalProviders[0].name}`);
 
+    const passkeyData = await generateAuthenticationOptions({
+        rpID: new URL(config.base_url).hostname
+    });
+    req.session.passkeyAuthOptions = passkeyData;
+
     res.renderSkin('로그인', {
         contentName: 'member/login',
         serverData: {
             disableSignup: !!config.disable_signup,
             disableInternal,
-            externalProviders
+            externalProviders,
+            passkeyData
         }
     });
 });
 
 app.post('/member/login',
     middleware.isLogout,
-    body('email')
-        .notEmpty()
-        .withMessage('이메일의 값은 필수입니다.'),
-    body('password')
-        .notEmpty()
-        .withMessage('비밀번호의 값은 필수입니다.'),
+    oneOf([
+        [
+            body('email')
+                .notEmpty()
+                .withMessage('이메일의 값은 필수입니다.'),
+            body('password')
+                .notEmpty()
+                .withMessage('비밀번호의 값은 필수입니다.')
+        ],
+        body('challenge')
+            .notEmpty()
+    ]),
     middleware.fieldErrors,
     middleware.captcha,
     async (req, res) => {
@@ -400,7 +412,7 @@ app.post('/member/login',
     const wrongCredentials = () => res.status(400).send('이메일 혹은 패스워드가 틀립니다.');
 
     let user;
-    try {
+    if(email) try {
         const exUser = await User.findOneAndUpdate({
             $or: [
                 { email },
@@ -431,12 +443,54 @@ app.post('/member/login',
         console.error(err);
         return res.status(500).send('서버 오류');
     }
+    else {
+        const options = req.session.passkeyAuthOptions;
+        const response = req.body.challenge;
+        const passkey = await Passkey.findOne({
+            id: response.id
+        });
+        if(!passkey) return res.status(400).send('패스키를 찾을 수 없습니다.');
+
+        let verification;
+        try {
+            verification = await verifyAuthenticationResponse({
+                response,
+                expectedChallenge: options.challenge,
+                expectedOrigin: config.base_url,
+                expectedRPID: options.rpId,
+                credential: {
+                    id: passkey.id,
+                    publicKey: passkey.publicKey,
+                    counter: passkey.counter,
+                    transports: passkey.transports
+                }
+            });
+        } catch(e) {
+            if(debug) console.error(e);
+            return res.status(400).send('패스키 인증이 실패했습니다.');
+        }
+
+        await Passkey.updateOne({
+            id: response.id
+        }, {
+            counter: verification.authenticationInfo.newCounter,
+            lastUsedAt: Date.now()
+        });
+        user = await User.findOne({
+            uuid: passkey.user
+        });
+
+        if(!user.usePasswordlessLogin)
+            return res.status(400).send('비밀번호 없이 로그인 옵션이 비활성화되어 있습니다.');
+    }
 
     let trusted = req.session.trustedAccounts?.includes(user.uuid);
 
     if((!user.totpToken && !config.use_email_verification) || user.permissions.includes('disable_two_factor_login')) {
         trusted = true;
     }
+
+    if(!email) trusted = true;
 
     if(trusted) {
         if(req.body.autologin === 'Y') {
@@ -450,13 +504,16 @@ app.post('/member/login',
             });
         }
 
-        await utils.createLoginHistory(user, req)
+        await utils.createLoginHistory(user, req);
 
         req.session.loginUser = user.uuid;
+        delete req.session.oauth2Provider;
         if(!res.headersSent) {
             req.session.fullReload = true;
             delete req.session.contributor;
-            return res.redirect(req.body.redirect || '/');
+            res.redirect(req.body.redirect || '/');
+            delete req.body.redirect;
+            return;
         }
     }
 
@@ -764,6 +821,7 @@ app.get('/member/login/oauth2/:provider/callback',
     req.session.oauth2Provider = req.params.provider;
 
     res.redirect(req.session.redirect || '/');
+    delete req.session.redirect;
 });
 
 app.delete('/member/login/oauth2/:provider', middleware.isLogin, async (req, res) => {
@@ -811,7 +869,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
         serverData: {
             skins: global.skins.filter(a => a !== 'plain'),
             passkeys,
-            user: utils.onlyKeys(req.user, ['name', 'email', 'skin']),
+            user: utils.onlyKeys(req.user, ['name', 'email', 'skin', 'usePasswordlessLogin']),
             permissions: req.displayPermissions,
             hasTotp: !!req.user.totpToken,
             canWithdraw: config.can_withdraw !== false,
@@ -833,7 +891,8 @@ app.post('/member/mypage', middleware.isLogin,
     await User.updateOne({
         uuid: req.user.uuid
     }, {
-        skin: req.body.skin
+        skin: req.body.skin,
+        usePasswordlessLogin: req.body.usePasswordlessLogin === 'Y'
     });
 
     if(req.user.skin !== req.body.skin)

@@ -87,6 +87,11 @@ const newSchema = new Schema({
     },
     lastChangePassword: {
         type: Date
+    },
+    usePasswordlessLogin: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 }, {
     virtuals: {
