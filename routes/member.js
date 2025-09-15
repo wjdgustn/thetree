@@ -687,7 +687,7 @@ app.get('/member/login/oauth2/:provider/callback',
         return res.error('사용자 정보를 불러오지 못했습니다.');
     }
 
-    const map = await OAuth2Map.findOne({
+    let map = await OAuth2Map.findOne({
         provider: req.params.provider,
         sub: userData[provider.sub_key || 'sub']
     });
@@ -713,32 +713,41 @@ app.get('/member/login/oauth2/:provider/callback',
     if(!map) {
         const email = userData[provider.email_key || 'email'];
         if(email && userData[provider.email_verified_key || 'email_verified'] !== false) {
-            const checkUser = await User.exists({ email });
-            if(checkUser) return res.error('연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.');
-
-            const checkBlacklist = await Blacklist.exists({
-                email: crypto.createHash('sha256').update(email).digest('hex')
-            });
-            if(checkBlacklist) return res.error('재가입 대기 기간 입니다.', 403);
-
-            await SignupToken.deleteMany({
-                email
-            });
-            await SignupToken.deleteMany({
-                ip: req.ip
-            });
-
-            const newToken = await SignupToken.create({
-                email,
-                ip: req.ip,
-                oauth2Map: {
+            const checkUser = await User.findOne({ email });
+            if(checkUser) {
+                map = await OAuth2Map.create({
                     provider: req.params.provider,
                     sub: userData[provider.sub_key || 'sub'],
+                    user: checkUser.uuid,
                     name: userData[provider.name_key || 'name'],
                     email: userData[provider.email_key || 'email']
-                }
-            });
-            return res.redirect(`/member/signup/${newToken.token}`);
+                });
+            }
+            else {
+                const checkBlacklist = await Blacklist.exists({
+                    email: crypto.createHash('sha256').update(email).digest('hex')
+                });
+                if(checkBlacklist) return res.error('재가입 대기 기간 입니다.', 403);
+
+                await SignupToken.deleteMany({
+                    email
+                });
+                await SignupToken.deleteMany({
+                    ip: req.ip
+                });
+
+                const newToken = await SignupToken.create({
+                    email,
+                    ip: req.ip,
+                    oauth2Map: {
+                        provider: req.params.provider,
+                        sub: userData[provider.sub_key || 'sub'],
+                        name: userData[provider.name_key || 'name'],
+                        email: userData[provider.email_key || 'email']
+                    }
+                });
+                return res.redirect(`/member/signup/${newToken.token}`);
+            }
         }
         else return res.error('연결되지 않은 외부 계정입니다. 내부 계정과 연결 후 사용해 주세요.');
     }
