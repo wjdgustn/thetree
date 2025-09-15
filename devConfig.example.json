@@ -43,6 +43,8 @@
       "token_endpoint": "",
       "userinfo_endpoint": "",
       "end_session_endpoint": "",
+      "sub_key": "",
+      "email_key": "",
       "scopes": [],
       "button": {
         "text": "example",
