@@ -15,6 +15,7 @@
 
   "grant_permissions": [],
 
+  "disable_signup": false,
   "email_whitelist": [],
   "use_email_verification": false,
 

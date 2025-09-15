@@ -31,5 +31,24 @@
   "github_api_token": "",
   "check_update": true,
   "auto_update": false,
-  "disable_dev_support": false
+  "disable_dev_support": false,
+
+  "disable_internal_login": false,
+  "oauth2_providers": {
+    "example": {
+      "display_name": "example",
+      "client_id": "",
+      "client_secret": "",
+      "authorization_endpoint": "",
+      "token_endpoint": "",
+      "userinfo_endpoint": "",
+      "end_session_endpoint": "",
+      "scopes": [],
+      "button": {
+        "text": "example",
+        "buttonColor": "#f85c64",
+        "textColor": "#ffffff"
+      }
+    }
+  }
 }
