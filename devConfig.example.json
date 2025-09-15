@@ -47,6 +47,7 @@
       "email_key": "",
       "name_key": "",
       "scopes": [],
+      "authorization_query": {},
       "button": {
         "text": "example",
         "buttonColor": "#f85c64",

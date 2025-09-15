@@ -634,6 +634,9 @@ app.get('/member/login/oauth2/:provider', async (req, res) => {
     url.searchParams.set('redirect_uri', new URL(`/member/login/oauth2/${req.params.provider}/callback`, config.base_url).toString());
     url.searchParams.set('scope', typeof provider.scopes === 'string' ? provider.scopes : provider.scopes.join(' '));
     url.searchParams.set('state', req.session.oauth2State);
+    for(const [key, value] of Object.entries(provider.authorization_query || {})) {
+        url.searchParams.set(key, value);
+    }
 
     res.redirect(url.toString());
 });
