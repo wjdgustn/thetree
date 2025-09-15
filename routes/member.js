@@ -365,7 +365,7 @@ app.get('/member/login', middleware.isLogout, (req, res) => {
         return res.redirect(url.pathname + url.search);
     }
 
-    const disableInternal = config.disable_internal_login || false;
+    const disableInternal = !req.query.internal && (config.disable_internal_login || false);
     const externalProviders = Object.entries(config.oauth2_providers || {}).filter(([_, value]) => value.button).map(([name, value]) => ({
         name,
         ...value.button
