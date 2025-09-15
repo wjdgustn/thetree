@@ -224,7 +224,7 @@ app.get('/member/signup/:token', async (req, res) => {
         serverData: {
             email: token.email,
             name: token.name,
-            fromOAuth2: !!token.fromOAuth2
+            fromOAuth2: !!token.oauth2Map
         }
     });
 });
