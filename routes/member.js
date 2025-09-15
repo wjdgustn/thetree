@@ -731,7 +731,7 @@ app.get('/member/login/oauth2/:provider/callback',
                 oauth2Map: {
                     provider: req.params.provider,
                     sub: userData[provider.sub_key || 'sub'],
-                    name: userData.name,
+                    name: userData[provider.name_key || 'name'],
                     email: userData[provider.email_key || 'email']
                 }
             });

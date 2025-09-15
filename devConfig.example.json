@@ -45,6 +45,7 @@
       "end_session_endpoint": "",
       "sub_key": "",
       "email_key": "",
+      "name_key": "",
       "scopes": [],
       "button": {
         "text": "example",
