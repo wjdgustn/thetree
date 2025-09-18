@@ -1033,7 +1033,8 @@ app.get('/contribution/:uuid/document',
         account: {
             uuid: req.params.uuid,
             name: user?.name ?? user?.ip,
-            type: user?.type ?? UserTypes.Deleted
+            type: user?.type ?? UserTypes.Deleted,
+            aclGroupStyle: (await this.getUserCSS(user)) || null
         },
         serverData: {
             revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null, req.backendMode)),
@@ -1073,7 +1074,8 @@ app.get('/contribution/:uuid/discuss',
         account: {
             uuid: req.params.uuid,
             name: user?.name ?? user?.ip,
-            type: user?.type ?? UserTypes.Deleted
+            type: user?.type ?? UserTypes.Deleted,
+            aclGroupStyle: (await this.getUserCSS(user)) || null
         },
         serverData: {
             ...data,
@@ -1147,7 +1149,8 @@ app.get('/contribution/:uuid/edit_request',
         account: {
             uuid: req.params.uuid,
             name: user?.name ?? user?.ip,
-            type: user?.type ?? UserTypes.Deleted
+            type: user?.type ?? UserTypes.Deleted,
+            aclGroupStyle: (await this.getUserCSS(user)) || null
         },
         serverData: {
             items,
@@ -1187,7 +1190,8 @@ app.get('/contribution/:uuid/accepted_edit_request',
         account: {
             uuid: req.params.uuid,
             name: user?.name ?? user?.ip,
-            type: user?.type ?? UserTypes.Deleted
+            type: user?.type ?? UserTypes.Deleted,
+            aclGroupStyle: (await this.getUserCSS(user)) || null
         },
         serverData: {
             ...data,
