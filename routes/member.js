@@ -1032,7 +1032,7 @@ app.get('/contribution/:uuid/document',
         contentName: 'userContribution/document',
         account: {
             uuid: req.params.uuid,
-            name: user?.name,
+            name: user?.name ?? user?.ip,
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
@@ -1072,7 +1072,7 @@ app.get('/contribution/:uuid/discuss',
         contentName: 'userContribution/discuss',
         account: {
             uuid: req.params.uuid,
-            name: user?.name,
+            name: user?.name ?? user?.ip,
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
@@ -1146,7 +1146,7 @@ app.get('/contribution/:uuid/edit_request',
         contentName: 'userContribution/editRequest',
         account: {
             uuid: req.params.uuid,
-            name: user?.name,
+            name: user?.name ?? user?.ip,
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
@@ -1186,7 +1186,7 @@ app.get('/contribution/:uuid/accepted_edit_request',
         contentName: 'userContribution/editRequest',
         account: {
             uuid: req.params.uuid,
-            name: user?.name,
+            name: user?.name ?? user?.ip,
             type: user?.type ?? UserTypes.Deleted
         },
         serverData: {
@@ -1201,7 +1201,9 @@ const checkDeletable = async user => {
     let blacklistDuration = config.withdraw_save_days * 1000 * 60 * 60 * 24;
 
     const aclGroups = await ACLGroup.find({
-        forBlock: true
+        withdrawPeriodHours: {
+            $gt: 0
+        }
     });
     const aclGroupItem = await ACLGroupItem.findOne({
         aclGroup: {
@@ -1220,7 +1222,7 @@ const checkDeletable = async user => {
         user: user.uuid
     }).lean();
     if(aclGroupItem) {
-        noActivityTime *= 90;
+        noActivityTime = 1000 * 60 * 60 * (aclGroups.find(a => a.uuid === aclGroupItem.aclGroup)?.withdrawPeriodHours ?? 24);
 
         if(aclGroupItem.expiresAt)
             blacklistDuration = Math.max(blacklistDuration, aclGroupItem.expiresAt - Date.now());
