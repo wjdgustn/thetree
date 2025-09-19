@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
-const { SignupPolicy} = require('../utils/types');
+const { SignupPolicy } = require('../utils/types');
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
