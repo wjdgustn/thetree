@@ -162,6 +162,7 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
         newGroup.accessPerms = ['admin'];
         newGroup.addPerms = ['admin'];
         newGroup.removePerms = ['admin'];
+        newGroup.managePerms = ['developer'];
     }
     else if(name === '로그인 허용 차단' || name.includes('통신사') || name.toLowerCase().includes('vpn')) {
         newGroup.signupPolicy = SignupPolicy.Block;
