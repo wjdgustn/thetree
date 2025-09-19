@@ -87,6 +87,10 @@ module.exports = {
         Owner: 2,
         Plugin: 3
     },
+    SignupPolicy: {
+        None: 0,
+        Block: 1
+    },
     AllPermissions: [
         'auto_verified_member',
         'developer',

@@ -95,5 +95,24 @@ module.exports = [
                 }
             });
         }
+    },
+    {
+        timestamp: 1758254444363,
+        code: async () => {
+            await User.updateMany({
+                $and: [
+                    {
+                        permissions: 'aclgroup'
+                    },
+                    {
+                        permissions: { $nin: ['config', 'developer'] }
+                    }
+                ]
+            }, {
+                $pull: {
+                    permissions: 'aclgroup'
+                }
+            });
+        }
     }
 ]

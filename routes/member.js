@@ -19,12 +19,14 @@ const {
 const axios = require('axios');
 
 const utils = require('../utils');
+const namumarkUtils = require('../utils/newNamumark/utils');
 const globalUtils = require('../utils/global');
 const middleware = require('../utils/middleware');
 const {
     HistoryTypes,
     UserTypes,
-    AuditLogTypes
+    AuditLogTypes,
+    SignupPolicy
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -78,7 +80,9 @@ app.post('/member/signup',
     else ipArr = new Address6(req.ip).toByteArray();
 
     const aclGroups = await ACLGroup.find({
-        noSignup: true
+        signupPolicy: {
+            $gt: SignupPolicy.None
+        }
     });
     const aclGroupItem = await ACLGroupItem.findOne({
         aclGroup: {
@@ -104,9 +108,9 @@ app.post('/member/signup',
     if(aclGroupItem) {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
         return res.status(403).send(`${aclGroup.aclMessage
-            ? aclGroup.aclMessage + ` (#${aclGroupItem.id})`    
-            : `현재 사용중인 아이피가 ACL그룹 ${aclGroup.name} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.`
-        }<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${aclGroupItem.note ?? '없음'}`);
+            ? aclGroup.aclMessage + ` (#${aclGroupItem.id})`
+            : `현재 사용중인 아이피가 ACL그룹 ${namumarkUtils.escapeHtml(aclGroup.name)} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.`
+        }<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`);
     }
 
     const email = req.body.email;

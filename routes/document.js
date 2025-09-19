@@ -233,7 +233,9 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         });
 
         if(blockedItem) {
+            const group = blockGroups.find(a => a.uuid === blockedItem.aclGroup);
             if(req.backendMode) userBlockedData = {
+                name: group.name,
                 id: blockedItem.id,
                 createdAt: blockedItem.createdAt,
                 expiresAt: blockedItem.expiresAt,

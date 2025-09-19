@@ -212,9 +212,6 @@ module.exports = {
                 $or: [
                     {
                         forBlock: true
-                    },
-                    {
-                        isWarn: true
                     }
                 ]
             });

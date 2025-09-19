@@ -9,7 +9,7 @@ const sanitizeHtml = require('sanitize-html');
 
 const allowedNames = require('./allowedNames.json');
 
-const sanitizeHtmlOptions = {
+const baseSanitizeHtmlOptions = {
     allowedTags: sanitizeHtml.defaults.allowedTags.filter(a => ![
         'code'
     ].includes(a)),
@@ -28,7 +28,13 @@ const sanitizeHtmlOptions = {
                 tagName,
                 attribs: { ...attribs, style }
             }
-        },
+        }
+    }
+}
+const sanitizeHtmlOptions = {
+    ...baseSanitizeHtmlOptions,
+    transformTags: {
+        ...baseSanitizeHtmlOptions.transformTags,
         a: sanitizeHtml.simpleTransform('a', {
             class: 'wiki-link-external',
             rel: 'nofollow noopener ugc',
@@ -87,13 +93,13 @@ function parsedToTextObj(content) {
 }
 
 module.exports = {
-    escapeHtml: text => (text ?? '')
+    escapeHtml: text => (text?.toString() ?? '')
         .replaceAll('&', "&amp;")
         .replaceAll('<', "&lt;")
         .replaceAll('>', "&gt;")
         .replaceAll(`"`, "&quot;")
         .replaceAll(`'`, "&#039;"),
-    unescapeHtml: text => (text ?? '')
+    unescapeHtml: text => (text?.toString() ?? '')
         .replaceAll("&amp;", '&')
         .replaceAll("&lt;", '<')
         .replaceAll("&gt;", '>')
@@ -290,5 +296,6 @@ module.exports = {
         'typescript',
         'xml'
     ].sort((a, b) => b.length - a.length),
+    baseSanitizeHtml: text => sanitizeHtml(text, baseSanitizeHtmlOptions),
     sanitizeHtml: text => sanitizeHtml(text, sanitizeHtmlOptions)
 }

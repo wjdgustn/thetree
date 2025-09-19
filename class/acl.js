@@ -70,7 +70,7 @@ module.exports = class ACL {
                 rule.aclGroup = await models.ACLGroup.findOne({
                     uuid: rule.conditionContent
                 })
-                    .select('uuid name aclMessage isWarn -_id')
+                    .select('uuid name aclMessage -_id')
                     .lean();
             }
 
@@ -129,7 +129,7 @@ module.exports = class ACL {
             auto_verified_member: '자동 인증된 사용자'
         }[permission] ?? permission;
 
-        return `${withPrefix && permission === result ? 'perm:' : ''}${result}`;
+        return `${withPrefix && permission === result ? 'perm:' : ''}${namumarkUtils.escapeHtml(result)}`;
     }
 
     static conditionToString(condition) {
@@ -154,17 +154,17 @@ module.exports = class ACL {
             str += `특정 IP`
         }
         else if(rule.conditionType === ACLConditionTypes.GeoIP) {
-            str += `geoip:${rule.conditionContent}`
+            str += `geoip:${namumarkUtils.escapeHtml(rule.conditionContent)}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            str += `ACL그룹 ${rule.aclGroup?.name ?? rule.conditionContent}에 속해 있는 사용자`
+            str += `ACL그룹 ${namumarkUtils.escapeHtml(rule.aclGroup?.name ?? rule.conditionContent)}에 속해 있는 사용자`
         }
         return str;
     }
 
     static ruleToDenyString(rule, aclGroupId = 0, isIp = false) {
         if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `${isIp ? '현재 사용중인 아이피가 ' : ''}ACL그룹 ${rule.aclGroup.name} #${aclGroupId}에 있기`
+            return `${isIp ? '현재 사용중인 아이피가 ' : ''}ACL그룹 ${namumarkUtils.escapeHtml(rule.aclGroup.name)} #${aclGroupId}에 있기`
         }
         else {
             return `${ACL.ruleToConditionString(rule)}이기`
@@ -177,13 +177,13 @@ module.exports = class ACL {
             str += `${ACL.permissionToString(rule.conditionContent, !formatPerm)}`
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
-            str += `user:${rule.user?.name ?? rule.conditionContent}`
+            str += `user:${namumarkUtils.escapeHtml(rule.user?.name ?? rule.conditionContent)}`
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            str += `aclgroup:${rule.aclGroup?.name ?? rule.conditionContent}`
+            str += `aclgroup:${namumarkUtils.escapeHtml(rule.aclGroup?.name ?? rule.conditionContent)}`
         }
         else {
-            str += `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${rule.conditionContent}`;
+            str += `${Object.keys(ACLConditionTypes)[rule.conditionType].toLowerCase()}:${namumarkUtils.escapeHtml(rule.conditionContent)}`;
         }
         return str;
     }
@@ -255,14 +255,19 @@ module.exports = class ACL {
             else if(action === ACLActionTypes.Deny) {
                 let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id, aclGroupItem?.ip != null)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
                 if(aclGroupItem) {
-                    if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
-                    aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
-                    aclMessage += `<br>\n사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
-
-                    if(rule.aclGroup.isWarn) {
-                        aclMessage = rule.aclGroup.aclMessage || '경고를 받았습니다.';
-                        aclMessage += `<br><br><a href="/self_unblock?id=${aclGroupItem.id}">[확인했습니다. #${aclGroupItem.id}]</a>`;
-                        aclMessage += `<br>\n사유: ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
+                    // if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
+                    // aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
+                    // aclMessage += `<br>\n사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
+                    if(rule.aclGroup.aclMessage) {
+                        aclMessage = rule.aclGroup.aclMessage;
+                        for(let [key, value] of Object.entries({
+                            name: rule.aclGroup.name,
+                            id: aclGroupItem.id,
+                            note: aclGroupItem.note,
+                            expired: aclGroupItem.expiresAt?.toString() ?? '무기한'
+                        })) {
+                            aclMessage = aclMessage.replaceAll(`{${key}}`, namumarkUtils.escapeHtml(value));
+                        }
                     }
                 }
 

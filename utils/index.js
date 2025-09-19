@@ -6,6 +6,7 @@ const { generateSlug } = require('random-word-slugs');
 const axios = require('axios');
 const querystring = require('querystring');
 const { colorFromUuid } = require('uuid-color');
+const sanitizeHtml = require('sanitize-html');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./newNamumark/utils');
@@ -122,6 +123,8 @@ module.exports = {
         return null;
     },
     async getUserCSS(user) {
+        if(!user) return '';
+
         let ipArr;
         if(user.ip) {
             if(Address4.isValid(user.ip)) ipArr = new Address4(user.ip).toArray();
