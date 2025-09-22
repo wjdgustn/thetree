@@ -1446,10 +1446,10 @@ app.get('/history/?*', middleware.parseDocumentName, async (req, res) => {
     revs = await utils.findUsers(req, revs, 'hideLogBy');
 
     for(let rev of revs) {
-        rev.editRequest &&= await EditRequest.findOne({
+        if(rev.editRequest) rev.editRequest = await EditRequest.findOne({
             uuid: rev.editRequest
         }).select('url -_id');
-        if(req.user?.type === UserTypes.Account
+        else if(req.user?.type === UserTypes.Account
             && rev.user.type === UserTypes.IP
             && rev.sessionId === req.session.sessionId)
             rev.transfer = true;
@@ -2129,7 +2129,7 @@ app.post('/transfer_contribution/?*', middleware.parseDocumentName, async (req, 
     const user = await User.findOne({
         uuid: rev.user
     });
-    if(user.type !== UserTypes.IP || rev.sessionId !== req.session.sessionId)
+    if(rev.editRequest || user.type !== UserTypes.IP || rev.sessionId !== req.session.sessionId)
         return res.status(400).send('not_transferable');
 
     await History.updateOne({
