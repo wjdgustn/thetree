@@ -837,5 +837,8 @@ module.exports = {
             condition: global.ACLClass.ruleToConditionString(a, false),
             action: global.ACLClass.actionToString(a)
         }
+    },
+    getObjectValue(obj, path) {
+        return path.split('.').reduce((obj, key) => obj ? obj[key] : undefined, obj);
     }
 }

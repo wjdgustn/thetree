@@ -750,7 +750,7 @@ app.get('/member/login/oauth2/:provider/callback',
 
     let map = await OAuth2Map.findOne({
         provider: req.params.provider,
-        sub: userData[provider.sub_key || 'sub']
+        sub: utils.getObjectValue(userData, provider.sub_key || 'sub')
     });
 
     if(req.user?.type === UserTypes.Account) {
@@ -763,27 +763,27 @@ app.get('/member/login/oauth2/:provider/callback',
 
         await OAuth2Map.create({
             provider: req.params.provider,
-            sub: userData[provider.sub_key || 'sub'],
+            sub: utils.getObjectValue(userData, provider.sub_key || 'sub'),
             user: req.user.uuid,
-            name: userData[provider.name_key || 'name'],
-            email: userData[provider.email_key || 'email']
+            name: utils.getObjectValue(userData, provider.name_key || 'name'),
+            email: utils.getObjectValue(userData, provider.email_key || 'email')
         });
         return res.redirect('/member/mypage');
     }
 
     if(!map) {
-        const email = userData[provider.email_key || 'email'];
-        if(email && userData[provider.email_verified_key || 'email_verified'] !== false) {
+        const email = utils.getObjectValue(userData, provider.email_key || 'email');
+        if(email && utils.getObjectValue(userData, provider.email_verified_key || 'email_verified') !== false) {
             const checkUser = await User.findOne({ email });
             if(checkUser) {
                 if(provider.disable_auto_register)
                     return res.error('연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.');
                 map = await OAuth2Map.create({
                     provider: req.params.provider,
-                    sub: userData[provider.sub_key || 'sub'],
+                    sub: utils.getObjectValue(userData, provider.sub_key || 'sub'),
                     user: checkUser.uuid,
-                    name: userData[provider.name_key || 'name'],
-                    email: userData[provider.email_key || 'email']
+                    name: utils.getObjectValue(userData, provider.name_key || 'name'),
+                    email: utils.getObjectValue(userData, provider.email_key || 'email')
                 });
             }
             else {
@@ -810,9 +810,9 @@ app.get('/member/login/oauth2/:provider/callback',
                     ip: req.ip,
                     oauth2Map: {
                         provider: req.params.provider,
-                        sub: userData[provider.sub_key || 'sub'],
-                        name: userData[provider.name_key || 'name'],
-                        email: userData[provider.email_key || 'email']
+                        sub: utils.getObjectValue(userData, provider.sub_key || 'sub'),
+                        name: utils.getObjectValue(userData, provider.name_key || 'name'),
+                        email: utils.getObjectValue(userData, provider.email_key || 'email')
                     }
                 });
                 return res.redirect(`/member/signup/${newToken.token}`);
