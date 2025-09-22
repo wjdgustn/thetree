@@ -609,7 +609,7 @@ app.post('/acl/?*', middleware.parseDocumentName, async (req, res) => {
         document: dbDocument.uuid,
         log
     });
-    else if(target === namespace) await AuditLog.create({
+    else if(target === 'namespace') await AuditLog.create({
         user: req.user.uuid,
         action: AuditLogTypes.NamespaceACL,
         target: namespace,
