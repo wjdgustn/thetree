@@ -147,7 +147,10 @@ module.exports = async (obj, options = {}) => {
     if(notExist) classList.push('not-exist');
 
     if(parsedLink) classList.push(hideExternalLinkIcon ? 'wiki-link-whitelisted' : 'wiki-link-external');
-    else if(title === docTitle && !hasHash && !thread) classList.push('wiki-self-link');
+    else {
+        classList.push('wiki-link-internal');
+        if(title === docTitle && !hasHash && !thread) classList.push('wiki-self-link');
+    }
 
     const rel = [];
 
