@@ -15,7 +15,8 @@ const {
     ACLTypes,
     ThreadCommentTypes,
     ThreadStatusTypes,
-    NotificationTypes
+    NotificationTypes,
+    PermissionFlags
 } = require('./types');
 const diffLib = require('./diff/lib');
 const diffView = require('./diff/view');
@@ -859,5 +860,12 @@ module.exports = {
     },
     getObjectValue(obj, path) {
         return path.split('.').reduce((obj, key) => obj ? obj[key] : undefined, obj);
+    },
+    permissionsToFlags(permissions = [], whitelist = []) {
+        return permissions.reduce((flag, key) => {
+            if(!whitelist.length || whitelist.includes(key))
+                return flag | (PermissionFlags[key] ?? 0n);
+            return flag;
+        }, 0n);
     }
 }

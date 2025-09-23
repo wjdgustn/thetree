@@ -1,3 +1,36 @@
+const SeedPermissions = [
+    'member',
+    'auto_verified_member',
+    'mobile_verified_member',
+    'developer',
+    'nsacl',
+    'admin',
+    'config',
+    'delete_thread',
+    'aclgroup',
+    'hideip',
+    'aclgroup_hidelog',
+    'no_force_captcha',
+    'skip_captcha',
+    'manage_thread',
+    'grant',
+    'login_history',
+    'api_access',
+    'hide_document_history_log',
+    'hide_revision',
+    'mark_troll_revision',
+    'batch_revert',
+    'edit_protected_file',
+    'delete_edit_request'
+]
+const TreePermissions = [
+    'disable_two_factor_login',
+    'grant_hidelog',
+    'login_history_hidelog',
+    'batch_revert_hidelog',
+    'engine_developer'
+]
+
 module.exports = {
     UserTypes: {
         Deleted: -1,
@@ -92,36 +125,20 @@ module.exports = {
         Block: 1
     },
     AllPermissions: [
-        'auto_verified_member',
-        'developer',
-        'nsacl',
-        'admin',
-        'config',
-        'delete_thread',
-        'aclgroup',
-        'hideip',
-        'aclgroup_hidelog',
-        'grant_hidelog',
-        'login_history_hidelog',
-        'batch_revert_hidelog',
-        'no_force_captcha',
-        'skip_captcha',
-        'disable_two_factor_login',
-        'manage_thread',
-        'grant',
-        'login_history',
-        'api_access',
-        'hide_document_history_log',
-        'hide_revision',
-        'mark_troll_revision',
-        'batch_revert',
-        'edit_protected_file',
-        'engine_developer'
+        ...SeedPermissions,
+        ...TreePermissions
     ],
+    PermissionFlags: {
+        ...Object.fromEntries(SeedPermissions.map((a, i) => [a, 1n << BigInt(i)])),
+        ...Object.fromEntries(TreePermissions.map((a, i) => [a, 1n << (BigInt(i) + 50n)]))
+    },
     ProtectedPermissions: [
         'developer'
     ],
     NoGrantPermissions: [
+        'member',
+        'mobile_verified_member',
+        'delete_edit_request',
         'engine_developer'
     ],
     ACLPermissions: [
