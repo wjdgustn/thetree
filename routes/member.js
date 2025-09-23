@@ -1411,7 +1411,8 @@ app.get('/member/change_email', middleware.isLogin, (req, res) => {
                 alert: '이메일 인증이 이미 진행 중입니다.'
             } : {}),
             doingChangeEmail,
-            email: req.user.email
+            email: req.user.email,
+            emailWhitelist: config.email_whitelist
         }
     });
 });
