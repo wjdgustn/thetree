@@ -6,7 +6,6 @@ const { generateSlug } = require('random-word-slugs');
 const axios = require('axios');
 const querystring = require('querystring');
 const { colorFromUuid } = require('uuid-color');
-const sanitizeHtml = require('sanitize-html');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./newNamumark/utils');
@@ -477,8 +476,6 @@ module.exports = {
         return result;
     },
     async validateCaptcha(req) {
-        if(!config.captcha.enabled || req.permissions.includes('skip_captcha')) return true;
-
         const response = req.body[{
             recaptcha: 'g-recaptcha-response',
             turnstile: 'cf-turnstile-response',
@@ -502,12 +499,34 @@ module.exports = {
 
         return data.success;
     },
-    async middleValidateCaptcha(req, res) {
+    checkCaptchaRequired(req, force = false, ipForce = false) {
+        req.session.noCaptchaCount ??= config.captcha.rate.account;
+
+        if(!config.captcha.enabled || req.permissions.includes('skip_captcha'))
+            return false;
+        if(ipForce && req.user?.type !== UserTypes.Account)
+            force = true;
+        if(req.permissions.includes('no_force_captcha'))
+            force = false;
+
+        const maxNoCaptchaRequests = req.user?.type === UserTypes.Account
+            ? (config.captcha.rate.account ?? 20)
+            : (config.captcha.rate.ip ?? 10);
+
+        return req.session.noCaptchaCount >= maxNoCaptchaRequests || force;
+    },
+    async middleValidateCaptcha(req, res, force = false, ipForce = false) {
+        if(!this.checkCaptchaRequired(req, force, ipForce)) {
+            req.session.noCaptchaCount++;
+            return true;
+        }
         const result = await this.validateCaptcha(req);
         if(!result) {
-            res.status(400).send('캡챠가 유효하지 않습니다.');
+            res.status(400).send('invalid_captcha');
             return false;
         }
+
+        req.session.noCaptchaCount = 1;
 
         return true;
     },

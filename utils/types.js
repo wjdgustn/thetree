@@ -104,6 +104,7 @@ module.exports = {
         'grant_hidelog',
         'login_history_hidelog',
         'batch_revert_hidelog',
+        'no_force_captcha',
         'skip_captcha',
         'disable_two_factor_login',
         'manage_thread',

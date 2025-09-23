@@ -748,6 +748,8 @@ app.use(async (req, res, next) => {
     const mobileHeader = req.get('Sec-CH-UA-Mobile');
     req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
 
+    req.additionalServerData = {};
+
     req.session.sessionId ??= crypto.randomUUID();
 
     if(req.session.ipUser?.ip !== req.ip)
@@ -900,9 +902,6 @@ app.use(async (req, res, next) => {
             gravatar_url: req.user?.avatar,
             user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
             quick_block: req.permissions.includes('admin'),
-            ...(req.permissions.includes('skip_captcha') ? {
-                disable_captcha: true
-            } : {}),
             notifications
         }
 
@@ -1074,7 +1073,8 @@ document.getElementById('initScript')?.remove();
                 data: {
                     publicData: page.data,
                     ...(data.serverData ?? {}),
-                    ...pluginData
+                    ...pluginData,
+                    ...req.additionalServerData
                 },
                 ...basicData
             }

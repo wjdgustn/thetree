@@ -1,6 +1,6 @@
 const utils = require('./');
 const { UserTypes } = require('./types');
-const {validationResult} = require('express-validator');
+const { validationResult } = require('express-validator');
 
 module.exports = {
     isLogin(req, res, next) {
@@ -59,8 +59,15 @@ module.exports = {
         }
         next();
     },
-    captcha: async (req, res, next) => {
-        if(!await utils.middleValidateCaptcha(req, res)) return;
+    captcha: (force = false, ipForce = false) => async (req, res, next) => {
+        if(!await utils.middleValidateCaptcha(req, res, force, ipForce)) return;
+        next();
+    },
+    checkCaptcha: (force = false, ipForce = false) => (req, res, next) => {
+        req.additionalServerData.captchaData = {
+            use: utils.checkCaptchaRequired(req, force, ipForce),
+            force: force || (req.user?.type !== UserTypes.Account && ipForce)
+        }
         next();
     }
 }

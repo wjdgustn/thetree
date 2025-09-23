@@ -47,7 +47,7 @@ const AuditLog = require('../schemas/auditLog');
 
 const app = express.Router();
 
-app.get('/member/signup', middleware.isLogout, (req, res) => {
+app.get('/member/signup', middleware.isLogout, middleware.checkCaptcha(true), (req, res) => {
     if(config.disable_signup || config.disable_internal_login) return res.error('가입이 비활성화되어 있습니다.');
 
     res.renderSkin('계정 만들기', {
@@ -67,7 +67,7 @@ app.post('/member/signup',
         .normalizeEmail(),
     body('agree').exists().withMessage('동의의 값은 필수입니다.'),
     middleware.fieldErrors,
-    middleware.captcha,
+    middleware.captcha(true),
     async (req, res) => {
     if(config.disable_signup || config.disable_internal_login) return res.status(400).send('가입이 비활성화되어 있습니다.');
 
@@ -362,7 +362,7 @@ app.post('/member/signup/:token',
     }
 });
 
-app.get('/member/login', middleware.isLogout, async (req, res) => {
+app.get('/member/login', middleware.isLogout, middleware.checkCaptcha(true), async (req, res) => {
     if(!req.query.redirect && req.referer) {
         const url = new URL(req.url, config.base_url);
         url.searchParams.set('redirect', req.referer.pathname + req.referer.search);
@@ -411,7 +411,7 @@ app.post('/member/login',
     const email = req.body.email;
     const password = req.body.password;
 
-    if(!req.body.challenge && !await utils.middleValidateCaptcha(req, res)) return;
+    if(!req.body.challenge && !await utils.middleValidateCaptcha(req, res, true)) return;
 
     const wrongCredentials = () => res.status(400).send('이메일 혹은 패스워드가 틀립니다.');
 
@@ -547,7 +547,11 @@ app.post('/member/login',
             email: user.email,
             useTotp: !!user.totpToken,
             autologin: req.body.autologin,
-            hasPasskey
+            hasPasskey,
+            captchaData: {
+                use: utils.checkCaptchaRequired(req, true),
+                force: true
+            }
         }
     });
 
@@ -593,7 +597,7 @@ app.post('/member/login/pin',
         return res.redirect('/member/login');
     }
 
-    if(!req.body.challenge && !await utils.middleValidateCaptcha(req, res)) return;
+    if(!req.body.challenge && !await utils.middleValidateCaptcha(req, res, true)) return;
 
     if(user.totpToken) {
         if(req.body.challenge) {
@@ -1627,7 +1631,7 @@ app.post('/member/deactivate_otp',
     res.redirect('/member/mypage');
 });
 
-app.get('/member/recover_password', middleware.isLogout, (req, res) => {
+app.get('/member/recover_password', middleware.isLogout, middleware.checkCaptcha(true), (req, res) => {
     if(!config.use_email_verification) return res.error('이메일 인증이 비활성화돼 있습니다.');
 
     res.renderSkin('계정 찾기', {
@@ -1635,7 +1639,7 @@ app.get('/member/recover_password', middleware.isLogout, (req, res) => {
     });
 });
 
-app.post('/member/recover_password', middleware.isLogout, middleware.captcha, async (req, res) => {
+app.post('/member/recover_password', middleware.isLogout, middleware.captcha(true), async (req, res) => {
     if(!config.use_email_verification) return res.error('이메일 인증이 비활성화돼 있습니다.');
 
     const email = req.body.email;

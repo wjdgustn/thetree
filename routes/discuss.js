@@ -88,7 +88,7 @@ SocketIO.of('/thread').use(async (socket, next) => {
     next();
 });
 
-app.get('/discuss/?*', middleware.parseDocumentName, async (req, res) => {
+app.get('/discuss/?*', middleware.parseDocumentName, middleware.checkCaptcha(), async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
     const dbDocument = await Document.findOne({
@@ -254,9 +254,8 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         })
         .withMessage('본문의 값은 65536글자 이하여야 합니다.'),
     middleware.fieldErrors,
+    middleware.captcha(),
     async (req, res) => {
-    if(req.user.type !== UserTypes.Account && !await utils.middleValidateCaptcha(req, res)) return;
-
     const document = req.document;
     const { namespace, title } = document;
     let dbDocument = await Document.findOne({
@@ -306,7 +305,7 @@ app.post('/discuss/?*', middleware.parseDocumentName,
     res.redirect(`/thread/${thread.url}`);
 });
 
-app.get('/thread/:url', async (req, res) => {
+app.get('/thread/:url', middleware.checkCaptcha(false, true), async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
@@ -475,11 +474,9 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
     res.json(comments);
 });
 
-app.post('/thread/:url', async (req, res) => {
+app.post('/thread/:url', middleware.captcha(), async (req, res) => {
     if(!req.body.text?.trim()) return res.status(400).send('본문의 값은 필수입니다.');
     if(req.body.text.length > 65536) return res.status(400).send('본문의 값은 65536글자 이하여야 합니다.');
-
-    if(req.user.type !== UserTypes.Account && !await utils.middleValidateCaptcha(req, res)) return;
 
     const thread = await Thread.findOne({
         url: req.params.url,

@@ -860,9 +860,6 @@ const editAndEditRequest = async (req, res) => {
         contentHtml = html;
     }
 
-    const doingManyEdits = await checkDoingManyEdits(req);
-    const useCaptcha = !docExists || doingManyEdits;
-
     res.renderSkin(undefined, {
         viewName: isEditRequest ? (editingEditRequest ? 'edit_edit_request' : 'edit_request') : 'edit',
         contentName: 'document/edit',
@@ -877,7 +874,10 @@ const editAndEditRequest = async (req, res) => {
             aclMessage,
             content,
             contentHtml,
-            useCaptcha,
+            captchaData: {
+                use: utils.checkCaptchaRequired(req, !docExists),
+                force: !docExists
+            },
             editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text,
             conflict: req.flash.conflict,
             editagreeAgreed: req.session.editagreeAgreed,
@@ -1036,25 +1036,6 @@ app.post('/preview/?*', middleware.parseDocumentName, async (req, res) => {
     else res.send(categoryHtml + contentHtml);
 });
 
-const checkDoingManyEdits = async req => {
-    if(!config.captcha.enabled || !config.captcha.edit_captcha.enabled) return false;
-
-    const recentContributionCount = await History.countDocuments({
-        user: req.user?.uuid,
-        type: {
-            $in: [
-                HistoryTypes.Create,
-                HistoryTypes.Modify
-            ]
-        },
-        createdAt: {
-            $gte: new Date(Date.now() - 1000 * 60 * 60 * config.captcha.edit_captcha.hours)
-        }
-    });
-
-    return recentContributionCount >= config.captcha.edit_captcha.edit_count;
-}
-
 const postEditAndEditRequest = async (req, res) => {
     const editingEditRequest = req.url.startsWith('/edit_request/');
     const isEditRequest = editingEditRequest || req.url.startsWith('/new_edit_request/');
@@ -1080,10 +1061,9 @@ const postEditAndEditRequest = async (req, res) => {
         title
     });
 
-    let isCreate = dbDocument && !dbDocument.contentExists;
-    const doingManyEdits = await checkDoingManyEdits(req);
+    let isCreate = !dbDocument || !dbDocument.contentExists;
 
-    if(!req.isAPI && (isCreate || doingManyEdits) && !await utils.middleValidateCaptcha(req, res)) return;
+    if(!req.isAPI && !await utils.middleValidateCaptcha(req, res, isCreate)) return;
 
     if(!dbDocument) {
         dbDocument = new Document({
@@ -1511,7 +1491,7 @@ app.get('/raw/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
+app.get('/revert/?*', middleware.parseDocumentName, middleware.checkCaptcha(), async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1560,8 +1540,6 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         if(html) contentHtml = html;
     }
 
-    const useCaptcha = await checkDoingManyEdits(req);
-
     res.renderSkin(undefined, {
         contentName: 'document/revert',
         viewName: 'revert',
@@ -1570,17 +1548,13 @@ app.get('/revert/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: rev.uuid,
         serverData: {
             content: rev?.content ?? '',
-            contentHtml,
-            useCaptcha
+            contentHtml
         }
     });
 });
 
-app.post('/revert/?*', middleware.parseDocumentName, async (req, res) => {
+app.post('/revert/?*', middleware.parseDocumentName, middleware.captcha(), async (req, res) => {
     if(req.body.log.length > 255) return res.error('요약의 값은 255글자 이하여야 합니다.');
-
-    const doingManyEdits = await checkDoingManyEdits(req);
-    if(doingManyEdits && !await utils.middleValidateCaptcha(req, res)) return;
 
     const document = req.document;
 
@@ -1891,7 +1865,7 @@ module.exports.getBacklinks = getBacklinks;
 
 app.get('/backlink/?*', middleware.parseDocumentName, getBacklinks);
 
-app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
+app.get('/delete/?*', middleware.parseDocumentName, middleware.checkCaptcha(true), async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1915,7 +1889,7 @@ app.get('/delete/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/delete/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
+app.post('/delete/?*', middleware.parseDocumentName, middleware.captcha(true), async (req, res) => {
     if(!req.permissions.includes('edit_protected_file')
         && Object.keys(config.external_link_icons).includes(globalUtils.doc_fulltitle(req.document)))
         return res.error('protect_file', 403);
@@ -1954,7 +1928,7 @@ app.post('/delete/?*', middleware.parseDocumentName, middleware.captcha, async (
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
-app.get('/move/?*', middleware.parseDocumentName, async (req, res) => {
+app.get('/move/?*', middleware.parseDocumentName, middleware.checkCaptcha(true), async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1978,7 +1952,7 @@ app.get('/move/?*', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.post('/move/?*', middleware.parseDocumentName, middleware.captcha, async (req, res) => {
+app.post('/move/?*', middleware.parseDocumentName, middleware.captcha(true), async (req, res) => {
     if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
     if(!req.body.title || req.body.title.length > 255) return res.status(400).send('문서 이름이 올바르지 않습니다.');
