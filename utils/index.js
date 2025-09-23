@@ -500,7 +500,7 @@ module.exports = {
         return data.success;
     },
     checkCaptchaRequired(req, force = false, ipForce = false) {
-        req.session.noCaptchaCount ??= config.captcha.rate.account;
+        req.session.noCaptchaCount ??= Math.max(config.captcha.rate?.ip ?? 10, config.captcha.rate?.account ?? 20);
 
         if(!config.captcha.enabled || req.permissions.includes('skip_captcha'))
             return false;
