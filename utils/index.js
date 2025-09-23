@@ -500,7 +500,7 @@ module.exports = {
         return data.success;
     },
     checkCaptchaRequired(req, force = false, ipForce = false) {
-        req.session.noCaptchaCount ??= Math.max(config.captcha.rate?.ip ?? 10, config.captcha.rate?.account ?? 20);
+        req.session.noCaptchaCount ??= Math.max(config.captcha?.rate?.ip ?? 10, config.captcha?.rate?.account ?? 20);
 
         if(!config.captcha.enabled || req.permissions.includes('skip_captcha'))
             return false;
@@ -510,8 +510,8 @@ module.exports = {
             force = false;
 
         const maxNoCaptchaRequests = req.user?.type === UserTypes.Account
-            ? (config.captcha.rate.account ?? 20)
-            : (config.captcha.rate.ip ?? 10);
+            ? (config.captcha?.rate?.account ?? 20)
+            : (config.captcha?.rate?.ip ?? 10);
 
         return req.session.noCaptchaCount >= maxNoCaptchaRequests || force;
     },
