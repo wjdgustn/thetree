@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const { exec } = require('child_process');
 const execPromise = util.promisify(exec);
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const JSON5 = require('json5');
 
 // openNAMU migration things
 let sqlite3;
@@ -586,9 +587,9 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
 
     let parsedJson;
     try {
-        parsedJson = JSON.parse(req.body.content);
+        parsedJson = JSON5.parse(req.body.content);
     } catch (e) {
-        return res.status(400).send('Invalid JSON');
+        return res.status(400).send(e.message);
     }
 
     if(config !== 'devConfig.json') for(let key in parsedJson) {

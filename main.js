@@ -25,6 +25,7 @@ const execPromise = promisify(exec);
 const axios = require('axios');
 const util = require('util');
 const msgpack = require('@msgpack/msgpack');
+const JSON5 = require('json5');
 
 global.debug = process.env.NODE_ENV === 'development';
 global.__THETREE__ = {};
@@ -140,10 +141,10 @@ global.updateConfig = () => {
         fs.copyFileSync(c.replace('.json', '.example.json'), configPath(c));
     }
 
-    global.publicConfig = JSON.parse(fs.readFileSync(configPath('publicConfig.json')).toString());
-    global.serverConfig = JSON.parse(fs.readFileSync(configPath('serverConfig.json')).toString());
-    global.devConfig = JSON.parse(fs.readFileSync(configPath('devConfig.json')).toString());
-    global.stringConfig = JSON.parse(fs.readFileSync(configPath('stringConfig.json')).toString());
+    global.publicConfig = JSON5.parse(fs.readFileSync(configPath('publicConfig.json')).toString());
+    global.serverConfig = JSON5.parse(fs.readFileSync(configPath('serverConfig.json')).toString());
+    global.devConfig = JSON5.parse(fs.readFileSync(configPath('devConfig.json')).toString());
+    global.stringConfig = JSON5.parse(fs.readFileSync(configPath('stringConfig.json')).toString());
 
     if(config.use_email_verification) global.mailTransporter = nodemailer.createTransport(config.smtp_settings);
 
