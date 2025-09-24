@@ -567,6 +567,26 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         }
     }
 
+    else if(tool === 'mailtest') {
+        if(!config.use_email_verification) return res.status(400).send('이메일 인증이 비활성화되어 있습니다.');
+
+        try {
+            await mailTransporter.sendMail({
+                from: config.smtp_sender,
+                to: req.user.email,
+                subject: `[${config.site_name}] 이메일 전송 테스트`,
+                html: `
+축하합니다! 이메일을 읽으셨습니다.
+        `.trim().replaceAll('\n', '<br>')
+            });
+        } catch(e) {
+            const result = highlight(e.stack, { language: 'javascript' }).value.replaceAll('\n', '<br>');
+            return res.partial({ evalOutput: result });
+        }
+
+        return res.status(204).end();
+    }
+
     else return res.status(404).send('tool not found');
 });
 
