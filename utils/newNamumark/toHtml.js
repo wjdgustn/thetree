@@ -12,7 +12,8 @@ const worker = new Piscina({
     workerData: {
         config,
         macroPluginPaths: global.plugins.macros ?? []
-    }
+    },
+    minThreads: 30
 });
 
 module.exports = async (...params) => {

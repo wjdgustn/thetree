@@ -1,4 +1,3 @@
-const { workerData } = require('piscina');
 const { highlight } = require('highlight.js');
 const crypto = require('crypto');
 
