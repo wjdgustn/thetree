@@ -19,9 +19,13 @@ module.exports = {
 
         let prevVote;
         if(options.aclData?.user && baseData) {
-            prevVote = await Vote.findOne({
-                ...baseData,
-                user: options.aclData.user.uuid
+            prevVote = await options.parentAction('db', {
+                model: 'Vote',
+                action: 'findOne',
+                data: {
+                    ...baseData,
+                    user: options.aclData.user.uuid
+                }
             });
         }
 
@@ -32,9 +36,13 @@ module.exports = {
         `;
 
         for(let i in params) {
-            const voteCount = baseData ? await Vote.countDocuments({
-                ...baseData,
-                value: parseInt(i)
+            const voteCount = baseData ? await options.parentAction('db', {
+                model: 'Vote',
+                action: 'countDocuments',
+                data: {
+                    ...baseData,
+                    value: parseInt(i)
+                }
             }) : 0;
 
             const option = params[i];

@@ -1545,6 +1545,10 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         heading.actualLevel = heading.level - Store.heading.lowestLevel + 1;
     }
 
+    // function은 전송하기 곤란함
+    for(let token of tokens)
+        delete token.tokenType.PATTERN;
+
     return {
         tokens,
         result,

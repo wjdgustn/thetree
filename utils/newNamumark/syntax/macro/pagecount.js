@@ -1,9 +1,11 @@
-const Document = require('../../../../schemas/document');
-
-module.exports = async params => {
+module.exports = async (params, { parentAction }) => {
     const namespace = config.namespaces.includes(params) ? params : undefined;
-    return Document.countDocuments({
-        ...(namespace ? { namespace } : {}),
-        contentExists: true
+    return await parentAction('db', {
+        model: 'Document',
+        action: 'countDocuments',
+        data: {
+            ...(namespace ? { namespace } : {}),
+            contentExists: true
+        }
     });
 }

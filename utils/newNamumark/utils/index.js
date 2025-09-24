@@ -6,6 +6,8 @@ const katex = require('katex');
 const jsep = require('jsep');
 const CSSFilter = require('cssfilter');
 const sanitizeHtml = require('sanitize-html');
+const fs = require('fs');
+const path = require('path');
 
 const allowedNames = require('./allowedNames.json');
 
@@ -297,5 +299,50 @@ module.exports = {
         'xml'
     ].sort((a, b) => b.length - a.length),
     baseSanitizeHtml: text => sanitizeHtml(text, baseSanitizeHtmlOptions),
-    sanitizeHtml: text => sanitizeHtml(text, sanitizeHtmlOptions)
+    sanitizeHtml: text => sanitizeHtml(text, sanitizeHtmlOptions),
+    loadMacros(macroPluginPaths) {
+        macroPluginPaths ??= global.plugins.macro;
+
+        const macros = {};
+        const threadMacros = [];
+
+        const macroDir = '../syntax/macro';
+        const files = fs.readdirSync(path.resolve(__dirname, macroDir));
+        for(let file of files) {
+            if(file === 'index.js') continue;
+
+            const macroName = file.replace('.js', '').toLowerCase();
+
+            const macroPath = require.resolve(path.resolve(__dirname, macroDir,  `./${file}`));
+            // if(debug) delete require.cache[macroPath];
+            const macro = require(macroPath);
+            macros[macroName] = macro.format ?? macro;
+
+            if(macro.aliases)
+                for(let alias of macro.aliases)
+                    macros[alias] = macro.format;
+
+            if(macro.allowThread)
+                threadMacros.push(macroName, ...(macro.aliases ?? []));
+        }
+
+        for(let macroPath of macroPluginPaths) {
+            const macro = require(macroPath);
+            macros[macro.name] = macro.format;
+            if(macro.aliases)
+                for(let alias of macro.aliases)
+                    macros[alias] = macro.format;
+
+            if(macro.allowThread)
+                threadMacros.push(plugin.name, ...(macro.aliases ?? []));
+        }
+
+        if(global.__THETREE__)
+            global.__THETREE__.macros = Object.keys(macros);
+
+        return {
+            macros,
+            threadMacros
+        }
+    }
 }

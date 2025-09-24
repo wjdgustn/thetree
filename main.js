@@ -427,6 +427,7 @@ global.reloadPlugins = () => {
     for(let key in plugins) plugins[key] = [];
     global.pluginPaths = {};
     pluginStaticPaths.length = 0;
+    global.__THETREE__.macros = [];
 
     const loadPlugins = dir => {
         if(!fs.existsSync(dir)) return;
@@ -443,7 +444,11 @@ global.reloadPlugins = () => {
                     plugin.name = pluginName;
                 }
 
-                plugins[plugin.type].push(plugin);
+                if(plugin.type === 'macro') {
+                    plugins.macro.push(pluginPath);
+                    global.__THETREE__.macros.push(plugin.name);
+                }
+                else plugins[plugin.type].push(plugin);
 
                 if(plugin.name) pluginPaths[plugin.name] = path.resolve(dir);
 
@@ -478,6 +483,7 @@ global.NamumarkParser = {
     parser,
     toHtml
 };
+namumarkUtils.loadMacros();
 global.ACLClass = ACL;
 
 require('./schemas')();
