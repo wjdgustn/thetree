@@ -88,7 +88,7 @@ SocketIO.of('/thread').use(async (socket, next) => {
     next();
 });
 
-app.get('/discuss/?*', middleware.parseDocumentName, middleware.checkCaptcha(), async (req, res) => {
+app.get('/discuss/?*', middleware.parseDocumentName, middleware.checkCaptcha(false, true), async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
     const dbDocument = await Document.findOne({
@@ -254,7 +254,7 @@ app.post('/discuss/?*', middleware.parseDocumentName,
         })
         .withMessage('본문의 값은 65536글자 이하여야 합니다.'),
     middleware.fieldErrors,
-    middleware.captcha(),
+    middleware.captcha(false, true),
     async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
@@ -305,7 +305,7 @@ app.post('/discuss/?*', middleware.parseDocumentName,
     res.redirect(`/thread/${thread.url}`);
 });
 
-app.get('/thread/:url', middleware.checkCaptcha(false, true), async (req, res) => {
+app.get('/thread/:url', middleware.checkCaptcha(), async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
