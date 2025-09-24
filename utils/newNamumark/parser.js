@@ -1546,7 +1546,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
     }
 
     // function은 전송하기 곤란함
-    for(let token of tokens)
+    if(tokens) for(let token of tokens)
         delete token.tokenType.PATTERN;
 
     return {
