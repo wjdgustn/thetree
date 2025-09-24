@@ -16,9 +16,7 @@ const worker = new Piscina({
 });
 
 module.exports = async (...params) => {
-    const ac = new AbortController();
     const channel = new MessageChannel();
-    const timeout = setTimeout(() => ac.abort(), config.document_maximum_time ?? MAXIMUM_TIME);
 
     const setupOptions = options => {
         for(let [key, value] of Object.entries(options)) {
@@ -54,11 +52,11 @@ module.exports = async (...params) => {
     console.time('render');
     try {
         return await worker.run(params, {
-            signal: ac.signal,
+            signal: AbortSignal.timeout(config.document_maximum_time ?? MAXIMUM_TIME),
             transferList: [channel.port1]
         });
     } catch (e) {
-        const isTimeout = e.name === 'AbortError';
+        const isTimeout = e.name === 'TimeoutError';
         if(!isTimeout) console.error(e);
         return {
             html: isTimeout ? MAXIMUM_TIME_HTML : ERROR_HTML,
@@ -74,6 +72,5 @@ module.exports = async (...params) => {
         }
     } finally {
         console.timeEnd('render');
-        clearTimeout(timeout);
     }
 }
