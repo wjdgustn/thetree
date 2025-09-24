@@ -15,6 +15,7 @@ const table = require('./syntax/table');
 const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
 
+const parentResponsePromise = {};
 const topToHtml = module.exports = async ([parsed, options = {}]) => {
     options.originalDocument ??= options.document;
     const {
@@ -62,7 +63,6 @@ const topToHtml = module.exports = async ([parsed, options = {}]) => {
         skipInit: true
     }]);
 
-    const parentResponsePromise = {};
     const parentAction = async (type, data = {}) => {
         const id = crypto.randomUUID();
         port.postMessage({

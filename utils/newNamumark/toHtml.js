@@ -47,6 +47,7 @@ module.exports = async (...params) => {
         }
     });
 
+    console.time('render');
     try {
         return await worker.run(params, {
             signal: ac.signal,
@@ -68,6 +69,7 @@ module.exports = async (...params) => {
             }
         }
     } finally {
+        console.timeEnd('render');
         clearTimeout(timeout);
     }
 }
