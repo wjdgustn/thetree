@@ -16,7 +16,11 @@ const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
 
 const parentResponsePromise = {};
-const topToHtml = module.exports = async ([parsed, options = {}]) => {
+const topToHtml = module.exports = async parameter => {
+    if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
+
+    const [parsed, options = {}] = parameter;
+
     options.originalDocument ??= options.document;
     const {
         document,
@@ -74,7 +78,7 @@ const topToHtml = module.exports = async ([parsed, options = {}]) => {
             parentResponsePromise[id] = resolve;
         });
     }
-    port.onmessage = msg => {
+    port.onmessage ??= msg => {
         if(msg.data.id) parentResponsePromise[msg.data.id]?.(msg.data.result);
     }
 

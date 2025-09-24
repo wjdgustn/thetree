@@ -16,18 +16,23 @@ const worker = new Piscina({
 });
 
 module.exports = async (...params) => {
-    for(let [key, value] of Object.entries(params[1])) {
-        if(key === 'req') delete params[1][key];
-        else if(value.toJSON) params[1][key] = value.toJSON();
-    }
-
     const ac = new AbortController();
+    const channel = new MessageChannel();
     const timeout = setTimeout(() => ac.abort(), config.document_maximum_time ?? MAXIMUM_TIME);
 
-    params[1].config = global.config;
+    const setupOptions = options => {
+        for(let [key, value] of Object.entries(options)) {
+            if(key === 'req') delete options[key];
+            else if(value.toJSON) options[key] = value.toJSON();
+        }
 
-    const channel = new MessageChannel();
-    params[1].port = channel.port1;
+        options.config = global.config;
+        options.port = channel.port1;
+    }
+
+    if(params[0].batch) for(let param of params[0].batch) setupOptions(param[1]);
+    else setupOptions(params[1]);
+
     channel.port2.on('message', async msg => {
         const reply = result => channel.port2.postMessage({ id: msg.id, result });
 

@@ -705,7 +705,8 @@ module.exports = {
             toHtmlParams,
             lightMode,
             user,
-            hideUser
+            hideUser,
+            skipRender = false
         } = {}
     ) {
         comment.user = user ?? comment.user;
@@ -732,8 +733,13 @@ module.exports = {
                 const parseResult = global.NamumarkParser.parser(comment.content, { thread: true });
                 if(lightMode) comment.contentHtml = namumarkUtils.escapeHtml(namumarkUtils.parsedToText(parseResult.result));
                 else {
-                    const { html } = await global.NamumarkParser.toHtml(parseResult, toHtmlParams);
-                    comment.contentHtml = html;
+                    if(skipRender) {
+                        comment.parseResult = parseResult;
+                    }
+                    else {
+                        const { html } = await global.NamumarkParser.toHtml(parseResult, toHtmlParams);
+                        comment.contentHtml = html;
+                    }
                 }
             }
             else if(comment.type === ThreadCommentTypes.UpdateStatus) {
@@ -764,6 +770,7 @@ module.exports = {
             'createdAt',
             'user',
             'admin',
+            'parseResult',
             'contentHtml',
 
             'hideUser',
@@ -772,6 +779,18 @@ module.exports = {
                 'hideUserHtml'
             ] : [])
         ]);
+    },
+    async multipleThreadCommentsMapper(requests = []) {
+        const results = await Promise.all(requests.map(a => {
+            a[1].skipRender = true;
+            return this.threadCommentMapper(...a);
+        }));
+        const renderResults = await global.NamumarkParser.toHtml({ batch: results.map((a, i) => [a.parseResult, requests[i][1].toHtmlParams]) });
+        return results.map((a, i) => ({
+            ...a,
+            parseResult: undefined,
+            contentHtml: a.contentHtml ?? renderResults[i].html
+        }));
     },
     async notificationMapper(req, items = [], lightMode = false) {
         await Promise.all(items.map(item => new Promise(async resolve => {

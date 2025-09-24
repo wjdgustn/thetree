@@ -203,7 +203,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, middleware.checkCaptcha(fal
         comments = await utils.findUsers(req, comments);
         comments = await utils.findUsers(req, comments, 'hiddenBy');
 
-        comments = await Promise.all(comments.map(c => utils.threadCommentMapper(c, {
+        comments = await utils.multipleThreadCommentsMapper(comments.map(c => [c, {
             req,
             thread,
             toHtmlParams: {
@@ -215,7 +215,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, middleware.checkCaptcha(fal
                 commentId: c.id,
                 req
             }
-        })));
+        }]));
 
         thread.recentComments = comments;
     }
@@ -457,7 +457,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
     comments = await utils.findUsers(req, comments);
     comments = await utils.findUsers(req, comments, 'hiddenBy');
 
-    comments = await Promise.all(comments.map(c => utils.threadCommentMapper(c, {
+    comments = await utils.multipleThreadCommentsMapper(comments.map(c => [c, {
         req,
         thread,
         toHtmlParams: {
@@ -469,7 +469,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
             commentId: c.id,
             req
         }
-    })));
+    }]));
 
     res.json(comments);
 });
