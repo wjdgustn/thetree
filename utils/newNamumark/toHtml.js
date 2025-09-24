@@ -56,7 +56,7 @@ module.exports = async (...params) => {
             transferList: [channel.port1]
         });
     } catch (e) {
-        const isTimeout = e.name === 'TimeoutError';
+        const isTimeout = e.name === 'AbortError';
         if(!isTimeout) console.error(e);
         return {
             html: isTimeout ? MAXIMUM_TIME_HTML : ERROR_HTML,
