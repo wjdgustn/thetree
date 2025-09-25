@@ -310,7 +310,8 @@ app.post('/member/signup/:token',
     const newUserJson = {
         email: token.email,
         password: req.body.password ? (await bcrypt.hash(req.body.password, 12)) : undefined,
-        name
+        name,
+        permissions: ['member']
     }
 
     const userExists = await User.exists({ type: UserTypes.Account });

@@ -16,7 +16,8 @@ const {
     ThreadCommentTypes,
     ThreadStatusTypes,
     NotificationTypes,
-    PermissionFlags
+    PermissionFlags,
+    AllPermissions
 } = require('./types');
 const diffLib = require('./diff/lib');
 const diffView = require('./diff/view');
@@ -381,7 +382,7 @@ module.exports = {
         req.permissions.unshift('any');
 
         if(req.user?.type === UserTypes.Account) {
-            req.permissions.unshift('member');
+            // req.permissions.unshift('member');
             if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
                 req.permissions.push('member_signup_15days_ago');
         }
@@ -403,11 +404,7 @@ module.exports = {
 
         req.permissions = [...new Set(req.permissions)];
         // if(req.user) req.user.permissions = req.permissions;
-        req.displayPermissions = req.permissions.filter(a => ![
-            'any',
-            'contributor',
-            'member_signup_15days_ago'
-        ].includes(a));
+        req.displayPermissions = AllPermissions.filter(a => req.permissions.includes(a));
 
         req.aclData = {
             permissions: [...req.permissions],

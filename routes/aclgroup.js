@@ -442,7 +442,7 @@ app.get('/aclgroup/group_manage', async (req, res) => {
 const permValidator = field => body(field)
     .custom((value, { req }) => {
         const input = value.split(',').map(a => a.trim()).filter(a => a);
-        const invalid = input.find(a => !['any', 'member', ...AllPermissions].includes(a));
+        const invalid = input.find(a => !['any', ...AllPermissions].includes(a));
         if(invalid)
             throw new Error(`${namumarkUtils.escapeHtml(invalid)} 권한은 유효하지 않습니다.`);
         if(field === 'managePerms'

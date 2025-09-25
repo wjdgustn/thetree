@@ -1,5 +1,9 @@
 const fs = require('fs');
 
+const {
+    UserTypes
+} = require('./types');
+
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const User = require('../schemas/user');
@@ -111,6 +115,18 @@ module.exports = [
             }, {
                 $pull: {
                     permissions: 'aclgroup'
+                }
+            });
+        }
+    },
+    {
+        timestamp: 1758778622368,
+        code: async () => {
+            await User.updateMany({
+                type: UserTypes.Account
+            }, {
+                $addToSet: {
+                    permissions: 'member'
                 }
             });
         }

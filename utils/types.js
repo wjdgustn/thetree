@@ -136,7 +136,6 @@ module.exports = {
         'developer'
     ],
     NoGrantPermissions: [
-        'member',
         'mobile_verified_member',
         'delete_edit_request',
         'engine_developer'
