@@ -172,7 +172,7 @@ module.exports = class ACL {
             return `${isIp ? '현재 사용중인 아이피가 ' : ''}ACL그룹 ${namumarkUtils.escapeHtml(rule.aclGroup.name)}${aclGroupId ? ` #${aclGroupId}에 있기` : '에 없기'}`
         }
         else {
-            return `${ACL.ruleToConditionString(rule)}이기`
+            return `${ACL.ruleToConditionString(rule, false)}이기`
         }
     }
 
