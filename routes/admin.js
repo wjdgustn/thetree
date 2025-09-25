@@ -122,6 +122,8 @@ app.get('/admin/developer', middleware.permission('developer'), async (req, res)
 });
 
 app.post('/admin/developer/eval', middleware.permission('developer'), async (req, res) => {
+    if(process.env.DISABLE_EVAL === 'true') return res.status(403).send('disable_eval');
+
     const Models = mongoose.models;
 
     let result;
@@ -994,7 +996,7 @@ app.post('/admin/config/disabledfeatures', middleware.permission('config'), asyn
 
     if(!method || !type || !condition) return res.status(400).send('method와 type과 condition은 필수입니다.');
 
-    if(!req.permissions.includes('developer') && type === 'js') {
+    if((!req.permissions.includes('developer') || process.env.DISABLE_EVAL === 'true') && type === 'js') {
         const whitelistedCodes = disabledFeaturesTemplates.filter(a => a.type === 'js').map(a => a.condition);
         if(!whitelistedCodes.includes(condition)) return res.status(400).send('템플릿에 등록된 js 코드만 사용할 수 있습니다.');
     }
