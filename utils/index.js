@@ -877,6 +877,13 @@ module.exports = {
     getObjectValue(obj, path) {
         return path.split('.').reduce((obj, key) => obj ? obj[key] : undefined, obj);
     },
+    getObjectValueFallback(obj, paths = []) {
+        for(const path of paths) {
+            const value = this.getObjectValue(obj, path);
+            if(value !== undefined) return value;
+        }
+        return undefined;
+    },
     permissionsToFlags(permissions = [], whitelist = []) {
         return permissions.reduce((flag, key) => {
             if(!whitelist.length || whitelist.includes(key))
