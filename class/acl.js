@@ -166,9 +166,9 @@ module.exports = class ACL {
         return str;
     }
 
-    static ruleToDenyString(rule, aclGroupId = 0, isIp = false) {
+    static ruleToDenyString(rule, aclGroupId = null, isIp = false) {
         if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `${isIp ? '현재 사용중인 아이피가 ' : ''}ACL그룹 ${namumarkUtils.escapeHtml(rule.aclGroup.name)} #${aclGroupId}에 있기`
+            return `${isIp ? '현재 사용중인 아이피가 ' : ''}ACL그룹 ${namumarkUtils.escapeHtml(rule.aclGroup.name)}${aclGroupId ? ` #${aclGroupId}에 있기` : '에 없기'}`
         }
         else {
             return `${ACL.ruleToConditionString(rule)}이기`
