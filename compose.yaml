@@ -15,6 +15,8 @@ services:
       - ./cache:/usr/src/app/cache
       - ./frontend:/usr/src/app/frontend
       - ./config:/usr/src/app/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
       MONGODB_HOST: db
       MONGODB_PORT: 27017
