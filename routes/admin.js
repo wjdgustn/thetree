@@ -1219,6 +1219,21 @@ app.post('/admin/batch_revert',
         resultText.push(`되돌린 문서 수 : ${revertedCount}`);
     }
 
+    if(revertEditRequests) {
+        const result = await EditRequest.updateMany({
+            lastUpdateUser: user.uuid,
+            lastUpdatedAt: {
+                $gte: date - duration
+            },
+            status: {
+                $ne: EditRequestStatusTypes.Closed
+            }
+        }, {
+            status: EditRequestStatusTypes.Open
+        });
+        resultText.push(`다시 열린 편집 요청 수 : ${result.modifiedCount}`);
+    }
+
     await BlockHistory.create({
         type: BlockHistoryTypes.BatchRevert,
         createdUser: req.user.uuid,
