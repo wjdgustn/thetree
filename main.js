@@ -760,7 +760,7 @@ app.use(async (req, res, next) => {
 
     if(req.session.ipUser?.ip !== req.ip)
         req.session.ipUser = null;
-    if(!req.session.ipUser) {
+    if(!req.session.ipUser && req.user?.type !== UserTypes.Account) {
         req.session.ipUser = await User.findOne({
             ip: req.ip
         }).lean();
