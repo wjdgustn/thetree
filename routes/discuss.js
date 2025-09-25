@@ -593,7 +593,7 @@ app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
         dbComment
     });
 
-    if(status === ThreadStatusTypes.Close && document.namespace === '사용자') {
+    if(status !== ThreadStatusTypes.Open && document.namespace === '사용자') {
         const user = await User.findOne({
             name: document.title
         });
@@ -603,15 +603,15 @@ app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
             }, {
                 lastUserDocumentDiscuss: null
             });
-            await Notification.updateMany({
-                user: user.uuid,
-                type: NotificationTypes.UserDiscuss,
-                data: thread.uuid,
-                read: false
-            }, {
-                read: true
-            });
         }
+        if(user && status === ThreadStatusTypes.Close) await Notification.updateMany({
+            user: user.uuid,
+            type: NotificationTypes.UserDiscuss,
+            data: thread.uuid,
+            read: false
+        }, {
+            read: true
+        });
     }
 
     res.status(204).end();
