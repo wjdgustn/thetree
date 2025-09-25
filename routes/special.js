@@ -288,7 +288,7 @@ const uploadFile = multer({
     limits: {
         fileSize: 1024 * 1024 * (config.max_file_size || 10)
     }
-}).single('file');
+}).array('file', 10);
 app.post('/Upload', (req, res, next) => {
         uploadFile(req, res, err => {
             if(err instanceof multer.MulterError)
@@ -300,6 +300,7 @@ app.post('/Upload', (req, res, next) => {
         });
     },
     body('document')
+        .if((value, { req }) => req.files.length === 1)
         .notEmpty()
         .withMessage('문서 제목을 입력해주세요.')
         .isLength({ max: 200 })
@@ -320,19 +321,22 @@ app.post('/Upload', (req, res, next) => {
         .withMessage('요약의 값은 255글자 이하여야 합니다.'),
     middleware.fieldErrors,
     async (req, res) => {
-    if(!req.file) return res.status(400).send('파일이 업로드되지 않았습니다.');
-    if(![
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/svg+xml',
-        'image/ico'
-    ].includes(req.file.mimetype)) return res.status(400).send(
-        '올바르지 않은 파일입니다.'
-        + (req.permissions.includes('developer') ? ` (${req.file.mimetype})` : '')
-    );
+    if(!req.files.length) return res.status(400).send('파일이 업로드되지 않았습니다.');
+
+    for(let file of req.files) {
+        if(![
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'image/bmp',
+            'image/svg+xml',
+            'image/ico'
+        ].includes(file.mimetype)) return res.status(400).send(
+            '올바르지 않은 파일입니다.'
+            + (req.permissions.includes('developer') ? ` (${file.mimetype})` : '')
+        );
+    }
 
     const {
         licenses,
@@ -342,108 +346,116 @@ app.post('/Upload', (req, res, next) => {
     if(!licenses.includes(req.body.license)) return res.status(400).send('잘못된 라이선스입니다.');
     if(!categories.includes(req.body.category)) return res.status(400).send('잘못된 분류입니다.');
 
-    const document = req.document;
-    const { namespace, title } = document;
+    if(req.files.length === 1) {
+        const { ext } = path.parse(req.files[0].originalname);
+        if(!req.document.title.endsWith(ext)) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext.slice(1)})`);
+    }
 
-    const { ext } = path.parse(req.file.originalname);
-    if(!title.endsWith(ext)) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext.slice(1)})`);
+    for(let file of req.files) {
+        const { ext } = path.parse(file.originalname);
+        const document = req.document ?? utils.parseDocumentName(`파일:${file.originalname}`);
+        const { namespace, title } = document;
 
-    let dbDocument = await Document.findOne({
-        namespace,
-        title
-    });
-
-    if(!dbDocument) {
-        dbDocument = new Document({
+        let dbDocument = await Document.findOne({
             namespace,
             title
         });
-        await dbDocument.save();
-    }
 
-    const acl = await ACL.get({ document: dbDocument }, document);
-    const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
-
-    if(!editable) return res.status(403).send(aclMessage);
-
-    const rev = await History.findOne({
-        document: dbDocument.uuid
-    }).sort({ rev: -1 });
-    if(rev?.content != null) return res.status(409).send('문서가 이미 존재합니다.');
-
-    let metadata;
-    let buffer = req.file.buffer;
-    let fileWidth = 0;
-    let fileHeight = 0;
-    try {
-        metadata = await sharp(buffer).metadata();
-        fileWidth = metadata.width;
-        fileHeight = metadata.height;
-    } catch(e) {}
-
-    const hash = crypto.createHash('sha256').update(buffer).digest('hex');
-    const Key = 'i/' + hash + ext;
-
-    const checkExists = await History.findOne({
-        fileKey: Key
-    });
-    if(checkExists) {
-        const dupDoc = await Document.findOne({
-            uuid: checkExists.document
-        });
-        let latestRev;
-        if(dupDoc.contentExists) latestRev = await History.findOne({
-            document: dupDoc.uuid
-        }).sort({ rev: -1 });
-
-        if(latestRev?.fileKey === Key) {
-            const doc = utils.dbDocumentToDocument(dupDoc);
-            return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
+        if(!dbDocument) {
+            dbDocument = new Document({
+                namespace,
+                title
+            });
+            await dbDocument.save();
         }
+
+        const acl = await ACL.get({ document: dbDocument }, document);
+        const { result: editable, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+
+        if(!editable) return res.status(403).send(aclMessage);
+
+        const rev = await History.findOne({
+            document: dbDocument.uuid
+        }).sort({ rev: -1 });
+        if(rev?.content != null) return res.status(409).send('문서가 이미 존재합니다.');
+
+        let metadata;
+        let buffer = file.buffer;
+        let fileWidth = 0;
+        let fileHeight = 0;
+        try {
+            metadata = await sharp(buffer).metadata();
+            fileWidth = metadata.width;
+            fileHeight = metadata.height;
+        } catch(e) {}
+
+        const hash = crypto.createHash('sha256').update(buffer).digest('hex');
+        const Key = 'i/' + hash + ext;
+
+        const checkExists = await History.findOne({
+            fileKey: Key
+        });
+        if(checkExists) {
+            const dupDoc = await Document.findOne({
+                uuid: checkExists.document
+            });
+            let latestRev;
+            if(dupDoc.contentExists) latestRev = await History.findOne({
+                document: dupDoc.uuid
+            }).sort({ rev: -1 });
+
+            if(latestRev?.fileKey === Key) {
+                const doc = utils.dbDocumentToDocument(dupDoc);
+                return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
+            }
+        }
+
+        if(metadata.format === 'svg') {
+            const svgCode = buffer.toString();
+            const window = new JSDOM('').window;
+            const DOMPurify = createDOMPurify(window);
+            const clean = DOMPurify.sanitize(svgCode);
+            buffer = Buffer.from(clean);
+        }
+
+        if(!checkExists) try {
+            await S3.send(new PutObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key,
+                Body: buffer,
+                ContentType: file.mimetype
+            }));
+        } catch(e) {
+            console.error(e);
+            return res.status(500).send((debug || req.permissions.includes('developer'))
+                ? e.toString()
+                : '파일 업로드 중 오류가 발생했습니다.');
+        }
+
+        const content = [
+            `[include(틀:이미지 라이선스/${req.body.license})]`,
+            `[[분류:파일/${req.body.category}]]`,
+            req.body.text
+        ].join('\n');
+
+        await History.create({
+            user: req.user.uuid,
+            sessionId: req.session.sessionId,
+            type: HistoryTypes.Create,
+            document: dbDocument.uuid,
+            content,
+            fileKey: Key,
+            fileSize: file.size,
+            fileWidth,
+            fileHeight,
+            log: req.body.log || `파일 ${Buffer.from(file.originalname, 'latin1').toString('utf-8')}을 올림`
+        });
     }
 
-    if(metadata.format === 'svg') {
-        const svgCode = buffer.toString();
-        const window = new JSDOM('').window;
-        const DOMPurify = createDOMPurify(window);
-        const clean = DOMPurify.sanitize(svgCode);
-        buffer = Buffer.from(clean);
-    }
-
-    if(!checkExists) try {
-        await S3.send(new PutObjectCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key,
-            Body: buffer,
-            ContentType: req.file.mimetype
-        }));
-    } catch(e) {
-        console.error(e);
-        return res.status(500).send((debug || req.permissions.includes('developer'))
-            ? e.toString()
-            : '파일 업로드 중 오류가 발생했습니다.');
-    }
-
-    const content = [
-        `[include(틀:이미지 라이선스/${req.body.license})]`,
-        `[[분류:파일/${req.body.category}]]`,
-        req.body.text
-    ].join('\n');
-
-    await History.create({
-        user: req.user.uuid,
-        sessionId: req.session.sessionId,
-        type: HistoryTypes.Create,
-        document: dbDocument.uuid,
-        content,
-        fileKey: Key,
-        fileSize: req.file.size,
-        fileWidth,
-        fileHeight,
-        log: req.body.log || `파일 ${Buffer.from(req.file.originalname, 'latin1').toString('utf-8')}을 올림`
+    if(req.files.length === 1) res.redirect(globalUtils.doc_action_link(req.document, 'w'));
+    else res.renderSkin('파일 업로드', {
+        contentHtml: `${req.files.length}개의 파일을 업로드했습니다.`
     });
-
-    res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
 app.get('/BlockHistory', async (req, res) => {
