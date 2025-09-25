@@ -22,6 +22,7 @@ const PermissionsNameMap = {
     document_contributor: '해당 문서 기여자',
     contributor: '위키 기여자',
     match_username_and_document_title: '문서 제목과 사용자 이름이 일치',
+    mobile_verified_member: '모바일 인증된 사용자',
     auto_verified_member: '자동 인증된 사용자'
 }
 
