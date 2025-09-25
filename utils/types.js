@@ -200,14 +200,6 @@ module.exports = {
             message: '위키가 읽기 전용 모드입니다.'
         },
         {
-            name: '계정 만들기 비활성화',
-            methodField: 'ALL',
-            type: 'js',
-            condition: `url.split('/')[1] === 'member' && url.split('/')[2] === 'signup' && !url.split('/')[3]`,
-            messageType: 'flexible',
-            message: '계정 만들기가 비활성화되어 있습니다.'
-        },
-        {
             name: '문서 생성 비활성화',
             methodField: 'POST',
             type: 'js',
