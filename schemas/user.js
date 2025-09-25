@@ -104,8 +104,14 @@ const newSchema = new Schema({
                         'ip',
                         'name'
                     ]),
-                    admin: ['admin', 'developer'].some(a => this.permissions?.includes(a)),
-                    autoVerified: this.permissions?.includes('auto_verified_member')
+                    flags: Number(utils.permissionsToFlags([
+                        ...(this.permissions ?? []),
+                        ...(this.permissions?.includes('developer') ? ['admin'] : [])
+                    ], [
+                        'admin',
+                        'auto_verified_member',
+                        'mobile_verified_member'
+                    ]))
                 }
             }
         }
