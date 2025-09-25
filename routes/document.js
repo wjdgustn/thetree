@@ -174,10 +174,10 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             && (user.type !== UserTypes.Deleted || req.permissions.includes('admin')))
             defaultData.user = {
                 uuid: user.uuid,
-                flags: Number(utils.permissionsToFlags(req.permissions, [
+                flags: Number(utils.permissionsToFlags(user.permissions ?? [], [
+                    'admin',
                     'auto_verified_member',
-                    'mobile_verified_member',
-                    'admin'
+                    'mobile_verified_member'
                 ]))
             }
     }

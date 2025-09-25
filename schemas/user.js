@@ -104,10 +104,7 @@ const newSchema = new Schema({
                         'ip',
                         'name'
                     ]),
-                    flags: Number(utils.permissionsToFlags([
-                        ...(this.permissions ?? []),
-                        ...(this.permissions?.includes('developer') ? ['admin'] : [])
-                    ], [
+                    flags: Number(utils.permissionsToFlags(this.permissions ?? [], [
                         'admin',
                         'auto_verified_member',
                         'mobile_verified_member'

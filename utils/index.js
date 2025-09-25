@@ -885,7 +885,12 @@ module.exports = {
         return undefined;
     },
     permissionsToFlags(permissions = [], whitelist = []) {
-        return permissions.reduce((flag, key) => {
+        const checkPerm = [...permissions];
+
+        if(whitelist.includes('admin') && checkPerm.includes('developer'))
+            checkPerm.push('admin');
+
+        return checkPerm.reduce((flag, key) => {
             if(!whitelist.length || whitelist.includes(key))
                 return flag | (PermissionFlags[key] ?? 0n);
             return flag;
