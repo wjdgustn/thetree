@@ -291,8 +291,9 @@ module.exports = class ACL {
 
         if(allowedRules.length) {
             let aclMessage = `${ACL.aclTypeToString(aclType)} 권한이 부족합니다. ${allowedRules
+                .slice(0, 5)
                 .map(r => ACL.ruleToRequiredString(r))
-                .join(' OR ')}(이)여야 합니다.`;
+                .join(' OR ')}${allowedRules.length > 5 ? ` 그 외 ${allowedRules.length - 5}개의 규칙` : ''}(이)여야 합니다.`;
             if(this.document) aclMessage += this.aclTabMessage;
 
             return {
