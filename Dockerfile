@@ -32,8 +32,6 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY . .
 
-RUN chown -R node:node /usr/src/app
-USER node
-
 EXPOSE 3000
+
 CMD node main.js
