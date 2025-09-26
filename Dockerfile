@@ -35,5 +35,7 @@ COPY . .
 RUN chown -R node:node /usr/src/app
 USER node
 
+RUN git config --global --add safe.directory /usr/src/app
+
 EXPOSE 3000
 CMD node main.js
