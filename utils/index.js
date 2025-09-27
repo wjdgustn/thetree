@@ -386,7 +386,8 @@ module.exports = {
             if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
                 req.permissions.push('member_signup_15days_ago');
         }
-        else req.permissions.unshift('ip');
+
+        if(!req.permission.includes('member')) req.permissions.unshift('ip');
 
         if(req.useragent?.isBot) req.permissions.push('bot');
 
