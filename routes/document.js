@@ -1152,9 +1152,9 @@ const postEditAndEditRequest = async (req, res) => {
             }
             if(req.backendMode) {
                 return res.partial({
-                    alert: '편집 도중에 다른 사용자가 먼저 편집을 했습니다.',
+                    errorAlert: '편집 도중에 다른 사용자가 먼저 편집을 했습니다.',
                     conflict: conflictData,
-                    content: editedRev.content,
+                    content: rev.content,
                     publicData: {
                         body: {
                             baserev: rev.rev,
