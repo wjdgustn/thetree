@@ -1050,11 +1050,11 @@ const postEditAndEditRequest = async (req, res) => {
 
     req.session.editagreeAgreed = true;
 
-    const section = parseInt(req.query.section);
+    const section = parseInt(req.body.section);
 
     const invalidSection = () => res.status(400).send('섹션이 올바르지 않습니다.');
 
-    if(req.query.section && (isNaN(section) || section < 1)) return invalidSection();
+    if(req.body.section && (isNaN(section) || section < 1)) return invalidSection();
 
     const document = req.document;
 
@@ -1109,7 +1109,7 @@ const postEditAndEditRequest = async (req, res) => {
 
     if(content == null) return res.status(400).send('content가 올바르지 않습니다.');
 
-    if(rev?.content != null && req.query.section && !editingEditRequest) {
+    if(rev?.content != null && req.body.section && !editingEditRequest) {
         const newLines = [];
 
         const fullLines = editedRev.content.split('\n');
@@ -1139,8 +1139,9 @@ const postEditAndEditRequest = async (req, res) => {
     if(isCreate && isEditRequest) return res.status(404).send('문서를 찾을 수 없습니다.');
 
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid)) {
-        content = utils.mergeText(editedRev.content, content, rev.content);
-        if(content != null) {
+        const mergedContent = utils.mergeText(editedRev.content, content, rev.content);
+        if(mergedContent != null) {
+            content = mergedContent;
             if(!isEditRequest) log ||= `자동 병합됨 (r${editedRev.rev})`;
         }
         else {
@@ -1148,7 +1149,7 @@ const postEditAndEditRequest = async (req, res) => {
 
             const conflictData = {
                 editedRev: editedRev.rev,
-                diff: await utils.generateDiff(editedRev.content, req.body.text)
+                diff: await utils.generateDiff(editedRev.content, content)
             }
             if(req.backendMode) {
                 return res.partial({
@@ -1158,7 +1159,8 @@ const postEditAndEditRequest = async (req, res) => {
                     publicData: {
                         body: {
                             baserev: rev.rev,
-                            baseuuid: rev.uuid
+                            baseuuid: rev.uuid,
+                            section: null
                         }
                     }
                 });
