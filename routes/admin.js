@@ -1227,9 +1227,7 @@ app.post('/admin/batch_revert',
             lastUpdatedAt: {
                 $gte: date - duration
             },
-            status: {
-                $ne: EditRequestStatusTypes.Closed
-            }
+            status: EditRequestStatusTypes.Closed
         }, {
             status: EditRequestStatusTypes.Open
         });
