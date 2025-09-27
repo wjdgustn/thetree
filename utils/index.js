@@ -387,7 +387,7 @@ module.exports = {
                 req.permissions.push('member_signup_15days_ago');
         }
 
-        if(!req.permission.includes('member')) req.permissions.unshift('ip');
+        if(!req.permissions.includes('member')) req.permissions.unshift('ip');
 
         if(req.useragent?.isBot) req.permissions.push('bot');
 
