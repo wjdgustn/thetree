@@ -39,3 +39,9 @@
  * (c) 2019 Justin Ribeiro
  * @license MIT
  */
+
+/**
+ * jsdifflib
+ * (c) 2007 - 2011 Chas Emerick
+ * @license BSD-2-Clause
+ */
