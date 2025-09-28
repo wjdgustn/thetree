@@ -50,6 +50,7 @@
     "jsdom": "^26.1.0",
     "jsep": "^1.4.0",
     "json5": "^2.2.3",
+    "jsonc-parser": "^3.3.1",
     "katex": "^0.16.21",
     "meilisearch": "^0.47.0",
     "mongoose": "^8.8.0",

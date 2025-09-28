@@ -357,6 +357,9 @@ app.post('/member/signup/:token',
     if(!res.headersSent) {
         req.session.fullReload = true;
         delete req.session.contributor;
+
+        if(!userExists) return res.redirect('/admin/initial_setup');
+
         return res.renderSkin('계정 만들기', {
             contentHtml: `<p>환영합니다! <b>${newUser.name}</b>님 계정 생성이 완료되었습니다.</p>`
         });

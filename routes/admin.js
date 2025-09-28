@@ -12,6 +12,7 @@ const { exec } = require('child_process');
 const execPromise = util.promisify(exec);
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const JSON5 = require('json5');
+const { modify, applyEdits } = require('jsonc-parser');
 
 // openNAMU migration things
 let sqlite3;
@@ -50,6 +51,7 @@ const LoginHistory = require('../schemas/loginHistory');
 const SignupToken = require('../schemas/signupToken');
 const AuditLog = require('../schemas/auditLog');
 const Thread = require('../schemas/thread');
+const ACLGroup = require('../schemas/aclGroup');
 
 const ACL = require('../class/acl');
 
@@ -607,9 +609,18 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
 
     if(!availableConfigs.includes(config)) return res.status(400).send('Invalid config file');
 
+    const filePath = process.env.IS_DOCKER ? `./config/${config}` : `./${config}`;
+
     let parsedJson;
+    let content = req.body.content;
+    if(req.body.key && req.body.value) {
+        content = (await fs.readFile(filePath)).toString()
+        const edits = modify(content, req.body.key.split('.'), req.body.value, {});
+        content = applyEdits(content, edits);
+    }
+
     try {
-        parsedJson = JSON5.parse(req.body.content);
+        parsedJson = JSON5.parse(content);
     } catch (e) {
         return res.status(400).send(e.message);
     }
@@ -618,7 +629,7 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
         if(global.devConfig.hasOwnProperty(key)) return res.status(400).send(`Invalid key "${key}"`);
     }
 
-    await fs.writeFile(process.env.IS_DOCKER ? `./config/${config}` : `./${config}`, req.body.content);
+    await fs.writeFile(filePath, content);
     updateConfig();
     return res.status(204).end();
 });
@@ -722,8 +733,8 @@ app.post('/admin/developer/skin/delete', middleware.permission('developer'), asy
 
     const skinPath = path.join('./skins', name);
 
-    await fs.rm(dir, { recursive: true });
-    await fs.rm(skinPath, { recursive: true });
+    await fs.rm(dir, { recursive: true }).catch(() => {});
+    await fs.rm(skinPath, { recursive: true }).catch(() => {});
 
     global.updateSkinInfo();
     res.reload();
@@ -731,6 +742,7 @@ app.post('/admin/developer/skin/delete', middleware.permission('developer'), asy
 
 app.post('/admin/developer/skin/build', middleware.permission('developer'), async (req, res) => {
     let names = req.body.name;
+    if(!names) return res.status(403).send('missing name');
     if(typeof names === 'string') names = [...names.split(',')].map(a => a.trim());
 
     for(let name of names) {
@@ -1434,6 +1446,20 @@ app.get('/admin/audit_log', middleware.permission('config'), async (req, res) =>
     res.renderSkin('감사 로그', {
         contentName: 'admin/auditLog',
         serverData: data
+    });
+});
+
+app.get('/admin/initial_setup', middleware.permission('developer'), async (req, res) => {
+    const docAcl = await ACL.get({ namespace: '문서' });
+    const hasAclGroup = await ACLGroup.exists();
+
+    res.renderSkin('초기 설정', {
+        contentName: 'admin/initialSetup',
+        serverData: {
+            namespaces: config.namespaces,
+            hasNsacl: !!docAcl.aclTypes[ACLTypes.Read].length,
+            hasAclGroup: !!hasAclGroup
+        }
     });
 });
 

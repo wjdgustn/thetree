@@ -859,6 +859,8 @@ app.use(async (req, res, next) => {
 
     if(!skin) return res.status(500).send('skin not installed');
 
+    req.skin = skin;
+
     req.isInternal = req.url.split('/')[1] === 'internal';
     req.backendMode = skinInfo || req.isInternal;
 

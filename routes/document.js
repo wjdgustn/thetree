@@ -92,13 +92,19 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     };
 
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
-    if(!readable) return res.renderSkin(undefined, {
-        ...defaultData,
-        date: null,
-        rev: null,
-        uuid: null,
-        contentHtml: `<h2>${read_acl_message}</h2>`
-    });
+    if(!readable) {
+        if(req.skin === 'plain' && req.user?.type !== UserTypes.Account) {
+            // initial setup
+            return res.redirect('/member/login');
+        }
+        return res.renderSkin(undefined, {
+            ...defaultData,
+            date: null,
+            rev: null,
+            uuid: null,
+            contentHtml: `<h2>${read_acl_message}</h2>`
+        });
+    }
 
     if(req.query.uuid && !rev) return res.renderSkin(undefined, {
         ...defaultData,
