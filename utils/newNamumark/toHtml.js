@@ -21,7 +21,7 @@ module.exports = async (...params) => {
     const setupOptions = options => {
         for(let [key, value] of Object.entries(options)) {
             if(key === 'req') delete options[key];
-            else if(value.toJSON) options[key] = value.toJSON();
+            else if(value?.toJSON) options[key] = value.toJSON();
         }
 
         options.config = global.config;
