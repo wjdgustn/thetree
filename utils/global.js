@@ -50,7 +50,7 @@ module.exports = {
         else str = `/${route}/${this.encodeSpecialChars(title)}`;
         if(Object.keys(query).length > 0) {
             str += '?';
-            str += Object.keys(query).filter(k => query[k]).map(k => `${k}=${query[k]}`).join('&');
+            str += Object.keys(query).filter(k => query[k]).map(k => `${k}=${encodeURIComponent(query[k])}`).join('&');
         }
         return str;
     },
