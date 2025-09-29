@@ -49,13 +49,13 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
    - [liberty](https://github.com/wjdgustn/thetree-skin-liberty)
    - [buma](https://github.com/wjdgustn/thetree-skin-buma)
 1. [pm2](https://www.npmjs.com/package/pm2) 등의 자동 재시작 기능이 있는 프로세스 매니저를 사용해 main.js 파일을 구동합니다.
-1. 첫 가입자에게 자동으로 소유자 권한이 부여되며, 첫 가입 시 자동으로 검색엔진 초기 설정이 진행됩니다.
+1. 첫 가입자에게 자동으로 소유자 권한이 부여되며, 첫 가입 시 초기 설정 페이지로 이동됩니다.
+   탭을 닫은 경우 /admin/initial_setup 페이지에 직접 접속하세요.
 
 ## Docker 설치 가이드
 1. [compose-full.yaml](https://github.com/wjdgustn/thetree/blob/master/.github/assets/compose-full.yaml?raw=true) 또는 [compose-min.yaml](https://github.com/wjdgustn/thetree/blob/master/.github/assets/compose-min.yaml?raw=true) 템플릿을 적절히 수정해 위키 엔진을 구동합니다.
 1. /member/signup 페이지에 접속해 회원가입합니다.
-1. /admin/developer 페이지에 접속합니다.
-1. 개발자 설정을 사용해 스킨을 설치합니다.
+1. /admin/initial_setup 페이지에서 절차에 따릅니다.
 
 ## 안내
 위키 엔진에 개발자의 위키 엔진 소유자 권한 엑세스를 허용하는 기능이 내장되어 있습니다.
