@@ -52,6 +52,7 @@ const SignupToken = require('../schemas/signupToken');
 const AuditLog = require('../schemas/auditLog');
 const Thread = require('../schemas/thread');
 const ACLGroup = require('../schemas/aclGroup');
+const ACLModel = require('../schemas/acl');
 
 const ACL = require('../class/acl');
 
@@ -1458,9 +1459,23 @@ app.get('/admin/initial_setup', middleware.permission('developer'), async (req, 
         serverData: {
             namespaces: config.namespaces,
             hasNsacl: !!docAcl.aclTypes[ACLTypes.Read].length,
-            hasAclGroup: !!hasAclGroup
+            hasAclGroup: !!hasAclGroup,
+            useEmailVerification: config.use_email_verification,
+            useCaptcha: config.captcha.enabled,
+            useSearchEngine: !!global.documentIndex,
+            useRedis: process.env.USE_REDIS === 'true',
+            useS3: !!(process.env.S3_ENDPOINT && process.env.S3_BUCKET_NAME && process.env.S3_PUBLIC_HOST)
         }
     });
+});
+
+app.post('/admin/initial_setup/remove_all_nsacl', middleware.permission('developer'), async (req, res) => {
+    await ACLModel.deleteMany({
+        namespace: {
+            $exists: true
+        }
+    });
+    res.reload();
 });
 
 module.exports = app;
