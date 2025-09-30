@@ -31,7 +31,7 @@ module.exports = {
     encodeSpecialChars(str, exclude = []) {
         if(!str) return str;
 
-        if(typeof specialChars === 'undefined') specialChars = '?&=+$#%'.split('');
+        if(typeof specialChars === 'undefined') specialChars = '?&=+$#%\\'.split('');
         return str.split('').map(a => specialChars.includes(a) && !exclude.includes(a) ? encodeURIComponent(a) : a).join('');
     },
     doc_action_link(document, route, query = {}) {
