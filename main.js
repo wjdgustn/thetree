@@ -329,9 +329,13 @@ setInterval(checkUpdate, 1000 * 60 * 60);
 if(config.check_update !== false)
     checkUpdate().then();
 
+global.updatingSkins = [];
 global.updateSkins = async (names = []) => {
     const failed = [];
     await Promise.allSettled(names.map(async name => {
+        if(global.updatingSkins.includes(name)) return;
+        global.updatingSkins.push(name);
+
         const skinPath = path.join('./skins', name);
 
         try {
@@ -349,6 +353,8 @@ global.updateSkins = async (names = []) => {
             console.error(e);
             failed.push(name);
             return;
+        } finally {
+            global.updatingSkins = global.updatingSkins.filter(a => a !== name);
         }
 
         const ssrModules = Object.keys(require.cache).filter(a => a.startsWith(path.resolve(skinPath)));
@@ -362,8 +368,10 @@ global.updateSkins = async (names = []) => {
 if(!global.skins.length)
     updateSkins(['plain']).then();
 
+global.updatingEngine = false;
 global.updateEngine = (exit = true) => {
     (async () => {
+        global.updatingEngine = true;
         try {
             const packageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./package.json')).digest('hex');
             const fePackageHash = () => crypto.createHash('sha256').update(fs.readFileSync('./frontend/package.json')).digest('hex');
@@ -409,6 +417,9 @@ global.updateEngine = (exit = true) => {
             }
             else global.skinCommitId = {};
         } catch(e) {}
+        finally {
+            global.updatingEngine = false;
+        }
     })()
 }
 

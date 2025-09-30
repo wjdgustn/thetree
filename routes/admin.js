@@ -546,11 +546,15 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'update') {
+        if(global.updatingEngine)
+            return res.status(409).send('이미 업데이트가 진행중입니다.');
         res.status(204).end();
         global.updateEngine();
     }
 
     else if(tool === 'updatesubmodule') {
+        if(global.updatingEngine)
+            return res.status(409).send('이미 업데이트가 진행중입니다.');
         res.status(204).end();
         global.updateEngine(false);
     }
@@ -752,6 +756,9 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
         const skinExists = await fs.exists(dir);
         if(!skinExists) return res.status(400).send('Invalid skin');
     }
+
+    const updatingSkin = names.find(a => global.updatingSkins.includes(a));
+    if(updatingSkin) return res.status(409).send(`${updatingSkin} already building`);
 
     const { failed } = await global.updateSkins(names);
     if(failed.length) return res.status(400).send(`build failed: ${failed.join(', ')}`);
