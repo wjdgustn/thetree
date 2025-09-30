@@ -41,7 +41,7 @@ module.exports = {
         return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
     },
     getGravatar(email) {
-        const hash = crypto.createHash('sha256').update(email).digest('hex');
+        const hash = crypto.createHash('md5').update(email).digest('hex');
         return `https://secure.gravatar.com/avatar/${hash}?d=retro`;
     },
     parseDocumentName(name, getNamespaceExists = false) {
