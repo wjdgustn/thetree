@@ -808,7 +808,7 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
         contentName: 'admin/grant',
         serverData: {
             targetUser: targetUser ? {
-                ...targetUser.publicUser,
+                ...await utils.getPublicUser(targetUser),
                 permissions: targetUser.permissions
             } : null,
             grantablePermissions: grantablePermissions,
@@ -1379,7 +1379,7 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
     res.renderSkin(`${targetUser?.name} 로그인 내역`, {
         contentName: 'admin/login_history_result',
         targetUser: {
-            ...targetUser.publicUser,
+            ...await utils.getPublicUser(targetUser),
             email: targetUser.email
         },
         userAgent: latestLog?.userAgent,

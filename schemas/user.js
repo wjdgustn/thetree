@@ -93,26 +93,6 @@ const newSchema = new Schema({
         required: true,
         default: false
     }
-}, {
-    virtuals: {
-        publicUser: {
-            get() {
-                return {
-                    ...utils.onlyKeys(this, [
-                        'uuid',
-                        'type',
-                        'ip',
-                        'name'
-                    ]),
-                    flags: Number(utils.permissionsToFlags(this.permissions ?? [], [
-                        'admin',
-                        'auto_verified_member',
-                        'mobile_verified_member'
-                    ]))
-                }
-            }
-        }
-    }
 });
 
 newSchema.index({ name: 1 }, {

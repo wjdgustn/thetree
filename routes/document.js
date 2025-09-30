@@ -170,22 +170,26 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
     }
 
     let user;
+    let userPermissions = [];
     let userBlockedData = null;
     let userIsAdmin = false;
     if(namespace === '사용자' && !title.includes('/')) {
         user = await User.findOne({
             name: title
         });
+        const permissions = await utils.getACLGroupPermissions(user);
+        userPermissions = [...(user.permissions ?? []), ...permissions];
         if(user
-            && (user.type !== UserTypes.Deleted || req.permissions.includes('admin')))
+            && (user.type !== UserTypes.Deleted || req.permissions.includes('admin'))) {
             defaultData.user = {
                 uuid: user.uuid,
-                flags: Number(utils.permissionsToFlags(user.permissions ?? [], [
+                flags: Number(utils.permissionsToFlags(userPermissions, [
                     'admin',
                     'auto_verified_member',
                     'mobile_verified_member'
                 ]))
             }
+        }
     }
 
     let content = rev.content;
@@ -263,7 +267,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         `.replaceAll('\n', '').trim() + contentHtml;
         }
 
-        if(user.permissions.includes('admin')) {
+        if(userPermissions.includes('admin')) {
             if(req.backendMode) userIsAdmin = true;
             else contentHtml = `
 <div class="special-box admin-box">

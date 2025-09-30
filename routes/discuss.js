@@ -53,10 +53,10 @@ const threadCommentEvent = async ({
             req
         },
         user: {
-            ...commentUser.publicUser,
+            ...await utils.getPublicUser(commentUser),
             userCSS: await utils.getUserCSS(commentUser)
         },
-        hideUser: hideUser?.publicUser
+        hideUser: await utils.getPublicUser(hideUser)
     });
 
     SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);

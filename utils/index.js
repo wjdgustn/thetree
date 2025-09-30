@@ -204,7 +204,7 @@ module.exports = {
                     uuid
                 });
                 if(dbUser) {
-                    obj[key] = dbUser.publicUser;
+                    obj[key] = await this.getPublicUser(dbUser);
                     if(!noCSS) obj[key].userCSS = await this.getUserCSS(dbUser);
                     cache[dbUser.uuid] = obj[key];
                 }
@@ -254,6 +254,24 @@ module.exports = {
                 ? `<a class="user-text-name${nameClass}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
                 : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
             + '</span>';
+    },
+    async getPublicUser(user) {
+        if(!user) return null;
+
+        const permissions = await this.getACLGroupPermissions(user);
+        return {
+            ...this.onlyKeys(user, [
+                'uuid',
+                'type',
+                'ip',
+                'name'
+            ]),
+            flags: Number(this.permissionsToFlags(permissions ?? [], [
+                'admin',
+                'auto_verified_member',
+                'mobile_verified_member'
+            ]))
+        }
     },
     addHistoryData(req, rev, isAdmin = false, document = null, backendMode = false) {
         document ??= rev.document;
@@ -376,35 +394,35 @@ module.exports = {
     escapeRegExp(s) {
         return s.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     },
+    async getACLGroupPermissions(user) {
+        const permGroups = await models.ACLGroup.find({
+            permissions: { $exists: true, $not: { $size: 0 } }
+        });
+        const permGroupItems = await models.ACLGroupItem.find({
+            aclGroup: {
+                $in: permGroups.map(group => group.uuid)
+            },
+            $or: [
+                {
+                    expiresAt: {
+                        $gte: new Date()
+                    }
+                },
+                {
+                    expiresAt: null
+                }
+            ],
+            user: user.uuid
+        });
+        return [...new Set(permGroups
+            .filter(a => permGroupItems.some(b => b.aclGroup === a.uuid))
+            .map(a => a.permissions)
+            .flat())];
+    },
     async makeACLData(req) {
         req.permissions = [...(req.user?.permissions ?? [])];
 
-        if(req.user?.uuid) {
-            const permGroups = await models.ACLGroup.find({
-                permissions: { $exists: true, $not: { $size: 0 } }
-            });
-            const permGroupItems = await models.ACLGroupItem.find({
-                aclGroup: {
-                    $in: permGroups.map(group => group.uuid)
-                },
-                $or: [
-                    {
-                        expiresAt: {
-                            $gte: new Date()
-                        }
-                    },
-                    {
-                        expiresAt: null
-                    }
-                ],
-                user: req.user.uuid
-            });
-            const groupPerms = permGroups
-                .filter(a => permGroupItems.some(b => b.aclGroup === a.uuid))
-                .map(a => a.permissions)
-                .flat();
-            req.permissions.push(...groupPerms);
-        }
+        if(req.user?.uuid) req.permissions.push(...await this.getACLGroupPermissions(req.user));
 
         req.permissions.unshift('any');
 
