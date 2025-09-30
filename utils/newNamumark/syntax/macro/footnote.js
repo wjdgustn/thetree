@@ -4,6 +4,8 @@ module.exports = {
     async format(params, options, obj) {
         const { commentPrefix, toHtml } = options;
 
+        if(!obj.footnoteValues.length) return '';
+
         let html = `<div class="wiki-macro-footnote">`;
         for(let { name, content } of obj.footnoteValues) {
             html += `<span class="footnote-list"><span id="${commentPrefix}fn-${name}"></span>`;
