@@ -422,14 +422,14 @@ module.exports = {
     async makeACLData(req) {
         req.permissions = [...(req.user?.permissions ?? [])];
 
-        if(req.user?.uuid) req.permissions.push(...await this.getACLGroupPermissions(req.user));
-
         req.permissions.unshift('any');
 
         if(req.user?.type === UserTypes.Account) {
             // req.permissions.unshift('member');
             if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
                 req.permissions.push('member_signup_15days_ago');
+
+            req.permissions.push(...await this.getACLGroupPermissions(req.user));
         }
 
         if(!req.permissions.includes('member')) req.permissions.unshift('ip');
