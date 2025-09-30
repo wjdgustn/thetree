@@ -9,7 +9,8 @@ const {
     BlockHistoryTypes,
     AuditLogTypes,
     SignupPolicy,
-    AllPermissions
+    AllPermissions,
+    ProtectedPermissions
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -52,8 +53,8 @@ const groupPermChecker = (req, group, key) => {
         return false;
 
     const perms = group[key] ?? [];
-    return perms.length 
-        ? perms.some(a => req.permissions.includes(a)) 
+    return perms.length
+        ? perms.some(a => req.permissions.includes(a))
         : req.permissions.includes('aclgroup');
 }
 
@@ -445,22 +446,50 @@ app.get('/aclgroup/group_manage', async (req, res) => {
 });
 
 const permValidator = field => body(field)
+    .customSanitizer(value => [...new Set(value.split(',').map(a => a.trim()).filter(a => a))])
     .custom((value, { req }) => {
-        const input = value.split(',').map(a => a.trim()).filter(a => a);
-        const invalid = input.find(a => !['any', ...AllPermissions].includes(a));
+        const invalid = value.find(a => !['any', ...AllPermissions].includes(a));
         if(invalid)
             throw new Error(`${namumarkUtils.escapeHtml(invalid)} 권한은 유효하지 않습니다.`);
         if(field === 'managePerms'
             && (
-                (input.length && !req.permissions.some(a => input.includes(a)))
-                || (!input.length && !req.permissions.includes('aclgroup'))
+                (value.length && !req.permissions.some(a => value.includes(a)))
+                || (!value.length && !req.permissions.includes('aclgroup'))
             ))
             throw new Error('본인이 가진 권한이 포함되지 않았습니다.');
+        if(field === 'permissions') {
+            const groupPermissions = req.body.group.permissions;
+            const modifiedPermissions = [
+                ...groupPermissions.filter(a => !value.includes(a)),
+                ...value.filter(a => !groupPermissions.includes(a))
+            ];
+
+            const addablePermissions = [...req.permissions];
+            if(req.permissions.includes('grant'))
+                addablePermissions.push(
+                    ...AllPermissions
+                        .filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+                );
+
+            const noGrantablePermission = modifiedPermissions.find(a => !addablePermissions.includes(a));
+            if(noGrantablePermission)
+                throw new Error(`${namumarkUtils.escapeHtml(noGrantablePermission)} 권한을 수정할 권한이 없습니다.`);
+        }
         return true;
-    })
-    .customSanitizer(value => value.split(',').map(a => a.trim()).filter(a => a));
+    });
 
 app.post('/aclgroup/group_manage',
+    body('uuid')
+        .custom(async (value, { req }) => {
+            const group = await ACLGroup.findOne({
+                uuid: value
+            });
+            if(!group
+                || !groupPermChecker(req, group, 'managePerms'))
+                throw new Error('존재하지 않는 그룹입니다.');
+
+            req.body.group = group;
+        }),
     body('name')
         .notEmpty()
         .withMessage('그룹 이름은 필수입니다.'),
@@ -494,12 +523,7 @@ app.post('/aclgroup/group_manage',
         .isInt({ min: 0 }),
     middleware.fieldErrors,
     async (req, res) => {
-    const group = await ACLGroup.findOne({
-        uuid: req.body.uuid
-    });
-        if(!group
-            || !groupPermChecker(req, group, 'managePerms'))
-            return res.error('존재하지 않는 그룹입니다.', 404);
+    const group = req.body.group;
 
     await ACLGroup.findOneAndUpdate({
         uuid: group.uuid
