@@ -97,6 +97,16 @@ const newSchema = new Schema({
     },
     selfRemoveNote: {
         type: String
+    },
+    permissions: {
+        type: Array,
+        required: true,
+        default: []
+    },
+    captchaRate: {
+        type: Number,
+        required: true,
+        default: 0
     }
 });
 

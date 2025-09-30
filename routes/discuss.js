@@ -537,7 +537,7 @@ app.post('/thread/:url', middleware.captcha(), async (req, res) => {
         read: true
     });
 
-    res.json({ captchaData: { use: utils.checkCaptchaRequired(req) } });
+    res.json({ captchaData: { use: await utils.checkCaptchaRequired(req) } });
 });
 
 app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),

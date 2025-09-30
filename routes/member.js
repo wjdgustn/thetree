@@ -553,7 +553,7 @@ app.post('/member/login',
             autologin: req.body.autologin,
             hasPasskey,
             captchaData: {
-                use: utils.checkCaptchaRequired(req, true),
+                use: await utils.checkCaptchaRequired(req, true),
                 force: true
             }
         }

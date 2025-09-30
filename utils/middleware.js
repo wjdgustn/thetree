@@ -63,9 +63,9 @@ module.exports = {
         if(!await utils.middleValidateCaptcha(req, res, force, ipForce)) return;
         next();
     },
-    checkCaptcha: (force = false, ipForce = false) => (req, res, next) => {
+    checkCaptcha: (force = false, ipForce = false) => async (req, res, next) => {
         req.additionalServerData.captchaData = {
-            use: utils.checkCaptchaRequired(req, force, ipForce),
+            use: await utils.checkCaptchaRequired(req, force, ipForce),
             force: force || (req.user?.type !== UserTypes.Account && ipForce)
         }
         next();

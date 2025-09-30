@@ -886,7 +886,7 @@ const editAndEditRequest = async (req, res) => {
             content,
             contentHtml,
             captchaData: {
-                use: utils.checkCaptchaRequired(req, !docExists),
+                use: await utils.checkCaptchaRequired(req, !docExists),
                 force: !docExists
             },
             editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text,

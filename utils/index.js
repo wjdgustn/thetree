@@ -377,7 +377,34 @@ module.exports = {
         return s.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     },
     async makeACLData(req) {
-        req.permissions = [...(req.user?.permissions ?? [])].sort();
+        req.permissions = [...(req.user?.permissions ?? [])];
+
+        if(req.user?.uuid) {
+            const permGroups = await models.ACLGroup.find({
+                permissions: { $exists: true, $not: { $size: 0 } }
+            });
+            const permGroupItems = await models.ACLGroupItem.find({
+                aclGroup: {
+                    $in: permGroups.map(group => group.uuid)
+                },
+                $or: [
+                    {
+                        expiresAt: {
+                            $gte: new Date()
+                        }
+                    },
+                    {
+                        expiresAt: null
+                    }
+                ],
+                user: req.user.uuid
+            });
+            const groupPerms = permGroups
+                .filter(a => permGroupItems.some(b => b.aclGroup === a.uuid))
+                .map(a => a.permissions)
+                .flat();
+            req.permissions.push(...groupPerms);
+        }
 
         req.permissions.unshift('any');
 
@@ -498,7 +525,7 @@ module.exports = {
 
         return data.success;
     },
-    checkCaptchaRequired(req, force = false, ipForce = false) {
+    async checkCaptchaRequired(req, force = false, ipForce = false) {
         req.session.noCaptchaCount ??= Math.max(config.captcha?.rate?.ip ?? 10, config.captcha?.rate?.account ?? 20);
 
         if(!config.captcha.enabled || req.permissions.includes('skip_captcha'))
@@ -508,14 +535,38 @@ module.exports = {
         if(req.permissions.includes('no_force_captcha'))
             force = false;
 
-        const maxNoCaptchaRequests = req.user?.type === UserTypes.Account
+        let maxNoCaptchaRequests = req.user?.type === UserTypes.Account
             ? (config.captcha?.rate?.account ?? 20)
             : (config.captcha?.rate?.ip ?? 10);
+
+        if(req.user?.uuid) {
+            const groups = await models.ACLGroup.find({
+                captchaRate: { $gt: 0 }
+            });
+            const item = await models.ACLGroupItem.findOne({
+                aclGroup: { $in: groups.map(a => a.uuid) },
+                $or: [
+                    {
+                        expiresAt: {
+                            $gte: new Date()
+                        }
+                    },
+                    {
+                        expiresAt: null
+                    }
+                ],
+                user: req.user.uuid
+            });
+            if(item) {
+                const group = groups.find(a => a.uuid === item.aclGroup);
+                maxNoCaptchaRequests = group.captchaRate;
+            }
+        }
 
         return req.session.noCaptchaCount >= maxNoCaptchaRequests || force;
     },
     async middleValidateCaptcha(req, res, force = false, ipForce = false) {
-        if(!this.checkCaptchaRequired(req, force, ipForce)) {
+        if(!(await this.checkCaptchaRequired(req, force, ipForce))) {
             req.session.noCaptchaCount++;
             return true;
         }

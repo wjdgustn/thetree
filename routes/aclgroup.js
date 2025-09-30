@@ -489,6 +489,9 @@ app.post('/aclgroup/group_manage',
         .customSanitizer(value => namumarkUtils.cssFilter(value)),
     body('aclMessage')
         .customSanitizer(value => namumarkUtils.baseSanitizeHtml(value)),
+    permValidator('permissions'),
+    body('captchaRate')
+        .isInt({ min: 0 }),
     middleware.fieldErrors,
     async (req, res) => {
     const group = await ACLGroup.findOne({
@@ -517,7 +520,9 @@ app.post('/aclgroup/group_manage',
         aclMessage: req.body.aclMessage,
         selfRemoveNote: req.body.selfRemoveNote,
         forBlock: req.body.forBlock === 'Y',
-        selfRemovable: req.body.selfRemovable === 'Y'
+        selfRemovable: req.body.selfRemovable === 'Y',
+        permissions: req.body.permissions,
+        captchaRate: req.body.captchaRate
     });
 
     if(req.body.name === group.name) res.reload();
