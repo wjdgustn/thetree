@@ -465,7 +465,7 @@ const permValidator = field => body(field)
             ];
 
             const addablePermissions = [...req.permissions];
-            if(req.permissions.includes('grant'))
+            if(req.permissions.includes('config'))
                 addablePermissions.push(
                     ...AllPermissions
                         .filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
