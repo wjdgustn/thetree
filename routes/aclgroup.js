@@ -463,6 +463,8 @@ const permValidator = field => body(field)
                 ...groupPermissions.filter(a => !value.includes(a)),
                 ...value.filter(a => !groupPermissions.includes(a))
             ];
+            if(modifiedPermissions.length && !req.permissions.includes('grant'))
+                throw new Error('이 값을 수정하려면 grant 권한이 필요합니다.');
 
             const addablePermissions = [...req.permissions];
             if(req.permissions.includes('config'))
