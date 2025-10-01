@@ -517,7 +517,11 @@ app.post('/aclgroup/group_manage',
     permValidator('removePerms'),
     permValidator('managePerms'),
     body('userCSS')
-        .customSanitizer(value => namumarkUtils.cssFilter(value)),
+        .customSanitizer((value, { req }) => {
+            if(req.body.group.userCSS !== value
+                && !req.permissions.includes('config'))
+                namumarkUtils.cssFilter(value);
+        }),
     body('aclMessage')
         .customSanitizer(value => namumarkUtils.baseSanitizeHtml(value)),
     permValidator('permissions'),
