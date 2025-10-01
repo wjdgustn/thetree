@@ -230,7 +230,6 @@ const topToHtml = module.exports = async parameter => {
                                     checkOptions: [ACLTypes.Read, aclData]
                                 });
                                 readable = result;
-                                readable = true;
                                 nsACLResultCache[doc.namespace] = readable;
                             }
 
