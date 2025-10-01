@@ -258,7 +258,7 @@ module.exports = {
     async getPublicUser(user) {
         if(!user) return null;
 
-        const permissions = await this.getACLGroupPermissions(user);
+        const permissions = [...user.permissions, ...await this.getACLGroupPermissions(user)];
         return {
             ...this.onlyKeys(user, [
                 'uuid',
