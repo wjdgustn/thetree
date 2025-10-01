@@ -520,7 +520,8 @@ app.post('/aclgroup/group_manage',
         .customSanitizer((value, { req }) => {
             if(req.body.group.userCSS !== value
                 && !req.permissions.includes('config'))
-                namumarkUtils.cssFilter(value);
+                value = namumarkUtils.cssFilter(value);
+            return value;
         }),
     body('aclMessage')
         .customSanitizer(value => namumarkUtils.baseSanitizeHtml(value)),
