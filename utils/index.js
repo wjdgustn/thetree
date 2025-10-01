@@ -557,28 +557,39 @@ module.exports = {
             ? (config.captcha?.rate?.account ?? 20)
             : (config.captcha?.rate?.ip ?? 10);
 
-        if(req.user?.uuid) {
-            const groups = await models.ACLGroup.find({
-                captchaRate: { $gt: 0 }
-            });
-            const item = await models.ACLGroupItem.findOne({
-                aclGroup: { $in: groups.map(a => a.uuid) },
-                $or: [
-                    {
-                        expiresAt: {
-                            $gte: new Date()
-                        }
-                    },
-                    {
-                        expiresAt: null
+        let ipArr;
+        if(Address4.isValid(req.ip)) ipArr = new Address4(req.ip).toArray();
+        else ipArr = new Address6(req.ip).toByteArray();
+
+        const groups = await models.ACLGroup.find({
+            captchaRate: { $gt: 0 }
+        });
+        const item = await models.ACLGroupItem.findOne({
+            aclGroup: { $in: groups.map(a => a.uuid) },
+            $or: [
+                {
+                    expiresAt: {
+                        $gte: new Date()
                     }
-                ],
+                },
+                {
+                    expiresAt: null
+                }
+            ],
+            ...(req.user?.type === UserTypes.Account ? {
                 user: req.user.uuid
-            });
-            if(item) {
-                const group = groups.find(a => a.uuid === item.aclGroup);
-                maxNoCaptchaRequests = group.captchaRate;
-            }
+            } : {
+                ipMin: {
+                    $lte: ipArr
+                },
+                ipMax: {
+                    $gte: ipArr
+                }
+            })
+        });
+        if(item) {
+            const group = groups.find(a => a.uuid === item.aclGroup);
+            maxNoCaptchaRequests = group.captchaRate;
         }
 
         return req.session.noCaptchaCount >= maxNoCaptchaRequests || force;
