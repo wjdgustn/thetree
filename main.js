@@ -456,10 +456,11 @@ global.reloadPlugins = () => {
                 }
 
                 if(plugin.type === 'macro') {
-                    plugins.macro.push(pluginPath);
+                    plugin.path = pluginPath;
+                    // plugins.macro.push(pluginPath);
                     global.__THETREE__.macros.push(plugin.name);
                 }
-                else plugins[plugin.type].push(plugin);
+                plugins[plugin.type].push(plugin);
 
                 if(plugin.name) pluginPaths[plugin.name] = path.resolve(dir);
 

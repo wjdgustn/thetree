@@ -301,7 +301,7 @@ module.exports = {
     baseSanitizeHtml: text => sanitizeHtml(text, baseSanitizeHtmlOptions),
     sanitizeHtml: text => sanitizeHtml(text, sanitizeHtmlOptions),
     loadMacros(macroPluginPaths) {
-        macroPluginPaths ??= global.plugins.macro;
+        macroPluginPaths ??= (global.plugins.macro ?? []).map(a => a.path);
 
         const macros = {};
         const threadMacros = [];

@@ -11,7 +11,7 @@ const worker = new Piscina({
     filename: require.resolve('./toHtmlWorker'),
     workerData: {
         config,
-        macroPluginPaths: global.plugins.macro ?? []
+        macroPluginPaths: (global.plugins.macro ?? []).map(a => a.path)
     }
 });
 
