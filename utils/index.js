@@ -138,7 +138,7 @@ module.exports = {
                 $ne: ''
             }
         }).lean();
-        const aclGroupItem = await models.ACLGroupItem.findOne({
+        const aclGroupItem = await models.ACLGroupItem.find({
             aclGroup: {
                 $in: aclGroups.map(group => group.uuid)
             },
@@ -176,10 +176,10 @@ module.exports = {
                 _id: -1
             })
             .lean();
-        if(!aclGroupItem) return '';
 
-        const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
-        return aclGroup.userCSS;
+        const groups = aclGroups.filter(group => aclGroupItem.some(item => item.aclGroup === group.uuid));
+        const styles = groups.map(a => a.userCSS).map(a => a.endsWith(';') ? a : `${a};`);
+        return styles.join('');
     },
     async findUsers(req, arr, key = 'user', options = {}) {
         const noCSS = options.noCSS;
