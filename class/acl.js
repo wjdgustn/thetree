@@ -200,7 +200,7 @@ module.exports = class ACL {
             [ACLActionTypes.Allow]: `허용`,
             [ACLActionTypes.GotoNS]: `이름공간ACL 실행`,
             [ACLActionTypes.GotoOtherNS]: `${ruleOrActionType.actionContent
-                ? `<a href="/acl/${safeActionContent}:#namespace.${utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, ruleOrActionType.type))}">${safeActionContent}</a>`
+                ? `<a href="/acl/${safeActionContent}:문서#namespace.${utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, ruleOrActionType.type))}">${safeActionContent}</a>`
                 : '다른 이름공간'} ACL 실행`
         }[typeof ruleOrActionType === 'object' ? ruleOrActionType.actionType : ruleOrActionType];
     }
