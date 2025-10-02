@@ -13,6 +13,7 @@ const execPromise = util.promisify(exec);
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const JSON5 = require('json5');
 const { modify, applyEdits } = require('jsonc-parser');
+const randomstring = require('randomstring');
 
 // openNAMU migration things
 let sqlite3;
@@ -40,6 +41,10 @@ const {
 const middleware = require('../utils/middleware');
 const minifyManager = require('../utils/minifyManager');
 const docUtils = require('../utils/docUtils');
+const {
+    changeNameAction,
+    withdrawAction
+} = require('./member');
 
 const User = require('../schemas/user');
 const Document = require('../schemas/document');
@@ -1483,6 +1488,186 @@ app.post('/admin/initial_setup/remove_all_nsacl', middleware.permission('develop
         }
     });
     res.reload();
+});
+
+app.get('/admin/manage_account', middleware.permission('manage_account'), async (req, res) => {
+    let targetUser;
+
+    if(req.query.uuid) {
+        targetUser = await User.findOne({
+            uuid: req.query.uuid,
+            type: UserTypes.Account
+        });
+    }
+    let query = req.query.query?.toString();
+    if(query && !query.includes(':')) {
+        targetUser = await User.findOne({
+            name: {
+                $regex: new RegExp(`^${utils.escapeRegExp(query)}$`, 'i')
+            }
+        });
+        if(targetUser) return res.redirect('/admin/manage_account?uuid=' + targetUser.uuid);
+    }
+
+    let searchData;
+    if(targetUser) {
+        if(targetUser.permissions.includes('developer')
+            && !req.permissions.includes('developer'))
+            return res.status(403).send('invalid_permission');
+    }
+    else if(query) {
+        const queryData = {
+            type: UserTypes.Account
+        };
+        const queryHasColon = query.includes(':');
+        const queryType = queryHasColon
+            ? query.split(':')[0]
+            : 'name';
+        if(queryHasColon)
+            query = query.slice(queryType.length + 1);
+
+        switch(queryType) {
+            case 'name':
+                queryData.name = {
+                    $regex: new RegExp(utils.escapeRegExp(query), 'i')
+                }
+                break;
+            case 'email':
+                queryData.email = query;
+                break;
+            case 'perm':
+                queryData.permissions = query;
+                break;
+            case 'skin':
+                queryData.skin = query;
+                break;
+        }
+
+        searchData = await utils.pagination(req, User, queryData, 'uuid', 'createdAt', {
+            getTotal: true
+        });
+        searchData.items = utils.onlyKeys(searchData.items, ['uuid', 'name']);
+    }
+
+    res.renderSkin('계정 관리', {
+        contentName: 'admin/manageAccount',
+        serverData: {
+            searchData,
+            targetUser: targetUser && {
+                ...utils.onlyKeys(targetUser, [
+                    'uuid', 'name', 'email', 'usePasswordlessLogin'
+                ]),
+                useTotp: !!targetUser.totpToken
+            }
+        }
+    });
+});
+
+app.post('/admin/manage_account',
+    body('uuid')
+        .isUUID()
+        .custom(async (value, { req }) => {
+            const targetUser = await User.findOne({
+                uuid: value,
+                type: UserTypes.Account
+            });
+            if(!targetUser) throw new Error('account_not_found');
+            if(targetUser.permissions.includes('developer')
+                && !req.permissions.includes('developer'))
+                throw new Error('invalid_permission');
+
+            req.body.targetUser = targetUser;
+        }),
+    body('name')
+        .if((value, { req }) => value !== req.body.targetUser.name)
+        .custom(async (value) => {
+            const existingUser = await User.exists({
+                name: {
+                    $regex: new RegExp(`^${value}$`, 'i')
+                }
+            });
+            if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
+        }),
+    body('email')
+        .if((value, { req }) => value !== req.body.targetUser.email)
+        .isEmail()
+        .normalizeEmail()
+        .custom(async (value) => {
+            const existingUser = await User.findOne({
+                email: value
+            });
+            if(existingUser) throw new Error(`이미 ${namumarkUtils.escapeHtml(existingUser.name)} 사용자가 사용중인 이메일입니다.`);
+        }),
+    middleware.fieldErrors,
+    middleware.permission('manage_account'), async (req, res) => {
+    const targetUser = req.body.targetUser;
+
+    if(req.body.name !== targetUser.name)
+        await changeNameAction(targetUser, req.body.name, req.user);
+
+    const newUser = {
+        email: req.body.email,
+        usePasswordlessLogin: req.body.usePasswordlessLogin === 'Y'
+    }
+
+    if(targetUser.totpToken && req.body.useTotp !== 'Y')
+        newUser.totpToken = null;
+
+    await User.updateOne({
+        uuid: targetUser.uuid
+    }, newUser);
+
+    res.reload();
+});
+
+app.post('/admin/manage_account/action',
+    body('uuid')
+        .isUUID(),
+    body('action')
+        .isString(),
+    middleware.permission('manage_account'), async (req, res) => {
+    const targetUser = await User.findOne({
+        uuid: req.body.uuid
+    });
+    if(!targetUser) return res.status(404).send('account_not_found');
+
+    switch(req.body.action) {
+        case 'resetLastNameChange': {
+            await User.updateOne({
+                uuid: targetUser.uuid
+            }, {
+                lastNameChange: 0
+            });
+            break;
+        }
+        case 'resetLastActivity': {
+            await User.updateOne({
+                uuid: targetUser.uuid
+            }, {
+                lastActivity: 0
+            });
+            break;
+        }
+        case 'resetPasswordLink': {
+            const changePasswordToken = randomstring.generate({
+                charset: 'hex',
+                length: 64
+            });
+            await User.updateOne({
+                uuid: targetUser.uuid
+            }, {
+                changePasswordToken,
+                lastChangePassword: Date.now()
+            });
+            return res.redirect(`/member/recover_password/auth/${targetUser.name}/${changePasswordToken}`);
+        }
+        case 'deleteAccount': {
+            await withdrawAction(targetUser, req.user);
+            return res.reload();
+        }
+    }
+
+    res.status(204).end();
 });
 
 module.exports = app;

@@ -28,7 +28,8 @@ const TreePermissions = [
     'grant_hidelog',
     'login_history_hidelog',
     'batch_revert_hidelog',
-    'engine_developer'
+    'engine_developer',
+    'manage_account'
 ]
 
 module.exports = {
@@ -154,6 +155,10 @@ module.exports = {
         grant: [{
             l: '/admin/grant',
             t: '권한'
+        }],
+        manage_account: [{
+            l: '/admin/manage_account',
+            t: '계정 관리'
         }],
         login_history: [{
             l: '/admin/login_history',

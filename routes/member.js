@@ -1270,6 +1270,60 @@ app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
     });
 });
 
+const withdrawAction = async (user, actUser) => {
+    actUser ??= user;
+
+    await User.deleteOne({
+        uuid: user.uuid
+    });
+    await AutoLoginToken.deleteMany({
+        uuid: user.uuid
+    });
+
+    const userDocs = await Document.find({
+        namespace: '사용자',
+        $or: [
+            {
+                title: user.name
+            },
+            {
+                title: {
+                    $regex: new RegExp(`^${utils.escapeRegExp(user.name)}/`)
+                }
+            }
+        ]
+    });
+    for(let dbDocument of userDocs) {
+        let newDbDocument;
+        try {
+            newDbDocument = await Document.findOneAndUpdate({
+                uuid: dbDocument.uuid
+            }, {
+                namespace: '삭제된사용자',
+                title: dbDocument.title.replace(user.name, user.uuid)
+            }, {
+                new: true
+            });
+        } catch(e) {
+            continue;
+        }
+        await History.create({
+            user: actUser.uuid,
+            type: HistoryTypes.Move,
+            document: dbDocument.uuid,
+            moveOldDoc: `사용자:${dbDocument.title}`,
+            moveNewDoc: `삭제된사용자:${newDbDocument.title}`
+        });
+        await History.create({
+            user: actUser.uuid,
+            type: HistoryTypes.Delete,
+            document: dbDocument.uuid,
+            content: null
+        });
+    }
+}
+module.exports.withdrawAction = withdrawAction;
+
 app.post('/member/withdraw',
     middleware.isLogin,
     passwordChecker('password'),
@@ -1290,54 +1344,7 @@ app.post('/member/withdraw',
             expiresAt: blacklistDuration ? new Date(Date.now() + blacklistDuration) : null
         });
 
-    await User.deleteOne({
-        uuid: req.user.uuid
-    });
-    await AutoLoginToken.deleteMany({
-        uuid: req.user.uuid
-    });
-
-    const userDocs = await Document.find({
-        namespace: '사용자',
-        $or: [
-            {
-                title: req.user.name
-            },
-            {
-                title: {
-                    $regex: new RegExp(`^${utils.escapeRegExp(req.user.name)}/`)
-                }
-            }
-        ]
-    });
-    for(let dbDocument of userDocs) {
-        let newDbDocument;
-        try {
-            newDbDocument = await Document.findOneAndUpdate({
-                uuid: dbDocument.uuid
-            }, {
-                namespace: '삭제된사용자',
-                title: dbDocument.title.replace(req.user.name, req.user.uuid)
-            }, {
-                new: true
-            });
-        } catch(e) {
-            continue;
-        }
-        await History.create({
-            user: req.user.uuid,
-            type: HistoryTypes.Move,
-            document: dbDocument.uuid,
-            moveOldDoc: `사용자:${dbDocument.title}`,
-            moveNewDoc: `삭제된사용자:${newDbDocument.title}`
-        });
-        await History.create({
-            user: req.user.uuid,
-            type: HistoryTypes.Delete,
-            document: dbDocument.uuid,
-            content: null
-        });
-    }
+    await withdrawAction(req.user);
 
     delete req.session.loginUser;
     req.session.fullReload = true;
@@ -1357,6 +1364,48 @@ app.get('/member/change_name', middleware.isLogin, (req, res) => {
     });
 });
 
+const changeNameAction = async (user, name, actUser) => {
+    actUser ??= user;
+
+    await User.updateOne({
+        uuid: user.uuid
+    }, {
+        name,
+        lastNameChange: Date.now()
+    });
+
+    const userDocs = await Document.find({
+        namespace: '사용자',
+        $or: [
+            {
+                title: user.name
+            },
+            {
+                title: {
+                    $regex: new RegExp(`^${utils.escapeRegExp(user.name)}/`)
+                }
+            }
+        ]
+    });
+    for(let dbDocument of userDocs) {
+        const newDbDocument = await Document.findOneAndUpdate({
+            uuid: dbDocument.uuid
+        }, {
+            title: dbDocument.title.replace(`${user.name}`, `${name}`)
+        }, {
+            new: true
+        });
+        await History.create({
+            user: actUser.uuid,
+            type: HistoryTypes.Move,
+            document: dbDocument.uuid,
+            moveOldDoc: `사용자:${dbDocument.title}`,
+            moveNewDoc: `사용자:${newDbDocument.title}`
+        });
+    }
+}
+module.exports.changeNameAction = changeNameAction;
+
 app.post('/member/change_name',
     middleware.isLogin,
     passwordChecker('password'),
@@ -1366,42 +1415,7 @@ app.post('/member/change_name',
     if(Date.now() - req.user.lastNameChange < 1000 * 60 * 60 * 24 * 30)
         return res.status(403).send('최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.');
 
-    await User.updateOne({
-        uuid: req.user.uuid
-    }, {
-        name: req.body.name,
-        lastNameChange: Date.now()
-    });
-
-    const userDocs = await Document.find({
-        namespace: '사용자',
-        $or: [
-            {
-                title: req.user.name
-            },
-            {
-                title: {
-                    $regex: new RegExp(`^${utils.escapeRegExp(req.user.name)}/`)
-                }
-            }
-        ]
-    });
-    for(let dbDocument of userDocs) {
-        const newDbDocument = await Document.findOneAndUpdate({
-            uuid: dbDocument.uuid
-        }, {
-            title: dbDocument.title.replace(`${req.user.name}`, `${req.body.name}`)
-        }, {
-            new: true
-        });
-        await History.create({
-            user: req.user.uuid,
-            type: HistoryTypes.Move,
-            document: dbDocument.uuid,
-            moveOldDoc: `사용자:${dbDocument.title}`,
-            moveNewDoc: `사용자:${newDbDocument.title}`
-        });
-    }
+    await changeNameAction(req.user, req.body.name);
 
     res.redirect('/member/mypage');
 });
@@ -2005,4 +2019,4 @@ app.post('/member/remove_developer_perm', middleware.permission('engine_develope
     res.reload();
 });
 
-module.exports = app;
+module.exports.router = app;

@@ -692,6 +692,7 @@ app.use(async (req, res, next) => {
                 token: req.cookies.honoka
             });
             if(token) req.session.loginUser = token.uuid;
+            else res.clearCookie('honoka');
         }
 
         res.cookie('honoka', req.cookies.honoka, {
@@ -710,6 +711,9 @@ const getUserMiddleware = async (req, res, next) => {
         if(user) req.user = {
             ...user,
             avatar: utils.getGravatar(user.email)
+        }
+        else {
+            delete req.session.contributor;
         }
     }
     next();
