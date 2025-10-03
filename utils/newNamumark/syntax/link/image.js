@@ -140,7 +140,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 <img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
 ${disableImageLinkButton || (docDocument.namespace === namespace && docDocument.title === title) 
     ? '' 
-    : `<a class="wiki-image-info" href="${globalUtils.doc_action_link(document, 'w')}" rel="nofollow noopener"></a>`
+    : `<a class="wiki-image-info" href="${utils.escapeHtml(globalUtils.doc_action_link(document, 'w'))}" rel="nofollow noopener"></a>`
 }
 </span>
 </span>`.replaceAll('\n', '');
