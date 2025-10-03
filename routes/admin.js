@@ -1454,6 +1454,7 @@ app.get('/admin/audit_log', middleware.permission('config'), async (req, res) =>
         }
     }
     data.items = await utils.findUsers(req, data.items);
+    data.items = await utils.findUsers(req, data.items, 'targetUser');
     data.items = utils.withoutKeys(data.items, ['_id', '__v']);
 
     res.renderSkin('감사 로그', {
@@ -1514,6 +1515,17 @@ app.get('/admin/manage_account', middleware.permission('manage_account'), async 
         if(targetUser.permissions.includes('developer')
             && !req.permissions.includes('developer'))
             return res.status(403).send('invalid_permission');
+
+        const auditLogContent = {
+            user: req.user.uuid,
+            action: AuditLogTypes.ManageAccount,
+            targetUser: targetUser.uuid
+        }
+        const prevAuditLog = await AuditLog.exists({
+            ...auditLogContent,
+            _id: { $gt: mongoose.Types.ObjectId.createFromTime(Date.now() / 1000 - 60 * 10) }
+        });
+        if(!prevAuditLog) await AuditLog.create(auditLogContent);
     }
     else if(query) {
         const queryData = {
@@ -1602,20 +1614,34 @@ app.post('/admin/manage_account',
     middleware.permission('manage_account'), async (req, res) => {
     const targetUser = req.body.targetUser;
 
-    if(req.body.name !== targetUser.name)
-        await changeNameAction(targetUser, req.body.name, req.user);
+    const editedKeys = [];
 
-    const newUser = {
-        email: req.body.email,
-        usePasswordlessLogin: req.body.usePasswordlessLogin === 'Y'
+    if(req.body.name !== targetUser.name) {
+        editedKeys.push('name');
+        await changeNameAction(targetUser, req.body.name, req.user);
     }
 
+    const newUser = {};
+
+    if(req.body.email !== targetUser.email)
+        newUser.email = req.body.email;
+    if((req.body.usePasswordlessLogin === 'Y') !== targetUser.usePasswordlessLogin)
+        newUser.usePasswordlessLogin = req.body.usePasswordlessLogin === 'Y';
     if(targetUser.totpToken && req.body.useTotp !== 'Y')
         newUser.totpToken = null;
 
     await User.updateOne({
         uuid: targetUser.uuid
     }, newUser);
+
+    editedKeys.push(...Object.keys(newUser));
+
+    if(editedKeys.length) await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.ManageAccount,
+        targetUser: targetUser.uuid,
+        content: `edit:${editedKeys.join(', ')}`
+    });
 
     res.reload();
 });
@@ -1631,40 +1657,53 @@ app.post('/admin/manage_account/action',
     });
     if(!targetUser) return res.status(404).send('account_not_found');
 
-    switch(req.body.action) {
-        case 'resetLastNameChange': {
-            await User.updateOne({
-                uuid: targetUser.uuid
-            }, {
-                lastNameChange: 0
-            });
-            break;
+    let isInvalid = false;
+    try {
+        switch(req.body.action) {
+            case 'resetLastNameChange': {
+                await User.updateOne({
+                    uuid: targetUser.uuid
+                }, {
+                    lastNameChange: 0
+                });
+                break;
+            }
+            case 'resetLastActivity': {
+                await User.updateOne({
+                    uuid: targetUser.uuid
+                }, {
+                    lastActivity: 0
+                });
+                break;
+            }
+            case 'resetPasswordLink': {
+                const changePasswordToken = randomstring.generate({
+                    charset: 'hex',
+                    length: 64
+                });
+                await User.updateOne({
+                    uuid: targetUser.uuid
+                }, {
+                    changePasswordToken,
+                    lastChangePassword: Date.now()
+                });
+                return res.redirect(`/member/recover_password/auth/${targetUser.name}/${changePasswordToken}`);
+            }
+            case 'deleteAccount': {
+                await withdrawAction(targetUser, req.user);
+                return res.reload();
+            }
+            default:
+                isInvalid = true;
+                return res.status(400).send('invalid_action');
         }
-        case 'resetLastActivity': {
-            await User.updateOne({
-                uuid: targetUser.uuid
-            }, {
-                lastActivity: 0
-            });
-            break;
-        }
-        case 'resetPasswordLink': {
-            const changePasswordToken = randomstring.generate({
-                charset: 'hex',
-                length: 64
-            });
-            await User.updateOne({
-                uuid: targetUser.uuid
-            }, {
-                changePasswordToken,
-                lastChangePassword: Date.now()
-            });
-            return res.redirect(`/member/recover_password/auth/${targetUser.name}/${changePasswordToken}`);
-        }
-        case 'deleteAccount': {
-            await withdrawAction(targetUser, req.user);
-            return res.reload();
-        }
+    } finally {
+        if(!isInvalid) await AuditLog.create({
+            user: req.user.uuid,
+            action: AuditLogTypes.ManageAccount,
+            targetUser: targetUser.uuid,
+            content: `action:${req.body.action}`
+        });
     }
 
     res.status(204).end();

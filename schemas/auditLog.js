@@ -17,6 +17,9 @@ const newSchema = new Schema({
     target: {
         type: String
     },
+    targetUser: {
+        type: String
+    },
     content: {
         type: String
     }

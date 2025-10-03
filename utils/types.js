@@ -109,7 +109,8 @@ module.exports = {
         DeleteThread: 1,
         DevSupport: 2,
         ACLGroupCreate: 3,
-        ACLGroupDelete: 4
+        ACLGroupDelete: 4,
+        ManageAccount: 5
     },
     LoginHistoryTypes: {
         Login: 0,
