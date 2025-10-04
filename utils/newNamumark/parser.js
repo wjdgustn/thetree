@@ -1072,11 +1072,11 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('syntaxSyntax', () => {
             const tok = $.CONSUME(SyntaxSyntax);
-            const text = tok.image.slice(12, -3).trim();
+            const text = tok.image.slice(12, -3);
             const newLinePos = text.indexOf('\n');
 
             const lang = text.slice(0, newLinePos);
-            const content = text.slice(newLinePos + 1);
+            const content = text.slice(newLinePos + 1).trim();
 
             return {
                 type: 'syntaxSyntax',
