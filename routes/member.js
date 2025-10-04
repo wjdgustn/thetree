@@ -1039,6 +1039,11 @@ app.get('/contribution/:uuid/document',
         revs = utils.withoutKeys(revs.filter(a => a.document), ['_id']);
     }
 
+    for(let rev of revs) {
+        if(rev.troll || (rev.hideLog && !req.permissions.includes('hide_document_history_log')))
+            delete rev.log;
+    }
+
     res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
         viewName: 'contribution',
         contentName: 'userContribution/document',

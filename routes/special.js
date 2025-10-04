@@ -56,6 +56,11 @@ app.get('/RecentChanges', async (req, res) => {
     if(logTypeText === 'all'
         && (!req.permissions.includes('admin') || req.query.userDoc !== '1')) revs = revs.filter(a => !['사용자', '삭제된사용자'].includes(a.document.parsedName.namespace));
 
+    for(let rev of revs) {
+        if(rev.troll || (rev.hideLog && !req.permissions.includes('hide_document_history_log')))
+            delete rev.log;
+    }
+
     res.renderSkin('최근 변경내역', {
         contentName: 'special/recentChanges',
         serverData: {
