@@ -526,7 +526,8 @@ const topToHtml = module.exports = async parameter => {
 
 
         return {
-            html: result,
+            html: Store.error ? `<h2>${result}</h2>` : result,
+            errorMsg: result,
             errorCode: Store.errorCode,
             links: Store.links,
             files: Store.files,

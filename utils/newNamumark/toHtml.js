@@ -58,8 +58,11 @@ module.exports = async (...params) => {
     } catch (e) {
         const isTimeout = e.name === 'AbortError';
         if(!isTimeout) console.error(e);
+
+        const errorMsg = isTimeout ? MAXIMUM_TIME_HTML : ERROR_HTML;
         return {
-            html: isTimeout ? MAXIMUM_TIME_HTML : ERROR_HTML,
+            html: `<h2>${errorMsg}</h2>`,
+            errorMsg,
             errorCode: isTimeout ? 'render_timeout' : 'render_failed',
             links: [],
             files: [],

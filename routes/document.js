@@ -223,7 +223,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         if(req.query.np === 'cst') return res.json(parseResult.result);
     }
     if(!debug) console.time(`toHtml ${document.title}`);
-    let { html: contentHtml, errorCode, categories, hasError, headings, embed } = await toHtml(parseResult, {
+    let { html: contentHtml, errorMsg, errorCode, categories, hasError, headings, embed } = await toHtml(parseResult, {
         document,
         dbDocument,
         rev,
@@ -238,7 +238,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: null,
         error: {
             code: errorCode,
-            msg: contentHtml
+            msg: errorMsg
         },
         contentHtml: `<h2>${contentHtml}</h2>`
     });
