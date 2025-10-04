@@ -4,8 +4,8 @@ const { models } = require('mongoose');
 const ACL = require('../../class/acl');
 
 const MAXIMUM_TIME = 10000;
-const ERROR_HTML = '<h2>문서 렌더링이 실패했습니다.</h2>';
-const MAXIMUM_TIME_HTML = '<h2>문서 렌더링이 너무 오래 걸립니다.</h2>';
+const ERROR_HTML = '문서 렌더링이 실패했습니다.';
+const MAXIMUM_TIME_HTML = '문서 렌더링이 너무 오래 걸립니다.';
 
 const worker = new Piscina({
     filename: require.resolve('./toHtmlWorker'),
@@ -60,6 +60,7 @@ module.exports = async (...params) => {
         if(!isTimeout) console.error(e);
         return {
             html: isTimeout ? MAXIMUM_TIME_HTML : ERROR_HTML,
+            errorCode: isTimeout ? 'render_timeout' : 'render_failed',
             links: [],
             files: [],
             categories: [],

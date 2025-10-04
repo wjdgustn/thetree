@@ -13,7 +13,7 @@ const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
 const MAXIMUM_LENGTH = 1000000;
-const MAXIMUM_LENGTH_HTML = '<h2>문서 길이가 너무 깁니다.</h2>';
+const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
 const parentResponsePromise = {};
 const topToHtml = module.exports = async parameter => {
@@ -50,6 +50,7 @@ const topToHtml = module.exports = async parameter => {
             html: ''
         },
         error: null,
+        errorCode: null,
         voteIndex: -1,
         macro: {
             counts: {}
@@ -498,6 +499,7 @@ const topToHtml = module.exports = async parameter => {
 
         if(result.length > config.document_maximum_length ?? MAXIMUM_LENGTH) {
             Store.error = MAXIMUM_LENGTH_HTML;
+            Store.errorCode = 'too_large_document';
             break;
         }
     }
@@ -525,6 +527,7 @@ const topToHtml = module.exports = async parameter => {
 
         return {
             html: result,
+            errorCode: Store.errorCode,
             links: Store.links,
             files: Store.files,
             categories: Store.categories,

@@ -88,7 +88,8 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         uuid: isOldVer ? rev.uuid : null,
         star_count: undefined,
         starred: null,
-        user: null
+        user: null,
+        error: null
     };
 
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
@@ -102,23 +103,41 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
             date: null,
             rev: null,
             uuid: null,
+            error: {
+                code: 'permission_read',
+                msg: read_acl_message
+            },
             contentHtml: `<h2>${read_acl_message}</h2>`
         });
     }
 
-    if(req.query.uuid && !rev) return res.renderSkin(undefined, {
-        ...defaultData,
-        date: null,
-        contentHtml: '<h2>해당 리비전이 존재하지 않습니다.</h2>'
-    });
+    if(req.query.uuid && !rev) {
+        const msg = '해당 리비전이 존재하지 않습니다.';
+        return res.renderSkin(undefined, {
+            ...defaultData,
+            date: null,
+            error: {
+                code: 'invalid_rev',
+                msg
+            },
+            contentHtml: `<h2>${msg}</h2>`
+        });
+    }
 
-    if(isOldVer && (rev.hidden || rev.troll)) return res.renderSkin(undefined, {
-        ...defaultData,
-        date: null,
-        rev: null,
-        uuid: null,
-        contentHtml: `<h2>${rev.hidden ? '숨겨진 리비전입니다.' : '이 리비전은 반달로 표시 되었습니다.'}</h2>`
-    });
+    if(isOldVer && (rev.hidden || rev.troll)) {
+        const msg = rev.hidden ? '숨겨진 리비전입니다.' : '이 리비전은 반달로 표시 되었습니다.';
+        return res.renderSkin(undefined, {
+            ...defaultData,
+            date: null,
+            rev: null,
+            uuid: null,
+            error: {
+                code: rev.hidden ? 'secret_rev' : 'marked_troll_rev',
+                msg
+            },
+            contentHtml: `<h2>${msg}</h2>`
+        });
+    }
 
     const { result: editable, aclMessage: edit_acl_message } = await acl.check(ACLTypes.Edit, req.aclData);
     const { result: editRequestable } = await acl.check(ACLTypes.EditRequest, req.aclData);
@@ -204,7 +223,7 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         if(req.query.np === 'cst') return res.json(parseResult.result);
     }
     if(!debug) console.time(`toHtml ${document.title}`);
-    let { html: contentHtml, categories, hasError, headings, embed } = await toHtml(parseResult, {
+    let { html: contentHtml, errorCode, categories, hasError, headings, embed } = await toHtml(parseResult, {
         document,
         dbDocument,
         rev,
@@ -217,7 +236,11 @@ app.get('/w/?*', middleware.parseDocumentName, async (req, res) => {
         date: null,
         rev: null,
         uuid: null,
-        contentHtml
+        error: {
+            code: errorCode,
+            msg: contentHtml
+        },
+        contentHtml: `<h2>${contentHtml}</h2>`
     });
     let categoryHtml;
     if(!req.backendMode) try {
