@@ -1523,6 +1523,9 @@ app.get('/admin/audit_log/:id/diff', middleware.permission('config'), async (req
     if(!log) return res.status(404).send('로그를 찾을 수 없습니다.');
     if(!log.diffOld || !log.diffNew) return res.status(400).send('비교할 내용이 없습니다.');
 
+    if(log.devOnly && !req.permissions.includes('developer'))
+        return res.status(403).send('invalid_permission');
+
     return res.json(utils.onlyKeys(await utils.generateDiff(log.diffOld, log.diffNew), ['diffHtml']));
 });
 
