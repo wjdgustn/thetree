@@ -951,13 +951,13 @@ app.post('/vote/:commentId/:voteIndex', async (req, res) => {
     const comment = await ThreadComment.findOne({
         uuid: req.params.commentId
     });
-    if(!comment) return res.error('댓글이 존재하지 않습니다.', 404);
+    if(!comment) return res.status(404).send('댓글이 존재하지 않습니다.');
 
     const thread = await Thread.findOne({
         uuid: comment.thread,
         deleted: false
     });
-    if(!thread) return res.error('댓글이 존재하지 않습니다.', 404);
+    if(!thread) return res.status(404).send('댓글이 존재하지 않습니다.');
 
     if(thread.status !== ThreadStatusTypes.Normal) return res.status(403).send('thread_invalid_status');
 
