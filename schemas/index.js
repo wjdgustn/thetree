@@ -8,6 +8,7 @@ module.exports = () => {
                 dbName: process.env.MONGODB_DATABASE
             });
 
+            global.scheduleMigration?.();
             console.log('MongoDB connected.');
         } catch(e) {
             console.error(e);

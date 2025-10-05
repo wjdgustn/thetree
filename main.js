@@ -216,17 +216,22 @@ if(!fs.existsSync('./cache/lastMigrationTime.json')) {
     }));
 }
 
-setTimeout(() => {
-    const lastMigrationTime = JSON.parse(fs.readFileSync('./cache/lastMigrationTime.json').toString()).timestamp;
-    for(let code of migrateCodes.filter(a => a.timestamp > lastMigrationTime)) {
-        (async () => {
-            await code.code();
-        })()
-    }
-    fs.writeFileSync('./cache/lastMigrationTime.json', JSON.stringify({
-        timestamp: Date.now()
-    }));
-}, 1000 * 10);
+let didMigrate = false;
+global.scheduleMigration = () => {
+    if(didMigrate) return;
+
+    setTimeout(() => {
+        const lastMigrationTime = JSON.parse(fs.readFileSync('./cache/lastMigrationTime.json').toString()).timestamp;
+        for(let code of migrateCodes.filter(a => a.timestamp > lastMigrationTime)) {
+            (async () => {
+                await code.code();
+            })()
+        }
+        fs.writeFileSync('./cache/lastMigrationTime.json', JSON.stringify({
+            timestamp: Date.now()
+        }));
+    }, 0);
+}
 
 global.checkUpdate = async (manually = false) => {
     try {
