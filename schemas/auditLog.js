@@ -22,6 +22,17 @@ const newSchema = new Schema({
     },
     content: {
         type: String
+    },
+    diffOld: {
+        type: String
+    },
+    diffNew: {
+        type: String
+    },
+    devOnly: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 

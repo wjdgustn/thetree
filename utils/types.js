@@ -110,7 +110,8 @@ module.exports = {
         DevSupport: 2,
         ACLGroupCreate: 3,
         ACLGroupDelete: 4,
-        ManageAccount: 5
+        ManageAccount: 5,
+        ModifyConfig: 6
     },
     LoginHistoryTypes: {
         Login: 0,

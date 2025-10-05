@@ -199,8 +199,21 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     else if(tool === 'removestringconfig') {
         const newStringConfig = { ...global.stringConfig };
         delete newStringConfig[req.query.key];
-        await fs.writeFile(configPath('stringConfig.json'), JSON.stringify(newStringConfig, null, 2));
+
+        const filePath = configPath('stringConfig.json');
+        const oldContent = (await fs.readFile(filePath)).toString();
+        const newContent = JSON.stringify(newStringConfig, null, 2);
+
+        await fs.writeFile(filePath, newContent);
         updateConfig();
+
+        await AuditLog.create({
+            user: req.user.uuid,
+            action: AuditLogTypes.ModifyConfig,
+            target: 'stringConfig.json',
+            diffOld: oldContent,
+            diffNew: newContent
+        });
 
         return res.reload();
     }
@@ -620,11 +633,12 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
     if(!availableConfigs.includes(config)) return res.status(400).send('Invalid config file');
 
     const filePath = process.env.IS_DOCKER ? `./config/${config}` : `./${config}`;
+    const oldContent = (await fs.readFile(filePath)).toString();
 
     let parsedJson;
     let content = req.body.content;
     if(req.body.key && req.body.value) {
-        content = (await fs.readFile(filePath)).toString()
+        content = oldContent;
         const edits = modify(content, req.body.key.split('.'), req.body.value, {});
         content = applyEdits(content, edits);
     }
@@ -641,6 +655,16 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
 
     await fs.writeFile(filePath, content);
     updateConfig();
+
+    await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.ModifyConfig,
+        target: config,
+        diffOld: oldContent,
+        diffNew: content,
+        devOnly: config === 'devConfig.json'
+    });
+
     return res.status(204).end();
 });
 
@@ -655,8 +679,22 @@ app.post('/admin/config/stringconfig', middleware.permission('config'), async (r
 
     const newObj = { ...global.stringConfig };
     newObj[req.body.key] = req.body.value;
-    await fs.writeFile(process.env.IS_DOCKER ? `./config/stringConfig.json` : `./stringConfig.json`, JSON.stringify(newObj, null, 2));
+
+    const filePath = process.env.IS_DOCKER ? `./config/stringConfig.json` : `./stringConfig.json`;
+    const oldContent = (await fs.readFile(filePath)).toString();
+    const newContent = JSON.stringify(newObj, null, 2);
+
+    await fs.writeFile(filePath, newContent);
     updateConfig();
+
+    await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.ModifyConfig,
+        target: 'stringConfig.json',
+        diffOld: oldContent,
+        diffNew: newContent
+    });
+
     return res.status(204).end();
 });
 
@@ -1406,6 +1444,9 @@ app.get('/admin/audit_log', middleware.permission('config'), async (req, res) =>
     const baseQuery = {
         ...(isNaN(typeNum) ? {} : {
             action: typeNum
+        }),
+        ...(req.permissions.includes('developer') ? {} : {
+            devOnly: { $ne: true }
         })
     }
 
@@ -1455,12 +1496,34 @@ app.get('/admin/audit_log', middleware.permission('config'), async (req, res) =>
     }
     data.items = await utils.findUsers(req, data.items);
     data.items = await utils.findUsers(req, data.items, 'targetUser');
-    data.items = utils.withoutKeys(data.items, ['_id', '__v']);
+    data.items = utils.withoutKeys(data.items, ['__v']);
+
+    for(let item of data.items) {
+        if(item.diffOld && item.diffNew)
+            item.hasDiff = true;
+        else
+            delete item._id;
+        delete item.diffOld;
+        delete item.diffNew;
+    }
 
     res.renderSkin('감사 로그', {
         contentName: 'admin/auditLog',
         serverData: data
     });
+});
+
+app.get('/admin/audit_log/:id/diff', middleware.permission('config'), async (req, res) => {
+    const log = await AuditLog.findOne({
+        ...(req.permissions.includes('developer') ? {} : {
+            devOnly: { $ne: true }
+        }),
+        _id: req.params.id
+    });
+    if(!log) return res.status(404).send('로그를 찾을 수 없습니다.');
+    if(!log.diffOld || !log.diffNew) return res.status(400).send('비교할 내용이 없습니다.');
+
+    return res.json(utils.onlyKeys(await utils.generateDiff(log.diffOld, log.diffNew), ['diffHtml']));
 });
 
 app.get('/admin/initial_setup', middleware.permission('developer'), async (req, res) => {
