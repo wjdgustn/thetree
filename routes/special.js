@@ -42,7 +42,8 @@ app.get('/RecentChanges', async (req, res) => {
 
     let revs = await History.find({
         ...(logType != null ? { type: logType } : {}),
-        troll: false
+        troll: false,
+        api: false
     })
         .sort({ _id: -1 })
         .limit(100)
