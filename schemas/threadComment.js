@@ -3,9 +3,14 @@ const crypto = require('crypto');
 
 const parser = require('../utils/newNamumark/parser');
 
+const utils = require('../utils');
 const docUtils = require('../utils/docUtils');
 const globalUtils = require('../utils/global');
-const { ThreadCommentTypes, NotificationTypes } = require('../utils/types');
+const {
+    ThreadCommentTypes,
+    NotificationTypes,
+    ACLTypes
+} = require('../utils/types');
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
@@ -106,14 +111,20 @@ newSchema.post('save', async function() {
     });
     if(!dbDocument) return;
 
+    const document = utils.dbDocumentToDocument(dbDocument);
+
     const { data: { links } } = parser(this.content);
-    const mentions = links.filter(a => a.startsWith('사용자:')).map(a => a.slice(4));
-    const users = await mongoose.models.User.find({
+    const mentions = links.filter(a => a.startsWith('사용자:')).map(a => a.slice(4)).slice(0, 10);
+    let users = await mongoose.models.User.find({
         name: {
             $in: mentions
         }
     });
-    await Promise.all(users.filter(a => a).map(a => mongoose.models.Notification.create({
+    users = users.filter(a => a);
+    const aclDatas = await Promise.all(users.map(a => utils.getACLData(a)));
+    const acls = await Promise.all(users.map(a => global.ACLClass.get({ thread }, document)));
+    const aclResults = await Promise.all(acls.map((a, i) => a.check(ACLTypes.Read, aclDatas[i])));
+    await Promise.all(users.filter((a, i) => aclResults[i].result).map(a => mongoose.models.Notification.create({
         type: NotificationTypes.Mention,
         user: a.uuid,
         data: this.uuid,

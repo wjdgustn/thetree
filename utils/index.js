@@ -420,43 +420,55 @@ module.exports = {
             .flat())];
     },
     async makeACLData(req) {
-        req.permissions = [...(req.user?.permissions ?? [])];
+        await this.getACLData(req.user, req);
+    },
+    async getACLData(user, req) {
+        let permissions = [...(user?.permissions ?? [])];
 
-        req.permissions.unshift('any');
+        permissions.unshift('any');
 
-        if(req.user?.type === UserTypes.Account) {
-            // req.permissions.unshift('member');
-            if(req.user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
-                req.permissions.push('member_signup_15days_ago');
+        if(user?.type === UserTypes.Account) {
+            // permissions.unshift('member');
+            if(user.createdAt < Date.now() - 1000 * 60 * 60 * 24 * 15)
+                permissions.push('member_signup_15days_ago');
 
-            req.permissions.push(...await this.getACLGroupPermissions(req.user));
+            permissions.push(...await this.getACLGroupPermissions(user));
         }
 
-        if(!req.permissions.includes('member')) req.permissions.unshift('ip');
+        if(!permissions.includes('member')) permissions.unshift('ip');
 
-        if(req.useragent?.isBot) req.permissions.push('bot');
+        if(req?.useragent?.isBot) permissions.push('bot');
 
-        if(req.session.contributor) req.permissions.push('contributor');
-        else if(req.user) {
+        if(req?.session.contributor) permissions.push('contributor');
+        else if(user) {
             const contribution = await models.History.exists({
-                user: req.user.uuid
+                user: user.uuid
             });
             if(contribution) {
-                req.permissions.push('contributor');
-                req.session.contributor = true;
-                req.session.save();
+                permissions.push('contributor');
+                if(req) {
+                    req.session.contributor = true;
+                    req.session.save();
+                }
             }
         }
 
-        req.permissions = [...new Set(req.permissions)];
-        // if(req.user) req.user.permissions = req.permissions;
-        req.displayPermissions = AllPermissions.filter(a => req.permissions.includes(a));
-
-        req.aclData = {
-            permissions: [...req.permissions],
-            user: req.user,
-            ip: req.ip
+        permissions = [...new Set(permissions)];
+        if(req) {
+            req.permissions = [...permissions];
+            // if(req.user) req.user.permissions = req.permissions;
+            req.displayPermissions = AllPermissions.filter(a => req.permissions.includes(a));
         }
+
+        const result = {
+            permissions: [...permissions],
+            user,
+            ip: req?.ip
+        }
+
+        if(req) req.aclData = result;
+
+        return result;
     },
     async findThreads(arr) {
         const cache = {};
