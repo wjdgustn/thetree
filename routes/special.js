@@ -521,7 +521,8 @@ app.get('/BlockHistory', async (req, res) => {
                 { targetUsername: exactRegex },
                 { targetContent: regex },
                 { content: regex },
-                { aclGroupName: regex }
+                { aclGroupName: regex },
+                { aclGroupId: exactRegex }
             ]
         }
     }
