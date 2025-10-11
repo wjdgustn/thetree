@@ -487,7 +487,7 @@ const topToHtml = module.exports = async parameter => {
                 });
                 break;
             case 'macro':
-                obj.params = utils.parseIncludeParams(obj.params, Store.isolateContext);
+                obj.params = await utils.parseIncludeParams(obj.params, Store.isolateContext);
                 result += await macro(obj, {
                     thread,
                     dbComment,
