@@ -48,7 +48,10 @@ the seed를 모방했으나 the seed를 완전히 동일하게 구현하는 것�
    <br>아래는 추천하는 스킨 목록입니다.
    - [liberty](https://github.com/wjdgustn/thetree-skin-liberty)
    - [buma](https://github.com/wjdgustn/thetree-skin-buma)
-1. [pm2](https://www.npmjs.com/package/pm2) 등의 자동 재시작 기능이 있는 프로세스 매니저를 사용해 main.js 파일을 구동합니다.
+1. [pm2](https://www.npmjs.com/package/pm2) 등의 자동 재시작 기능이 있는 프로세스 매니저를 사용해 main.js 파일을 구동합니다. Node.js에 --no-node-snapshot 인자를 전달해야 합니다. 아래는 pm2 예제입니다.
+   ```shell
+    pm2 start --name thetree --node-args="--no-node-snapshot" main.js
+   ```
 1. 첫 가입자에게 자동으로 소유자 권한이 부여되며, 첫 가입 시 초기 설정 페이지로 이동됩니다.
    탭을 닫은 경우 /admin/initial_setup 페이지에 직접 접속하세요.
 
