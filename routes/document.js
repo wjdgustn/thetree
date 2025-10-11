@@ -898,6 +898,29 @@ const editAndEditRequest = async (req, res) => {
         contentHtml = html;
     }
 
+    let dochelptext;
+    if(config.edit_help_document) {
+        const helpDocName = utils.parseDocumentName(config.edit_help_document);
+        const helpDoc = await Document.findOne({
+            namespace: helpDocName.namespace,
+            title: helpDocName.title
+        });
+        if(helpDoc?.contentExists) {
+            const helpRev = await History.findOne({
+                document: helpDoc.uuid
+            }).sort({ rev: -1 });
+            if(helpRev?.content) {
+                const parseResult = parser(helpRev.content);
+                const { html } = await toHtml(parseResult, {
+                    document: helpDocName,
+                    aclData: req.aclData,
+                    req
+                });
+                dochelptext = html;
+            }
+        }
+    }
+
     res.renderSkin(undefined, {
         viewName: isEditRequest ? (editingEditRequest ? 'edit_edit_request' : 'edit_request') : 'edit',
         contentName: 'document/edit',
@@ -917,6 +940,7 @@ const editAndEditRequest = async (req, res) => {
                 force: !docExists
             },
             editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text,
+            dochelptext,
             conflict: req.flash.conflict,
             editagreeAgreed: req.session.editagreeAgreed,
             log: req.editRequest?.log

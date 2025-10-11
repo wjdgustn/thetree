@@ -277,12 +277,27 @@ app.get('/Upload', async (req, res) => {
         categories
     } = await getImageDropdowns();
 
+    let file_upload_template = config.file_upload_template ?? '';
+    if(!file_upload_template && config.upload_help_document) {
+        const helpDocName = utils.parseDocumentName(config.upload_help_document);
+        const helpDoc = await Document.findOne({
+            namespace: helpDocName.namespace,
+            title: helpDocName.title
+        });
+        if(helpDoc?.contentExists) {
+            const helpRev = await History.findOne({
+                document: helpDoc.uuid
+            }).sort({ rev: -1 });
+            if(helpRev?.content) file_upload_template = helpRev.content;
+        }
+    }
+
     res.renderSkin('파일 올리기', {
         contentName: 'special/upload',
         serverData: {
             licenses,
             categories,
-            file_upload_template: config.file_upload_template ?? '',
+            file_upload_template,
             editagree_text: config[`namespace.파일.editagree_text`] || config.editagree_text
         }
     });

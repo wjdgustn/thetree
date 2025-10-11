@@ -54,6 +54,7 @@ app.get('/member/signup', middleware.isLogout, middleware.checkCaptcha(true), (r
         contentName: 'member/signup',
         serverData: {
             terms: config.terms,
+            agreeText: config.terms_agree_text || '동의합니다.',
             emailWhitelist: config.email_whitelist
         }
     });
