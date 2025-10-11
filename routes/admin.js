@@ -182,7 +182,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
     else if(tool === 'fixstringconfig') {
         const newStringConfig = {};
-        const exampleStringConfig = JSON.parse(await fs.readFile('./stringConfig.example.json').toString());
+        const exampleStringConfig = JSON.parse((await fs.readFile('./stringConfig.example.json')).toString());
         for(let [key, defaultValue] of Object.entries(exampleStringConfig)) {
             newStringConfig[key] = config[key] || defaultValue;
         }
