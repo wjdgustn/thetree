@@ -45,3 +45,4 @@ tempObj.defineProperty(tempProtos.Array, 'includes', {
 });
 tempObj = undefined;
 tempProtos = undefined;
+globalThis = undefined;
