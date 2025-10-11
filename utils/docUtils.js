@@ -164,7 +164,7 @@ module.exports = {
 
         if(search) {
             let anyoneReadable = contentExists;
-            if(anyoneReadable && !['문서', '틀', '분류', '파일', '사용자'].includes(dbDocument.namespace)) {
+            if(anyoneReadable && !['문서', '틀', '분류', '파일'].includes(dbDocument.namespace)) {
                 const acl = await ACL.get({ document: dbDocument });
                 const { result: readable } = await acl.check(ACLTypes.Read, {
                     permissions: ['any']
