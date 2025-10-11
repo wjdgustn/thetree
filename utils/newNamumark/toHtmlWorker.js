@@ -1,5 +1,7 @@
 const { highlight } = require('highlight.js');
 const crypto = require('crypto');
+const ivm = require('isolated-vm');
+const fs = require('fs');
 
 const utils = require('./utils');
 const mainUtils = require('../');
@@ -12,8 +14,11 @@ const link = require('./syntax/link');
 const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
+
 const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
+
+const jsGlobalRemover = fs.readFileSync('./utils/newNamumark/utils/jsGlobalRemover.js', 'utf8');
 
 const parentResponsePromise = {};
 const topToHtml = module.exports = async parameter => {
@@ -59,6 +64,7 @@ const topToHtml = module.exports = async parameter => {
             text: null,
             image: null
         },
+        isolateContext: await new ivm.Isolate({ memoryLimit: 8 }).createContext(),
         ...(options.StorePatch ?? {})
     }
 
@@ -99,6 +105,12 @@ const topToHtml = module.exports = async parameter => {
     //     return lines.join('<br>');
     // }
 
+    if(isTop) {
+        await Store.isolateContext.eval(jsGlobalRemover);
+        if(includeData)
+            await Promise.all(Object.entries(includeData).map(([key, value]) => Store.isolateContext.global.set(key, value)));
+    }
+
     const commentPrefix = commentId ? `tc${commentId}-` : '';
 
     if(parsed.data && !options.skipInit) {
@@ -116,7 +128,7 @@ const topToHtml = module.exports = async parameter => {
             doc.params.push(...params);
         }
 
-        const parsedDocAdder = (result, parsedDocs = [], includeParams = []) => {
+        const parsedDocAdder = async (result, parsedDocs = [], includeParams = []) => {
             const links = [...new Set([
                 ...result.data.links,
                 ...result.data.categories.map(a => '분류:' + a.document),
@@ -127,7 +139,7 @@ const topToHtml = module.exports = async parameter => {
             if(includeParams.length) {
                 for(let link of paramLinks) {
                     for(let params of includeParams) {
-                        const newLink = utils.parseIncludeParams(link, params);
+                        const newLink = await utils.parseIncludeParams(link, null, params);
                         if(!links.includes(newLink))
                             links.push(newLink);
                     }
@@ -135,7 +147,7 @@ const topToHtml = module.exports = async parameter => {
             }
             else {
                 for(let link of paramLinks) {
-                    const newLink = utils.parseIncludeParams(link);
+                    const newLink = await utils.parseIncludeParams(link);
                     if(!links.includes(newLink))
                         links.push(newLink);
                 }
@@ -256,7 +268,7 @@ const topToHtml = module.exports = async parameter => {
             }
         }
 
-        const topDocs = parsedDocAdder(parsed);
+        const topDocs = await parsedDocAdder(parsed);
         await parsedDocFinder(topDocs);
 
         const includeDocs = [];
@@ -267,7 +279,7 @@ const topToHtml = module.exports = async parameter => {
                 const params = includeParams
                     .find(a => a.namespace === docName.namespace && a.title === docName.title)?.params ?? [];
                 doc.parseResult = parser(doc.rev.content);
-                parsedDocAdder(doc.parseResult, includeDocs, params);
+                await parsedDocAdder(doc.parseResult, includeDocs, params);
             }
         }
         await parsedDocFinder(includeDocs);
@@ -375,7 +387,7 @@ const topToHtml = module.exports = async parameter => {
             }
 
             case 'wikiSyntax':
-                let wikiParamsStr = utils.parseIncludeParams(obj.wikiParamsStr, includeData);
+                let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.isolateContext);
 
                 const styleCloseStr = '"';
 
@@ -405,18 +417,24 @@ const topToHtml = module.exports = async parameter => {
                 result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
                 break;
             case 'htmlSyntax':
-                result += utils.sanitizeHtml(utils.parseIncludeParams(obj.text, includeData));
+                result += utils.sanitizeHtml(await utils.parseIncludeParams(obj.text, Store.isolateContext));
                 break;
             case 'folding':
                 result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(obj.content)}</dd></dl>`;
                 break;
             case 'ifSyntax':
-                const { bool } = utils.parseExpression(obj.expression, includeData ?? {});
-                if(bool) result += await toHtml(obj.content);
+                if(!utils.checkJavascriptValid(obj.expression)) break;
+                let evalResult;
+                try {
+                    evalResult = await Store.isolateContext.eval(obj.expression, {
+                        timeout: 100
+                    });
+                } catch(e) {}
+                if(evalResult) result += await toHtml(obj.content);
                 break;
 
             case 'text':
-                result += utils.escapeHtml(utils.parseIncludeParams(obj.text, includeData)).replaceAll('\n', '<br>');
+                result += utils.escapeHtml(await utils.parseIncludeParams(obj.text, Store.isolateContext)).replaceAll('\n', '<br>');
                 break;
             case 'bold':
                 result += `<strong>${await toHtml(obj.content)}</strong>`;
@@ -469,7 +487,7 @@ const topToHtml = module.exports = async parameter => {
                 });
                 break;
             case 'macro':
-                obj.params = utils.parseIncludeParams(obj.params, includeData);
+                obj.params = utils.parseIncludeParams(obj.params, Store.isolateContext);
                 result += await macro(obj, {
                     thread,
                     dbComment,

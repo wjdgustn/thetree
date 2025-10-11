@@ -3,11 +3,12 @@ const {
     validateHTMLColorName
 } = require('validate-color');
 const katex = require('katex');
-const jsep = require('jsep');
 const CSSFilter = require('cssfilter');
 const sanitizeHtml = require('sanitize-html');
 const fs = require('fs');
 const path = require('path');
+const babelParser = require('@babel/parser');
+const traverse = require('@babel/traverse').default;
 
 const allowedNames = require('./allowedNames.json');
 
@@ -94,6 +95,15 @@ function parsedToTextObj(content) {
     return result;
 }
 
+const jsBlacklistedTypes = [
+    'FunctionDeclaration',
+    'FunctionExpression',
+    'ArrowFunctionExpression',
+    'ObjectMethod',
+    'ClassDeclaration',
+    'WhileStatement'
+]
+
 module.exports = {
     escapeHtml: text => (text?.toString() ?? '')
         .replaceAll('&', "&amp;")
@@ -131,10 +141,8 @@ module.exports = {
     validateHTMLColorName(color) {
         return color === 'transparent' || validateHTMLColorName(color);
     },
-    parseIncludeParams(text, includeData = {}) {
+    async parseIncludeParams(text, isolateContext, includeData) {
         if(!text) return text;
-
-        includeData ??= {};
 
         let newText = '';
         let textPos = 0;
@@ -157,7 +165,13 @@ module.exports = {
                 continue;
             }
 
-            const finalText = includeData[key] ?? value;
+            let contextValue;
+            if(includeData)
+                contextValue = includeData[key];
+            else if(isolateContext)
+                contextValue = await isolateContext.global.get(key);
+
+            const finalText = contextValue ?? value;
             newText += finalText;
         }
 
@@ -168,103 +182,6 @@ module.exports = {
     katex: text => katex.renderToString(text, {
         throwOnError: false
     }),
-    parseExpression: (expression, data = {}) => {
-        let parsed;
-        try {
-            parsed = jsep(expression);
-        } catch (e) {}
-
-        const bool = value => !!value || Number.isNaN(value);
-
-        const parseNode = node => {
-            switch(node.type) {
-                case 'Literal':
-                    return node.value;
-                case 'Identifier':
-                    switch(node.name) {
-                        case 'NaN':
-                            return NaN;
-                        default:
-                            return data[node.name] ?? null;
-                    }
-                case 'BinaryExpression':
-                case 'UnaryExpression': {
-                    let left;
-                    let right;
-                    if(node.type === 'BinaryExpression') {
-                        left = parseNode(node.left);
-                        right = parseNode(node.right);
-                    }
-                    else {
-                        left = 0;
-                        right = parseNode(node.argument);
-                    }
-
-                    const bothNum = !isNaN(left) && !isNaN(right);
-                    const bothInt = bothNum && !node.left?.raw?.includes('.') && !node.right?.raw?.includes('.');
-
-                    switch(node.operator) {
-                        case '==':
-                            return left === right;
-                        case '!=':
-                            return left !== right;
-                        case '>':
-                            return left > right;
-                        case '>=':
-                            return left >= right;
-                        case '<':
-                            return left < right;
-                        case '<=':
-                            return left <= right;
-
-                        case '&&':
-                            return left && right;
-                        case '||':
-                            return left || right;
-                        case '!':
-                            return !right;
-
-                        case '+':
-                            return Number(left) + Number(right);
-                        case '-':
-                            return left - right;
-                        case '*':
-                            return left * right;
-                        case '/':
-                            if(bothInt)
-                                return Math.trunc(left / right);
-                            else
-                                return left / right;
-                        case '%':
-                            return left % right;
-                        case '**':
-                            return left ** right;
-
-                        case '~':
-                            return ~right;
-                        case '<<':
-                            return left << right;
-                        case '>>':
-                            return left >> right;
-                        case '&':
-                            if(bothNum) return left & right;
-                            return bool(left) && bool(right);
-                        case '|':
-                            if(bothNum) return left | right;
-                            return bool(left) || bool(right);
-                        case '^':
-                            return left ^ right;
-                    }
-                }
-            }
-        }
-
-        const result = parsed ? parseNode(parsed) : null;
-        return {
-            result,
-            bool: bool(result)
-        }
-    },
     cssFilter: css => filter.process(css),
     parsedToText(content, putSpace = false) {
         const obj = parsedToTextObj(content);
@@ -344,5 +261,25 @@ module.exports = {
             macros,
             threadMacros
         }
+    },
+    checkJavascriptValid(code) {
+        let ast;
+        try {
+            ast = babelParser.parse(code);
+        } catch(e) {
+            return false;
+        }
+
+        let isValid = true;
+        traverse(ast, {
+            enter(path) {
+                // console.log(path.node.type);
+                if(jsBlacklistedTypes.includes(path.node.type)) {
+                    isValid = false;
+                    path.stop();
+                }
+            }
+        });
+        return isValid;
     }
 }

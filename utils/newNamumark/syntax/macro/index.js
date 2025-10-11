@@ -7,8 +7,6 @@ let { macros, threadMacros } = utils.loadMacros(workerData.macroPluginPaths);
 module.exports = async (obj, options) => {
     // if(debug) loadMacros();
 
-    // content = utils.parseIncludeParams(content, namumark.includeData);
-
     const name = obj.name;
     const params = obj.params;
 

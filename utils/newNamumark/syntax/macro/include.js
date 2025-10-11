@@ -1,5 +1,6 @@
 const mainUtils = require('../../../');
 const parser = require('../../parser');
+const ivm = require('isolated-vm');
 
 module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj) => {
     if(includeData) return '';
@@ -20,7 +21,8 @@ module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj
             heading: {
                 list: [],
                 html: ''
-            }
+            },
+            isolateContext: await new ivm.Isolate({ memoryLimit: 8 }).createContext()
         }
     });
     return final.html;

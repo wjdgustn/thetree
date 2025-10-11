@@ -7,13 +7,11 @@ const globalUtils = require('../../../../utils/global');
 module.exports = async (obj, options = {}) => {
     const { document, Store, thread, toHtml } = options;
 
-    // content = utils.parseIncludeParams(content, namumark.includeData);
-
     const docTitle = globalUtils.doc_fulltitle(document);
 
     let link = obj.link;
-    let text = obj.text = utils.parseIncludeParams(obj.text, options.includeData);
-    const hash = utils.parseIncludeParams(obj.hash, options.includeData);
+    let text = obj.text = await utils.parseIncludeParams(obj.text, options.Store.isolateContext);
+    const hash = await utils.parseIncludeParams(obj.hash, options.Store.isolateContext);
     let notExist = false;
 
     let isImage = false;
@@ -46,7 +44,7 @@ module.exports = async (obj, options = {}) => {
         }
     }
 
-    link = utils.parseIncludeParams(link, options.includeData).trim();
+    link = (await utils.parseIncludeParams(link, options.Store.isolateContext)).trim();
     text = text.trim();
 
     // if(!isImage && !obj.textExists && link.slice(1).includes('#')) {

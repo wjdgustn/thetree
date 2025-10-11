@@ -20,6 +20,8 @@
   "homepage": "https://github.com/wjdgustn/thetree#readme",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.717.0",
+    "@babel/parser": "^7.28.4",
+    "@babel/traverse": "^7.28.4",
     "@msgpack/msgpack": "^3.1.1",
     "@simplewebauthn/server": "^13.1.1",
     "axios": "^1.7.9",
@@ -47,8 +49,8 @@
     "html-minifier-terser": "^7.2.0",
     "ip-address": "^10.0.1",
     "ip-location-api": "^2.3.2",
+    "isolated-vm": "^6.0.1",
     "jsdom": "^26.1.0",
-    "jsep": "^1.4.0",
     "json5": "^2.2.3",
     "jsonc-parser": "^3.3.1",
     "katex": "^0.16.21",

@@ -313,7 +313,7 @@ global.checkUpdate = async (manually = false) => {
             commitId: newCommits[newCommits.length - 1].sha,
             commitDate: new Date(newCommits[newCommits.length - 1].commit.committer.date),
             versionData: newVersionData,
-            updateRequired: newVersionData.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
+            updateRequired: newVersionData?.lastForceUpdate > global.versionInfo.versionData.lastForceUpdate,
         } : {}),
         ...(newFECommits.length ? {
             feCommitId: newFECommits[newFECommits.length - 1].sha,
