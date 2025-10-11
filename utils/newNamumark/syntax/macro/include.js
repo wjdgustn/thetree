@@ -13,6 +13,8 @@ module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj
         noTopParagraph: !obj.topParagraph,
         tokens: doc.parseResult.tokens
     });
+    const isolate = new ivm.Isolate({ memoryLimit: 8 });
+    const isolateContext = await isolate.createContext();
     const final = await toHtml(result, {
         document: docName,
         includeData: obj.includeData,
@@ -22,7 +24,8 @@ module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj
                 list: [],
                 html: ''
             },
-            isolateContext: await new ivm.Isolate({ memoryLimit: 8 }).createContext()
+            isolate,
+            isolateContext
         }
     });
     return final.html;
