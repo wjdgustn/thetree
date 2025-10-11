@@ -43,6 +43,9 @@ for(let key of [...Object.getOwnPropertyNames(globalThis).filter(a => !laterProc
 tempObj.defineProperty(tempProtos.Array, 'includes', {
     value: undefined
 });
+tempObj.defineProperty(globalThis, 'constructor', {
+    value: undefined
+});
 tempObj = undefined;
 tempProtos = undefined;
 globalThis = undefined;
