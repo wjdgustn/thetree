@@ -2,6 +2,8 @@ ARG NODE_VERSION=22.19.0
 
 FROM node:${NODE_VERSION}-alpine AS builder
 
+RUN apk add --no-cache python3 make g++
+
 #USER node
 WORKDIR /usr/src/app
 
