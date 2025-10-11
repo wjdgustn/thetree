@@ -1765,8 +1765,7 @@ const starHandler = starred => async (req, res) => {
         if(!deleted) return res.error('already_unstarred_document', 404);
     }
 
-    const referer = new URL(req.get('Referer'));
-    if(referer.pathname.startsWith('/member/starred_documents')) res.status(204).end();
+    if(req.referer?.pathname.startsWith('/member/starred_documents')) res.status(204).end();
     else res.redirect(globalUtils.doc_action_link(document, 'w'));
 }
 
