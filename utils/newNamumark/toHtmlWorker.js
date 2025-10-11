@@ -43,6 +43,12 @@ const topToHtml = module.exports = async parameter => {
     } = options;
     global.config = config;
 
+    let isolate;
+    let isolateContext;
+    if(options.Store == null) {
+        isolate = new ivm.Isolate({ memoryLimit: 8 });
+        isolateContext = await isolate.createContext();
+    }
     const Store = options.Store ??= {
         dbDocuments: [],
         revDocCache: [],
@@ -64,7 +70,8 @@ const topToHtml = module.exports = async parameter => {
             text: null,
             image: null
         },
-        isolateContext: await new ivm.Isolate({ memoryLimit: 8 }).createContext(),
+        isolate,
+        isolateContext,
         ...(options.StorePatch ?? {})
     }
 
@@ -542,6 +549,7 @@ const topToHtml = module.exports = async parameter => {
                 .slice(0, 200);
         }
 
+        Store.isolate.dispose();
 
         return {
             html: Store.error ? `<h2>${result}</h2>` : result,
