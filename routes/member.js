@@ -108,10 +108,19 @@ app.post('/member/signup',
     }).lean();
     if(aclGroupItem) {
         const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
-        return res.status(403).send(`${aclGroup.aclMessage
-            ? aclGroup.aclMessage + ` (#${aclGroupItem.id})`
-            : `현재 사용중인 아이피가 ACL그룹 ${namumarkUtils.escapeHtml(aclGroup.name)} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.`
-        }<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`);
+        let aclMessage = `현재 사용중인 아이피가 ACL그룹 ${namumarkUtils.escapeHtml(aclGroup.name)} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
+        if(aclGroup.aclMessage) {
+            aclMessage = aclGroup.aclMessage;
+            for(let [key, value] of Object.entries({
+                name: rule.aclGroup.name,
+                id: aclGroupItem.id,
+                note: aclGroupItem.note,
+                expired: aclGroupItem.expiresAt?.toString() ?? '무기한'
+            })) {
+                aclMessage = aclMessage.replaceAll(`{${key}}`, namumarkUtils.escapeHtml(value));
+            }
+        }
+        return res.status(403).send(aclMessage);
     }
 
     const email = req.body.email;
