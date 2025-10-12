@@ -17,6 +17,7 @@ const laterProcess = ['Array'];
 
 let tempProtos = {};
 let tempObj = Object;
+let tempProxy = Proxy;
 for(let key of [...Object.getOwnPropertyNames(globalThis).filter(a => !laterProcess.includes(a)), ...laterProcess]) {
     const item = globalThis[key];
     if(typeof item !== 'function' || key === 'log') continue;
@@ -40,12 +41,24 @@ for(let key of [...Object.getOwnPropertyNames(globalThis).filter(a => !laterProc
     item.prototype = undefined;
     globalThis[key] = undefined;
 }
+
 tempObj.defineProperty(tempProtos.Array, 'includes', {
     value: undefined
 });
 tempObj.defineProperty(globalThis, 'constructor', {
     value: undefined
 });
+
+const safeGlobal = new tempProxy(this, {
+    has() {
+        return true;
+    },
+    get(target, prop) {
+        return target[prop] ?? undefined;
+    }
+});
+
 tempObj = undefined;
+tempProxy = undefined;
 tempProtos = undefined;
 globalThis = undefined;

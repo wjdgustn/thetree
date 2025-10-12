@@ -433,7 +433,7 @@ const topToHtml = module.exports = async parameter => {
                 if(!utils.checkJavascriptValid(obj.expression)) break;
                 let evalResult;
                 try {
-                    evalResult = await Store.isolateContext.eval(obj.expression, {
+                    evalResult = await Store.isolateContext.eval(`with(safeGlobal){${obj.expression}}`, {
                         timeout: 100
                     });
                 } catch(e) {}
