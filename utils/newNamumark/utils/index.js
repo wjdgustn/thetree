@@ -22,7 +22,9 @@ const baseSanitizeHtmlOptions = {
     ],
     allowedAttributes: {
         '*': ['style'],
-        a: ['href', 'class', 'rel', 'target']
+        a: ['href', 'class', 'rel', 'target'],
+        audio: ['width', 'height', 'src', 'controls', 'loop'],
+        video: ['width', 'height', 'src', 'controls', 'loop']
     },
     allowedSchemes: ['http', 'https', 'ftp'],
     transformTags: {
