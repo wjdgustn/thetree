@@ -405,6 +405,7 @@ app.post('/Upload', (req, res, next) => {
         let fileHeight = 0;
         try {
             metadata = await sharp(buffer).metadata();
+            if(!metadata) return res.status(400).send('올바르지 않은 파일입니다.');
             fileWidth = metadata.width;
             fileHeight = metadata.height;
         } catch(e) {}
