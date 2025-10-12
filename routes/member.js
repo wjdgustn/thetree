@@ -17,6 +17,7 @@ const {
     isoBase64URL
 } = require('@simplewebauthn/server/helpers');
 const axios = require('axios');
+const { lookup: ipLookup } = require('ip-location-api');
 
 const utils = require('../utils');
 const namumarkUtils = require('../utils/newNamumark/utils');
@@ -28,6 +29,7 @@ const {
     AuditLogTypes,
     SignupPolicy
 } = require('../utils/types');
+const countryCodes = require('../utils/countryCodes.json');
 
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
@@ -112,7 +114,7 @@ app.post('/member/signup',
         if(aclGroup.aclMessage) {
             aclMessage = aclGroup.aclMessage;
             for(let [key, value] of Object.entries({
-                name: rule.aclGroup.name,
+                name: aclGroup.name,
                 id: aclGroupItem.id,
                 note: aclGroupItem.note,
                 expired: aclGroupItem.expiresAt?.toString() ?? '무기한'
@@ -899,7 +901,8 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
                 name,
                 displayName: value.display_name
             })),
-            oauth2Maps: Object.fromEntries(oauth2Maps.map(a => [a.provider, a]))
+            oauth2Maps: Object.fromEntries(oauth2Maps.map(a => [a.provider, a])),
+            verifyEnabled: config.verify_enabled
         }
     });
 });
@@ -2031,6 +2034,19 @@ app.post('/member/remove_developer_perm', middleware.permission('engine_develope
         }
     });
     res.reload();
+});
+
+app.get('/member/signup_verify', middleware.isLogin, (req, res) => {
+    if(!config.verify_enabled) return res.error('이 기능이 활성화되어있지 않습니다.');
+
+    res.renderSkin('모바일 인증', {
+        contentName: 'member/signup_verify',
+        serverData: {
+            countryCodes,
+            verifyText: config.verify_text,
+            countryCode: ipLookup(req.ip)
+        }
+    });
 });
 
 module.exports.router = app;
