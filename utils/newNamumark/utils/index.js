@@ -13,9 +13,13 @@ const traverse = require('@babel/traverse').default;
 const allowedNames = require('./allowedNames.json');
 
 const baseSanitizeHtmlOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.filter(a => ![
-        'code'
-    ].includes(a)),
+    allowedTags: [
+        ...sanitizeHtml.defaults.allowedTags.filter(a => ![
+            'code'
+        ].includes(a)),
+        'audio',
+        'video'
+    ],
     allowedAttributes: {
         '*': ['style'],
         a: ['href', 'class', 'rel', 'target']
