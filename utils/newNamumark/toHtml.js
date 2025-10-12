@@ -1,5 +1,6 @@
 const Piscina = require('piscina');
 const { models } = require('mongoose');
+const os = require('os');
 
 const ACL = require('../../class/acl');
 
@@ -7,12 +8,19 @@ const MAXIMUM_TIME = 10000;
 const ERROR_HTML = '문서 렌더링이 실패했습니다.';
 const MAXIMUM_TIME_HTML = '문서 렌더링이 너무 오래 걸립니다.';
 
+let minThreads = parseInt(process.env.MULTITHREAD_MIN_THREADS);
+if(isNaN(minThreads) || minThreads < 1) minThreads = Math.min(4, os.cpus().length);
+let maxThreads = parseInt(process.env.MULTITHREAD_MAX_THREADS);
+if(isNaN(maxThreads) || maxThreads < 1) maxThreads = Math.max(4, os.cpus().length);
+
 const worker = new Piscina({
     filename: require.resolve('./toHtmlWorker'),
     workerData: {
         config,
         macroPluginPaths: (global.plugins.macro ?? []).map(a => a.path)
-    }
+    },
+    minThreads,
+    maxThreads
 });
 
 module.exports = async (...params) => {
