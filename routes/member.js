@@ -112,7 +112,7 @@ app.post('/member/signup',
         if(aclGroup.aclMessage) {
             aclMessage = aclGroup.aclMessage;
             for(let [key, value] of Object.entries({
-                name: rule.aclGroup.name,
+                name: aclGroup.name,
                 id: aclGroupItem.id,
                 note: aclGroupItem.note,
                 expired: aclGroupItem.expiresAt?.toString() ?? '무기한'
