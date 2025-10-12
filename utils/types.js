@@ -138,8 +138,10 @@ module.exports = {
     ProtectedPermissions: [
         'developer'
     ],
+    AlwaysProtectedPermissions: [
+        'mobile_verified_member'
+    ],
     NoGrantPermissions: [
-        'mobile_verified_member',
         'delete_edit_request',
         'engine_developer'
     ],

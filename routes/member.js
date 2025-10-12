@@ -17,6 +17,7 @@ const {
     isoBase64URL
 } = require('@simplewebauthn/server/helpers');
 const axios = require('axios');
+const parsePhoneNumber = require('libphonenumber-js/max');
 
 const utils = require('../utils');
 const namumarkUtils = require('../utils/newNamumark/utils');
@@ -28,6 +29,7 @@ const {
     AuditLogTypes,
     SignupPolicy
 } = require('../utils/types');
+const countryCodes = require('../utils/countryCodes.json');
 
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
@@ -899,7 +901,8 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
                 name,
                 displayName: value.display_name
             })),
-            oauth2Maps: Object.fromEntries(oauth2Maps.map(a => [a.provider, a]))
+            oauth2Maps: Object.fromEntries(oauth2Maps.map(a => [a.provider, a])),
+            verifyEnabled: config.verify_enabled
         }
     });
 });
@@ -2031,6 +2034,112 @@ app.post('/member/remove_developer_perm', middleware.permission('engine_develope
         }
     });
     res.reload();
+});
+
+app.get('/member/signup_verify', middleware.isLogin, (req, res) => {
+    if(!config.verify_enabled) return res.error('이 기능이 활성화되어있지 않습니다.');
+    if(req.user.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
+
+    const mobileVerifyInfo = req.session.mobileVerifyInfo;
+    if(mobileVerifyInfo) {
+        if(mobileVerifyInfo.startedAt < Date.now() - 1000 * 60 * 60 * 24 || mobileVerifyInfo.user !== req.user.uuid)
+            delete req.session.mobileVerifyInfo;
+        else
+            return res.redirect('/member/signup_verify_code');
+    }
+
+    res.renderSkin('모바일 인증', {
+        contentName: 'member/signup_verify',
+        serverData: {
+            countryCodes,
+            verifyText: config.verify_text,
+            countryCode: (req.countryCode ?? '').toLowerCase()
+        }
+    });
+});
+
+app.post('/member/signup_verify',
+    middleware.isLogin,
+    body('countryCode')
+        .custom(value => countryCodes.some(a => a.code === value))
+        .withMessage('countryCode의 값이 올바르지 않습니다.')
+        .custom((value, { req }) => req.countryCode.toLowerCase() === value)
+        .withMessage('전화 번호와 사용중인 IP의 국가가 일치해야 합니다.'),
+    body('phoneNumber')
+        .notEmpty().withMessage('phoneNumber의 값은 필수입니다.')
+        .customSanitizer((value, { req }) => parsePhoneNumber(value, req.body.countryCode.toUpperCase()))
+        .custom(value => value?.isValid() && value.getType() === 'MOBILE')
+        .withMessage('번호가 올바르지 않습니다.'),
+    middleware.fieldErrors,
+    (req, res) => {
+    if(!config.verify_enabled) return res.error('이 기능이 활성화되어있지 않습니다.');
+    if(req.user.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
+
+    req.session.mobileVerifyInfo = {
+        user: req.user.uuid,
+        phoneNumber: req.body.phoneNumber.number,
+        pin: utils.getRandomInt(0, 999999).toString().padStart(6, '0'),
+        startedAt: Date.now(),
+        tries: 0
+    }
+
+    res.redirect('/member/signup_verify_code');
+});
+
+app.get('/member/signup_verify_code', middleware.isLogin, (req, res) => {
+    const mobileVerifyInfo = req.session.mobileVerifyInfo;
+    const mobileVerifyInfoExpired = mobileVerifyInfo?.startedAt < Date.now() - 1000 * 60 * 60 * 24 || mobileVerifyInfo.user !== req.user.uuid;
+    if(mobileVerifyInfoExpired)
+        delete req.session.mobileVerifyInfo;
+    if(!mobileVerifyInfo || mobileVerifyInfoExpired) return res.redirect('/');
+
+    res.renderSkin('모바일 인증', {
+        contentName: 'member/signup_verify_code'
+    });
+});
+
+app.post('/member/signup_verify_code',
+    middleware.isLogin,
+    body('pin')
+        .if(body('cancel').not().equals('true'))
+        .notEmpty().withMessage('pin의 값은 필수입니다.'),
+    middleware.fieldErrors,
+    async (req, res) => {
+    if(req.body.cancel === 'true') {
+        delete req.session.mobileVerifyInfo;
+        return res.redirect('/');
+    }
+
+    const mobileVerifyInfo = req.session.mobileVerifyInfo;
+    const mobileVerifyInfoExpired = !!mobileVerifyInfo
+        && (mobileVerifyInfo?.startedAt < Date.now() - 1000 * 60 * 60 * 24 || ++mobileVerifyInfo.tries > 5 || mobileVerifyInfo.user !== req.user.uuid);
+    if(mobileVerifyInfoExpired)
+        delete req.session.mobileVerifyInfo;
+    if(!mobileVerifyInfo || mobileVerifyInfoExpired) return res.redirect('/');
+
+    if(req.body.pin !== mobileVerifyInfo.pin) return res.status(400).json({
+        fieldErrors: {
+            pin: {
+                msg: 'PIN이 올바르지 않습니다.'
+            }
+        }
+    });
+
+    const checkNumberExists = await User.exists({
+        phoneNumber: mobileVerifyInfo.phoneNumber
+    });
+    if(checkNumberExists) return res.status(409).send('이 번호로는 더 이상 인증할 수 없습니다.');
+
+    await User.updateOne({
+        uuid: req.user.uuid
+    }, {
+        phoneNumber: mobileVerifyInfo.phoneNumber,
+        $addToSet: {
+            permissions: 'mobile_verified_member'
+        }
+    });
+
+    res.redirect('/member/mypage');
 });
 
 module.exports.router = app;

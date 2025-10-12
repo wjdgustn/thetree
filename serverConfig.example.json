@@ -19,6 +19,9 @@
   "email_whitelist": [],
   "use_email_verification": false,
 
+  "verify_enabled": false,
+  "verify_text": "",
+
   "auto_verified_member": {
     "check_days": 7,
     "delay_hours": 3,

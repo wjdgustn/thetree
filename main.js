@@ -26,6 +26,7 @@ const axios = require('axios');
 const util = require('util');
 const msgpack = require('@msgpack/msgpack');
 const JSON5 = require('json5');
+const { lookup: ipLookup } = require('ip-location-api');
 
 global.debug = process.env.NODE_ENV === 'development';
 global.__THETREE__ = {};
@@ -762,6 +763,9 @@ app.use(async (req, res, next) => {
             return slicedIp;
         }
     });
+    req.countryCode = ipLookup(req.ip)?.country;
+    if(!req.countryCode && debug)
+        req.countryCode = 'KR';
 
     const referer = req.get('Referer');
     req.referer = null;
