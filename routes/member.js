@@ -921,7 +921,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
                 displayName: value.display_name
             })),
             oauth2Maps: Object.fromEntries(oauth2Maps.map(a => [a.provider, a])),
-            verifyEnabled: config.verify_enabled
+            verifyEnabled: config.verify_enabled && global.plugins.mobileVerify.length
         }
     });
 });
