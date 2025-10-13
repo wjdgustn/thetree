@@ -2116,6 +2116,7 @@ app.post('/member/signup_verify',
     try {
         await plugin.verify(req.body.phoneNumber, pin);
     } catch (e) {
+        console.error(e);
         return res.status(500).send('내부 오류가 발생했습니다.');
     }
 
