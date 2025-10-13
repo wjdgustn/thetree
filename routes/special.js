@@ -435,7 +435,19 @@ app.post('/Upload', (req, res, next) => {
             const svgCode = buffer.toString();
             const window = new JSDOM('').window;
             const DOMPurify = createDOMPurify(window);
-            const clean = DOMPurify.sanitize(svgCode);
+            DOMPurify.addHook('afterSanitizeAttributes', node => {
+                const href = node.getAttribute('xlink:href') || node.getAttribute('href');
+                if(href && !href.startsWith('#')) {
+                    node.removeAttribute('xlink:href');
+                    node.removeAttribute('href');
+                }
+            });
+            const clean = DOMPurify.sanitize(svgCode, {
+                USE_PROFILES: {
+                    svg: true
+                },
+                ADD_TAGS: ['use']
+            });
             buffer = Buffer.from(clean);
         }
 
