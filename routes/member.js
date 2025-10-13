@@ -46,6 +46,7 @@ const Star = require('../schemas/star');
 const Passkey = require('../schemas/passkey');
 const Notification = require('../schemas/notification');
 const AuditLog = require('../schemas/auditLog');
+const MobileVerifyInfo = require('../schemas/mobileVerifyInfo');
 
 const app = express.Router();
 
@@ -342,7 +343,8 @@ app.post('/member/signup/:token',
         password: req.body.password ? (await bcrypt.hash(req.body.password, 12)) : undefined,
         name,
         permissions: ['member', ...(token.phoneNumber ? ['mobile_verified_member'] : [])],
-        phoneNumber: token.phoneNumber
+        phoneNumber: token.phoneNumber,
+        phoneVerifiedAt: token.phoneNumber && Date.now()
     }
 
     const userExists = await User.exists({ type: UserTypes.Account });
@@ -2055,20 +2057,18 @@ app.post('/member/remove_developer_perm', middleware.permission('engine_develope
     res.reload();
 });
 
-app.get('/member/signup_verify', (req, res) => {
+app.get('/member/signup_verify', async (req, res) => {
     if(!config.verify_enabled || !global.plugins.mobileVerify.length) return res.error('이 기능이 활성화되어있지 않습니다.');
 
     if(req.user?.type !== UserTypes.Account && !req.session.signupVerifyInfo)
         return res.redirect('/member/signup');
     if(req.user?.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
 
-    const mobileVerifyInfo = req.session.mobileVerifyInfo;
-    if(mobileVerifyInfo) {
-        if(mobileVerifyInfo.startedAt < Date.now() - 1000 * 60 * 60 * 24 || mobileVerifyInfo.user !== req.user.uuid)
-            delete req.session.mobileVerifyInfo;
-        else
-            return res.redirect('/member/signup_verify_code');
-    }
+    const mobileVerifyInfo = await MobileVerifyInfo.findOne({
+        sessionId: req.session.sessionId
+    });
+    if(mobileVerifyInfo)
+        return res.redirect('/member/signup_verify_code');
 
     const countryCodes = CountryCodes.filter(a => !config.verify_countries?.length
         || (config.verify_countries?.includes(a.code) === (config.verify_countries_whitelist ?? true)));
@@ -2110,6 +2110,11 @@ app.post('/member/signup_verify',
         return res.redirect('/member/signup');
     if(req.user?.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
 
+    const existingVerify = await MobileVerifyInfo.exists({
+        phoneNumber: req.body.phoneNumber.number
+    });
+    if(existingVerify) return res.status(409).send('이미 해당 번호로 인증이 진행중입니다.');
+
     const pin = utils.getRandomInt(0, 999999).toString().padStart(6, '0');
     const plugin = global.plugins.mobileVerify[0];
 
@@ -2120,25 +2125,23 @@ app.post('/member/signup_verify',
         return res.status(500).send('내부 오류가 발생했습니다.');
     }
 
-    req.session.mobileVerifyInfo = {
+    await MobileVerifyInfo.create({
+        sessionId: req.session.sessionId,
         user: req.user.uuid,
         email: req.session.signupVerifyInfo?.email,
         phoneNumber: req.body.phoneNumber.number,
-        pin,
-        startedAt: Date.now(),
-        tries: 0
-    }
-    delete req.session.signupVerifyInfo;
+        pin
+    });
+        delete req.session.signupVerifyInfo;
 
     res.redirect('/member/signup_verify_code');
 });
 
-app.get('/member/signup_verify_code', (req, res) => {
-    const mobileVerifyInfo = req.session.mobileVerifyInfo;
-    const mobileVerifyInfoExpired = mobileVerifyInfo?.startedAt < Date.now() - 1000 * 60 * 60 * 24 || mobileVerifyInfo.user !== req.user.uuid;
-    if(mobileVerifyInfoExpired)
-        delete req.session.mobileVerifyInfo;
-    if(!mobileVerifyInfo || mobileVerifyInfoExpired) return res.redirect('/');
+app.get('/member/signup_verify_code', async (req, res) => {
+    const mobileVerifyInfo = await MobileVerifyInfo.findOne({
+        sessionId: req.session.sessionId
+    });
+    if(!mobileVerifyInfo) return res.redirect('/');
 
     res.renderSkin('모바일 인증', {
         contentName: 'member/signup_verify_code'
@@ -2152,37 +2155,67 @@ app.post('/member/signup_verify_code',
     middleware.fieldErrors,
     async (req, res) => {
     if(req.body.cancel === 'true') {
-        delete req.session.mobileVerifyInfo;
+        await MobileVerifyInfo.deleteOne({
+            sessionId: req.session.sessionId
+        });
         return res.redirect('/');
     }
 
-    const mobileVerifyInfo = req.session.mobileVerifyInfo;
-    const mobileVerifyInfoExpired = !!mobileVerifyInfo
-        && (mobileVerifyInfo?.startedAt < Date.now() - 1000 * 60 * 60 * 24 || ++mobileVerifyInfo.tries > 5 || mobileVerifyInfo.user !== req.user.uuid);
-    if(mobileVerifyInfoExpired)
-        delete req.session.mobileVerifyInfo;
-    if(!mobileVerifyInfo || mobileVerifyInfoExpired) return res.redirect('/');
-
-    if(req.body.pin !== mobileVerifyInfo.pin) return res.status(400).json({
-        fieldErrors: {
-            pin: {
-                msg: 'PIN이 올바르지 않습니다.'
-            }
-        }
+    const mobileVerifyInfo = await MobileVerifyInfo.findOne({
+        sessionId: req.session.sessionId
     });
+    if(!mobileVerifyInfo) return res.redirect('/');
+
+    if(req.body.pin !== mobileVerifyInfo.pin) {
+        if(mobileVerifyInfo.tries >= 5) await MobileVerifyInfo.deleteOne({
+            sessionId: req.session.sessionId
+        });
+        else await MobileVerifyInfo.updateOne({
+            sessionId: req.session.sessionId
+        }, {
+            $inc: {
+                tries: 1
+            }
+        });
+        return res.status(400).json({
+            fieldErrors: {
+                pin: {
+                    msg: 'PIN이 올바르지 않습니다.'
+                }
+            }
+        });
+    }
 
     const checkNumberExists = await User.exists({
         phoneNumber: mobileVerifyInfo.phoneNumber,
-        permissions: 'mobile_verified_member'
+        permissions: 'mobile_verified_member',
+        phoneVerifiedAt: {
+            $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * (config.verify_change_cooldown_days ?? 0))
+        }
     });
     if(checkNumberExists) return res.status(409).send('이 번호로는 더 이상 인증할 수 없습니다.');
 
-    delete req.session.mobileVerifyInfo;
+    await MobileVerifyInfo.deleteOne({
+        sessionId: req.session.sessionId
+    });
+
+    await User.updateOne({
+        phoneNumber: mobileVerifyInfo.phoneNumber
+    }, {
+        $pull: {
+            permissions: 'mobile_verified_member'
+        },
+        $unset: {
+            phoneNumber: 1,
+            phoneVerifiedAt: 1
+        }
+    });
 
     if(req.user?.type === UserTypes.Account) await User.updateOne({
         uuid: req.user.uuid
     }, {
         phoneNumber: mobileVerifyInfo.phoneNumber,
+        phoneVerifiedAt: Date.now(),
         $addToSet: {
             permissions: 'mobile_verified_member'
         }

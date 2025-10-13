@@ -95,6 +95,9 @@ const newSchema = new Schema({
     },
     phoneNumber: {
         type: String
+    },
+    phoneVerifiedAt: {
+        type: Date
     }
 });
 

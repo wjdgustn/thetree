@@ -23,6 +23,7 @@
   "verify_countries_ip_match": true,
   "verify_countries": [],
   "verify_countries_whitelist": true,
+  "verify_change_cooldown_days": 1,
 
   "auto_verified_member": {
     "check_days": 7,
