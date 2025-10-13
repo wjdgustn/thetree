@@ -1634,10 +1634,12 @@ app.get('/admin/manage_account', middleware.permission('manage_account'), async 
         contentName: 'admin/manageAccount',
         serverData: {
             searchData,
+            verifyEnabled: config.verify_enabled && global.plugins.mobileVerify.length,
             targetUser: targetUser && {
                 ...utils.onlyKeys(targetUser, [
                     'uuid', 'name', 'email', 'usePasswordlessLogin'
                 ]),
+                mobileVerified: targetUser.permissions.includes('mobile_verified_member'),
                 useTotp: !!targetUser.totpToken
             }
         }
@@ -1760,6 +1762,24 @@ app.post('/admin/manage_account/action',
             }
             case 'deleteAccount': {
                 await withdrawAction(targetUser, req.user);
+                return res.reload();
+            }
+            case 'getPhoneNumber': {
+                return res.partial({
+                    phoneNumber: targetUser.phoneNumber
+                });
+            }
+            case 'removePhoneNumber': {
+                await User.updateOne({
+                    uuid: targetUser.uuid
+                }, {
+                    $unset: {
+                        phoneNumber: 1
+                    },
+                    $pull: {
+                        permissions: 'mobile_verified_member'
+                    }
+                });
                 return res.reload();
             }
             default:
