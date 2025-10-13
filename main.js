@@ -811,7 +811,7 @@ app.use(async (req, res, next) => {
         user: req.user?.uuid,
         method: req.method,
         url: req.originalUrl,
-        body: Object.fromEntries(Object.entries(req.body).filter(([key]) => !key.includes('password')))
+        body: Object.fromEntries(Object.entries(req.body ?? {}).filter(([key]) => !key.includes('password')))
     });
     req.requestId = log._id.toString();
     log.save().then();

@@ -23,7 +23,7 @@ const ThreadComment = require('../schemas/threadComment');
 
 const app = express.Router();
 
-app.all('/api/*', async (req, res, next) => {
+app.all('/api/*route', async (req, res, next) => {
     req.isAPI = true;
     res.error = (status, code = 400) => res.status(code).json({
         status
@@ -72,7 +72,7 @@ const apiWrapper = fn => async (req, res, next) => {
     return finalData;
 }
 
-app.get('/api/edit/?*', middleware.parseDocumentName, apiWrapper(editAndEditRequest), async (req, res) => {
+app.get('/api/edit/{*document}', middleware.parseDocumentName, apiWrapper(editAndEditRequest), async (req, res) => {
     const baseuuid = req.apiData.body.baseuuid;
     const editToken = await EditToken.create({
         baseuuid,
@@ -88,7 +88,7 @@ app.get('/api/edit/?*', middleware.parseDocumentName, apiWrapper(editAndEditRequ
     });
 });
 
-app.post('/api/edit/?*',
+app.post('/api/edit/{*document}',
     middleware.parseDocumentName,
     body('text')
         .exists()
@@ -125,7 +125,7 @@ app.post('/api/edit/?*',
     });
 });
 
-app.get('/api/backlink/?*', middleware.parseDocumentName, async (req, res) => {
+app.get('/api/backlink/{*document}', middleware.parseDocumentName, async (req, res) => {
     if(req.document.namespace === '분류' && false) {
 
     }

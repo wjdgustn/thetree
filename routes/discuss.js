@@ -88,7 +88,7 @@ SocketIO.of('/thread').use(async (socket, next) => {
     next();
 });
 
-app.get('/discuss/?*', middleware.parseDocumentName, middleware.checkCaptcha(false, true), async (req, res) => {
+app.get('/discuss/{*document}', middleware.parseDocumentName, middleware.checkCaptcha(false, true), async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
     const dbDocument = await Document.findOne({
@@ -234,7 +234,7 @@ app.get('/discuss/?*', middleware.parseDocumentName, middleware.checkCaptcha(fal
     });
 });
 
-app.post('/discuss/?*', middleware.parseDocumentName,
+app.post('/discuss/{*document}', middleware.parseDocumentName,
     body('topic')
         .notEmpty({
             ignore_whitespace: true

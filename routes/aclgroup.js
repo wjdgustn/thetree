@@ -446,7 +446,7 @@ app.get('/aclgroup/group_manage', async (req, res) => {
 });
 
 const permValidator = field => body(field)
-    .customSanitizer(value => [...new Set(value.split(',').map(a => a.trim()).filter(a => a))])
+    .customSanitizer(value => [...new Set((value ?? '').split(',').map(a => a.trim()).filter(a => a))])
     .custom((value, { req }) => {
         const invalid = value.find(a => !['any', ...AllPermissions].includes(a));
         if(invalid)

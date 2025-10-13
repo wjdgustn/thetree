@@ -212,7 +212,7 @@ app.post('/member/signup',
             $gte: ipArr
         }
     }).lean();
-    let blockItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGruop)?.signupPolicy === SignupPolicy.Block);
+    let blockItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGroup)?.signupPolicy === SignupPolicy.Block);
     const verifyItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGroup)?.signupPolicy === SignupPolicy.RequireVerification);
 
     if(!blockItem && verifyItem && (!config.verify_enabled || !global.plugins.mobileVerify.length))
@@ -1829,8 +1829,8 @@ app.get('/member/starred_documents', middleware.isLogin, async (req, res) => {
     });
 });
 
-app.get('/member/star/?*', middleware.isLogin, middleware.parseDocumentName, starHandler(true));
-app.get('/member/unstar/?*', middleware.isLogin, middleware.parseDocumentName, starHandler(false));
+app.get('/member/star/{*document}', middleware.isLogin, middleware.parseDocumentName, starHandler(true));
+app.get('/member/unstar/{*document}', middleware.isLogin, middleware.parseDocumentName, starHandler(false));
 
 app.post('/member/register_webauthn',
     middleware.isLogin,
