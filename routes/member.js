@@ -2122,7 +2122,7 @@ app.post('/member/signup_verify',
 
     req.session.mobileVerifyInfo = {
         user: req.user.uuid,
-        email: req.session.signupVerifyInfo.email,
+        email: req.session.signupVerifyInfo?.email,
         phoneNumber: req.body.phoneNumber.number,
         pin,
         startedAt: Date.now(),
