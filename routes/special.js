@@ -535,7 +535,7 @@ app.get('/BlockHistory', async (req, res) => {
                 { targetContent: regex },
                 { content: regex },
                 { aclGroupName: regex },
-                { aclGroupId: query }
+                ...(isNaN(query) ? [] : [{ aclGroupId: query }])
             ]
         }
     }
