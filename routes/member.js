@@ -29,7 +29,7 @@ const {
     AuditLogTypes,
     SignupPolicy
 } = require('../utils/types');
-const countryCodes = require('../utils/countryCodes.json');
+const CountryCodes = require('../utils/countryCodes.json');
 
 const User = require('../schemas/user');
 const SignupToken = require('../schemas/signupToken');
@@ -62,71 +62,7 @@ app.get('/member/signup', middleware.isLogout, middleware.checkCaptcha(true), (r
     });
 });
 
-app.post('/member/signup',
-    middleware.isLogout,
-    body('email')
-        .notEmpty().withMessage('이메일의 값은 필수입니다.')
-        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
-        .normalizeEmail(),
-    body('agree').exists().withMessage('동의의 값은 필수입니다.'),
-    middleware.fieldErrors,
-    middleware.captcha(true),
-    async (req, res) => {
-    if(config.disable_signup || config.disable_internal_login) return res.status(400).send('가입이 비활성화되어 있습니다.');
-
-    const emailDomain = req.body.email.split('@').pop();
-    if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
-        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
-
-    let ipArr;
-    if(Address4.isValid(req.ip)) ipArr = new Address4(req.ip).toArray();
-    else ipArr = new Address6(req.ip).toByteArray();
-
-    const aclGroups = await ACLGroup.find({
-        signupPolicy: {
-            $gt: SignupPolicy.None
-        }
-    });
-    const aclGroupItem = await ACLGroupItem.findOne({
-        aclGroup: {
-            $in: aclGroups.map(group => group.uuid)
-        },
-        $or: [
-            {
-                expiresAt: {
-                    $gte: new Date()
-                }
-            },
-            {
-                expiresAt: null
-            }
-        ],
-        ipMin: {
-            $lte: ipArr
-        },
-        ipMax: {
-            $gte: ipArr
-        }
-    }).lean();
-    if(aclGroupItem) {
-        const aclGroup = aclGroups.find(group => group.uuid === aclGroupItem.aclGroup);
-        let aclMessage = `현재 사용중인 아이피가 ACL그룹 ${namumarkUtils.escapeHtml(aclGroup.name)} #${aclGroupItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
-        if(aclGroup.aclMessage) {
-            aclMessage = aclGroup.aclMessage;
-            for(let [key, value] of Object.entries({
-                name: aclGroup.name,
-                id: aclGroupItem.id,
-                note: aclGroupItem.note,
-                expired: aclGroupItem.expiresAt?.toString() ?? '무기한'
-            })) {
-                aclMessage = aclMessage.replaceAll(`{${key}}`, namumarkUtils.escapeHtml(value));
-            }
-        }
-        return res.status(403).send(aclMessage);
-    }
-
-    const email = req.body.email;
-
+const signupAction = async (email, req, res, phoneNumber) => {
     const checkBlacklist = await Blacklist.exists({
         email: crypto.createHash('sha256').update(email).digest('hex')
     });
@@ -146,7 +82,7 @@ app.post('/member/signup',
             res.renderSkin('계정 만들기', {
                 contentName: 'member/signup_email_sent',
                 serverData: { email }
-           });
+            });
 
             await mailTransporter.sendMail({
                 from: config.smtp_sender,
@@ -199,7 +135,8 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
 
     const newToken = new SignupToken({
         email,
-        ip: req.ip
+        ip: req.ip,
+        phoneNumber
     });
     await newToken.save();
 
@@ -225,6 +162,87 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
         });
     }
     else res.redirect(signupUrl);
+}
+
+app.post('/member/signup',
+    middleware.isLogout,
+    body('email')
+        .notEmpty().withMessage('이메일의 값은 필수입니다.')
+        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .normalizeEmail(),
+    body('agree').exists().withMessage('동의의 값은 필수입니다.'),
+    middleware.fieldErrors,
+    middleware.captcha(true),
+    async (req, res) => {
+    if(config.disable_signup || config.disable_internal_login) return res.status(400).send('가입이 비활성화되어 있습니다.');
+
+    const emailDomain = req.body.email.split('@').pop();
+    if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
+        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
+
+    let ipArr;
+    if(Address4.isValid(req.ip)) ipArr = new Address4(req.ip).toArray();
+    else ipArr = new Address6(req.ip).toByteArray();
+
+    const email = req.body.email;
+
+    const aclGroups = await ACLGroup.find({
+        signupPolicy: {
+            $gt: SignupPolicy.None
+        }
+    });
+    const aclGroupItems = await ACLGroupItem.find({
+        aclGroup: {
+            $in: aclGroups.map(group => group.uuid)
+        },
+        $or: [
+            {
+                expiresAt: {
+                    $gte: new Date()
+                }
+            },
+            {
+                expiresAt: null
+            }
+        ],
+        ipMin: {
+            $lte: ipArr
+        },
+        ipMax: {
+            $gte: ipArr
+        }
+    }).lean();
+    let blockItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGruop)?.signupPolicy === SignupPolicy.Block);
+    const verifyItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGroup)?.signupPolicy === SignupPolicy.RequireVerification);
+
+    if(!blockItem && verifyItem && (!config.verify_enabled || !global.plugins.mobileVerify.length))
+        blockItem = verifyItem;
+
+    if(blockItem) {
+        const aclGroup = aclGroups.find(group => group.uuid === blockItem.aclGroup);
+        let aclMessage = `현재 사용중인 아이피가 ACL그룹 ${namumarkUtils.escapeHtml(aclGroup.name)} #${blockItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.<br>만료일 : ${blockItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${namumarkUtils.escapeHtml(blockItem.note ?? '없음')}`;
+        if(aclGroup.aclMessage) {
+            aclMessage = aclGroup.aclMessage;
+            for(let [key, value] of Object.entries({
+                name: aclGroup.name,
+                id: blockItem.id,
+                note: blockItem.note,
+                expired: blockItem.expiresAt?.toString() ?? '무기한'
+            })) {
+                aclMessage = aclMessage.replaceAll(`{${key}}`, namumarkUtils.escapeHtml(value));
+            }
+        }
+        return res.status(403).send(aclMessage);
+    }
+    else if(verifyItem) {
+        req.session.signupVerifyInfo = {
+            email,
+            note: verifyItem.note
+        }
+        return res.redirect('/member/signup_verify');
+    }
+
+    await signupAction(email, req, res);
 });
 
 app.get('/member/signup/:token', async (req, res) => {
@@ -323,7 +341,8 @@ app.post('/member/signup/:token',
         email: token.email,
         password: req.body.password ? (await bcrypt.hash(req.body.password, 12)) : undefined,
         name,
-        permissions: ['member']
+        permissions: ['member', ...(token.phoneNumber ? ['mobile_verified_member'] : [])],
+        phoneNumber: token.phoneNumber
     }
 
     const userExists = await User.exists({ type: UserTypes.Account });
@@ -2036,9 +2055,12 @@ app.post('/member/remove_developer_perm', middleware.permission('engine_develope
     res.reload();
 });
 
-app.get('/member/signup_verify', middleware.isLogin, (req, res) => {
-    if(!config.verify_enabled) return res.error('이 기능이 활성화되어있지 않습니다.');
-    if(req.user.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
+app.get('/member/signup_verify', (req, res) => {
+    if(!config.verify_enabled || !global.plugins.mobileVerify.length) return res.error('이 기능이 활성화되어있지 않습니다.');
+
+    if(req.user?.type !== UserTypes.Account && !req.session.signupVerifyInfo)
+        return res.redirect('/member/signup');
+    if(req.user?.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
 
     const mobileVerifyInfo = req.session.mobileVerifyInfo;
     if(mobileVerifyInfo) {
@@ -2048,45 +2070,69 @@ app.get('/member/signup_verify', middleware.isLogin, (req, res) => {
             return res.redirect('/member/signup_verify_code');
     }
 
+    const countryCodes = CountryCodes.filter(a => !config.verify_countries.length
+        || (config.verify_countries.includes(a.code) === (config.verify_countries_whitelist ?? true)));
     res.renderSkin('모바일 인증', {
         contentName: 'member/signup_verify',
         serverData: {
             countryCodes,
             verifyText: config.verify_text,
-            countryCode: (req.countryCode ?? '').toLowerCase()
+            countryCode: (req.countryCode ?? '').toLowerCase(),
+            note: req.session.signupVerifyInfo?.note
         }
     });
 });
 
 app.post('/member/signup_verify',
-    middleware.isLogin,
     body('countryCode')
-        .custom(value => countryCodes.some(a => a.code === value))
+        .custom(value => CountryCodes.some(a => a.code === value) && (!config.verify_countries.length || (config.verify_countries.includes(value) === (config.verify_countries_whitelist ?? true))))
         .withMessage('countryCode의 값이 올바르지 않습니다.')
-        .custom((value, { req }) => req.countryCode.toLowerCase() === value)
+        .custom((value, { req }) => config.verify_countries_ip_match === false || req.countryCode.toLowerCase() === value)
         .withMessage('전화 번호와 사용중인 IP의 국가가 일치해야 합니다.'),
     body('phoneNumber')
         .notEmpty().withMessage('phoneNumber의 값은 필수입니다.')
         .customSanitizer((value, { req }) => parsePhoneNumber(value, req.body.countryCode.toUpperCase()))
-        .custom(value => value?.isValid() && value.getType() === 'MOBILE')
-        .withMessage('번호가 올바르지 않습니다.'),
+        .custom(async value => {
+            const isValid = value?.isValid();
+            if(!isValid) throw new Error('번호가 올바르지 않습니다.');
+
+            const plugin = global.plugins.mobileVerify[0];
+            if(plugin.validate) {
+                const pluginValid = await plugin.validate(value);
+                if(!pluginValid) throw new Error('번호가 올바르지 않습니다.');
+            }
+        }),
     middleware.fieldErrors,
-    (req, res) => {
-    if(!config.verify_enabled) return res.error('이 기능이 활성화되어있지 않습니다.');
-    if(req.user.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
+    async (req, res) => {
+    if(!config.verify_enabled || !global.plugins.mobileVerify.length) return res.error('이 기능이 활성화되어있지 않습니다.');
+
+    if(req.user?.type !== UserTypes.Account && !req.session.signupVerifyInfo)
+        return res.redirect('/member/signup');
+    if(req.user?.permissions.includes('mobile_verified_member')) return res.error('already_mobile_verified');
+
+    const pin = utils.getRandomInt(0, 999999).toString().padStart(6, '0');
+    const plugin = global.plugins.mobileVerify[0];
+
+    try {
+        await plugin.verify(req.body.phoneNumber, pin);
+    } catch (e) {
+        return res.status(500).send('내부 오류가 발생했습니다.');
+    }
 
     req.session.mobileVerifyInfo = {
         user: req.user.uuid,
+        email: req.session.signupVerifyInfo.email,
         phoneNumber: req.body.phoneNumber.number,
-        pin: utils.getRandomInt(0, 999999).toString().padStart(6, '0'),
+        pin,
         startedAt: Date.now(),
         tries: 0
     }
+    delete req.session.signupVerifyInfo;
 
     res.redirect('/member/signup_verify_code');
 });
 
-app.get('/member/signup_verify_code', middleware.isLogin, (req, res) => {
+app.get('/member/signup_verify_code', (req, res) => {
     const mobileVerifyInfo = req.session.mobileVerifyInfo;
     const mobileVerifyInfoExpired = mobileVerifyInfo?.startedAt < Date.now() - 1000 * 60 * 60 * 24 || mobileVerifyInfo.user !== req.user.uuid;
     if(mobileVerifyInfoExpired)
@@ -2099,7 +2145,6 @@ app.get('/member/signup_verify_code', middleware.isLogin, (req, res) => {
 });
 
 app.post('/member/signup_verify_code',
-    middleware.isLogin,
     body('pin')
         .if(body('cancel').not().equals('true'))
         .notEmpty().withMessage('pin의 값은 필수입니다.'),
@@ -2126,11 +2171,14 @@ app.post('/member/signup_verify_code',
     });
 
     const checkNumberExists = await User.exists({
-        phoneNumber: mobileVerifyInfo.phoneNumber
+        phoneNumber: mobileVerifyInfo.phoneNumber,
+        permissions: 'mobile_verified_member'
     });
     if(checkNumberExists) return res.status(409).send('이 번호로는 더 이상 인증할 수 없습니다.');
 
-    await User.updateOne({
+    delete req.session.mobileVerifyInfo;
+
+    if(req.user?.type === UserTypes.Account) await User.updateOne({
         uuid: req.user.uuid
     }, {
         phoneNumber: mobileVerifyInfo.phoneNumber,
@@ -2138,6 +2186,7 @@ app.post('/member/signup_verify_code',
             permissions: 'mobile_verified_member'
         }
     });
+    else if(mobileVerifyInfo.email) return signupAction(mobileVerifyInfo.email, req, res, mobileVerifyInfo.phoneNumber);
 
     res.redirect('/member/mypage');
 });

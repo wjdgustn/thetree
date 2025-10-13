@@ -20,7 +20,9 @@
   "use_email_verification": false,
 
   "verify_enabled": false,
-  "verify_text": "",
+  "verify_countries_ip_match": true,
+  "verify_countries": [],
+  "verify_countries_whitelist": true,
 
   "auto_verified_member": {
     "check_days": 7,

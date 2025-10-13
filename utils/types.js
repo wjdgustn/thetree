@@ -125,7 +125,8 @@ module.exports = {
     },
     SignupPolicy: {
         None: 0,
-        Block: 1
+        Block: 1,
+        RequireVerification: 2
     },
     AllPermissions: [
         ...SeedPermissions,

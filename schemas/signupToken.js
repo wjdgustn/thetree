@@ -32,6 +32,9 @@ const newSchema = new Schema({
     },
     oauth2Map: {
         type: Object
+    },
+    phoneNumber: {
+        type: String
     }
 });
 

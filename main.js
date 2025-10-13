@@ -436,7 +436,8 @@ global.plugins = {
     page: [],
     preHook: [],
     postHook: [],
-    code: []
+    code: [],
+    mobileVerify: []
 };
 global.pluginPaths = {};
 const pluginStaticPaths = [];
