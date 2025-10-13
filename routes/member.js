@@ -2070,8 +2070,8 @@ app.get('/member/signup_verify', (req, res) => {
             return res.redirect('/member/signup_verify_code');
     }
 
-    const countryCodes = CountryCodes.filter(a => !config.verify_countries.length
-        || (config.verify_countries.includes(a.code) === (config.verify_countries_whitelist ?? true)));
+    const countryCodes = CountryCodes.filter(a => !config.verify_countries?.length
+        || (config.verify_countries?.includes(a.code) === (config.verify_countries_whitelist ?? true)));
     res.renderSkin('모바일 인증', {
         contentName: 'member/signup_verify',
         serverData: {
@@ -2085,7 +2085,7 @@ app.get('/member/signup_verify', (req, res) => {
 
 app.post('/member/signup_verify',
     body('countryCode')
-        .custom(value => CountryCodes.some(a => a.code === value) && (!config.verify_countries.length || (config.verify_countries.includes(value) === (config.verify_countries_whitelist ?? true))))
+        .custom(value => CountryCodes.some(a => a.code === value) && (!config.verify_countries?.length || (config.verify_countries?.includes(value) === (config.verify_countries_whitelist ?? true))))
         .withMessage('countryCode의 값이 올바르지 않습니다.')
         .custom((value, { req }) => config.verify_countries_ip_match === false || req.countryCode.toLowerCase() === value)
         .withMessage('전화 번호와 사용중인 IP의 국가가 일치해야 합니다.'),
