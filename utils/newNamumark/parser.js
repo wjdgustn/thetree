@@ -1316,8 +1316,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             const index = Store.footnote.index;
             const name = splitted[0] || index.toString();
 
-            let value = Store.footnote.values.find(a => a.name === name)?.content;
-            if(value == null) {
+            const prevFootnote = Store.footnote.values.find(a => a.name === name);
+            let value = prevFootnote?.content;
+            if(prevFootnote == null) {
                 value = valueInput;
                 $.ACTION(() => {
                     value = parseInline(value);
