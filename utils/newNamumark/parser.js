@@ -1237,8 +1237,20 @@ class NamumarkParser extends EmbeddedActionsParser {
             link = link.replaceAll('\\#', '#');
 
             const text = parsedText || newLink || link;
+            let isFile = false;
             $.ACTION(() => {
-                parsedText &&= parseInline(parsedText);
+                if(!parsedUrl && link) {
+                    const maybeNamespace = link.split(':')[0];
+                    if(maybeNamespace === '파일'
+                        || (maybeNamespace.includes('파일') && global.config?.namespaces?.length && global.config.namespaces.includes(maybeNamespace))) {
+                        isFile = true;
+                        parsedText = [{
+                            type: 'text',
+                            text: link
+                        }];
+                    }
+                }
+                if(!isFile) parsedText &&= parseInline(parsedText);
             });
 
             if(origParsedText && origParsedText.replace(LiteralRegex, '').includes('\n')) {
