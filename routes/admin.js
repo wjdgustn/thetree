@@ -208,7 +208,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         await fs.writeFile(filePath, newContent);
         updateConfig();
 
-        await AuditLog.create({
+        if(oldContent !== newContent) await AuditLog.create({
             user: req.user.uuid,
             action: AuditLogTypes.ModifyConfig,
             target: 'stringConfig.json',
@@ -657,7 +657,7 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
     await fs.writeFile(filePath, content);
     updateConfig();
 
-    await AuditLog.create({
+    if(oldContent !== content) await AuditLog.create({
         user: req.user.uuid,
         action: AuditLogTypes.ModifyConfig,
         target: config,
@@ -688,7 +688,7 @@ app.post('/admin/config/stringconfig', middleware.permission('config'), async (r
     await fs.writeFile(filePath, newContent);
     updateConfig();
 
-    await AuditLog.create({
+    if(oldContent !== newContent) await AuditLog.create({
         user: req.user.uuid,
         action: AuditLogTypes.ModifyConfig,
         target: 'stringConfig.json',
