@@ -850,15 +850,6 @@ app.use(async (req, res, next) => {
         req.path = req.path.slice('/internal'.length) || '/';
     }
 
-    if(req.method === 'GET'
-        && req.url !== '/sidebar'
-        && req.isInternal
-        && versionHeader !== skinInfo.versionHeader
-        && ((!debug && !config.testwiki) || versionHeader !== 'bypass')) {
-        res.originalStatus(400).end();
-        return;
-    }
-
     res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
 
     let session;
@@ -1157,6 +1148,14 @@ app.use(async (req, res, next) => {
                     viewData: data
                 }
             });
+        }
+
+        if(req.method === 'GET'
+            && req.url !== '/sidebar'
+            && versionHeader !== skinInfo.versionHeader
+            && ((!debug && !config.testwiki) || versionHeader !== 'bypass')) {
+            res.originalStatus(400).end();
+            return;
         }
     }
 
