@@ -837,8 +837,8 @@ app.use(async (req, res, next) => {
 
         const decryptedStr = encryptedBytes.map((a, i) => String.fromCharCode(a ^ urlKey[i % urlKey.length])).join('');
 
-        if(decryptedStr.startsWith(versionHeader)) {
-            const finalPath = decryptedStr.slice(versionHeader.length);
+        if(decryptedStr.startsWith(versionHeader) || decryptedStr.startsWith(skinInfo.versionHeader)) {
+            const finalPath = decryptedStr.slice(versionHeader?.length ?? skinInfo.versionHeader.length);
             req.isInternal = true;
             req.url = req.url.replace(req.path, finalPath) || '/';
             req.path = finalPath || '/';
