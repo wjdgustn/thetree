@@ -912,7 +912,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
     res.renderSkin('내 정보', {
         contentName: 'member/mypage',
         serverData: {
-            skins: global.skins.filter(a => a !== 'plain'),
+            skins: Object.keys(global.skinInfos).filter(a => a !== 'plain'),
             passkeys,
             user: utils.onlyKeys(req.user, ['name', 'email', 'skin', 'usePasswordlessLogin']),
             permissions: req.displayPermissions,
@@ -930,7 +930,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
 
 app.post('/member/mypage', middleware.isLogin,
     body('skin')
-        .custom(value => ['default', ...global.skins.filter(a => a !== 'plain')].includes(value))
+        .custom(value => ['default', ...Object.keys(global.skinInfos).filter(a => a !== 'plain')].includes(value))
         .withMessage('invalid_skin'),
     middleware.fieldErrors,
     async (req, res) => {
@@ -959,15 +959,8 @@ app.post('/member/generate_api_token',
         apiToken
     });
 
-    if(req.backendMode) res.partial({
+    res.partial({
         apiToken
-    });
-    else res.json({
-        type: 'js',
-        script: `
-document.getElementById('token-input').value = '${apiToken}';
-document.getElementById('token-page').style.display = '';
-        `.trim()
     });
 });
 
@@ -1088,7 +1081,7 @@ app.get('/contribution/:uuid/document',
             aclGroupStyle: (await utils.getUserCSS(user)) || null
         },
         serverData: {
-            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null, req.backendMode)),
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null)),
             total,
             prevItem,
             nextItem,
@@ -1901,8 +1894,7 @@ app.post('/member/register_webauthn/challenge', async (req, res) => {
         backedUp: credentialBackedUp
     });
 
-    if(req.backendMode) res.reload();
-    else res.status(204).end();
+    res.reload();
 });
 
 app.post('/member/delete_webauthn',
@@ -1914,8 +1906,7 @@ app.post('/member/delete_webauthn',
         user: req.user.uuid,
         name: req.body.name
     });
-    if(req.backendMode) res.reload();
-    else res.status(204).end();
+    res.reload();
 });
 
 app.get('/member/notifications', middleware.isLogin, async (req, res) => {

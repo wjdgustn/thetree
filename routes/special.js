@@ -64,7 +64,7 @@ app.get('/RecentChanges', async (req, res) => {
     res.renderSkin('최근 변경내역', {
         contentName: 'special/recentChanges',
         serverData: {
-            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null, req.backendMode)),
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null)),
             logType: logTypeText
         }
     });
@@ -219,15 +219,10 @@ app.get('/sidebar', middleware.internal, async (req, res) => {
     });
 });
 
-global.skinCommitId = {};
 let openSourceLicense;
 app.get('/License', (req, res) => {
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
-
-    if(!req.backendMode) skinCommitId[skin] ??= execSync('git rev-parse HEAD', {
-        cwd: `./skins/${skin}`
-    }).toString().trim().slice(0, 7);
 
     openSourceLicense ??= fs.readFileSync('./OPEN_SOURCE_LICENSE.txt').toString();
 
@@ -235,14 +230,10 @@ app.get('/License', (req, res) => {
         viewName: 'license',
         contentName: 'special/license',
         serverData: {
-            ...(req.backendMode ? {
-                version: global.versionInfo.versionData.version,
-                branch: global.versionInfo.branch !== 'master' ? global.versionInfo.branch : undefined,
-                commitDate: global.versionInfo.commitDate,
-                commitId: global.versionInfo.commitId.slice(0, 7)
-            } : {
-                skinCommitId: skinCommitId[skin],
-            }),
+            version: global.versionInfo.versionData.version,
+            branch: global.versionInfo.branch !== 'master' ? global.versionInfo.branch : undefined,
+            commitDate: global.versionInfo.commitDate,
+            commitId: global.versionInfo.commitId.slice(0, 7),
             openSourceLicense
         }
     });

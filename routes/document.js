@@ -163,7 +163,7 @@ app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
             status: 404,
             serverData: {
                 document,
-                revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode))
+                revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document))
             }
         });
     }
@@ -242,12 +242,6 @@ app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
         },
         contentHtml: `<h2>${contentHtml}</h2>`
     });
-    let categoryHtml;
-    if(!req.backendMode) try {
-        categoryHtml = await utils.renderCategory(categories, namespace !== '사용자' && !isRedirect);
-    } catch (e) {
-        return res.status(500).send('카테고리 렌더 오류');
-    }
 
     if(user) {
         const blockGroups = await ACLGroup.find({
@@ -272,31 +266,17 @@ app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
 
         if(blockedItem) {
             const group = blockGroups.find(a => a.uuid === blockedItem.aclGroup);
-            if(req.backendMode) userBlockedData = {
+            userBlockedData = {
                 name: group.name,
                 id: blockedItem.id,
                 createdAt: blockedItem.createdAt,
                 expiresAt: blockedItem.expiresAt,
                 note: blockedItem.note
             }
-            else contentHtml = `
-<div class="special-box blocked-box">
-<span>이 사용자는 차단된 사용자입니다. (#${blockedItem.id})</span>
-<br><br>
-이 사용자는 ${globalUtils.getFullDateTag(blockedItem.createdAt)}에 ${blockedItem.expiresAt ? globalUtils.getFullDateTag(blockedItem.expiresAt) + ' 까지' : '영구적으로'} 차단되었습니다.
-<br>
-차단 사유: ${blockedItem.note ?? '없음'}
-</div>
-        `.replaceAll('\n', '').trim() + contentHtml;
         }
 
         if(userPermissions.includes('admin')) {
-            if(req.backendMode) userIsAdmin = true;
-            else contentHtml = `
-<div class="special-box admin-box">
-<span>이 사용자는 특수 권한을 가지고 있습니다.</span>
-</div>
-        `.replaceAll('\n', '').trim() + contentHtml;
+            userIsAdmin = true;
         }
     }
 
@@ -395,11 +375,6 @@ app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
                 nextItem: nextItem?.title
             }
         }
-
-        if(!req.backendMode) contentHtml += await utils.renderCategoryDocument({
-            document,
-            categoryInfos
-        });
     }
 
     const star_count = await Star.countDocuments({
@@ -414,30 +389,22 @@ app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
     res.renderSkin(undefined, {
         ...defaultData,
         headings,
-        ...(req.backendMode ? {
-            contentName: 'wiki'
-        } : {}),
+        contentName: 'wiki',
         serverData: {
-            ...(req.backendMode ? {
-                categories: categories.map(a => ({
-                    ...a,
-                    text: undefined,
-                    document: utils.parseDocumentName('분류:' + a.document)
-                })),
-                contentHtml,
-                userboxData: {
-                    admin: userIsAdmin,
-                    blocked: userBlockedData
-                },
-                categoriesData,
-                isRedirect,
-                embed
-            } : {})
-        },
-        ...(req.backendMode ? {} : {
+            categories: categories.map(a => ({
+                ...a,
+                text: undefined,
+                document: utils.parseDocumentName('분류:' + a.document)
+            })),
             contentHtml,
-            categoryHtml
-        }),
+            userboxData: {
+                admin: userIsAdmin,
+                blocked: userBlockedData
+            },
+            categoriesData,
+            isRedirect,
+            embed
+        },
         date: Math.floor(rev.createdAt.getTime() / 1000),
         star_count,
         starred: !!starred
@@ -467,10 +434,8 @@ app.get('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
 
     let aclData = aclMapper(acl);
     let nsaclData = aclMapper(namespaceACL);
-    if(req.backendMode) {
-        aclData = aclData.map(a => a.map(b => utils.aclStrMapper(b)));
-        nsaclData = nsaclData.map(a => a.map(b => utils.aclStrMapper(b)));
-    }
+    aclData = aclData.map(a => a.map(b => utils.aclStrMapper(b)));
+    nsaclData = nsaclData.map(a => a.map(b => utils.aclStrMapper(b)));
 
     res.renderSkin(undefined, {
         viewName: 'acl',
@@ -818,8 +783,7 @@ app.patch('/action/acl/reorder', async (req, res) => {
 
     if(actions.length) await ACLModel.bulkWrite(actions);
 
-    if(req.backendMode) res.status(204).end();
-    else res.redirect(303, req.get('Referer'));
+    res.status(204).end();
 });
 
 const editAndEditRequest = async (req, res) => {
@@ -1074,32 +1038,8 @@ app.post('/preview/{*document}', middleware.parseDocumentName, async (req, res) 
         thread: isThread,
         req
     });
-    let categoryHtml = '';
-    if(!isThread && !req.backendMode) try {
-        categoryHtml = await utils.renderCategory(categories);
-    } catch (e) {
-        return res.status(500).send('카테고리 렌더 오류');
-    }
 
-    const isAdmin = req.permissions.includes('admin');
-    if(isThread && !req.backendMode) expressApp.render('components/commentPreview', {
-        comment: {
-            id: 1,
-            type: ThreadCommentTypes.Default,
-            userHtml: utils.userHtml(req.user, {
-                isAdmin,
-                thread: true,
-                threadAdmin: isAdmin
-            }),
-            contentHtml,
-            createdAt: new Date()
-        }
-    }, (err, html) => {
-        if(err) return res.status(500).send('댓글 미리보기 렌더 오류');
-        contentHtml = html;
-    });
-
-    if(req.backendMode) res.json({
+    res.json({
         contentHtml,
         categories: categories.map(a => ({
             ...a,
@@ -1107,7 +1047,6 @@ app.post('/preview/{*document}', middleware.parseDocumentName, async (req, res) 
             document: utils.parseDocumentName('분류:' + a.document)
         }))
     });
-    else res.send(categoryHtml + contentHtml);
 });
 
 const postEditAndEditRequest = async (req, res) => {
@@ -1220,24 +1159,18 @@ const postEditAndEditRequest = async (req, res) => {
                 editedRev: editedRev.rev,
                 diff: await utils.generateDiff(editedRev.content, content)
             }
-            if(req.backendMode) {
-                return res.partial({
-                    errorAlert: '편집 도중에 다른 사용자가 먼저 편집을 했습니다.',
-                    conflict: conflictData,
-                    content: rev.content,
-                    publicData: {
-                        body: {
-                            baserev: rev.rev,
-                            baseuuid: rev.uuid,
-                            section: null
-                        }
+            return res.partial({
+                errorAlert: '편집 도중에 다른 사용자가 먼저 편집을 했습니다.',
+                conflict: conflictData,
+                content: rev.content,
+                publicData: {
+                    body: {
+                        baserev: rev.rev,
+                        baseuuid: rev.uuid,
+                        section: null
                     }
-                });
-            }
-            else {
-                req.session.flash.conflict = conflictData;
-                return res.redirect(req.originalUrl);
-            }
+                }
+            });
         }
     }
 
@@ -1516,7 +1449,7 @@ app.get('/history/{*document}', middleware.parseDocumentName, async (req, res) =
         viewName: 'history',
         document,
         serverData: {
-            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document, req.backendMode)),
+            revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), req.document)),
             latestRev,
             permissions: {
                 troll: req.permissions.includes('mark_troll_revision'),
@@ -1785,22 +1718,20 @@ app.get('/blame/{*document}', middleware.parseDocumentName, async (req, res) => 
     const lines = rev.content?.split('\n') ?? [''];
 
     const blameLines = [];
-    if(req.backendMode) {
-        let remainingCount = 0;
-        const blameCopy = blame.slice();
-        for(let i in lines) {
-            i = parseInt(i);
-            const obj = { content: lines[i] };
+    let remainingCount = 0;
+    const blameCopy = blame.slice();
+    for(let i in lines) {
+        i = parseInt(i);
+        const obj = { content: lines[i] };
 
-            if(!remainingCount) {
-                const diff = blameCopy.shift();
-                remainingCount = diff.count;
-                obj.diff = diff;
-            }
-            remainingCount--;
-
-            blameLines.push(obj);
+        if(!remainingCount) {
+            const diff = blameCopy.shift();
+            remainingCount = diff.count;
+            obj.diff = diff;
         }
+        remainingCount--;
+
+        blameLines.push(obj);
     }
 
     res.renderSkin(undefined, {
@@ -1810,13 +1741,7 @@ app.get('/blame/{*document}', middleware.parseDocumentName, async (req, res) => 
         rev: rev.rev,
         uuid: rev.uuid,
         serverData: {
-            ...(req.backendMode ? {
-                blameLines
-            } : {
-                document,
-                blame,
-                lines
-            })
+            blameLines
         }
     });
 });

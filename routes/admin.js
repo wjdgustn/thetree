@@ -40,7 +40,6 @@ const {
     AuditLogTypes
 } = require('../utils/types');
 const middleware = require('../utils/middleware');
-const minifyManager = require('../utils/minifyManager');
 const docUtils = require('../utils/docUtils');
 const {
     changeNameAction,
@@ -152,8 +151,7 @@ app.post('/admin/developer/eval', middleware.permission('developer'), async (req
     if(isStr) result = namumarkUtils.escapeHtml(result);
     else result = highlight(result, { language: 'javascript' }).value.replaceAll('\n', '<br>');
 
-    if(req.backendMode) res.partial({ evalOutput: result });
-    else res.send(result);
+    res.partial({ evalOutput: result });
 });
 
 app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware.referer('/admin/'), async (req, res) => {
@@ -217,40 +215,6 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         });
 
         return res.reload();
-    }
-
-    else if(tool === 'minifyjs') {
-        minifyManager.minifyJS(true);
-        return res.status(204).end();
-    }
-
-    else if(tool === 'minifycss') {
-        minifyManager.minifyCSS(true);
-        return res.status(204).end();
-    }
-
-    else if(tool === 'clearpublicmindir') {
-        const files = await fs.readdir('./publicMin');
-        for(let file of files) {
-            const dirPath = path.join('./publicMin', file);
-            const stat = await fs.stat(dirPath);
-            if(!stat.isDirectory()) continue;
-
-            await fs.rm(dirPath, { recursive: true });
-        }
-        return res.status(204).end();
-    }
-
-    else if(tool === 'clearcachedir') {
-        const files = await fs.readdir('./cache');
-        for(let file of files) {
-            const dirPath = path.join('./cache', file);
-            const stat = await fs.stat(dirPath);
-            if(!stat.isDirectory()) continue;
-
-            await fs.rm(dirPath, { recursive: true });
-        }
-        return res.status(204).end();
     }
 
     else if(tool === 'generateblame') {
@@ -580,7 +544,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
     else if(tool === 'updateskin') {
         res.status(204).end();
-        for(let skin of global.skins) {
+        for(let skin of Object.keys(global.skinInfos)) {
             const checkGit = await fs.exists(`./skins/${skin}/.git`);
             if(!checkGit) continue;
 
@@ -1315,13 +1279,9 @@ app.post('/admin/batch_revert',
         resultText,
         failResultText
     }
-    if(req.backendMode) res.partial({
+    res.partial({
         result: resultData
     });
-    else {
-        req.session.flash.batchRevertResult = resultData;
-        res.redirect('/admin/batch_revert');
-    }
 });
 
 app.get('/admin/login_history', middleware.permission('login_history'), async (req, res) => {

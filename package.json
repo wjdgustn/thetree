@@ -26,7 +26,6 @@
     "@simplewebauthn/server": "^13.1.1",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
-    "cheerio": "^1.0.0",
     "chevrotain": "^10.5.0",
     "clean-css": "^5.3.3",
     "compression": "^1.7.5",
@@ -37,7 +36,6 @@
     "diff": "^7.0.0",
     "dompurify": "^3.2.6",
     "dotenv": "^16.4.5",
-    "ejs": "^3.1.10",
     "es-hangul": "^2.2.4",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
@@ -82,7 +80,6 @@
     "ignore": [
       "public/",
       "customStatic/",
-      "publicMin/",
       "cache/",
       "views/",
       "frontend/",

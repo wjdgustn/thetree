@@ -79,35 +79,10 @@ module.exports = {
     },
     dbDocumentToDocument(dbDocument) {
         return this.parseDocumentName(`${dbDocument.namespace}:${dbDocument.title}`);
-    },camelToSnakeCase(str) {
+    },
+    camelToSnakeCase(str) {
         return str.replace(/(.)([A-Z][a-z]+)/, '$1_$2').replace(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase();
     },
-
-    renderCategory: (categories = [], fromWiki = false) => new Promise((resolve, reject) => {
-        expressApp.render('components/category', {
-            categories,
-            fromWiki
-        }, (err, html) => {
-            if(err) {
-                console.error(err);
-                reject(err);
-            }
-
-            resolve(html.replaceAll('\n', '').trim());
-        });
-    }),
-    renderCategoryDocument: data => new Promise((resolve, reject) => {
-        expressApp.render('document/category', {
-            ...data
-        }, (err, html) => {
-            if(err) {
-                console.error(err);
-                reject(err);
-            }
-
-            resolve(html.replaceAll('\n', '').trim());
-        });
-    }),
     compareArray: (arr1, arr2) => {
         if(!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
         if(arr1.length !== arr2.length) return false;
@@ -273,52 +248,34 @@ module.exports = {
             ]))
         }
     },
-    addHistoryData(req, rev, isAdmin = false, document = null, backendMode = false) {
+    addHistoryData(req, rev, isAdmin = false, document = null) {
         document ??= rev.document;
 
-        rev.infoText = null;
-
+        let infoText = null;
+        let htmlInfoText = null;
         if(rev.type === HistoryTypes.ACL) {
-            rev.infoText = `${rev.log}으로 ACL 변경`
+            infoText = `${rev.log}으로 ACL 변경`
             rev.log = null;
         }
         else if(rev.type === HistoryTypes.Create) {
-            rev.infoText = '새 문서';
+            infoText = '새 문서';
         }
         else if(rev.type === HistoryTypes.Revert) {
-            rev.infoText = `r${rev.revertRev}으로 되돌림`
+            infoText = `r${rev.revertRev}으로 되돌림`
         }
         else if(rev.type === HistoryTypes.Delete) {
-            rev.infoText = `삭제`
+            infoText = `삭제`
         }
         else if(rev.type === HistoryTypes.Move) {
-            rev.infoText = `${rev.moveOldDoc}에서 ${rev.moveNewDoc}로 문서 이동`;
-            rev.htmlInfoText = `<b>${namumarkUtils.escapeHtml(rev.moveOldDoc)}</b>에서 <b>${namumarkUtils.escapeHtml(rev.moveNewDoc)}</b>로 문서 이동`;
+            htmlInfoText = `<b>${namumarkUtils.escapeHtml(rev.moveOldDoc)}</b>에서 <b>${namumarkUtils.escapeHtml(rev.moveNewDoc)}</b>로 문서 이동`;
         }
 
         if(rev.troll || (rev.hideLog && !req.permissions.includes('hide_document_history_log')))
             rev.log = null;
 
-        if(rev.infoText) rev.htmlInfoText ??= namumarkUtils.escapeHtml(rev.infoText);
+        if(infoText) htmlInfoText ??= namumarkUtils.escapeHtml(infoText);
 
-        if(backendMode) {
-            rev.infoText = rev.htmlInfoText;
-            rev.htmlInfoText = undefined;
-        }
-        else {
-            rev.userHtml = this.userHtml(rev.user, {
-                isAdmin,
-                note: document ? `${globalUtils.doc_fulltitle(document)} r${rev.rev} 긴급차단` : null
-            });
-
-            const diffClassList = ['diff-text'];
-
-            if(rev.diffLength > 0) diffClassList.push('diff-add');
-            else if(rev.diffLength < 0) diffClassList.push('diff-remove');
-
-            rev.pureDiffHtml = `<span class="${diffClassList.join(' ')}">${rev.diffLength > 0 ? '+' : ''}${rev.diffLength ?? 0}</span>`;
-            rev.diffHtml = `<span>(${rev.pureDiffHtml})</span>`;
-        }
+        rev.infoText = htmlInfoText;
 
         return rev;
     },
@@ -339,7 +296,7 @@ module.exports = {
                     .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc -_id')
                     .lean();
                 if(obj.history) {
-                    obj.history = this.addHistoryData(req, obj.history, isAdmin, null, req.backendMode);
+                    obj.history = this.addHistoryData(req, obj.history, isAdmin, null);
                     cache[obj.uuid] = obj.history;
                     obj.user = obj.history.user;
                 }
@@ -680,35 +637,15 @@ module.exports = {
             ...this.withoutKeys(req.query, [query.from ? 'until' : 'from']),
             ...query
         })}`;
-        const originalPageButton = await new Promise(async (resolve, reject) => {
-            if(req.backendMode) return resolve(null);
-
-            expressApp.render('components/pageButton', {
-                prevLink: prevItem ? link({
-                    until: prevItem[key].toString()
-                }) : null,
-                nextLink: nextItem ? link({
-                    from: nextItem[key].toString()
-                }) : null
-            }, (err, html) => {
-                if(err) reject(err);
-                resolve(html);
-            });
-        });
 
         return {
             items,
             prevItem,
             nextItem,
-            ...(req.backendMode ? {
-                pageProps: {
-                    prev: prevItem ? { query: { until: prevItem[key] } } : null,
-                    next: nextItem ? { query: { from: nextItem[key] } } : null
-                }
-            } : {
-                pageButton: `<div class="navigation-div navigation-page">${originalPageButton}</div>`,
-                originalPageButton,
-            }),
+            pageProps: {
+                prev: prevItem ? { query: { until: prevItem[key] } } : null,
+                next: nextItem ? { query: { from: nextItem[key] } } : null
+            },
             total
         }
     },
@@ -800,22 +737,11 @@ module.exports = {
         } = {}
     ) {
         comment.user = user ?? comment.user;
-        if(!req?.backendMode) comment.userHtml = this.userHtml(user ?? comment.user, {
-            isAdmin: req?.permissions.includes('admin'),
-            note: `토론 ${thread.url} #${comment.id} 긴급차단`,
-            thread: true,
-            threadAdmin: comment.admin
-        });
 
         const canSeeHidden = req?.permissions.includes('manage_thread');
         if(comment.hidden) {
             hideUser ??= comment.hiddenBy;
             comment.hideUser = hideUser;
-            if(!req?.backendMode) comment.hideUserHtml = this.userHtml(hideUser, {
-                isAdmin: hideUser.permissions?.includes('admin'),
-                thread: true,
-                threadAdmin: true
-            });
         }
 
         if(!comment.hidden || canSeeHidden) {
@@ -863,11 +789,7 @@ module.exports = {
             'parseResult',
             'contentHtml',
 
-            'hideUser',
-            ...(!req || !req.backendMode ? [
-                'userHtml',
-                'hideUserHtml'
-            ] : [])
+            'hideUser'
         ]);
     },
     async multipleThreadCommentsMapper(requests = []) {

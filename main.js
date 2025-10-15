@@ -6,17 +6,13 @@ const helmet = require('helmet');
 const session = require('express-session');
 const fs = require('fs-extra');
 const path = require('path');
-const querystring = require('querystring');
 const crypto = require('crypto');
-const dayjs = require('dayjs');
 const nodemailer = require('nodemailer');
-const cheerio = require('cheerio');
 const compression = require('compression');
 const useragent = require('express-useragent');
 const { Address4 } = require('ip-address');
 const redis = require('redis');
 const RedisStore = require('connect-redis').default;
-const { colorFromUuid } = require('uuid-color');
 const aws = require('@aws-sdk/client-s3');
 const meiliSearch = require('meilisearch');
 const { execSync, exec } = require('child_process');
@@ -44,7 +40,6 @@ const {
     LoginHistoryTypes,
     NotificationTypes
 } = types;
-const minifyManager = require('./utils/minifyManager');
 
 const User = require('./schemas/user');
 const AutoLoginToken = require('./schemas/autoLoginToken');
@@ -164,9 +159,9 @@ global.updateSkinInfo = () => {
     }
     if(!fs.existsSync('./skins')) fs.mkdirSync('./skins');
 
-    global.skins = fs.readdirSync('./skins').filter(a => !a.startsWith('.'));
+    const skinDir = fs.readdirSync('./skins').filter(a => !a.startsWith('.'));
     global.skinInfos = {};
-    for(let skin of global.skins) {
+    for(let skin of skinDir) {
         const metadataPath = path.join('./skins', skin, 'metadata.json');
         const isSPA = fs.existsSync(metadataPath);
         if(!isSPA) continue;
@@ -371,7 +366,7 @@ global.updateSkins = async (names = []) => {
 
     return { failed };
 }
-if(!global.skins.length)
+if(!Object.keys(global.skinInfos).length)
     updateSkins(['plain']).then();
 
 global.updatingEngine = false;
@@ -553,9 +548,6 @@ global.permTokens = Object.fromEntries(AllPermissions.map(a => [a, crypto.random
 
 // app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
-app.set('views', './views');
-app.set('view engine', 'ejs');
-
 app.use(cookieParser());
 
 app.use((req, res, next) => {
@@ -607,24 +599,8 @@ if(!debug) {
     app.use(compression());
 }
 app.use(express.static(`./customStatic`));
+// app.use(express.static(`./public`));
 
-if(config.minify.js || config.minify.css) {
-    minifyManager.check();
-}
-app.use((req, res, next) => {
-    if(req.url.startsWith('/js/perm') || req.url.startsWith('/css/perm')) {
-        const perm = req.url.split('/')[3];
-        if(global.permTokens[perm] !== req.query.token) return res.status(403).end();
-        next();
-    }
-    else if(config.minify.js && req.url.endsWith('.js')
-        || config.minify.css && req.url.endsWith('.css'))
-        express.static(`./publicMin`)(req, res, next);
-    else next();
-});
-app.use(express.static(`./public`));
-
-const skinsStatic = express.static('./skins');
 app.use('/skins', (req, res, next) => {
     const splittedPath = req.path.split('/');
     const skinName = splittedPath[1];
@@ -637,15 +613,7 @@ app.use('/skins', (req, res, next) => {
         req.url = req.url.slice(skinName.length + 2);
         express.static(`./skins/${skinName}/client`)(req, res, next);
     }
-    else {
-        const blacklist = ['ejs', 'vue'];
-        if(!filename.includes('.') || blacklist.some(a => req.url.endsWith('.' + a))) return next();
-
-        if(config.minify.js && filename.endsWith('.js')) return minifyManager.handleSkinJS(filename, req, res, next);
-        if(config.minify.css && filename.endsWith('.css')) return minifyManager.handleSkinCSS(filename, req, res, next);
-
-        skinsStatic(req, res, next);
-    }
+    else next();
 });
 
 app.use('/plugins/:pluginName', (req, res, next) => {
@@ -730,27 +698,13 @@ SocketIO.engine.use(onlyForHandshake(getUserMiddleware));
 
 app.use(useragent.express());
 
-app.get('/js/global.js', (req, res) => {
-    if(!global.globalUtilsCache) {
-        global.globalUtilsCache = 'globalUtils = {\n'
-            + Object.keys(globalUtils)
-                .map(k => `${globalUtils[k].toString()}`)
-                .join(',\n')
-                .split('\n')
-                .map(a => a.trim())
-                .join('\n')
-            + '\n}';
-        global.globalUtilsEtag = crypto.createHash('sha256').update(global.globalUtilsCache).digest('hex');
+app.use(async (req, res, next) => {
+    req.isInternal = req.url.split('/')[1] === 'internal';
+    if(req.isInternal) {
+        req.url = req.url.slice('/internal'.length) || '/';
+        req.path = req.path.slice('/internal'.length) || '/';
     }
 
-    res.setHeader('Content-Type', 'text/javascript');
-    res.setHeader('Etag', global.globalUtilsEtag);
-    res.end(global.globalUtilsCache);
-});
-
-const skinFiles = {};
-
-app.use(async (req, res, next) => {
     if(process.env.IP_HEADER && req.headers[process.env.IP_HEADER]) Object.defineProperty(req, 'ip', {
         get() {
             return req.headers[process.env.IP_HEADER].split(',')[0];
@@ -793,14 +747,13 @@ app.use(async (req, res, next) => {
 
         if(!req.session.ipUser
             && req.method === 'POST'
-            && !['/member/', '/preview/'].some(a => req.url.startsWith(a) || req.url.startsWith('/internal' + a))) {
+            && !['/member/', '/preview/'].some(a => req.url.startsWith(a))) {
             const newUser = new User({
                 ip: req.ip,
                 type: UserTypes.IP
             });
             await newUser.save();
             req.session.ipUser = newUser.toJSON();
-            req.session.fullReload = true;
         }
     }
 
@@ -816,44 +769,9 @@ app.use(async (req, res, next) => {
     req.requestId = log._id.toString();
     log.save().then();
 
-    app.locals.rmWhitespace = true;
-
-    // app.locals.fs = fs;
-    app.locals.path = path;
-    app.locals.dayjs = dayjs;
-    app.locals.colorFromUuid = colorFromUuid;
-    app.locals.querystring = querystring;
-
-    app.locals.getSkinFile = filename => {
-        const files = skinFiles[skin] ??= {};
-        files[filename] ??= fs.readFileSync(`./skins/${skin}/${filename.replaceAll('..', '')}`);
-        return files[filename];
-    }
-
-    for(let t in types) {
-        app.locals[t] = types[t];
-    }
-
-    app.locals.ACL = ACL;
-
-    app.locals.__dirname = __dirname;
-
-    app.locals.req = req;
-    app.locals.user = req.user;
-    app.locals.env = process.env;
-    app.locals.config = config;
-
-    app.locals.utils = utils;
-    app.locals.namumarkUtils = namumarkUtils;
-
-    for(let util in globalUtils) {
-        app.locals[util] = globalUtils[util];
-    }
-
     await utils.makeACLData(req);
 
     const isDev = req.permissions.includes('developer');
-    app.locals.isDev = isDev;
 
     if(isDev) for(let perm of AllPermissions) {
         if(!req.permissions.includes(perm) && !NoGrantPermissions.includes(perm))
@@ -880,15 +798,12 @@ app.use(async (req, res, next) => {
 
     let skin = req.user?.skin;
     if(!skin || skin === 'default') skin = config.default_skin;
-    if(!global.skins.includes(skin)) skin = global.skins[0];
+    if(!global.skinInfos[skin]) skin = Object.keys(global.skinInfos)[0];
     const skinInfo = global.skinInfos[skin];
 
-    if(!skin) return res.status(500).send('skin not installed');
+    if(!skinInfo) return res.status(500).send('skin not installed');
 
     req.skin = skin;
-
-    req.isInternal = req.url.split('/')[1] === 'internal';
-    req.backendMode = skinInfo || req.isInternal;
 
     res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
 
@@ -952,36 +867,33 @@ app.use(async (req, res, next) => {
             } : {})
         }
 
-        if(skinInfo || req.backendMode) {
-            const configMapper = {
-                site_name: 'wiki.site_name',
-                logo_url: 'wiki.logo_url',
-                front_page: 'wiki.front_page',
-                editagree_text: 'wiki.editagree_text',
-                copyright_text: 'wiki.copyright_text',
-                base_url: 'wiki.canonical_url',
-                sitenotice: 'wiki.sitenotice'
-            }
-            for(let [key, value] of Object.entries(configMapper)) {
-                const configVal = configJSON[key] ?? config[key];
-                delete configJSON[key];
-                if(!configVal) continue;
-                configJSON[value] = configVal;
-            }
+        const configMapper = {
+            site_name: 'wiki.site_name',
+            logo_url: 'wiki.logo_url',
+            front_page: 'wiki.front_page',
+            editagree_text: 'wiki.editagree_text',
+            copyright_text: 'wiki.copyright_text',
+            base_url: 'wiki.canonical_url',
+            sitenotice: 'wiki.sitenotice'
+        }
+        for(let [key, value] of Object.entries(configMapper)) {
+            const configVal = configJSON[key] ?? config[key];
+            delete configJSON[key];
+            if(!configVal) continue;
+            configJSON[value] = configVal;
         }
 
         configJSONstr = JSON.stringify(configJSON);
         sessionJSONstr = JSON.stringify(session);
     }
 
-    const isBackendMode = req.isInternal || (debug && req.query.be);
     const getFEBasicData = () => {
         makeConfigAndSession();
 
         const userClientVersion = req.get('X-Chika');
         const clientVersion = skinInfo?.versionHeader;
 
-        if(req.url !== '/sidebar' && isBackendMode && userClientVersion !== clientVersion && ((!debug && !config.testwiki) || userClientVersion !== 'bypass')) {
+        if(req.url !== '/sidebar' && req.isInternal && userClientVersion !== clientVersion && ((!debug && !config.testwiki) || userClientVersion !== 'bypass')) {
             res.originalStatus(400).end();
             return;
         }
@@ -1015,14 +927,6 @@ app.use(async (req, res, next) => {
         const viewName = data.viewName || null;
         if (viewName) delete data.viewName;
 
-        let sendOnlyContent = req.fromFetch;
-        if(data.fullReload || req.session.fullReload) {
-            sendOnlyContent = false;
-
-            delete data.fullReload;
-            delete req.session.fullReload;
-        }
-
         if(viewName === 'wiki') {
             data.copyright_text = config.copyright_text;
             if(data.document) {
@@ -1038,44 +942,8 @@ app.use(async (req, res, next) => {
             data: utils.withoutKeys(data, [
                 'contentName',
                 'contentHtml',
-                'categoryHtml',
                 'serverData'
             ])
-        }
-
-        const browserGlobalVarScript = `
-<script id="initScript" nonce="${res.locals.cspNonce}">
-window.CONFIG = ${configJSONstr}
-window.page = ${JSON.stringify(page)}
-window.session = ${sessionJSONstr}
-
-document.getElementById('initScript')?.remove();
-        `.trim().replaceAll('/', '\\/') + '\n</script>';
-
-        if(data.contentHtml) data.contentText = globalUtils.removeHtmlTags(data.contentHtml);
-
-        if(data.categoryHtml) {
-            data.contentHtml = data.categoryHtml + data.contentHtml;
-        }
-
-        if(data.contentHtml && req.query.from && req.path.startsWith('/w/')) {
-            data.contentHtml = `
-<div class="thetree-alert thetree-alert-primary">
-<div class="thetree-alert-content">
-<a href="/w/${encodeURIComponent(req.query.from)}?noredirect=1" rel="nofollow" title="${req.query.from}">${namumarkUtils.escapeHtml(req.query.from)}</a>에서 넘어옴
-</div>
-</div>
-        `.replaceAll('\n', '').trim() + data.contentHtml;
-        }
-
-        if(data.contentHtml && data.rev) {
-            data.contentHtml = `
-<div class="thetree-alert thetree-alert-danger">
-<div class="thetree-alert-content">
-<b>[주의!]</b> 문서의 이전 버전(${globalUtils.getFullDateTag(data.date)}에 수정)을 보고 있습니다. <a href="${globalUtils.doc_action_link(data.document, 'w')}">최신 버전으로 이동</a>
-</div>
-</div>
-        `.replaceAll('\n', '').trim() + data.contentHtml;
         }
 
         const pluginData = {};
@@ -1089,90 +957,44 @@ document.getElementById('initScript')?.remove();
             if(typeof output === 'object') Object.assign(pluginData, output);
         }
 
-        const isAdmin = req.permissions.includes('admin');
-        if(isBackendMode || skinInfo) {
-            const basicData = getFEBasicData();
-            if(!basicData) return;
+        const basicData = getFEBasicData();
+        if(!basicData) return;
 
-            const resData = {
-                page: {
-                    contentName: data.contentName || null,
-                    contentHtml: data.contentHtml || null,
-                    ...utils.onlyKeys(page, [
-                        'title',
-                        'viewName',
-                        'menus'
-                    ])
-                },
-                data: {
-                    publicData: page.data,
-                    ...(data.serverData ?? {}),
-                    ...pluginData,
-                    ...req.additionalServerData
-                },
-                ...basicData
-            }
-
-            if(isBackendMode) res.json(resData);
-            else {
-                const render = require(`./skins/${skin}/server/server.cjs`).render;
-                const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`));
-                let body = rendered.html;
-                if(rendered.state) {
-                    body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
-                }
-                const html = skinInfo.template
-                    .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
-                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
-                    .replace('<!--app-body-->', body);
-
-                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-                res.status(status).send(html);
-            }
+        const resData = {
+            page: {
+                contentName: data.contentName || null,
+                contentHtml: data.contentHtml || null,
+                ...utils.onlyKeys(page, [
+                    'title',
+                    'viewName',
+                    'menus'
+                ])
+            },
+            data: {
+                publicData: page.data,
+                ...(data.serverData ?? {}),
+                ...pluginData,
+                ...req.additionalServerData
+            },
+            ...basicData
         }
-        else app.render('main', {
-            ...data,
-            ...(data.serverData ?? {}),
-            ...pluginData,
-            skin,
-            page,
-            session,
-            browserGlobalVarScript,
-            cspNonce: res.locals.cspNonce,
-            userHtml: (user, data) => utils.userHtml(user, {
-                ...data,
-                isAdmin
-            }),
-            addHistoryData: (rev, document) => utils.addHistoryData(req, rev, isAdmin, document, req.backendMode)
-        }, async (err, html) => {
-            if(err) {
-                console.error(err);
-                RequestLog.updateOne({
-                    _id: req.requestId
-                }, {
-                    error: util.inspect(err, { depth: 2, maxArrayLength: 200 })
-                }).then();
-                return res.status(500).send('스킨 렌더 오류<br>요청 ID: ' + req.requestId);
-            }
 
-            // if(config.minify.html) {
-            //     if(debug) console.time('minifyHtml');
-            //     try {
-            //         html = await minifyHtml(html, {
-            //             collapseWhitespace: true
-            //         });
-            //     } catch (e) {}
-            //     if(debug) console.timeEnd('minifyHtml');
-            // }
+        if(req.isInternal) res.json(resData);
+        else {
+            const render = require(`./skins/${skin}/server/server.cjs`).render;
+            const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`));
+            let body = rendered.html;
+            if(rendered.state) {
+                body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
+            }
+            const html = skinInfo.template
+                .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
+                .replace('<!--app-head-->', rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
+                .replace('<!--app-body-->', body);
 
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-
-            if(sendOnlyContent) {
-                const $ = cheerio.load(html);
-                res.status(status).send(browserGlobalVarScript + $('#content').html());
-            }
-            else res.status(status).send(html);
-        });
+            res.status(status).send(html);
+        }
     }
 
     res.error = (contentHtml, status = 400) => res.renderSkin('오류', {
@@ -1184,7 +1006,7 @@ document.getElementById('initScript')?.remove();
     });
 
     res.reload = (anchor, usingUrl = false) => {
-        if(req.backendMode && !usingUrl) {
+        if(!usingUrl) {
             res.json({
                 action: 'reloadView'
             });
@@ -1218,7 +1040,6 @@ document.getElementById('initScript')?.remove();
     }
 
     let url = req.url;
-    if(url.startsWith('/internal/')) url = url.replace('/internal', '');
     if(req.isInternal) {
         res.originalStatus = res.status;
         res.status = code => ({
@@ -1344,7 +1165,6 @@ document.getElementById('initScript')?.remove();
     if(req.method === 'GET') {
         let urlPath = req.path;
         if(urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
-        if(urlPath.startsWith('/internal/')) urlPath = urlPath.slice('/internal'.length);
         const pagePlugin = plugins.page.find(a => typeof a.url === 'string' ? a.url === urlPath : a.url(urlPath));
         if(pagePlugin) return pagePlugin.handler(req, res);
     }
@@ -1362,7 +1182,7 @@ document.getElementById('initScript')?.remove();
 for(let f of fs.readdirSync('./routes')) {
     const route = require(`./routes/${f}`);
     app.use(route.router ?? route);
-    app.use('/internal', route.router ?? route);
+    // app.use('/internal', route.router ?? route);
 }
 
 app.use((req, res, next) => {
