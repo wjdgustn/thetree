@@ -205,7 +205,7 @@ module.exports = {
             name: '읽기 전용 모드',
             methodField: 'ALL',
             type: 'js',
-            condition: `['/edit/','/move/','/delete/','/member/login','/member/logout'].some(a => url.startsWith(a)) || req.method !== 'GET'`,
+            condition: `['/edit/','/move/','/delete/','/member/login','/member/logout'].some(a => url.startsWith(a) || url.startsWith('/internal' + a)) || req.method !== 'GET'`,
             messageType: 'flexible',
             message: '위키가 읽기 전용 모드입니다.'
         },
@@ -213,7 +213,7 @@ module.exports = {
             name: '문서 생성 비활성화',
             methodField: 'POST',
             type: 'js',
-            condition: `!req.permissions.includes('admin') && url.startsWith('/edit/') && req.body.baseuuid === 'create'`,
+            condition: `!req.permissions.includes('admin') && url.includes('/edit/') && req.body.baseuuid === 'create'`,
             messageType: 'plaintext',
             message: '새 문서 생성이 비활성화되어 있습니다.'
         }
