@@ -1,7 +1,7 @@
 const express = require('express');
 
 const utils = require('../utils');
-const namumarkUtils = require('../utils/newNamumark/utils');
+const namumarkUtils = require('../utils/namumark/utils');
 const globalUtils = require('../utils/global');
 const { ACLTypes } = require('../utils/types');
 

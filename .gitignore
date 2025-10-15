@@ -8,7 +8,7 @@
 /plugins/*
 /frontend/
 /config/
-/utils/newNamumark/*.json
+/utils/namumark/*.json
 
 .env
 

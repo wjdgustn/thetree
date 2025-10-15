@@ -18,7 +18,7 @@ const table = require('./syntax/table');
 const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
-const jsGlobalRemover = fs.readFileSync('./utils/newNamumark/utils/jsGlobalRemover.js', 'utf8');
+const jsGlobalRemover = fs.readFileSync('./utils/namumark/utils/jsGlobalRemover.js', 'utf8');
 
 const parentResponsePromise = {};
 const topToHtml = module.exports = async parameter => {

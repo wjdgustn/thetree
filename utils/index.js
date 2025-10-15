@@ -8,7 +8,7 @@ const querystring = require('querystring');
 const { colorFromUuid } = require('uuid-color');
 
 const globalUtils = require('./global');
-const namumarkUtils = require('./newNamumark/utils');
+const namumarkUtils = require('./namumark/utils');
 const {
     UserTypes,
     HistoryTypes,

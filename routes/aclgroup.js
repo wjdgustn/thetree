@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const { Address4, Address6 } = require('ip-address');
 
 const utils = require('../utils');
-const namumarkUtils = require('../utils/newNamumark/utils');
+const namumarkUtils = require('../utils/namumark/utils');
 const middleware = require('../utils/middleware');
 const {
     BlockHistoryTypes,

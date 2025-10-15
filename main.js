@@ -29,7 +29,7 @@ global.__THETREE__ = {};
 
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
-const namumarkUtils = require('./utils/newNamumark/utils');
+const namumarkUtils = require('./utils/namumark/utils');
 const migrateCodes = require('./utils/migrate');
 const types = require('./utils/types');
 const {
@@ -491,8 +491,8 @@ global.reloadPlugins = () => {
 }
 reloadPlugins();
 
-const parser = require('./utils/newNamumark/parser');
-const toHtml = require('./utils/newNamumark/toHtml');
+const parser = require('./utils/namumark/parser');
+const toHtml = require('./utils/namumark/toHtml');
 global.NamumarkParser = {
     parser,
     toHtml

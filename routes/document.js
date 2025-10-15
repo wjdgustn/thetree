@@ -2,8 +2,8 @@ const express = require('express');
 const { Address4, Address6 } = require('ip-address');
 const { getChoseong } = require('es-hangul');
 
-const parser = require('../utils/newNamumark/parser');
-const toHtml = require('../utils/newNamumark/toHtml');
+const parser = require('../utils/namumark/parser');
+const toHtml = require('../utils/namumark/toHtml');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
-const parser = require('../utils/newNamumark/parser');
+const parser = require('../utils/namumark/parser');
 
 const utils = require('../utils');
 const docUtils = require('../utils/docUtils');

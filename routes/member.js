@@ -20,7 +20,7 @@ const axios = require('axios');
 const parsePhoneNumber = require('libphonenumber-js/max');
 
 const utils = require('../utils');
-const namumarkUtils = require('../utils/newNamumark/utils');
+const namumarkUtils = require('../utils/namumark/utils');
 const globalUtils = require('../utils/global');
 const middleware = require('../utils/middleware');
 const {

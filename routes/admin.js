@@ -24,7 +24,7 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
-const namumarkUtils = require('../utils/newNamumark/utils');
+const namumarkUtils = require('../utils/namumark/utils');
 const {
     AllPermissions,
     ProtectedPermissions,
