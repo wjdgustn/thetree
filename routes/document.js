@@ -653,6 +653,12 @@ app.post('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
         target: namespace,
         content: log
     });
+    else if(target === 'thread') await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.ThreadACL,
+        target: dbThread.uuid,
+        content: log
+    });
 
     res.reload();
 });
@@ -730,6 +736,12 @@ app.get('/action/acl/delete', async (req, res) => {
         user: req.user.uuid,
         action: AuditLogTypes.NamespaceACL,
         target: dbACL.namespace,
+        content: log
+    });
+    else if(dbACL.thread) await AuditLog.create({
+        user: req.user.uuid,
+        action: AuditLogTypes.ThreadACL,
+        target: dbACL.thread,
         content: log
     });
 

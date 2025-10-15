@@ -111,7 +111,8 @@ module.exports = {
         ACLGroupCreate: 3,
         ACLGroupDelete: 4,
         ManageAccount: 5,
-        ModifyConfig: 6
+        ModifyConfig: 6,
+        ThreadACL: 7
     },
     LoginHistoryTypes: {
         Login: 0,

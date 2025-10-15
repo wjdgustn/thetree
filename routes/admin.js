@@ -1496,6 +1496,14 @@ app.get('/admin/audit_log', middleware.permission('config'), async (req, res) =>
                 .lean();
             delete item.content;
         }
+        else if(item.action === AuditLogTypes.ThreadACL) {
+            item.thread = await Thread.findOne({
+                uuid: item.target
+            })
+                .select('url topic -_id')
+                .lean();
+            delete item.target;
+        }
     }
     data.items = await utils.findUsers(req, data.items);
     data.items = await utils.findUsers(req, data.items, 'targetUser');
