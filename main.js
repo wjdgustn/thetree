@@ -798,10 +798,16 @@ app.use(async (req, res, next) => {
 
     if(!skinInfo) return res.status(500).send('skin not installed');
 
+    req.skin = skin;
+
+    const versionHeader = req.get('X-Chika');
+
     const firstPath = req.path.split('/')[1];
     const isPlainInternal = firstPath === 'internal';
     const isEncryptedInternal = firstPath === 'i';
     if(isEncryptedInternal && skinInfo.urlKey) {
+        const urlKey = [...crypto.createHash('sha256').update(versionHeader ?? skinInfo.versionHeader).digest()];
+
         const urlChars = [
             ...[
                 ...[...Array(26)].map((a, i) => i + 97),
@@ -812,7 +818,7 @@ app.use(async (req, res, next) => {
             '-',
             '_'
         ];
-        utils.shuffleArray(urlChars, skinInfo.urlKey);
+        utils.shuffleArray(urlChars, urlKey);
 
         const encryptedPath = req.path.slice('/i/'.length);
 
@@ -827,12 +833,12 @@ app.use(async (req, res, next) => {
             const byte = binary.slice(i, i + 8);
             if(byte.length === 8) encryptedBytes.push(parseInt(byte, 2));
         }
-        utils.deshuffleArray(encryptedBytes, skinInfo.urlKey);
+        utils.deshuffleArray(encryptedBytes, urlKey);
 
-        const decryptedStr = encryptedBytes.map((a, i) => String.fromCharCode(a ^ skinInfo.urlKey[i % skinInfo.urlKey.length])).join('');
+        const decryptedStr = encryptedBytes.map((a, i) => String.fromCharCode(a ^ urlKey[i % urlKey.length])).join('');
 
-        if(decryptedStr.startsWith(skinInfo.versionHeader)) {
-            const finalPath = decryptedStr.slice(skinInfo.versionHeader.length);
+        if(decryptedStr.startsWith(versionHeader)) {
+            const finalPath = decryptedStr.slice(versionHeader.length);
             req.isInternal = true;
             req.url = req.url.replace(req.path, finalPath) || '/';
             req.path = finalPath || '/';
@@ -844,7 +850,14 @@ app.use(async (req, res, next) => {
         req.path = req.path.slice('/internal'.length) || '/';
     }
 
-    req.skin = skin;
+    if(req.method === 'GET'
+        && req.url !== '/sidebar'
+        && req.isInternal
+        && versionHeader !== skinInfo.versionHeader
+        && ((!debug && !config.testwiki) || versionHeader !== 'bypass')) {
+        res.originalStatus(400).end();
+        return;
+    }
 
     res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
 
@@ -930,14 +943,6 @@ app.use(async (req, res, next) => {
 
     const getFEBasicData = () => {
         makeConfigAndSession();
-
-        const userClientVersion = req.get('X-Chika');
-        const clientVersion = skinInfo?.versionHeader;
-
-        if(req.url !== '/sidebar' && req.isInternal && userClientVersion !== clientVersion && ((!debug && !config.testwiki) || userClientVersion !== 'bypass')) {
-            res.originalStatus(400).end();
-            return;
-        }
 
         const userConfigHash = req.get('X-You');
         const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
