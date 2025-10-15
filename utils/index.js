@@ -907,5 +907,17 @@ module.exports = {
                 return flag | (PermissionFlags[key] ?? 0n);
             return flag;
         }, 0n);
+    },
+    shuffleArray(arr, key) {
+        for(let i in arr) {
+            const j = key[i % key.length] % arr.length;
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+    },
+    deshuffleArray(arr, key) {
+        for(let i = arr.length - 1; i >= 0; i--) {
+            const j = key[i % key.length] % arr.length;
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
     }
 }

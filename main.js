@@ -493,6 +493,7 @@ reloadPlugins();
 
 const parser = require('./utils/namumark/parser');
 const toHtml = require('./utils/namumark/toHtml');
+const {shuffleArray} = require('./utils');
 global.NamumarkParser = {
     parser,
     toHtml
@@ -699,12 +700,6 @@ SocketIO.engine.use(onlyForHandshake(getUserMiddleware));
 app.use(useragent.express());
 
 app.use(async (req, res, next) => {
-    req.isInternal = req.url.split('/')[1] === 'internal';
-    if(req.isInternal) {
-        req.url = req.url.slice('/internal'.length) || '/';
-        req.path = req.path.slice('/internal'.length) || '/';
-    }
-
     if(process.env.IP_HEADER && req.headers[process.env.IP_HEADER]) Object.defineProperty(req, 'ip', {
         get() {
             return req.headers[process.env.IP_HEADER].split(',')[0];
@@ -802,6 +797,52 @@ app.use(async (req, res, next) => {
     const skinInfo = global.skinInfos[skin];
 
     if(!skinInfo) return res.status(500).send('skin not installed');
+
+    const firstPath = req.path.split('/')[1];
+    const isPlainInternal = firstPath === 'internal';
+    const isEncryptedInternal = firstPath === 'i';
+    if(isEncryptedInternal && skinInfo.urlKey) {
+        const urlChars = [
+            ...[
+                ...[...Array(26)].map((a, i) => i + 97),
+                ...[...Array(26)].map((a, i) => i + 65),
+                ...[...Array(10)].map((a, i) => i + 48)
+            ]
+                .map(a => String.fromCharCode(a)),
+            '-',
+            '_'
+        ];
+        utils.shuffleArray(urlChars, skinInfo.urlKey);
+
+        const encryptedPath = req.path.slice('/i/'.length);
+
+        let binary = '';
+        for(let char of encryptedPath) {
+            const index = urlChars.indexOf(char);
+            binary += index.toString(2).padStart(6, '0');
+        }
+
+        const encryptedBytes = [];
+        for(let i = 0; i < binary.length; i += 8) {
+            const byte = binary.slice(i, i + 8);
+            if(byte.length === 8) encryptedBytes.push(parseInt(byte, 2));
+        }
+        utils.deshuffleArray(encryptedBytes, skinInfo.urlKey);
+
+        const decryptedStr = encryptedBytes.map((a, i) => String.fromCharCode(a ^ skinInfo.urlKey[i % skinInfo.urlKey.length])).join('');
+
+        if(decryptedStr.startsWith(skinInfo.versionHeader)) {
+            const finalPath = decryptedStr.slice(skinInfo.versionHeader.length);
+            req.isInternal = true;
+            req.url = req.url.replace(req.path, finalPath) || '/';
+            req.path = finalPath || '/';
+        }
+    }
+    else if(isPlainInternal && (debug || !skinInfo.urlKey)) {
+        req.isInternal = true;
+        req.url = req.url.slice('/internal'.length) || '/';
+        req.path = req.path.slice('/internal'.length) || '/';
+    }
 
     req.skin = skin;
 
