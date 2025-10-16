@@ -8,6 +8,9 @@ const newSchema = new Schema({
         unique: true,
         index: true
     },
+    phone: {
+        type: String
+    },
     expiresAt: {
         type: Date
     }

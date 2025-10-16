@@ -1373,6 +1373,7 @@ app.post('/member/withdraw',
     if(blacklistDuration == null || blacklistDuration > 0)
         await Blacklist.create({
             email: crypto.createHash('sha256').update(req.user.email).digest('hex'),
+            phone: req.user.phone ? crypto.createHash('sha256').update(req.user.phone).digest('hex') : null,
             expiresAt: blacklistDuration ? new Date(Date.now() + blacklistDuration) : null
         });
 
@@ -2176,6 +2177,11 @@ app.post('/member/signup_verify_code',
             }
         });
     }
+
+    const checkBlacklist = await Blacklist.exists({
+        phone: crypto.createHash('sha256').update(mobileVerifyInfo.phoneNumber).digest('hex')
+    });
+    if(checkBlacklist) return res.status(403).send('재가입 대기 기간 입니다.');
 
     const checkNumberExists = await User.exists({
         phoneNumber: mobileVerifyInfo.phoneNumber,
