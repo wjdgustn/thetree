@@ -806,7 +806,9 @@ app.use(async (req, res, next) => {
     const isPlainInternal = firstPath === 'internal';
     const isEncryptedInternal = firstPath === 'i';
     if(isEncryptedInternal && skinInfo.urlKey) {
-        const urlKey = [...crypto.createHash('sha256').update(versionHeader ?? skinInfo.versionHeader).digest()];
+        const urlKey = versionHeader === skinInfo.versionHeader
+            ? skinInfo.urlKey
+            : [...crypto.createHash('sha256').update(versionHeader ?? skinInfo.versionHeader).digest()];
 
         const urlChars = [
             ...[
