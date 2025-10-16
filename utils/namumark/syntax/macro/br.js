@@ -1,3 +1,6 @@
-module.exports = _ => {
-    return '<br>';
+module.exports = {
+    allowThread: true,
+    format() {
+        return '<br>';
+    }
 }
