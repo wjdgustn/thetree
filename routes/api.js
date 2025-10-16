@@ -13,7 +13,8 @@ const {
 const {
     editAndEditRequest,
     postEditAndEditRequest,
-    getBacklinks
+    getBacklinks,
+    getCate, getCategoryDocuments
 } = require('./document');
 
 const User = require('../schemas/user');
@@ -126,8 +127,25 @@ app.post('/api/edit/{*document}',
 });
 
 app.get('/api/backlink/{*document}', middleware.parseDocumentName, async (req, res) => {
-    if(req.document.namespace === '분류' && false) {
+    if(req.document.namespace === '분류') {
+        const categoriesData = await getCategoryDocuments(req, { limit: 50 });
 
+        let selectedNamespace = req.query.namespace;
+        if(!selectedNamespace || !categoriesData[selectedNamespace])
+            selectedNamespace = Object.keys(categoriesData)[0];
+        const selectedData = categoriesData[selectedNamespace];
+
+        res.json({
+            namespaces: Object.entries(categoriesData).map(([namespace, data]) => ({
+                namespace,
+                count: data.count
+            })),
+            backlinks: Object.values(selectedData.categoriesPerChar).flat().map(a => ({
+                document: globalUtils.doc_fulltitle(a.parsedName)
+            })),
+            from: selectedData.nextItem ?? null,
+            until: selectedData.prevItem ?? null
+        });
     }
     else {
         const finalData = await apiWrapper(getBacklinks)(req, res);
@@ -138,8 +156,8 @@ app.get('/api/backlink/{*document}', middleware.parseDocumentName, async (req, r
                 document: globalUtils.doc_fulltitle(utils.dbDocumentToDocument(a)),
                 flags: a.flags.map(a => utils.getKeyFromObject(BacklinkFlags, a).toLowerCase()).join(',')
             })),
-            to: data.prevItem?.title ?? null,
-            from: data.nextItem?.title ?? null
+            from: data.nextItem?.title ?? null,
+            until: data.prevItem?.title ?? null
         });
     }
 });

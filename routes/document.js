@@ -40,6 +40,101 @@ app.get('/', (req, res) => {
     res.redirect(`/w/${config.front_page}`);
 });
 
+const getCategoryDocuments = async (req, { limit = 100 } = {}) => {
+    const { namespace, title } = req.document;
+    if(namespace !== '분류') return;
+
+    const allNamespaces = [
+        '분류',
+        ...config.namespaces.filter(a => a !== '분류')
+    ];
+
+    const categoriesData = {};
+    for(let namespace of allNamespaces) {
+        const baseQuery = {
+            namespace,
+            categories: {
+                $elemMatch: {
+                    document: title
+                }
+            }
+        }
+        const query = { ...baseQuery };
+
+        const selectedNamespace = req.query.namespace === namespace;
+        const pageQuery = req.query.cuntil || req.query.cfrom;
+        if(selectedNamespace && pageQuery) {
+            const checkExists = await Document.findOne({
+                title: pageQuery
+            });
+            if(checkExists) {
+                if(req.query.cuntil) query.upperTitle = {
+                    $lte: checkExists.upperTitle
+                }
+                else query.upperTitle = {
+                    $gte: checkExists.upperTitle
+                }
+            }
+        }
+
+        const categories = await Document.find(query)
+            .sort({ upperTitle: query.upperTitle?.$lte ? -1 : 1 })
+            .limit(limit)
+            .lean();
+        if(!categories.length) continue;
+
+        if(query.upperTitle?.$lte) categories.reverse();
+
+        const count = await Document.countDocuments(baseQuery);
+
+        const prevItem = await Document.findOne({
+            ...baseQuery,
+            upperTitle: {
+                $lt: categories[0].upperTitle
+            }
+        })
+            .sort({ upperTitle: -1 })
+            .lean();
+
+        const nextItem = await Document.findOne({
+            ...baseQuery,
+            upperTitle: {
+                $gt: categories[categories.length - 1].upperTitle
+            }
+        })
+            .sort({ upperTitle: 1 })
+            .lean();
+
+        let categoriesPerChar = {};
+        for(let document of categories) {
+            let char = document.upperTitle[0];
+            const choseong = getChoseong(char);
+            if(choseong) char = choseong;
+
+            document.parsedName = utils.parseDocumentName(`${document.namespace}:${document.title}`);
+            document.category = document.categories.find(a => a.document === title);
+
+            const arr = categoriesPerChar[char] ??= [];
+            arr.push({
+                parsedName: document.parsedName,
+                category: {
+                    text: document.category.text
+                }
+            });
+        }
+
+        categoriesData[namespace] = {
+            categoriesPerChar,
+            count,
+            prevItem: prevItem?.title,
+            nextItem: nextItem?.title
+        }
+    }
+
+    return categoriesData;
+}
+module.exports.getCategoryDocuments = getCategoryDocuments;
+
 app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
@@ -280,102 +375,7 @@ app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
         }
     }
 
-    const categoriesData = {};
-    if(namespace === '분류') {
-        const allNamespaces = [
-            '분류',
-            ...config.namespaces.filter(a => a !== '분류')
-        ];
-
-        const categoryInfos = {};
-        for(let namespace of allNamespaces) {
-            const baseQuery = {
-                namespace,
-                categories: {
-                    $elemMatch: {
-                        document: title
-                    }
-                }
-            }
-            const query = { ...baseQuery };
-
-            const selectedNamespace = req.query.namespace === namespace;
-            const pageQuery = req.query.cuntil || req.query.cfrom;
-            if(selectedNamespace && pageQuery) {
-                const checkExists = await Document.findOne({
-                    title: pageQuery
-                });
-                if(checkExists) {
-                    if(req.query.cuntil) query.upperTitle = {
-                        $lte: checkExists.upperTitle
-                    }
-                    else query.upperTitle = {
-                        $gte: checkExists.upperTitle
-                    }
-                }
-            }
-
-            const categories = await Document.find(query)
-                .sort({ upperTitle: query.upperTitle?.$lte ? -1 : 1 })
-                .limit(100)
-                .lean();
-            if(!categories.length) continue;
-
-            if(query.upperTitle?.$lte) categories.reverse();
-
-            const count = await Document.countDocuments(baseQuery);
-
-            const prevItem = await Document.findOne({
-                ...baseQuery,
-                upperTitle: {
-                    $lt: categories[0].upperTitle
-                }
-            })
-                .sort({ upperTitle: -1 })
-                .lean();
-
-            const nextItem = await Document.findOne({
-                ...baseQuery,
-                upperTitle: {
-                    $gt: categories[categories.length - 1].upperTitle
-                }
-            })
-                .sort({ upperTitle: 1 })
-                .lean();
-
-            let categoriesPerChar = {};
-            for(let document of categories) {
-                let char = document.upperTitle[0];
-                const choseong = getChoseong(char);
-                if(choseong) char = choseong;
-
-                document.parsedName = utils.parseDocumentName(`${document.namespace}:${document.title}`);
-                document.category = document.categories.find(a => a.document === title);
-
-                const arr = categoriesPerChar[char] ??= [];
-                arr.push({
-                    parsedName: document.parsedName,
-                    category: {
-                        text: document.category.text
-                    }
-                });
-            }
-
-            categoryInfos[namespace] = {
-                categories,
-                categoriesPerChar,
-                count,
-                prevItem,
-                nextItem
-            };
-            categoriesData[namespace] = {
-                categoriesPerChar,
-                count,
-                prevItem: prevItem?.title,
-                nextItem: nextItem?.title
-            }
-        }
-    }
+    const categoriesData = await getCategoryDocuments(req);
 
     const star_count = await Star.countDocuments({
         document: dbDocument.uuid
