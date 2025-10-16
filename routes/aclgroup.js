@@ -58,7 +58,7 @@ const groupPermChecker = (req, group, key) => {
         : req.permissions.includes('aclgroup');
 }
 
-app.get('/aclgroup', async (req, res) => {
+const getACLGroup = async (req, res) => {
     const rawAclGroups = await ACLGroup.find(aclGroupsQuery(req));
     const aclGroups = [...new Set([
         ...(config.aclgroup_order ?? []).map(a => rawAclGroups.find(b => b.name === a)).filter(a => a),
@@ -134,7 +134,10 @@ app.get('/aclgroup', async (req, res) => {
             nextItem: nextItem?.id
         }
     });
-});
+}
+module.exports.getACLGroup = getACLGroup;
+
+app.get('/aclgroup', getACLGroup);
 
 app.get('/aclgroup/groups', async (req, res) => {
     const aclGroups = await ACLGroup.find(aclGroupsQuery(req));
@@ -218,12 +221,24 @@ app.post('/aclgroup/group_remove', async (req, res) => {
     res.redirect('/aclgroup');
 });
 
-app.post('/aclgroup',
+const postACLGroupValidate = [
     (req, res, next) => {
         req.modifiedBody = {};
         next();
     },
     body('group')
+        .if((value, { req }) => req.isAPI)
+        .isString()
+        .custom(async (value, { req }) => {
+            const group = await ACLGroup.findOne({
+                ...aclGroupsQuery(req),
+                name: req.body.group
+            });
+            if(!group) throw new Error('존재하지 않는 그룹입니다.');
+            req.modifiedBody.group = group;
+        }),
+    body('group')
+        .if((value, { req }) => !req.isAPI)
         .isUUID()
         .custom(async (value, { req }) => {
             const group = await ACLGroup.findOne({
@@ -234,10 +249,12 @@ app.post('/aclgroup',
             req.modifiedBody.group = group;
         }),
     body('mode')
-        .isIn(['ip', 'username']),
+        .customSanitizer(value => value ?? 'ip'),
+        // .isIn(['ip', 'username']),
     body('ip')
+        .if(body('mode').equals('ip'))
+        .notEmpty()
         .custom((value, { req }) => {
-            if(req.body.mode !== 'ip') return true;
             const ipv4 = Address4.isValid(value);
             const ipv6 = Address6.isValid(value);
             if(!ipv4 && !ipv6) throw new Error('invalid_cidr');
@@ -256,9 +273,9 @@ app.post('/aclgroup',
             return true;
         }),
     body('username')
+        .if(body('mode').equals('username'))
+        .notEmpty()
         .custom(async (value, { req }) => {
-            if(req.body.mode !== 'username') return true;
-
             const user = await User.findOne({
                 name: {
                     $regex: new RegExp(`^${utils.escapeRegExp(value)}$`, 'i')
@@ -310,8 +327,11 @@ app.post('/aclgroup',
             if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error('권한이 부족합니다.');
             return true;
         }),
-    middleware.fieldErrors,
-    async (req, res) => {
+    middleware.fieldErrors
+];
+module.exports.postACLGroupValidate = postACLGroupValidate;
+
+const postACLGroup = async (req, res) => {
     const group = req.modifiedBody.group;
 
     if(!groupPermChecker(req, group, 'addPerms')) return res.status(403).send('권한이 부족합니다.');
@@ -323,7 +343,7 @@ app.post('/aclgroup',
 
     const mode = req.body.mode;
     if(mode === 'ip') newItem.ip = req.body.ip;
-    else if(mode === 'username') newItem.user = req.modifiedBody.user.uuid;
+    else newItem.user = req.modifiedBody.user.uuid;
 
     const duration = req.modifiedBody.duration;
     if(duration > 0) newItem.expiresAt = new Date(Date.now() + duration * 1000);
@@ -355,11 +375,15 @@ app.post('/aclgroup',
         hideLog: req.body.hidelog === 'Y'
     });
 
-    if(req.referer?.pathname.startsWith('/aclgroup')) {
+    if(req.isAPI) res.sendData({ id: aclGroupItem.id });
+    else if(req.referer?.pathname.startsWith('/aclgroup')) {
         res.reload();
     }
     else res.status(204).end();
-});
+}
+module.exports.postACLGroup = postACLGroup;
+
+app.post('/aclgroup', ...postACLGroupValidate, postACLGroup);
 
 app.post('/aclgroup/remove',
     (req, res, next) => {
@@ -590,4 +614,4 @@ app.get('/aclgroup/self_remove', async (req, res) => {
     res.reload(null, true);
 });
 
-module.exports = app;
+module.exports.router = app;

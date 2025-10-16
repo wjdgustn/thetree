@@ -17,6 +17,11 @@ const {
     getBacklinks,
     getCategoryDocuments
 } = require('./document');
+const {
+    getACLGroup,
+    postACLGroupValidate,
+    postACLGroup
+} = require('./aclgroup');
 
 const User = require('../schemas/user');
 const EditToken = require('../schemas/editToken');
@@ -249,6 +254,28 @@ app.get('/api/discuss/{*document}', middleware.parseDocumentName, async (req, re
         update_date: Math.floor(a.lastUpdatedAt / 1000),
         status: utils.getKeyFromObject(ThreadStatusTypes, a.status).toLowerCase()
     })));
+});
+
+app.get('/api/v0/aclgroup', apiWrapper(getACLGroup), async (req, res) => {
+    const data = req.apiData.serverData;
+    res.json({
+        groups: data.aclGroups.map(a => a.name),
+        group: data.selectedGroup?.name,
+        aclgroup: data.groupItems?.map(a => ({
+            id: a.id,
+            ip: a.ip ?? null,
+            username: a.user?.name ?? null,
+            note: a.note,
+            created: Math.floor(new Date(a.createdAt) / 1000),
+            expired: a.expiresAt ? Math.floor(new Date(a.expiresAt) / 1000) : null
+        })) ?? [],
+        from: data.nextItem ?? null,
+        until: data.prevItem ?? null
+    });
+});
+
+app.post('/api/v0/aclgroup', postACLGroupValidate, apiWrapper(postACLGroup), async (req, res) => {
+    res.json(req.apiData);
 });
 
 module.exports = app;

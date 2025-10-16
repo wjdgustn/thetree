@@ -45,9 +45,18 @@ module.exports = {
     },
     fieldErrors: (req, res, next) => {
         const result = validationResult(req);
-        if(!result.isEmpty()) return res.status(400).send({
-            fieldErrors: result.mapped()
-        });
+        if(!result.isEmpty()) {
+            if(req.isAPI) {
+                const err = result.array()[0];
+                const isDefaultMsg = err.msg === 'Invalid value';
+                return res.status(400).send({
+                    status: err.msg + (isDefaultMsg ? `: ${err.path}` : '')
+                });
+            }
+            else return res.status(400).send({
+                fieldErrors: result.mapped()
+            });
+        }
         next();
     },
     singleFieldError: (req, res, next) => {
