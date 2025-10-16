@@ -8,19 +8,23 @@ const globalUtils = require('../utils/global');
 const {
     BacklinkFlags,
     ThreadStatusTypes,
-    ThreadCommentTypes
+    ThreadCommentTypes,
+    ACLTypes
 } = require('../utils/types');
 const {
     editAndEditRequest,
     postEditAndEditRequest,
     getBacklinks,
-    getCate, getCategoryDocuments
+    getCategoryDocuments
 } = require('./document');
 
 const User = require('../schemas/user');
 const EditToken = require('../schemas/editToken');
 const Thread = require('../schemas/thread');
 const ThreadComment = require('../schemas/threadComment');
+const Document = require('../schemas/document');
+
+const ACL = require('../class/acl');
 
 const app = express.Router();
 
@@ -214,5 +218,37 @@ if(config.testwiki) {
         res.json({ result: !!exists });
     });
 }
+
+app.get('/api/discuss/{*document}', middleware.parseDocumentName, async (req, res) => {
+    const document = req.document;
+    const { namespace, title } = document;
+    const dbDocument = await Document.findOne({
+        namespace,
+        title
+    });
+
+    const acl = await ACL.get({ document: dbDocument }, document);
+    const { result: readable, aclMessage: readAclMessage } = await acl.check(ACLTypes.Read, req.aclData);
+    if(!readable) return res.error(readAclMessage, 403);
+
+    const threads = await Thread.find({
+        document: dbDocument.uuid,
+        status: req.query.state === 'close' ? ThreadStatusTypes.Close : {
+            $ne: ThreadStatusTypes.Close
+        },
+        deleted: false
+    })
+        .sort({
+            lastUpdatedAt: -1
+        })
+        .select('url topic lastUpdatedAt status -_id');
+
+    res.json(threads.map(a => ({
+        slug: a.url,
+        topic: a.topic,
+        update_date: Math.floor(a.lastUpdatedAt / 1000),
+        status: utils.getKeyFromObject(ThreadStatusTypes, a.status).toLowerCase()
+    })));
+});
 
 module.exports = app;
