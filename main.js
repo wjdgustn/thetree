@@ -1263,8 +1263,13 @@ const exitHandler = async () => {
     if(global.exiting) return;
     global.exiting = true;
     console.log('exiting...');
-    server.close();
+    await new Promise(resolve => {
+        server.close(() => {
+            resolve();
+        });
+    });
     await mongoose.disconnect();
+    process.exit(0);
 }
 process.on('SIGINT', exitHandler);
 process.on('SIGTERM', exitHandler);
