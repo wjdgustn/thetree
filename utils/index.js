@@ -167,6 +167,13 @@ module.exports = {
         }
         const cache = {};
 
+        const dbUsers = await models.User.find({
+            uuid: {
+                $in: arr.map(a => a?.[key]).filter(a => a)
+            }
+        });
+        const userStyles = noCSS ? [] : await Promise.all(dbUsers.map(a => this.getUserCSS(a)));
+
         for(let obj of arr) {
             if(obj?.[key]) {
                 if(cache[obj[key]]) {
@@ -175,12 +182,11 @@ module.exports = {
                 }
 
                 const uuid = obj[key];
-                const dbUser = await models.User.findOne({
-                    uuid
-                });
+                const dbUserIndex = dbUsers.findIndex(a => a.uuid === uuid);
+                const dbUser = dbUsers[dbUserIndex];
                 if(dbUser) {
                     obj[key] = await this.getPublicUser(dbUser);
-                    if(!noCSS) obj[key].userCSS = await this.getUserCSS(dbUser);
+                    if(!noCSS) obj[key].userCSS = userStyles[dbUserIndex];
                     cache[dbUser.uuid] = obj[key];
                 }
                 else obj[key] = {
@@ -282,6 +288,14 @@ module.exports = {
     async findHistories(req, arr, isAdmin = false) {
         const cache = {};
 
+        const dbHistories = await models.History.find({
+            uuid: {
+                $in: arr.map(a => a?.uuid).filter(a => a)
+            }
+        })
+            .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc -_id')
+            .lean();
+
         for(let obj of arr) {
             if(obj?.uuid) {
                 if(cache[obj.uuid]) {
@@ -290,11 +304,7 @@ module.exports = {
                     continue;
                 }
 
-                obj.history = await models.History.findOne({
-                    uuid: obj.uuid
-                })
-                    .select('type rev revertRev uuid user createdAt log moveOldDoc moveNewDoc -_id')
-                    .lean();
+                obj.history = dbHistories.find(a => a.uuid === obj.uuid);
                 if(obj.history) {
                     obj.history = this.addHistoryData(req, obj.history, isAdmin, null);
                     cache[obj.uuid] = obj.history;
@@ -324,6 +334,12 @@ module.exports = {
     async findDocuments(arr, additionalKeys = []) {
         const cache = {};
 
+        const dbDocuments = await models.Document.find({
+            uuid: {
+                $in: arr.map(a => a?.document).filter(a => a)
+            }
+        }).lean();
+
         for(let obj of arr) {
             if(obj?.document) {
                 if(typeof obj.document !== 'string') continue;
@@ -333,9 +349,7 @@ module.exports = {
                     continue;
                 }
 
-                obj.document = await models.Document.findOne({
-                    uuid: obj.document
-                }).lean();
+                obj.document = dbDocuments.find(a => a.uuid === obj.document);
                 if(obj.document) {
                     obj.document = {
                         parsedName: this.parseDocumentName(`${obj.document.namespace}:${obj.document.title}`),
@@ -430,6 +444,14 @@ module.exports = {
     async findThreads(arr) {
         const cache = {};
 
+        const dbThreads = await models.Thread.find({
+            uuid: {
+                $in: arr.map(a => a?.thread).filter(a => a)
+            }
+        })
+            .select('uuid url topic document -_id')
+            .lean();
+
         for(let obj of arr) {
             if(obj?.thread) {
                 if(cache[obj.thread]) {
@@ -437,11 +459,7 @@ module.exports = {
                     continue;
                 }
 
-                obj.thread = await models.Thread.findOne({
-                    uuid: obj.thread
-                })
-                    .select('url topic document -_id')
-                    .lean();
+                obj.thread = dbThreads.find(a => a.uuid === obj.thread);
                 if(obj.thread) {
                     cache[obj.thread.uuid] = obj.thread;
                 }
