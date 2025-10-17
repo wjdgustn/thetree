@@ -98,7 +98,7 @@ module.exports = {
         }
         return null;
     },
-    async getUserCSS(user) {
+    async getUserCSS(user, aclGroups) {
         if(!user) return '';
 
         let ipArr;
@@ -107,7 +107,7 @@ module.exports = {
             else ipArr = new Address6(user.ip).toByteArray();
         }
 
-        const aclGroups = await models.ACLGroup.find({
+        aclGroups ??= await models.ACLGroup.find({
             userCSS: {
                 $exists: true,
                 $ne: ''
@@ -172,7 +172,13 @@ module.exports = {
                 $in: arr.map(a => a?.[key]).filter(a => a)
             }
         });
-        const userStyles = noCSS ? [] : await Promise.all(dbUsers.map(a => this.getUserCSS(a)));
+        const styleGroups = await models.ACLGroup.find({
+            userCSS: {
+                $exists: true,
+                $ne: ''
+            }
+        }).lean();
+        const userStyles = noCSS ? [] : await Promise.all(dbUsers.map(a => this.getUserCSS(a, styleGroups)));
 
         for(let obj of arr) {
             if(obj?.[key]) {
