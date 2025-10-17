@@ -19,6 +19,7 @@ module.exports = () => {
         console.error(e);
     });
     mongoose.connection.on('disconnected', () => {
+        if(global.exiting) return;
         console.error('MongoDB disconnected. reconnecting...');
         connect().then();
     });

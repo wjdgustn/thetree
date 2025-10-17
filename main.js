@@ -23,6 +23,7 @@ const util = require('util');
 const msgpack = require('@msgpack/msgpack');
 const JSON5 = require('json5');
 const { lookup: ipLookup } = require('ip-location-api');
+const mongoose = require('mongoose');
 
 global.debug = process.env.NODE_ENV === 'development';
 global.__THETREE__ = {};
@@ -1256,3 +1257,14 @@ const port = process.env.PORT ?? 3000;
 server.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
+
+global.exiting = false;
+const exitHandler = async () => {
+    if(global.exiting) return;
+    global.exiting = true;
+    console.log('exiting...');
+    server.close();
+    await mongoose.disconnect();
+}
+process.on('SIGINT', exitHandler);
+process.on('SIGTERM', exitHandler);
