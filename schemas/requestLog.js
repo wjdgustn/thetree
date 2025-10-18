@@ -17,6 +17,9 @@ const newSchema = new Schema({
         type: String,
         required: true
     },
+    decryptedUrl: {
+        type: String
+    },
     body: {
         type: Object
     },
