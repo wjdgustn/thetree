@@ -27,6 +27,7 @@ services:
       S3_SECRET_ACCESS_KEY:
       S3_BUCKET_NAME: thetree
       S3_REGION: auto
+      S3_FORCE_PATH_STYLE: false
       S3_PUBLIC_HOST: https://cdn.example.com
 
       MONGODB_HOST: host.docker.internal
