@@ -1230,7 +1230,7 @@ app.use(async (req, res, next) => {
                 lastActivity: new Date()
             }).then();
     } finally {
-        log.save().then();
+        requestLogData.save().then();
     }
 });
 
