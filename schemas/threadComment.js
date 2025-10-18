@@ -113,17 +113,30 @@ newSchema.post('save', async function() {
 
     const document = utils.dbDocumentToDocument(dbDocument);
 
-    const { data: { links } } = parser(this.content);
+    const { data: { links, commentNumbers } } = parser(this.content, { thread: true });
     const mentions = links.filter(a => a.startsWith('사용자:')).map(a => a.slice(4)).slice(0, 10);
-    let users = await mongoose.models.User.find({
+    let users = mentions.length ? await mongoose.models.User.find({
         name: {
             $in: mentions
         }
-    });
+    }) : [];
+
+    let linkComments = commentNumbers.length ? await model.find({
+        id: {
+            $in: commentNumbers.filter(a => !isNaN(a))
+        }
+    }) : [];
+    const linkCommentUsers = linkComments.length ? await mongoose.models.User.find({
+        uuid: {
+            $in: linkComments.map(a => a.user)
+        }
+    }) : [];
+    users.push(...linkCommentUsers);
+
     users = users.filter(a => a);
     const aclDatas = await Promise.all(users.map(a => utils.getACLData(a)));
-    const acls = await Promise.all(users.map(a => global.ACLClass.get({ thread }, document)));
-    const aclResults = await Promise.all(acls.map((a, i) => a.check(ACLTypes.Read, aclDatas[i])));
+    const aclClass = await global.ACLClass.get({ thread }, document);
+    const aclResults = await Promise.all(aclDatas.map(a => aclClass.check(ACLTypes.Read, a)));
     await Promise.all(users.filter((a, i) => aclResults[i].result).map(a => mongoose.models.Notification.create({
         type: NotificationTypes.Mention,
         user: a.uuid,

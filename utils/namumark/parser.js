@@ -592,6 +592,7 @@ let currDepth = 0;
 
 let Store = {
     links: [],
+    commentNumbers: [],
     categories: [],
     includes: [],
     includeParams: {},
@@ -1099,6 +1100,10 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('commentNumber', () => {
             const tok = $.CONSUME(CommentNumber);
             const num = parseInt(tok.image.slice(1));
+
+            if(!Store.commentNumbers.includes(num))
+                Store.commentNumbers.push(num);
+
             return {
                 type: 'commentNumber',
                 num
@@ -1567,6 +1572,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         result,
         data: {
             links: Store.links,
+            commentNumbers: Store.commentNumbers,
             categories: Store.categories,
             includes: Store.includes,
             includeParams: Store.includeParams,
