@@ -702,530 +702,536 @@ SocketIO.engine.use(onlyForHandshake(getUserMiddleware));
 app.use(useragent.express());
 
 app.use(async (req, res, next) => {
-    if(process.env.IP_HEADER && req.headers[process.env.IP_HEADER]) Object.defineProperty(req, 'ip', {
-        get() {
-            return req.headers[process.env.IP_HEADER].split(',')[0];
+    let requestLogData;
+    try {
+        if(process.env.IP_HEADER && req.headers[process.env.IP_HEADER]) Object.defineProperty(req, 'ip', {
+            get() {
+                return req.headers[process.env.IP_HEADER].split(',')[0];
+            }
+        });
+
+        if(!req.ip) return res.status(500).send('ip error');
+        const slicedIp = req.ip.slice(7);
+        if(Address4.isValid(slicedIp)) Object.defineProperty(req, 'ip', {
+            get() {
+                return slicedIp;
+            }
+        });
+        req.countryCode = ipLookup(req.ip)?.country;
+        if(!req.countryCode && debug)
+            req.countryCode = 'KR';
+
+        const referer = req.get('Referer');
+        req.referer = null;
+        if(referer) {
+            try {
+                req.referer = new URL(referer);
+            } catch(e) {}
         }
-    });
+        req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
 
-    if(!req.ip) return res.status(500).send('ip error');
-    const slicedIp = req.ip.slice(7);
-    if(Address4.isValid(slicedIp)) Object.defineProperty(req, 'ip', {
-        get() {
-            return slicedIp;
-        }
-    });
-    req.countryCode = ipLookup(req.ip)?.country;
-    if(!req.countryCode && debug)
-        req.countryCode = 'KR';
+        const mobileHeader = req.get('Sec-CH-UA-Mobile');
+        req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
 
-    const referer = req.get('Referer');
-    req.referer = null;
-    if(referer) {
-        try {
-            req.referer = new URL(referer);
-        } catch(e) {}
-    }
-    req.fromFetch = req.get('Sec-Fetch-Dest') === 'empty';
+        req.additionalServerData = {};
 
-    const mobileHeader = req.get('Sec-CH-UA-Mobile');
-    req.isMobile = mobileHeader ? mobileHeader === '?1' : req.useragent.isMobile;
+        req.session.sessionId ??= crypto.randomUUID();
 
-    req.additionalServerData = {};
+        if(req.session.ipUser?.ip !== req.ip)
+            req.session.ipUser = null;
+        if(!req.session.ipUser && req.user?.type !== UserTypes.Account) {
+            req.session.ipUser = await User.findOne({
+                ip: req.ip
+            }).lean();
 
-    req.session.sessionId ??= crypto.randomUUID();
-
-    if(req.session.ipUser?.ip !== req.ip)
-        req.session.ipUser = null;
-    if(!req.session.ipUser && req.user?.type !== UserTypes.Account) {
-        req.session.ipUser = await User.findOne({
-            ip: req.ip
-        }).lean();
-
-        if(!req.session.ipUser
-            && req.method === 'POST'
-            && !['/member/', '/preview/'].some(a => req.url.startsWith(a))) {
-            const newUser = new User({
-                ip: req.ip,
-                type: UserTypes.IP
-            });
-            await newUser.save();
-            req.session.ipUser = newUser.toJSON();
-        }
-    }
-
-    if(!req.user && req.session.ipUser) req.user = req.session.ipUser;
-
-    const log = new RequestLog({
-        ip: req.ip,
-        user: req.user?.uuid,
-        method: req.method,
-        url: req.originalUrl,
-        body: Object.fromEntries(Object.entries(req.body ?? {}).filter(([key]) => !key.includes('password')))
-    });
-    req.requestId = log._id.toString();
-    log.save().then();
-
-    await utils.makeACLData(req);
-
-    const isDev = req.permissions.includes('developer');
-
-    if(isDev) for(let perm of AllPermissions) {
-        if(!req.permissions.includes(perm) && !NoGrantPermissions.includes(perm))
-            req.permissions.push(perm);
-    }
-
-    if(req.user?.type === UserTypes.Account) {
-        if(!req.permissions.includes('hideip') && req.session.lastIp !== req.ip) {
-            req.session.lastIp = req.ip;
-            setTimeout(async () => {
-                const oldHistory = await LoginHistory.findOne({
-                    uuid: req.user.uuid,
+            if(!req.session.ipUser
+                && req.method === 'POST'
+                && !['/member/', '/preview/'].some(a => req.url.startsWith(a))) {
+                const newUser = new User({
                     ip: req.ip,
-                    createdAt: {
-                        $gt: Date.now() - 1000 * 60 * 60
-                    }
+                    type: UserTypes.IP
                 });
-                if(!oldHistory) await utils.createLoginHistory(req.user, req, {
-                    type: LoginHistoryTypes.IPChange
-                });
-            }, 0);
-        }
-    }
-
-    let skin = req.user?.skin;
-    if(!skin || skin === 'default') skin = config.default_skin;
-    if(!global.skinInfos[skin]) skin = Object.keys(global.skinInfos)[0];
-    const skinInfo = global.skinInfos[skin];
-
-    if(!skinInfo) return res.status(500).send('skin not installed');
-
-    req.skin = skin;
-
-    const versionHeader = req.get('X-Chika');
-
-    const firstPath = req.path.split('/')[1];
-    const isPlainInternal = firstPath === 'internal';
-    const isEncryptedInternal = firstPath === 'i';
-    if(isEncryptedInternal && skinInfo.urlKey) {
-        const urlKey = versionHeader === skinInfo.versionHeader
-            ? skinInfo.urlKey
-            : [...crypto.createHash('sha256').update(versionHeader ?? skinInfo.versionHeader).digest()];
-
-        const urlChars = [
-            ...[
-                ...[...Array(26)].map((a, i) => i + 97),
-                ...[...Array(26)].map((a, i) => i + 65),
-                ...[...Array(10)].map((a, i) => i + 48)
-            ]
-                .map(a => String.fromCharCode(a)),
-            '-',
-            '_'
-        ];
-        utils.shuffleArray(urlChars, urlKey);
-
-        const encryptedPath = req.path.slice('/i/'.length);
-
-        let binary = '';
-        for(let char of encryptedPath) {
-            const index = urlChars.indexOf(char);
-            binary += index.toString(2).padStart(6, '0');
+                await newUser.save();
+                req.session.ipUser = newUser.toJSON();
+            }
         }
 
-        const encryptedBytes = [];
-        for(let i = 0; i < binary.length; i += 8) {
-            const byte = binary.slice(i, i + 8);
-            if(byte.length === 8) encryptedBytes.push(parseInt(byte, 2));
+        if(!req.user && req.session.ipUser) req.user = req.session.ipUser;
+
+        requestLogData = new RequestLog({
+            ip: req.ip,
+            user: req.user?.uuid,
+            method: req.method,
+            url: req.originalUrl,
+            body: Object.fromEntries(Object.entries(req.body ?? {}).filter(([key]) => !key.includes('password')))
+        });
+        req.requestId = requestLogData._id.toString();
+
+        await utils.makeACLData(req);
+
+        const isDev = req.permissions.includes('developer');
+
+        if(isDev) for(let perm of AllPermissions) {
+            if(!req.permissions.includes(perm) && !NoGrantPermissions.includes(perm))
+                req.permissions.push(perm);
         }
-        utils.deshuffleArray(encryptedBytes, urlKey);
 
-        const decryptedStr = encryptedBytes.map((a, i) => String.fromCharCode(a ^ urlKey[i % urlKey.length])).join('');
+        if(req.user?.type === UserTypes.Account) {
+            if(!req.permissions.includes('hideip') && req.session.lastIp !== req.ip) {
+                req.session.lastIp = req.ip;
+                setTimeout(async () => {
+                    const oldHistory = await LoginHistory.findOne({
+                        uuid: req.user.uuid,
+                        ip: req.ip,
+                        createdAt: {
+                            $gt: Date.now() - 1000 * 60 * 60
+                        }
+                    });
+                    if(!oldHistory) await utils.createLoginHistory(req.user, req, {
+                        type: LoginHistoryTypes.IPChange
+                    });
+                }, 0);
+            }
+        }
 
-        if(decryptedStr.startsWith(versionHeader) || decryptedStr.startsWith(skinInfo.versionHeader)) {
-            const finalPath = decryptedStr.slice(versionHeader?.length ?? skinInfo.versionHeader.length);
+        let skin = req.user?.skin;
+        if(!skin || skin === 'default') skin = config.default_skin;
+        if(!global.skinInfos[skin]) skin = Object.keys(global.skinInfos)[0];
+        const skinInfo = global.skinInfos[skin];
+
+        if(!skinInfo) return res.status(500).send('skin not installed');
+
+        req.skin = skin;
+
+        const versionHeader = req.get('X-Chika');
+
+        const firstPath = req.path.split('/')[1];
+        const isPlainInternal = firstPath === 'internal';
+        const isEncryptedInternal = firstPath === 'i';
+        if(isEncryptedInternal && skinInfo.urlKey) {
+            const urlKey = versionHeader === skinInfo.versionHeader
+                ? skinInfo.urlKey
+                : [...crypto.createHash('sha256').update(versionHeader ?? skinInfo.versionHeader).digest()];
+
+            const urlChars = [
+                ...[
+                    ...[...Array(26)].map((a, i) => i + 97),
+                    ...[...Array(26)].map((a, i) => i + 65),
+                    ...[...Array(10)].map((a, i) => i + 48)
+                ]
+                    .map(a => String.fromCharCode(a)),
+                '-',
+                '_'
+            ];
+            utils.shuffleArray(urlChars, urlKey);
+
+            const encryptedPath = req.path.slice('/i/'.length);
+
+            let binary = '';
+            for(let char of encryptedPath) {
+                const index = urlChars.indexOf(char);
+                binary += index.toString(2).padStart(6, '0');
+            }
+
+            const encryptedBytes = [];
+            for(let i = 0; i < binary.length; i += 8) {
+                const byte = binary.slice(i, i + 8);
+                if(byte.length === 8) encryptedBytes.push(parseInt(byte, 2));
+            }
+            utils.deshuffleArray(encryptedBytes, urlKey);
+
+            const decryptedStr = encryptedBytes.map((a, i) => String.fromCharCode(a ^ urlKey[i % urlKey.length])).join('');
+
+            if(decryptedStr.startsWith(versionHeader) || decryptedStr.startsWith(skinInfo.versionHeader)) {
+                const finalPath = decryptedStr.slice(versionHeader?.length ?? skinInfo.versionHeader.length);
+                req.isInternal = true;
+                req.url = req.url.replace(req.path, finalPath) || '/';
+                req.path = finalPath || '/';
+
+                requestLogData.decryptedUrl = req.url;
+            }
+        }
+        else if(isPlainInternal && (debug || !skinInfo.urlKey)) {
             req.isInternal = true;
-            req.url = req.url.replace(req.path, finalPath) || '/';
-            req.path = finalPath || '/';
-        }
-    }
-    else if(isPlainInternal && (debug || !skinInfo.urlKey)) {
-        req.isInternal = true;
-        req.url = req.url.slice('/internal'.length) || '/';
-        req.path = req.path.slice('/internal'.length) || '/';
-    }
-
-    res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
-
-    let session;
-    let configJSON;
-    let configJSONstr;
-    let sessionJSONstr;
-
-    let notifications = [];
-
-    if(req.user?.type === UserTypes.Account) {
-        const queries = [{
-            user: req.user.uuid
-        }];
-        if(req.permissions.includes('developer')) queries.push({
-            user: 'developer'
-        });
-        notifications = await Notification.find({
-            $or: queries,
-            read: false
-        })
-            .select('uuid type read data createdAt -_id')
-            .sort({ createdAt: -1 })
-            .limit(5)
-            .lean();
-        notifications = await utils.notificationMapper(req, notifications, true);
-    }
-
-    const makeConfigAndSession = () => {
-        const sessionMenus = [];
-        for(let permMenus of [...plugins.page.map(a => a.menus).filter(a => a), permissionMenus])
-            for(let [key, value] of Object.entries(permMenus)) {
-                if(req.permissions.includes(key)) {
-                    sessionMenus.push(...value);
-                }
-            }
-
-        session = {
-            menus: sessionMenus,
-            account: {
-                name: req.user?.name ?? req.ip,
-                uuid: req.user?.uuid,
-                type: req.user?.type ?? UserTypes.IP
-            },
-            gravatar_url: req.user?.avatar,
-            user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
-            quick_block: req.permissions.includes('admin'),
-            notifications
+            req.url = req.url.slice('/internal'.length) || '/';
+            req.path = req.path.slice('/internal'.length) || '/';
         }
 
-        configJSON = {
-            ...Object.fromEntries([
-                ...Object.entries(publicConfig).filter(([k]) => debug || !k.startsWith('skin.')),
-                ...Object.entries(config).filter(([k]) => k.startsWith(`skin.${skin}.`) || k.startsWith('wiki.'))
-            ]),
-            ...(config.captcha.enabled ? {
-                captcha: {
-                    type: config.captcha.type,
-                    site_key: config.captcha.site_key
-                }
-            } : {})
-        }
+        res.setHeader('Accept-CH', 'Sec-CH-UA-Platform-Version, Sec-CH-UA-Model');
 
-        const configMapper = {
-            site_name: 'wiki.site_name',
-            logo_url: 'wiki.logo_url',
-            front_page: 'wiki.front_page',
-            editagree_text: 'wiki.editagree_text',
-            copyright_text: 'wiki.copyright_text',
-            base_url: 'wiki.canonical_url',
-            sitenotice: 'wiki.sitenotice'
-        }
-        for(let [key, value] of Object.entries(configMapper)) {
-            const configVal = configJSON[key] ?? config[key];
-            delete configJSON[key];
-            if(!configVal) continue;
-            configJSON[value] = configVal;
-        }
+        let session;
+        let configJSON;
+        let configJSONstr;
+        let sessionJSONstr;
 
-        configJSONstr = JSON.stringify(configJSON);
-        sessionJSONstr = JSON.stringify(session);
-    }
+        let notifications = [];
 
-    const getFEBasicData = () => {
-        makeConfigAndSession();
-
-        const userConfigHash = req.get('X-You');
-        const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
-
-        const userSessionHash = req.get('X-Riko');
-        const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
-
-        return {
-            ...(userConfigHash !== configHash ? {
-                configHash,
-                config: Object.fromEntries(Object.entries(configJSON).map(([k, v]) => [k, typeof v === 'string' ? v.replaceAll('{cspNonce}', res.locals.cspNonce) : v]))
-            } : {}),
-            ...(userSessionHash !== sessionHash ? {
-                sessionHash,
-                session
-            } : {})
-        }
-    }
-
-    res.renderSkin = (...args) => renderSkin(...args).then();
-
-    const renderSkin = async (title, data = {}) => {
-        makeConfigAndSession();
-
-        const status = data.status || 200;
-        delete data.status;
-
-        const viewName = data.viewName || null;
-        if (viewName) delete data.viewName;
-
-        if(viewName === 'wiki') {
-            data.copyright_text = config.copyright_text;
-            if(data.document) {
-                const nsKey = `namespace.${data.document.namespace}.copyright_text`;
-                if(config[nsKey]) data.copyright_text = config[nsKey];
-            }
-        }
-
-        const page = {
-            title: data.document ? globalUtils.doc_fulltitle(data.document) : title,
-            viewName: viewName ?? '',
-            menus: [],
-            data: utils.withoutKeys(data, [
-                'contentName',
-                'contentHtml',
-                'serverData'
-            ])
-        }
-
-        const pluginData = {};
-        for(let plugin of plugins.skinData) {
-            const output = await plugin.format({
-                data,
-                page,
-                session,
-                req
+        if(req.user?.type === UserTypes.Account) {
+            const queries = [{
+                user: req.user.uuid
+            }];
+            if(req.permissions.includes('developer')) queries.push({
+                user: 'developer'
             });
-            if(typeof output === 'object') Object.assign(pluginData, output);
-        }
-
-        const basicData = getFEBasicData();
-        if(!basicData) return;
-
-        const resData = {
-            page: {
-                contentName: data.contentName || null,
-                contentHtml: data.contentHtml || null,
-                ...utils.onlyKeys(page, [
-                    'title',
-                    'viewName',
-                    'menus'
-                ])
-            },
-            data: {
-                publicData: page.data,
-                ...(data.serverData ?? {}),
-                ...pluginData,
-                ...req.additionalServerData
-            },
-            ...basicData
-        }
-
-        if(req.isInternal) res.json(resData);
-        else {
-            const render = require(`./skins/${skin}/server/server.cjs`).render;
-            const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`));
-            let body = rendered.html;
-            if(rendered.state) {
-                body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
-            }
-            const html = skinInfo.template
-                .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
-                .replace('<!--app-head-->', rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
-                .replace('<!--app-body-->', body);
-
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-            res.status(status).send(html);
-        }
-    }
-
-    res.error = (contentHtml, status = 400) => res.renderSkin('오류', {
-        contentHtml,
-        status,
-        serverData: {
-            document: req.document ?? undefined
-        }
-    });
-
-    res.reload = (anchor, usingUrl = false) => {
-        if(!usingUrl) {
-            res.json({
-                action: 'reloadView'
-            });
-        }
-        else {
-            const url = new URL(req.get('Referrer') || config.base_url);
-            if(anchor) url.searchParams.set('anchor', anchor);
-            res.redirect(url.pathname + url.search);
-        }
-    }
-
-    res.originalRedirect = res.redirect;
-    res.redirect = (...args) => {
-        const target = args.pop();
-
-        let finalUrl;
-        if(target.startsWith('/')) {
-            const url = new URL(target, 'http://' + req.hostname);
-            if(req.query.f) url.searchParams.set('f', req.query.f);
-
-            finalUrl = url.pathname + url.search + url.hash;
-        }
-        else {
-            finalUrl = target;
-        }
-        if(req.isInternal) res.json({
-            code: 302,
-            url: finalUrl
-        });
-        else res.originalRedirect(...args, finalUrl);
-    }
-
-    let url = req.url;
-    if(req.isInternal) {
-        res.originalStatus = res.status;
-        res.status = code => ({
-            end: data => res.json({
-                code,
-                data
-            }),
-            send: data => res.json({
-                code,
-                data
-            }),
-            json: data => res.json({
-                code,
-                data
+            notifications = await Notification.find({
+                $or: queries,
+                read: false
             })
-        })
+                .select('uuid type read data createdAt -_id')
+                .sort({ createdAt: -1 })
+                .limit(5)
+                .lean();
+            notifications = await utils.notificationMapper(req, notifications, true);
+        }
 
-        res.originalSend = res.send;
-        res.json = data => {
+        const makeConfigAndSession = () => {
+            const sessionMenus = [];
+            for(let permMenus of [...plugins.page.map(a => a.menus).filter(a => a), permissionMenus])
+                for(let [key, value] of Object.entries(permMenus)) {
+                    if(req.permissions.includes(key)) {
+                        sessionMenus.push(...value);
+                    }
+                }
+
+            session = {
+                menus: sessionMenus,
+                account: {
+                    name: req.user?.name ?? req.ip,
+                    uuid: req.user?.uuid,
+                    type: req.user?.type ?? UserTypes.IP
+                },
+                gravatar_url: req.user?.avatar,
+                user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
+                quick_block: req.permissions.includes('admin'),
+                notifications
+            }
+
+            configJSON = {
+                ...Object.fromEntries([
+                    ...Object.entries(publicConfig).filter(([k]) => debug || !k.startsWith('skin.')),
+                    ...Object.entries(config).filter(([k]) => k.startsWith(`skin.${skin}.`) || k.startsWith('wiki.'))
+                ]),
+                ...(config.captcha.enabled ? {
+                    captcha: {
+                        type: config.captcha.type,
+                        site_key: config.captcha.site_key
+                    }
+                } : {})
+            }
+
+            const configMapper = {
+                site_name: 'wiki.site_name',
+                logo_url: 'wiki.logo_url',
+                front_page: 'wiki.front_page',
+                editagree_text: 'wiki.editagree_text',
+                copyright_text: 'wiki.copyright_text',
+                base_url: 'wiki.canonical_url',
+                sitenotice: 'wiki.sitenotice'
+            }
+            for(let [key, value] of Object.entries(configMapper)) {
+                const configVal = configJSON[key] ?? config[key];
+                delete configJSON[key];
+                if(!configVal) continue;
+                configJSON[value] = configVal;
+            }
+
+            configJSONstr = JSON.stringify(configJSON);
+            sessionJSONstr = JSON.stringify(session);
+        }
+
+        const getFEBasicData = () => {
+            makeConfigAndSession();
+
+            const userConfigHash = req.get('X-You');
+            const configHash = crypto.createHash('md5').update(configJSONstr).digest('hex');
+
+            const userSessionHash = req.get('X-Riko');
+            const sessionHash = crypto.createHash('md5').update(sessionJSONstr).digest('hex');
+
+            return {
+                ...(userConfigHash !== configHash ? {
+                    configHash,
+                    config: Object.fromEntries(Object.entries(configJSON).map(([k, v]) => [k, typeof v === 'string' ? v.replaceAll('{cspNonce}', res.locals.cspNonce) : v]))
+                } : {}),
+                ...(userSessionHash !== sessionHash ? {
+                    sessionHash,
+                    session
+                } : {})
+            }
+        }
+
+        res.renderSkin = (...args) => renderSkin(...args).then();
+
+        const renderSkin = async (title, data = {}) => {
+            makeConfigAndSession();
+
+            const status = data.status || 200;
+            delete data.status;
+
+            const viewName = data.viewName || null;
+            if (viewName) delete data.viewName;
+
+            if(viewName === 'wiki') {
+                data.copyright_text = config.copyright_text;
+                if(data.document) {
+                    const nsKey = `namespace.${data.document.namespace}.copyright_text`;
+                    if(config[nsKey]) data.copyright_text = config[nsKey];
+                }
+            }
+
+            const page = {
+                title: data.document ? globalUtils.doc_fulltitle(data.document) : title,
+                viewName: viewName ?? '',
+                menus: [],
+                data: utils.withoutKeys(data, [
+                    'contentName',
+                    'contentHtml',
+                    'serverData'
+                ])
+            }
+
+            const pluginData = {};
+            for(let plugin of plugins.skinData) {
+                const output = await plugin.format({
+                    data,
+                    page,
+                    session,
+                    req
+                });
+                if(typeof output === 'object') Object.assign(pluginData, output);
+            }
+
             const basicData = getFEBasicData();
             if(!basicData) return;
 
-            const responseData = JSON.parse(JSON.stringify(data));
-            res.originalSend(Buffer.from(msgpack.encode({
-                ...basicData,
-                ...responseData
-            })));
-
-            (async () => {
-                for(let item of global.plugins.postHook) {
-                    if(!item.includeError && (data.code && !['2', '3'].includes(data.code.toString()[0]))) continue;
-
-                    if(item.method && item.method !== req.method) continue;
-                    if(item.url) {
-                        if(!url.startsWith(item.url)) continue;
-                    }
-                    else if(item.condition) {
-                        try {
-                            if(!item.condition(req)) continue;
-                        } catch(e) {
-                            console.error('error from postHook plugin condition:', e);
-                            continue;
-                        }
-                    }
-                    else {
-                        console.warn('invalid postHook plugin detected:', item);
-                        continue;
-                    }
-                    try {
-                        await item.handler(req, responseData);
-                    } catch (e) {
-                        console.error('error from postHook plugin action:', e);
-                    }
-                }
-            })()
-        }
-        res.send = data => res.json({ data });
-
-        res.partial = data => {
-            let publicData;
-            if(data.publicData) {
-                publicData = data.publicData;
-                delete data.publicData;
+            const resData = {
+                page: {
+                    contentName: data.contentName || null,
+                    contentHtml: data.contentHtml || null,
+                    ...utils.onlyKeys(page, [
+                        'title',
+                        'viewName',
+                        'menus'
+                    ])
+                },
+                data: {
+                    publicData: page.data,
+                    ...(data.serverData ?? {}),
+                    ...pluginData,
+                    ...req.additionalServerData
+                },
+                ...basicData
             }
 
-            res.json({
-                partialData: {
-                    publicData,
-                    viewData: data
+            if(req.isInternal) res.json(resData);
+            else {
+                const render = require(`./skins/${skin}/server/server.cjs`).render;
+                const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`));
+                let body = rendered.html;
+                if(rendered.state) {
+                    body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
                 }
-            });
-        }
+                const html = skinInfo.template
+                    .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
+                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
+                    .replace('<!--app-body-->', body);
 
-        if(req.method === 'GET'
-            && req.url !== '/sidebar'
-            && versionHeader !== skinInfo.versionHeader
-            && ((!debug && !config.testwiki) || versionHeader !== 'bypass')) {
-            res.originalStatus(400).end();
-            return;
-        }
-    }
-
-    if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) {
-        for(let item of global.disabledFeatures) {
-            if(item.method !== 'ALL' && item.method !== req.method) continue;
-
-            if(item.type === 'string' && !url.startsWith(item.condition)) continue;
-            if(item.type === 'js' && !eval(item.condition)) continue;
-
-            const msg = (item.message || '비활성화된 기능입니다.')
-                .replaceAll('{cspNonce}', res.locals.cspNonce);
-
-            let messageType = item.messageType;
-            if(messageType === 'flexible') {
-                if(req.method === 'GET') messageType = 'res.error';
-                else messageType = 'plaintext';
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                res.status(status).send(html);
             }
-            if(messageType === 'res.error') return res.error(msg, 403);
-            if(messageType === 'plaintext') return res.status(403).send(msg);
         }
 
-        for(let item of global.plugins.preHook) {
-            if(item.method && item.method !== req.method) continue;
-            if(item.url) {
-                if(!url.startsWith(item.url)) continue;
+        res.error = (contentHtml, status = 400) => res.renderSkin('오류', {
+            contentHtml,
+            status,
+            serverData: {
+                document: req.document ?? undefined
             }
-            else if(item.condition) {
-                try {
-                    if(!item.condition(req)) continue;
-                } catch(e) {
-                    console.error('error from preHook plugin condition:', e);
-                    continue;
-                }
+        });
+
+        res.reload = (anchor, usingUrl = false) => {
+            if(!usingUrl) {
+                res.json({
+                    action: 'reloadView'
+                });
             }
             else {
-                console.warn('invalid preHook plugin detected:', item);
-                continue;
+                const url = new URL(req.get('Referrer') || config.base_url);
+                if(anchor) url.searchParams.set('anchor', anchor);
+                res.redirect(url.pathname + url.search);
             }
-            try {
-                await item.handler(req, res);
-            } catch (e) {
-                console.error('error from preHook plugin action:', e);
-            }
-            if(res.headersSent) return;
         }
+
+        res.originalRedirect = res.redirect;
+        res.redirect = (...args) => {
+            const target = args.pop();
+
+            let finalUrl;
+            if(target.startsWith('/')) {
+                const url = new URL(target, 'http://' + req.hostname);
+                if(req.query.f) url.searchParams.set('f', req.query.f);
+
+                finalUrl = url.pathname + url.search + url.hash;
+            }
+            else {
+                finalUrl = target;
+            }
+            if(req.isInternal) res.json({
+                code: 302,
+                url: finalUrl
+            });
+            else res.originalRedirect(...args, finalUrl);
+        }
+
+        let url = req.url;
+        if(req.isInternal) {
+            res.originalStatus = res.status;
+            res.status = code => ({
+                end: data => res.json({
+                    code,
+                    data
+                }),
+                send: data => res.json({
+                    code,
+                    data
+                }),
+                json: data => res.json({
+                    code,
+                    data
+                })
+            })
+
+            res.originalSend = res.send;
+            res.json = data => {
+                const basicData = getFEBasicData();
+                if(!basicData) return;
+
+                const responseData = JSON.parse(JSON.stringify(data));
+                res.originalSend(Buffer.from(msgpack.encode({
+                    ...basicData,
+                    ...responseData
+                })));
+
+                (async () => {
+                    for(let item of global.plugins.postHook) {
+                        if(!item.includeError && (data.code && !['2', '3'].includes(data.code.toString()[0]))) continue;
+
+                        if(item.method && item.method !== req.method) continue;
+                        if(item.url) {
+                            if(!url.startsWith(item.url)) continue;
+                        }
+                        else if(item.condition) {
+                            try {
+                                if(!item.condition(req)) continue;
+                            } catch(e) {
+                                console.error('error from postHook plugin condition:', e);
+                                continue;
+                            }
+                        }
+                        else {
+                            console.warn('invalid postHook plugin detected:', item);
+                            continue;
+                        }
+                        try {
+                            await item.handler(req, responseData);
+                        } catch (e) {
+                            console.error('error from postHook plugin action:', e);
+                        }
+                    }
+                })()
+            }
+            res.send = data => res.json({ data });
+
+            res.partial = data => {
+                let publicData;
+                if(data.publicData) {
+                    publicData = data.publicData;
+                    delete data.publicData;
+                }
+
+                res.json({
+                    partialData: {
+                        publicData,
+                        viewData: data
+                    }
+                });
+            }
+
+            if(req.method === 'GET'
+                && req.url !== '/sidebar'
+                && versionHeader !== skinInfo.versionHeader
+                && ((!debug && !config.testwiki) || versionHeader !== 'bypass')) {
+                res.originalStatus(400).end();
+                return;
+            }
+        }
+
+        if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) {
+            for(let item of global.disabledFeatures) {
+                if(item.method !== 'ALL' && item.method !== req.method) continue;
+
+                if(item.type === 'string' && !url.startsWith(item.condition)) continue;
+                if(item.type === 'js' && !eval(item.condition)) continue;
+
+                const msg = (item.message || '비활성화된 기능입니다.')
+                    .replaceAll('{cspNonce}', res.locals.cspNonce);
+
+                let messageType = item.messageType;
+                if(messageType === 'flexible') {
+                    if(req.method === 'GET') messageType = 'res.error';
+                    else messageType = 'plaintext';
+                }
+                if(messageType === 'res.error') return res.error(msg, 403);
+                if(messageType === 'plaintext') return res.status(403).send(msg);
+            }
+
+            for(let item of global.plugins.preHook) {
+                if(item.method && item.method !== req.method) continue;
+                if(item.url) {
+                    if(!url.startsWith(item.url)) continue;
+                }
+                else if(item.condition) {
+                    try {
+                        if(!item.condition(req)) continue;
+                    } catch(e) {
+                        console.error('error from preHook plugin condition:', e);
+                        continue;
+                    }
+                }
+                else {
+                    console.warn('invalid preHook plugin detected:', item);
+                    continue;
+                }
+                try {
+                    await item.handler(req, res);
+                } catch (e) {
+                    console.error('error from preHook plugin action:', e);
+                }
+                if(res.headersSent) return;
+            }
+        }
+
+        req.flash = Object.keys(req.session.flash ?? {}).length ? req.session.flash : {};
+        req.session.flash = {};
+
+        if(req.method === 'GET') {
+            let urlPath = req.path;
+            if(urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
+            const pagePlugin = plugins.page.find(a => typeof a.url === 'string' ? a.url === urlPath : a.url(urlPath));
+            if(pagePlugin) return pagePlugin.handler(req, res);
+        }
+
+        next();
+
+        if(req.method === 'POST' && !req.url.startsWith('/member') && req.user?.type === UserTypes.Account)
+            User.updateOne({
+                uuid: req.user.uuid
+            }, {
+                lastActivity: new Date()
+            }).then();
+    } finally {
+        log.save().then();
     }
-
-    req.flash = Object.keys(req.session.flash ?? {}).length ? req.session.flash : {};
-    req.session.flash = {};
-
-    if(req.method === 'GET') {
-        let urlPath = req.path;
-        if(urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
-        const pagePlugin = plugins.page.find(a => typeof a.url === 'string' ? a.url === urlPath : a.url(urlPath));
-        if(pagePlugin) return pagePlugin.handler(req, res);
-    }
-
-    next();
-
-    if(req.method === 'POST' && !req.url.startsWith('/member') && req.user?.type === UserTypes.Account)
-        User.updateOne({
-            uuid: req.user.uuid
-        }, {
-            lastActivity: new Date()
-        }).then();
 });
 
 for(let f of fs.readdirSync('./routes')) {
