@@ -66,7 +66,7 @@ newSchema.post('save', function() {
             else return;
         }
 
-        const [item] = await utils.notificationMapper({ permissions: [] }, [notification], true);
+        const [item] = await utils.notificationMapper({ permissions: [] }, [notification]);
 
         let title = `[${config.site_name ?? '위키'}] `;
         let body;
