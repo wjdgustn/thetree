@@ -771,7 +771,7 @@ module.exports = {
         if(!comment.hidden || canSeeHidden) {
             if(comment.type === ThreadCommentTypes.Default) {
                 const parseResult = global.NamumarkParser.parser(comment.content, { thread: true });
-                if(lightMode) comment.contentHtml = namumarkUtils.escapeHtml(namumarkUtils.parsedToText(parseResult.result));
+                if(lightMode) comment.contentHtml = namumarkUtils.escapeHtml(namumarkUtils.parsedToText(parseResult.result)).trim();
                 else {
                     if(skipRender) {
                         comment.parseResult = parseResult;
