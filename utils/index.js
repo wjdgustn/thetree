@@ -829,6 +829,8 @@ module.exports = {
         }));
     },
     async notificationMapper(req, items = [], lightMode = false) {
+        const commentRequests = [];
+
         await Promise.all(items.map(item => new Promise(async resolve => {
             switch(item.type) {
                 case NotificationTypes.UserDiscuss: {
@@ -845,7 +847,8 @@ module.exports = {
                     }).sort({
                         _id: -1
                     }).lean();
-                    item.comment = await this.threadCommentMapper(comment, {
+                    item.comment = commentRequests.length;
+                    commentRequests.push([comment, {
                         req,
                         lightMode,
                         toHtmlParams: {
@@ -856,8 +859,7 @@ module.exports = {
                             commentId: comment.id,
                             req
                         }
-                    });
-                    item.comment = await this.findUsers(req, item.comment);
+                    }]);
                     item.url = `/thread/${thread.url}`;
                     delete item.data;
                     break;
@@ -874,7 +876,8 @@ module.exports = {
                         uuid: thread.document
                     });
                     item.document = this.dbDocumentToDocument(dbDocument);
-                    item.comment = await this.threadCommentMapper(comment, {
+                    item.comment = commentRequests.length;
+                    commentRequests.push([comment, {
                         req,
                         lightMode,
                         toHtmlParams: {
@@ -885,8 +888,7 @@ module.exports = {
                             commentId: comment.id,
                             req
                         }
-                    });
-                    item.comment = await this.findUsers(req, item.comment);
+                    }]);
                     item.url = `/thread/${thread.url}#${comment.id}`;
                     delete item.data;
                     break;
@@ -894,7 +896,16 @@ module.exports = {
             }
             resolve();
         })));
-        return items;
+
+        const mappedComments = await this.multipleThreadCommentsMapper(commentRequests);
+        await Promise.all(mappedComments.map(a => this.findUsers(req, a)));
+
+        return items.map(a => {
+            if(a.comment != null)
+                a.comment = mappedComments[a.comment];
+
+            return a;
+        });
     },
     insertText: (text, index, insertText) => {
         return text.slice(0, index) + insertText + text.slice(index);
