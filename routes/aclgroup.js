@@ -385,12 +385,31 @@ module.exports.postACLGroup = postACLGroup;
 
 app.post('/aclgroup', ...postACLGroupValidate, postACLGroup);
 
-app.post('/aclgroup/remove',
+const removeACLGroupValidate = [
     (req, res, next) => {
         req.modifiedBody = {};
         next();
     },
+    body('id')
+        .if((value, { req }) => req.isAPI)
+        .isInt({ min: 1 })
+        .toInt(),
+    body('uuid')
+        .if((value, { req }) => !req.isAPI)
+        .isUUID(),
     body('group')
+        .if((value, { req }) => req.isAPI)
+        .isString()
+        .custom(async (value, { req }) => {
+            const group = await ACLGroup.findOne({
+                ...aclGroupsQuery(req),
+                name: req.body.group
+            });
+            if(!group) throw new Error('존재하지 않는 그룹입니다.');
+            req.modifiedBody.group = group;
+        }),
+    body('group')
+        .if((value, { req }) => !req.isAPI)
         .isUUID()
         .custom(async (value, { req }) => {
             const group = await ACLGroup.findOne({
@@ -408,13 +427,18 @@ app.post('/aclgroup/remove',
             if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error('권한이 부족합니다.');
             return true;
         }),
-    middleware.fieldErrors,
-    async (req, res) => {
+    middleware.fieldErrors
+];
+module.exports.removeACLGroupValidate = removeACLGroupValidate;
+
+const removeACLGroup = async (req, res) => {
     const group = req.modifiedBody.group;
 
     if(!groupPermChecker(req, group, 'removePerms')) return res.status(403).send('권한이 부족합니다.');
 
-    const deleted = await ACLGroupItem.findOneAndDelete({
+    const deleted = await ACLGroupItem.findOneAndDelete(req.isAPI ? {
+        id: req.body.id
+    } : {
         uuid: req.body.uuid
     });
     if(!deleted) return res.status(404).send('ACL 요소가 존재하지 않습니다.');
@@ -440,8 +464,11 @@ app.post('/aclgroup/remove',
         hideLog: req.body.hidelog === 'Y'
     });
 
-        res.reload();
-});
+    res.reload();
+}
+module.exports.removeACLGroup = removeACLGroup;
+
+app.post('/aclgroup/remove', ...removeACLGroupValidate, removeACLGroup);
 
 app.get('/aclgroup/group_manage', async (req, res) => {
     const group = await ACLGroup.findOne({

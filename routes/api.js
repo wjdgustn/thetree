@@ -20,7 +20,9 @@ const {
 const {
     getACLGroup,
     postACLGroupValidate,
-    postACLGroup
+    postACLGroup,
+    removeACLGroupValidate,
+    removeACLGroup
 } = require('./aclgroup');
 
 const User = require('../schemas/user');
@@ -71,6 +73,9 @@ const apiWrapper = fn => async (req, res, next) => {
         },
         sendData(data) {
             finalData = data;
+        },
+        reload() {
+            finalData = {};
         }
     }
     await fn(req, fakeRes);
@@ -274,7 +279,11 @@ app.get('/api/v0/aclgroup', apiWrapper(getACLGroup), async (req, res) => {
     });
 });
 
-app.post('/api/v0/aclgroup', postACLGroupValidate, apiWrapper(postACLGroup), async (req, res) => {
+app.post('/api/v0/aclgroup', ...postACLGroupValidate, apiWrapper(postACLGroup), async (req, res) => {
+    res.json(req.apiData);
+});
+
+app.delete('/api/v0/aclgroup', ...removeACLGroupValidate, apiWrapper(removeACLGroup), async (req, res) => {
     res.json(req.apiData);
 });
 
