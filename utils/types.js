@@ -138,7 +138,8 @@ module.exports = {
         ...Object.fromEntries(TreePermissions.map((a, i) => [a, 1n << (BigInt(i) + 50n)]))
     },
     ProtectedPermissions: [
-        'developer'
+        'developer',
+        'manage_account'
     ],
     AlwaysProtectedPermissions: [
         'mobile_verified_member'

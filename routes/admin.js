@@ -817,7 +817,7 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
     const configPerms = AllPermissions.filter(a => !grantPerms.includes(a));
     const grantablePermissions = [...grantPerms, ...(req.permissions.includes('config') ? configPerms : [])]
         .filter(a => !NoGrantPermissions.includes(a)
-            && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+            && (req.permissions.includes(a) || !ProtectedPermissions.includes(a))
             && !AlwaysProtectedPermissions.includes(a));
 
     res.renderSkin('권한 부여', {
@@ -850,7 +850,7 @@ app.post('/admin/grant',
 
     const grantablePermissions = AllPermissions.filter(a =>
         !NoGrantPermissions.includes(a)
-        && (req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
+        && (req.permissions.includes(a) || !ProtectedPermissions.includes(a))
         && !AlwaysProtectedPermissions.includes(a)
         && (req.permissions.includes('config') || config.grant_permissions.includes(a) || req.permissions.includes(a)));
 
