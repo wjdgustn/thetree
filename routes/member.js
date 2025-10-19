@@ -18,6 +18,7 @@ const {
 } = require('@simplewebauthn/server/helpers');
 const axios = require('axios');
 const parsePhoneNumber = require('libphonenumber-js/max');
+const webpush = require('web-push');
 
 const utils = require('../utils');
 const namumarkUtils = require('../utils/namumark/utils');
@@ -47,6 +48,8 @@ const Passkey = require('../schemas/passkey');
 const Notification = require('../schemas/notification');
 const AuditLog = require('../schemas/auditLog');
 const MobileVerifyInfo = require('../schemas/mobileVerifyInfo');
+const ServerKeyValue = require('../schemas/serverKeyValue');
+const PushSubscription = require('../schemas/pushSubscription');
 
 const app = express.Router();
 
@@ -1989,6 +1992,30 @@ app.post('/member/notifications/read', middleware.isLogin, async (req, res) => {
         read: true
     });
     res.reload();
+});
+
+let vapidKeys;
+app.get('/member/notifications/subscribe', middleware.isLogin, async (req, res) => {
+    vapidKeys ??= await ServerKeyValue.findOne({
+        key: 'vapidKeys'
+    });
+    vapidKeys ??= await ServerKeyValue.create({
+        key: 'vapidKeys',
+        value: webpush.generateVAPIDKeys()
+    });
+
+    return res.json({ applicationServerKey: vapidKeys.value.publicKey });
+});
+
+app.post('/member/notifications/subscribe', middleware.isLogin, async (req, res) => {
+    await PushSubscription.create({
+        user: req.user.uuid,
+        expiresAt: isNaN(req.body.expirationTime) ? new Date(req.body.expirationTime) : undefined,
+        endpoint: req.body.endpoint,
+        p256dh: req.body.keys.p256dh,
+        auth: req.body.keys.auth
+    });
+    res.status(201).end();
 });
 
 app.get('/engine/getperm', middleware.isLogin, async (req, res) => {

@@ -69,7 +69,8 @@
     "socket.io": "^4.8.1",
     "uglify-js": "^3.19.3",
     "uuid-color": "^0.1.1",
-    "validate-color": "^2.2.4"
+    "validate-color": "^2.2.4",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@socket.io/admin-ui": "^0.5.1",

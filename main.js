@@ -602,7 +602,7 @@ if(!debug) {
     app.use(compression());
 }
 app.use(express.static(`./customStatic`));
-// app.use(express.static(`./public`));
+app.use(express.static(`./public`));
 
 app.use('/skins', (req, res, next) => {
     const splittedPath = req.path.split('/');
