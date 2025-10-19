@@ -1175,7 +1175,7 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
-    if((namespace === '사용자' || namespace === '삭제된사용자') && isCreate && (!title.includes('/') || title.startsWith('*'))) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+    if((namespace === '사용자' || namespace === '삭제된사용자') && isCreate && !title.includes('/')) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
 
     if(isEditRequest) {
         const editRequest = await EditRequest.findOneAndUpdate({
@@ -2005,8 +2005,8 @@ app.post('/move/{*document}', middleware.parseDocumentName, middleware.captcha(t
     const { result: otherResult, aclMessage: otherAclMessage } = await otherAcl.check(ACLTypes.Move, req.aclData);
     if(!otherResult) return res.error(otherAclMessage, 403);
 
-    const isUserDoc = document.namespace === '사용자' && !document.title.includes('/');
-    const otherIsUserDoc = otherDocument.namespace === '사용자' && (!otherDocument.title.includes('/') || otherDocument.title.startsWith('*'));
+    const isUserDoc = ['사용자', '삭제된사용자'].includes(document.namespace) && !document.title.includes('/');
+    const otherIsUserDoc = ['사용자', '삭제된사용자'].includes(document.namespace) && !otherDocument.title.includes('/');
     if(isUserDoc || otherIsUserDoc || (document.namespace.includes('파일') !== otherDocument.namespace.includes('파일')))
         return res.error('이 문서를 해당 이름공간으로 이동할 수 없습니다.', 403);
 
