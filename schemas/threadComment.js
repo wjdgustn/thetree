@@ -122,6 +122,7 @@ newSchema.post('save', async function() {
     }) : [];
 
     let linkComments = commentNumbers.length ? await model.find({
+        thread: this.thread,
         id: {
             $in: commentNumbers.filter(a => !isNaN(a))
         }
