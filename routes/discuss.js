@@ -571,14 +571,6 @@ app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
     });
     SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { status });
 
-    const latestComment = await ThreadComment.findOne({
-        thread: thread.uuid
-    })
-        .sort({
-            id: -1
-        })
-        .lean();
-
     const dbComment = await ThreadComment.create({
         thread: thread.uuid,
         user: req.user.uuid,
@@ -594,6 +586,14 @@ app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
     });
 
     if(status !== ThreadStatusTypes.Open && document.namespace === '사용자') {
+        const latestComment = await ThreadComment.findOne({
+            thread: thread.uuid
+        })
+            .sort({
+                id: -1
+            })
+            .lean();
+
         const user = await User.findOne({
             name: document.title
         });
@@ -802,6 +802,35 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
         content: thread.uuid
     });
     SocketIO.of('/thread').to(thread.uuid).emit('updateThread', { deleted: true });
+
+    if(document.namespace === '사용자') {
+        const latestComment = await ThreadComment.findOne({
+            thread: thread.uuid
+        })
+            .sort({
+                id: -1
+            })
+            .lean();
+
+        const user = await User.findOne({
+            name: document.title
+        });
+        if(user.lastUserDocumentDiscuss <= latestComment.createdAt) {
+            await User.updateOne({
+                uuid: user.uuid
+            }, {
+                lastUserDocumentDiscuss: null
+            });
+        }
+        if(user) await Notification.updateMany({
+            user: user.uuid,
+            type: NotificationTypes.UserDiscuss,
+            data: thread.uuid,
+            read: false
+        }, {
+            read: true
+        });
+    }
 
     const referer = new URL(req.get('referer'));
     if(referer.pathname.startsWith('/discuss/')) res.reload();
