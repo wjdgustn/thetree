@@ -10,8 +10,6 @@ module.exports = async (obj, toHtml) => {
     const colDarkColors = [];
     const colKeepAll = [];
 
-    const trClassList = [];
-
     let tableWrapStyle = ';';
     let tableStyle = ';';
     let tableDarkStyle = ';';
@@ -27,6 +25,7 @@ module.exports = async (obj, toHtml) => {
 
         let colspan = 1;
 
+        const trClassList = [];
         let trStyle = ';';
         let trDarkStyle = ';';
 
@@ -303,7 +302,7 @@ module.exports = async (obj, toHtml) => {
 
         trStyle = trStyle.slice(1);
         trDarkStyle = trDarkStyle.slice(1);
-        htmlRows.push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}>${htmlValues.join('')}</tr>`);
+        htmlRows.push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}${trClassList.length ? ` class="${trClassList.join(' ')}"` : ''}>${htmlValues.join('')}</tr>`);
 
         prevColspan = 1;
     }
