@@ -890,7 +890,8 @@ const editAndEditRequest = async (req, res) => {
                 const { html } = await toHtml(parseResult, {
                     document: helpDocName,
                     aclData: req.aclData,
-                    req
+                    req,
+                    includeData: {}
                 });
                 dochelptext = html;
             }
