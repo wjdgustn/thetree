@@ -797,6 +797,9 @@ module.exports = {
             else if(comment.type === ThreadCommentTypes.UnpinComment) {
                 comment.contentHtml = `댓글 고정 해제`;
             }
+
+            if(lightMode && comment.type !== ThreadCommentTypes.Default)
+                comment.contentHtml = globalUtils.removeHtmlTags(comment.contentHtml);
         }
 
         // if(typeof comment.user === 'object')
