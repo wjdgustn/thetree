@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const { highlight } = require('highlight.js');
 const multer = require('multer');
 const { body } = require('express-validator');
-const parseDuration = require('parse-duration');
+const ms = require('ms');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 const execPromise = util.promisify(exec);
@@ -1075,7 +1075,7 @@ app.post('/admin/batch_revert',
             max: 100
         })
         .custom(async (value, { req }) => {
-            req.modifiedBody.duration = parseDuration(value);
+            req.modifiedBody.duration = ms(value);
             if(!req.modifiedBody.duration) throw new Error('기간 형식이 잘못되었습니다.');
             if(req.modifiedBody.duration > 1000 * 60 * 60 * 24) throw new Error('최대 기간은 24시간입니다.');
         }),
