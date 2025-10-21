@@ -918,6 +918,9 @@ const editAndEditRequest = async (req, res) => {
             },
             editagree_text: config[`namespace.${namespace}.editagree_text`] || config.editagree_text,
             dochelptext,
+            ...(isEditRequest ? {
+                editRequestBottomText: config.edit_request_bottom_text
+            } : {}),
             conflict: req.flash.conflict,
             editagreeAgreed: req.session.editagreeAgreed,
             log: req.editRequest?.log

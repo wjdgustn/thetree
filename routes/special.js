@@ -283,12 +283,19 @@ app.get('/Upload', async (req, res) => {
         }
     }
 
+    let defaultLicense = config.file_default_license;
+    const imageLicensePrefix = '틀:이미지 라이선스/';
+    if(defaultLicense.startsWith(imageLicensePrefix))
+        defaultLicense = defaultLicense.slice(imageLicensePrefix.length);
+
     res.renderSkin('파일 올리기', {
         contentName: 'special/upload',
         serverData: {
             licenses,
+            defaultLicense,
             categories,
             file_upload_template,
+            licenseText: config.file_license_text,
             editagree_text: config[`namespace.파일.editagree_text`] || config.editagree_text
         }
     });
