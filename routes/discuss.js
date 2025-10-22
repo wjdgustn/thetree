@@ -61,12 +61,12 @@ const threadCommentEvent = async ({
 
     const acl = await ACL.get({ thread }, document);
     const sockets = await SocketIO.of('/thread').to(thread.uuid).fetchSockets();
-    for(let socket of sockets) {
+    await Promise.allSettled(sockets.map(async socket => {
         const { result: readable } = await acl.check(ACLTypes.Read, socket.request.aclData);
-        if(readable) continue;
+        if(readable) return;
 
         socket.disconnect();
-    }
+    }));
 
     SocketIO.of('/thread').to(thread.uuid).emit('comment', comment);
 }
