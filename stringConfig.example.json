@@ -4,6 +4,8 @@
   "terms": "여기에 약관을 입력해주세요.",
   "terms_agree_text": "",
   "withdraw_pledge": "본인은 계정 삭제를 하면 기여했던 모든 내역이 <삭제된 사용자>로 표시됨을 동의하며 시스템에서 데이터가 삭제된 이후 기여자임을 증명할 수 없게 된다는 사실을 인지하고 있습니다.",
+  "edit_request_bottom_text": "",
+  "file_license_text": "",
   "not_found_html": "",
   "head_html": "",
   "verify_text": ""
