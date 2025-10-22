@@ -285,7 +285,7 @@ app.get('/Upload', async (req, res) => {
 
     let defaultLicense = config.file_default_license;
     const imageLicensePrefix = '틀:이미지 라이선스/';
-    if(defaultLicense.startsWith(imageLicensePrefix))
+    if(defaultLicense?.startsWith(imageLicensePrefix))
         defaultLicense = defaultLicense.slice(imageLicensePrefix.length);
 
     res.renderSkin('파일 올리기', {
