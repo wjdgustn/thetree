@@ -450,6 +450,19 @@ app.get('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
+const disconnectThreadSocketsWithoutPerm = dbThread => {
+    setTimeout(async () => {
+        const acl = await ACL.get({ thread: dbThread }, document);
+        const sockets = await SocketIO.of('/thread').to(dbThread.uuid).fetchSockets();
+        await Promise.allSettled(sockets.map(async socket => {
+            const { result: readable } = await acl.check(ACLTypes.Read, socket.request.aclData);
+            if(readable) return;
+
+            socket.disconnect();
+        }));
+    }, 0);
+}
+
 app.post('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
     const target = req.body.target;
 
@@ -618,12 +631,16 @@ app.post('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
         target: namespace,
         content: log
     });
-    else if(target === 'thread') await AuditLog.create({
-        user: req.user.uuid,
-        action: AuditLogTypes.ThreadACL,
-        target: dbThread.uuid,
-        content: log
-    });
+    else if(target === 'thread') {
+        disconnectThreadSocketsWithoutPerm(dbThread);
+
+        await AuditLog.create({
+            user: req.user.uuid,
+            action: AuditLogTypes.ThreadACL,
+            target: dbThread.uuid,
+            content: log
+        });
+    }
 
     res.reload();
 });
@@ -703,12 +720,16 @@ app.get('/action/acl/delete', async (req, res) => {
         target: dbACL.namespace,
         content: log
     });
-    else if(dbACL.thread) await AuditLog.create({
-        user: req.user.uuid,
-        action: AuditLogTypes.ThreadACL,
-        target: dbACL.thread,
-        content: log
-    });
+    else if(dbACL.thread) {
+        disconnectThreadSocketsWithoutPerm(dbThread);
+
+        await AuditLog.create({
+            user: req.user.uuid,
+            action: AuditLogTypes.ThreadACL,
+            target: dbACL.thread,
+            content: log
+        });
+    }
 
     res.reload(dbACL.document ? 'document' : 'namespace' + '.' + aclTypeStr);
 });
@@ -782,6 +803,8 @@ app.patch('/action/acl/reorder', async (req, res) => {
     }
 
     if(actions.length) await ACLModel.bulkWrite(actions);
+
+    if(dbThread) disconnectThreadSocketsWithoutPerm(dbThread);
 
     res.status(204).end();
 });
