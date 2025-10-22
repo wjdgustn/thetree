@@ -450,7 +450,7 @@ app.get('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-const disconnectThreadSocketsWithoutPerm = dbThread => {
+const disconnectThreadSocketsWithoutPerm = (document, dbThread) => {
     setTimeout(async () => {
         const acl = await ACL.get({ thread: dbThread }, document);
         const sockets = await SocketIO.of('/thread').to(dbThread.uuid).fetchSockets();
@@ -632,7 +632,7 @@ app.post('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
         content: log
     });
     else if(target === 'thread') {
-        disconnectThreadSocketsWithoutPerm(dbThread);
+        disconnectThreadSocketsWithoutPerm(document, dbThread);
 
         await AuditLog.create({
             user: req.user.uuid,
@@ -721,7 +721,7 @@ app.get('/action/acl/delete', async (req, res) => {
         content: log
     });
     else if(dbACL.thread) {
-        disconnectThreadSocketsWithoutPerm(dbThread);
+        disconnectThreadSocketsWithoutPerm(utils.dbDocumentToDocument(dbDocument), dbThread);
 
         await AuditLog.create({
             user: req.user.uuid,
@@ -804,7 +804,7 @@ app.patch('/action/acl/reorder', async (req, res) => {
 
     if(actions.length) await ACLModel.bulkWrite(actions);
 
-    if(dbThread) disconnectThreadSocketsWithoutPerm(dbThread);
+    if(dbThread) disconnectThreadSocketsWithoutPerm(utils.dbDocumentToDocument(dbDocument), dbThread);
 
     res.status(204).end();
 });
