@@ -29,6 +29,7 @@ services:
       S3_REGION: auto
       S3_FORCE_PATH_STYLE: false
       S3_PUBLIC_HOST: https://cdn.example.com
+      S3_PUBLIC_HOST_PREFIX:
 
       # compose-full 사용 시 아래 부분 건들 필요 없음
       MONGODB_HOST: db

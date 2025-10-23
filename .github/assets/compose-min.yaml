@@ -29,6 +29,7 @@ services:
       S3_REGION: auto
       S3_FORCE_PATH_STYLE: false
       S3_PUBLIC_HOST: https://cdn.example.com
+      S3_PUBLIC_HOST_PREFIX:
 
       MONGODB_HOST: host.docker.internal
       MONGODB_PORT: 27017
