@@ -60,6 +60,11 @@ const topToHtml = module.exports = async parameter => {
             list: [],
             html: ''
         },
+        footnote: {
+            index: 0,
+            values: [],
+            list: []
+        },
         error: null,
         errorCode: null,
         voteIndex: -1,
@@ -511,8 +516,27 @@ const topToHtml = module.exports = async parameter => {
                 });
                 break;
             case 'footnote': {
-                const name = obj.name;
-                const value = await toHtml(obj.value);
+                const index = ++Store.footnote.index;
+                const name = obj.name || index.toString();
+                // const value = await toHtml(obj.value);
+
+                const prevFootnote = Store.footnote.values.find(a => a.name === name);
+                let value = prevFootnote?.content;
+                if(prevFootnote == null) {
+                    value = obj.value;
+                    Store.footnote.values.push({
+                        name,
+                        content: value
+                    });
+                }
+
+                Store.footnote.list.push({
+                    name,
+                    index
+                });
+
+                value = await toHtml(value);
+
                 result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(value)}" href="#${commentPrefix}fn-${name}"><span id="${commentPrefix}rfn-${obj.index}"></span>[${name}]</a>`;
                 break;
             }

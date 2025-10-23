@@ -1,16 +1,21 @@
 module.exports = {
     aliases: ['각주'],
     allowThread: true,
-    async format(params, options, obj) {
-        const { commentPrefix, toHtml } = options;
+    async format(params, options) {
+        const { commentPrefix, toHtml, Store } = options;
 
-        if(!obj.footnoteValues.length) return '';
+        const footnoteValues = [...Store.footnote.values];
+        const footnoteList = [...Store.footnote.list];
+        Store.footnote.values.length = 0;
+        Store.footnote.list.length = 0;
+
+        if(!footnoteValues.length) return '';
 
         let html = `<div class="wiki-macro-footnote">`;
-        for(let { name, content } of obj.footnoteValues) {
+        for(let { name, content } of footnoteValues) {
             html += `<span class="footnote-list"><span id="${commentPrefix}fn-${name}"></span>`;
 
-            const sameFootnotes = obj.footnoteList.filter(a => a.name === name);
+            const sameFootnotes = footnoteList.filter(a => a.name === name);
             const footnote = sameFootnotes[0];
             if(sameFootnotes.length > 1) {
                 html += `[${name}]`;
