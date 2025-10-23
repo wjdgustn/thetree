@@ -851,7 +851,7 @@ app.use(async (req, res, next) => {
                 requestLogData.decryptedUrl = req.url;
             }
         }
-        else if(isPlainInternal && (debug || !skinInfo.urlKey)) {
+        else if(isPlainInternal && (debug || !skinInfo.urlKey || (versionHeader === 'bypass' && config.testwiki))) {
             req.isInternal = true;
             req.url = req.url.slice('/internal'.length) || '/';
             req.path = req.path.slice('/internal'.length) || '/';
