@@ -279,6 +279,8 @@ const nameChecker = field => body(field)
     .withMessage('사용자 이름은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.')
     .custom(value => value[0].match(/[a-zA-Z]/))
     .withMessage('사용자 이름은 영문으로 시작해야 합니다.')
+    .custom(value => !(config.name_blacklist ?? []).some(a => value.toLowerCase().includes(a.toLowerCase())))
+    .withMessage('사용자 이름으로 사용할 수 없는 단어가 포함되어 있습니다.')
     .custom(async (value, {req}) => {
         const existingUser = await User.exists({
             name: {

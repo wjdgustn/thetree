@@ -18,6 +18,7 @@
   "disable_signup": false,
   "email_whitelist": [],
   "use_email_verification": false,
+  "name_blacklist": ["admin", "developer"],
 
   "verify_enabled": false,
   "verify_countries_ip_match": true,
