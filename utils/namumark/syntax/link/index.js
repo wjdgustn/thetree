@@ -23,7 +23,7 @@ module.exports = async (obj, options = {}) => {
     else if(typeof image === 'object') {
         if(image.link) link = image.link;
         if(image.text) {
-            text = image.text;
+            text = await utils.parseIncludeParams(image.text, options.Store.isolateContext);
             obj.textExists = false;
         }
         if(!options.includeData) Store.files.push(link);
