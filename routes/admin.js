@@ -868,12 +868,6 @@ app.post('/admin/grant',
         }
     }
 
-    await User.updateOne({
-        uuid: req.body.uuid
-    }, {
-        permissions: newPerm
-    });
-
     const addedPerms = [];
     const removedPerms = [];
 
@@ -883,6 +877,19 @@ app.post('/admin/grant',
     for(let perm of targetUser.permissions) {
         if(!newPerm.includes(perm)) removedPerms.push(perm);
     }
+
+    if(removedPerms.includes('developer')) {
+        const devCount = await User.countDocuments({
+            permissions: 'developer'
+        });
+        if(devCount <= 1) return res.status(400).send('최소 1명은 developer 권한을 보유해야 합니다.');
+    }
+
+    await User.updateOne({
+        uuid: req.body.uuid
+    }, {
+        permissions: newPerm
+    });
 
     if(addedPerms.length || removedPerms.length)
         await BlockHistory.create({
