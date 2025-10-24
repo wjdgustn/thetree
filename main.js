@@ -1167,6 +1167,15 @@ app.use(async (req, res, next) => {
         }
 
         if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) {
+            if((config.read_only || global.updatingEngine) &&
+                ([
+                    '/edit/', '/move/', '/delete/', '/revert/',
+                    '/member/login', '/member/logout'
+                ].some(a => url.startsWith(a)) || req.method !== 'GET')) {
+                if(req.method === 'GET') return res.error('위키가 읽기 전용 모드입니다.');
+                else return res.status(403).send('위키가 읽기 전용 모드입니다.');
+            }
+
             for(let item of global.disabledFeatures) {
                 if(item.method !== 'ALL' && item.method !== req.method) continue;
 
