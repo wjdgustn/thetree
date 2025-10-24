@@ -443,7 +443,7 @@ const Literal = createToken({
 });
 const LegacyMath = createToken({
     name: 'LegacyMath',
-    pattern: /<math>(.*)<\/math>/
+    pattern: /<math>(.*?)<\/math>/
 });
 const Link = createToken({
     name: 'Link',
@@ -458,7 +458,7 @@ const CategoryWithNewline = createToken({
     pattern: (text, startOffset) => {
         const openLineIndex = text.lastIndexOf('\n', startOffset);
         const openLine = text.slice(openLineIndex + 1, text.indexOf('\n', openLineIndex + 1));
-        if(openLine.replace(/\[\[분류:(.*)]]/, '')) return null;
+        if(openLine.replace(/\[\[분류:(.*?)]]/, '')) return null;
 
         return categoryWithNewlineRegex.pattern(text, startOffset);
     },
