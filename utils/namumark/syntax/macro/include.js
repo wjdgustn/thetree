@@ -24,6 +24,11 @@ module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj
                 list: [],
                 html: ''
             },
+            footnote: {
+                index: 0,
+                values: [],
+                list: []
+            },
             isolate,
             isolateContext
         }
