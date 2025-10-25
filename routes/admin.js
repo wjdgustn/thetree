@@ -774,7 +774,13 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
     res.reload();
 });
 
-app.post('/admin/developer/signup', middleware.permission('developer'), async (req, res) => {
+app.post('/admin/developer/signup',
+    middleware.permission('developer'),
+    body('email')
+        .notEmpty().withMessage('이메일의 값은 필수입니다.')
+        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .normalizeEmail(),
+    async (req, res) => {
     const email = req.body.email;
     const name = req.body.name;
 
