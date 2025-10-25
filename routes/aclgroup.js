@@ -10,7 +10,9 @@ const {
     AuditLogTypes,
     SignupPolicy,
     AllPermissions,
-    ProtectedPermissions
+    ProtectedPermissions,
+    NoGrantPermissions,
+    AlwaysProtectedPermissions
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -514,12 +516,11 @@ const permValidator = field => body(field)
             if(modifiedPermissions.length && !req.permissions.includes('grant'))
                 throw new Error('이 값을 수정하려면 grant 권한이 필요합니다.');
 
-            const addablePermissions = [...req.permissions];
-            if(req.permissions.includes('config'))
-                addablePermissions.push(
-                    ...AllPermissions
-                        .filter(a => req.permissions.includes('developer') || !ProtectedPermissions.includes(a))
-                );
+            const addablePermissions = AllPermissions.filter(a =>
+                !NoGrantPermissions.includes(a)
+                && (req.permissions.includes(a) || !ProtectedPermissions.includes(a))
+                && !AlwaysProtectedPermissions.includes(a)
+                && (req.permissions.includes('config') || config.grant_permissions.includes(a) || req.permissions.includes(a)));
 
             const noGrantablePermission = modifiedPermissions.find(a => !addablePermissions.includes(a));
             if(noGrantablePermission)
