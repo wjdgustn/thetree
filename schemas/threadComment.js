@@ -74,78 +74,83 @@ newSchema.index({ thread: 1, id: 1 }, { unique: true });
 const lastItem = {};
 const lockPromise = {};
 newSchema.pre('save', async function() {
-    const locks = lockPromise[this.thread] ??= [];
+    const locks = lockPromise[comment.thread] ??= [];
 
-    let last = lastItem[this.thread];
-    lastItem[this.thread] = this;
+    let last = lastItem[comment.thread];
+    lastItem[comment.thread] = this;
 
     if(last && last.id == null) await globalUtils.waitUntil(new Promise(resolve => {
         locks.push(resolve);
     }), 5000);
 
-    if (!last) last = await model.findOne({ thread: this.thread }).sort({ id: -1 });
+    if (!last) last = await model.findOne({ thread: comment.thread }).sort({ id: -1 });
 
     locks.forEach(r => r());
-    delete lockPromise[this.thread];
+    delete lockPromise[comment.thread];
 
-    if(this.id == null) {
-        this.id = last ? last.id + 1 : 1;
+    if(comment.id == null) {
+        comment.id = last ? last.id + 1 : 1;
     }
 });
 
 newSchema.post('save', async function() {
-    delete lastItem[this.id];
+    const comment = this;
+    delete lastItem[comment.id];
 
-    mongoose.models.Thread.updateOne({
-        uuid: this.thread
-    }, {
-        lastUpdateUser: this.user,
-        lastUpdatedAt: this.createdAt
-    }).then();
+    setTimeout(async () => {
+        mongoose.models.Thread.updateOne({
+            uuid: comment.thread
+        }, {
+            lastUpdateUser: comment.user,
+            lastUpdatedAt: comment.createdAt
+        }).then();
 
-    const thread = await mongoose.models.Thread.findOne({
-        uuid: this.thread
-    });
-    const dbDocument = await mongoose.models.Document.findOne({
-        uuid: thread.document
-    });
-    if(!dbDocument) return;
+        const thread = await mongoose.models.Thread.findOne({
+            uuid: comment.thread
+        });
+        const dbDocument = await mongoose.models.Document.findOne({
+            uuid: thread.document
+        });
+        if(!dbDocument) return;
 
-    const document = utils.dbDocumentToDocument(dbDocument);
+        if(comment.type === ThreadCommentTypes.Default) {
+            const document = utils.dbDocumentToDocument(dbDocument);
 
-    const { data: { links, commentNumbers } } = parser(this.content, { thread: true });
-    const mentions = links.filter(a => a.startsWith('사용자:')).map(a => a.slice(4)).slice(0, 10);
-    let users = mentions.length ? await mongoose.models.User.find({
-        name: {
-            $in: mentions
+            const { data: { links, commentNumbers } } = parser(comment.content, { thread: true });
+            const mentions = links.filter(a => a.startsWith('사용자:')).map(a => a.slice(4)).slice(0, 10);
+            let users = mentions.length ? await mongoose.models.User.find({
+                name: {
+                    $in: mentions
+                }
+            }) : [];
+
+            let linkComments = commentNumbers.length ? await model.find({
+                thread: comment.thread,
+                id: {
+                    $in: commentNumbers.filter(a => !isNaN(a))
+                }
+            }) : [];
+            const linkCommentUsers = linkComments.length ? await mongoose.models.User.find({
+                uuid: {
+                    $in: linkComments.map(a => a.user)
+                }
+            }) : [];
+            users.push(...linkCommentUsers);
+
+            users = users.filter(a => a);
+            const aclDatas = await Promise.all(users.map(a => utils.getACLData(a)));
+            const aclClass = await global.ACLClass.get({ thread }, document);
+            const aclResults = await Promise.all(aclDatas.map(a => aclClass.check(ACLTypes.Read, a)));
+            await Promise.all(users.filter((a, i) => aclResults[i].result).map(a => mongoose.models.Notification.create({
+                type: NotificationTypes.Mention,
+                user: a.uuid,
+                data: comment.uuid,
+                thread: comment.thread
+            })));
         }
-    }) : [];
 
-    let linkComments = commentNumbers.length ? await model.find({
-        thread: this.thread,
-        id: {
-            $in: commentNumbers.filter(a => !isNaN(a))
-        }
-    }) : [];
-    const linkCommentUsers = linkComments.length ? await mongoose.models.User.find({
-        uuid: {
-            $in: linkComments.map(a => a.user)
-        }
-    }) : [];
-    users.push(...linkCommentUsers);
-
-    users = users.filter(a => a);
-    const aclDatas = await Promise.all(users.map(a => utils.getACLData(a)));
-    const aclClass = await global.ACLClass.get({ thread }, document);
-    const aclResults = await Promise.all(aclDatas.map(a => aclClass.check(ACLTypes.Read, a)));
-    await Promise.all(users.filter((a, i) => aclResults[i].result).map(a => mongoose.models.Notification.create({
-        type: NotificationTypes.Mention,
-        user: a.uuid,
-        data: this.uuid,
-        thread: this.thread
-    })));
-
-    docUtils.checkMemberContribution(this.user).then();
+        docUtils.checkMemberContribution(comment.user).then();
+    }, 0);
 });
 
 const model = mongoose.model('ThreadComment', newSchema);
