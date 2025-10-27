@@ -127,7 +127,7 @@ newSchema.post('save', async function() {
             let linkComments = commentNumbers.length ? await model.find({
                 thread: comment.thread,
                 id: {
-                    $in: commentNumbers.filter(a => !isNaN(a))
+                    $in: commentNumbers.filter(a => !isNaN(a)).slice(0, 10)
                 }
             }) : [];
             const linkCommentUsers = linkComments.length ? await mongoose.models.User.find({
