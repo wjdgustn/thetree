@@ -537,7 +537,7 @@ const topToHtml = module.exports = async parameter => {
 
                 value = await toHtml(value);
 
-                result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(value)}" href="#${commentPrefix}fn-${name}"><span id="${commentPrefix}rfn-${index}"></span>[${name}]</a>`;
+                result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(value)}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
                 break;
             }
 

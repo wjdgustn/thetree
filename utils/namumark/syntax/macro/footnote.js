@@ -1,3 +1,5 @@
+const utils = require('../../utils');
+
 module.exports = {
     aliases: ['각주'],
     allowThread: true,
@@ -18,7 +20,7 @@ module.exports = {
             const sameFootnotes = footnoteList.filter(a => a.name === name);
             const footnote = sameFootnotes[0];
             if(sameFootnotes.length > 1) {
-                html += `[${name}]`;
+                html += `[${utils.escapeHtml(name)}]`;
                 for(let i in sameFootnotes) {
                     i = parseInt(i);
                     const sameFootnote = sameFootnotes[i];
@@ -26,7 +28,7 @@ module.exports = {
                 }
             }
             else {
-                html += `<a href="#${commentPrefix}rfn-${footnote.index}">[${name}]</a>`;
+                html += `<a href="#${commentPrefix}rfn-${footnote.index}">[${utils.escapeHtml(name)}]</a>`;
             }
             html += ' ' + (await toHtml(content ?? '')) + '</span>';
         }
