@@ -74,22 +74,22 @@ newSchema.index({ thread: 1, id: 1 }, { unique: true });
 const lastItem = {};
 const lockPromise = {};
 newSchema.pre('save', async function() {
-    const locks = lockPromise[comment.thread] ??= [];
+    const locks = lockPromise[this.thread] ??= [];
 
-    let last = lastItem[comment.thread];
-    lastItem[comment.thread] = this;
+    let last = lastItem[this.thread];
+    lastItem[this.thread] = this;
 
     if(last && last.id == null) await globalUtils.waitUntil(new Promise(resolve => {
         locks.push(resolve);
     }), 5000);
 
-    if (!last) last = await model.findOne({ thread: comment.thread }).sort({ id: -1 });
+    if (!last) last = await model.findOne({ thread: this.thread }).sort({ id: -1 });
 
     locks.forEach(r => r());
-    delete lockPromise[comment.thread];
+    delete lockPromise[this.thread];
 
-    if(comment.id == null) {
-        comment.id = last ? last.id + 1 : 1;
+    if(this.id == null) {
+        this.id = last ? last.id + 1 : 1;
     }
 });
 
