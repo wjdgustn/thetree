@@ -244,9 +244,10 @@ const getImageDropdowns = async () => {
         isFileLicense: true,
         contentExists: true
     })
-        .sort({ _id: 1 })
+        .sort({ title: 1 })
         .select('title')
         .lean();
+    const mappedLicenses = licenses.map(doc => doc.title.slice('이미지 라이선스/'.length));
 
     const catgories = await Document.find({
         isFileCategory: true,
@@ -257,7 +258,10 @@ const getImageDropdowns = async () => {
         .lean();
 
     return {
-        licenses: licenses.map(doc => doc.title.slice('이미지 라이선스/'.length)),
+        licenses: [
+            ...(config.file_top_license ?? []).filter(a => mappedLicenses.includes(a)),
+            ...mappedLicenses.filter(a => !config.file_top_license || !config.file_top_license.includes(a))
+        ],
         categories: catgories.map(doc => doc.title.slice('파일/'.length))
     }
 }

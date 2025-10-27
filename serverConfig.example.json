@@ -43,6 +43,7 @@
   "edit_help_document": "",
   "upload_help_document": "",
   "file_default_license": "",
+  "file_top_license": ["제한적 이용"],
 
   "aclgroup_order": [],
 
