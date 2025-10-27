@@ -364,15 +364,18 @@ app.post('/Upload', (req, res, next) => {
     if(!licenses.includes(req.body.license)) return res.status(400).send('잘못된 라이선스입니다.');
     if(!categories.includes(req.body.category)) return res.status(400).send('잘못된 분류입니다.');
 
-    if(req.files.length === 1) {
-        const { ext } = path.parse(req.files[0].originalname);
-        if(!req.document.title.endsWith(ext)) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext.slice(1)})`);
-    }
-
     for(let file of req.files) {
         const { ext } = path.parse(file.originalname);
         const document = req.document ?? utils.parseDocumentName(`파일:${file.originalname}`);
         const { namespace, title } = document;
+
+        const possibleExts = [];
+        if(file.mimetype === 'image/jpeg')
+            possibleExts.push('jpg', 'jpeg');
+        else possibleExts.push(file.mimetype.replace('image/', '').match(/[a-z]*/i)[0]);
+
+        if(!possibleExts.some(a => title.endsWith('.' + a)))
+            return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${possibleExts[0]})`);
 
         let dbDocument = await Document.findOne({
             namespace,
