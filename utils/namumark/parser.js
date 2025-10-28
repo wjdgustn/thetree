@@ -8,6 +8,7 @@ const {
 } = require('validate-color');
 
 const utils = require('./utils');
+const {AllowedLanguages} = require('./utils');
 
 const MAXIMUM_DEPTH = 15;
 
@@ -1090,10 +1091,9 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('syntaxSyntax', () => {
             const tok = $.CONSUME(SyntaxSyntax);
             const text = tok.image.slice(12, -3);
-            const newLinePos = text.indexOf('\n');
 
-            const lang = text.slice(0, newLinePos);
-            const content = text.slice(newLinePos + 1).trim();
+            const lang = AllowedLanguages.find(a => text.startsWith(a));
+            const content = text.slice(lang?.length ?? 0).trim();
 
             return {
                 type: 'syntaxSyntax',
