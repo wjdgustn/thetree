@@ -10,7 +10,8 @@ const whitelistedFunctions = {
         'substring',
         'trim',
         'substr',
-        'toString'
+        'toString',
+        'charCodeAt'
     ]
 }
 const laterProcess = ['Array'];
