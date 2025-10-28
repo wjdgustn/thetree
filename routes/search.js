@@ -60,7 +60,7 @@ app.get('/Go', async (req, res) => {
     }, 'w'));
 });
 
-app.get('/Search', async (req, res) => {
+const getSearch = async (req, res) => {
     if(!global.documentIndex) return res.error('검색 엔진이 비활성화되어 있습니다.');
 
     if(!req.query.q) return res.error('검색어가 없습니다.');
@@ -154,6 +154,9 @@ app.get('/Search', async (req, res) => {
             processingTime: result.processingTimeMs
         }
     });
-});
+}
+module.exports.getSearch = getSearch;
 
-module.exports = app;
+app.get('/Search', getSearch);
+
+module.exports.router = app;

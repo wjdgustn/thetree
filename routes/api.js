@@ -24,6 +24,9 @@ const {
     removeACLGroupValidate,
     removeACLGroup
 } = require('./aclgroup');
+const {
+    getSearch
+} = require('./search');
 
 const User = require('../schemas/user');
 const EditToken = require('../schemas/editToken');
@@ -285,6 +288,10 @@ app.post('/api/v0/aclgroup', ...postACLGroupValidate, apiWrapper(postACLGroup), 
 
 app.delete('/api/v0/aclgroup', ...removeACLGroupValidate, apiWrapper(removeACLGroup), async (req, res) => {
     res.json(req.apiData);
+});
+
+app.get('/api/search', apiWrapper(getSearch), (req, res) => {
+    res.json(req.apiData.serverData);
 });
 
 module.exports = app;
