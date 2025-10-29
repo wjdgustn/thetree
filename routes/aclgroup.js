@@ -509,9 +509,13 @@ const permValidator = field => body(field)
             throw new Error('본인이 가진 권한이 포함되지 않았습니다.');
         if(field === 'permissions') {
             const groupPermissions = req.body.group.permissions;
+            const addedPermissions = value.filter(a => !groupPermissions.includes(a));
+            const removedPermissions = groupPermissions.filter(a => !value.includes(a)
+                && !NoGrantPermissions.includes(a)
+                && !AlwaysProtectedPermissions.includes(a));
             const modifiedPermissions = [
-                ...groupPermissions.filter(a => !value.includes(a)),
-                ...value.filter(a => !groupPermissions.includes(a))
+                ...addedPermissions,
+                ...removedPermissions
             ];
             if(modifiedPermissions.length && !req.permissions.includes('grant'))
                 throw new Error('이 값을 수정하려면 grant 권한이 필요합니다.');
