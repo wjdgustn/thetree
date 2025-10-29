@@ -1167,7 +1167,7 @@ app.use(async (req, res, next) => {
         }
 
         if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) {
-            if((config.read_only || global.updatingEngine) &&
+            if((config.read_only || (global.updatingEngine && !global.updatingSkins.length)) &&
                 ([
                     '/edit/', '/move/', '/delete/', '/revert/',
                     '/member/login', '/member/logout', '/member/star/', '/member/unstar/'
