@@ -864,7 +864,6 @@ app.post('/admin/thread/:url/:id/pin', middleware.permission('manage_thread'), a
             id: commentId
         });
         if(!comment) return res.status(404).send('댓글이 존재하지 않습니다.');
-        if(comment.type !== ThreadCommentTypes.Default) return res.status(400).send('고정할 수 없는 댓글입니다.');
 
         await threadCommentEvent({
             req,
@@ -925,7 +924,6 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('manage_thread'
         id: parseInt(req.params.id)
     });
     if(!dbComment) return res.status(404).send('댓글이 존재하지 않습니다.');
-    if(dbComment.type !== ThreadCommentTypes.Default) return res.status(400).send('숨길 수 없는 댓글입니다.');
     if(isHide && dbComment.hidden) return res.status(409).send('이미 숨겨진 댓글입니다.');
     if(!isHide && !dbComment.hidden) return res.status(409).send('숨겨지지 않은 댓글입니다.');
 

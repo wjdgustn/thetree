@@ -762,13 +762,14 @@ module.exports = {
     ) {
         comment.user = user ?? comment.user;
 
+        const isHidden = comment.hidden && comment.type === ThreadCommentTypes.Default;
         const canSeeHidden = req?.permissions.includes('manage_thread');
-        if(comment.hidden) {
+        if(isHidden) {
             hideUser ??= comment.hiddenBy;
             comment.hideUser = hideUser;
         }
 
-        if(!comment.hidden || canSeeHidden) {
+        if(!isHidden || canSeeHidden) {
             if(comment.type === ThreadCommentTypes.Default) {
                 const parseResult = global.NamumarkParser.parser(comment.content, { thread: true });
                 if(lightMode) comment.contentHtml = namumarkUtils.escapeHtml(namumarkUtils.parsedToText(parseResult.result)).trim();
