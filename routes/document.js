@@ -135,7 +135,7 @@ const getCategoryDocuments = async (req, { limit = 100 } = {}) => {
 }
 module.exports.getCategoryDocuments = getCategoryDocuments;
 
-app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -411,7 +411,7 @@ app.get('/w/{*document}', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -463,7 +463,7 @@ const disconnectThreadSocketsWithoutPerm = (document, dbThread) => {
     }, 0);
 }
 
-app.post('/acl/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     const target = req.body.target;
 
     const document = req.document;
@@ -952,8 +952,8 @@ const editAndEditRequest = async (req, res) => {
 }
 module.exports.editAndEditRequest = editAndEditRequest;
 
-app.get('/edit/{*document}', middleware.parseDocumentName, editAndEditRequest);
-app.get('/new_edit_request/{*document}', middleware.parseDocumentName, editAndEditRequest);
+app.get('/edit{/*document}', middleware.parseDocumentName, editAndEditRequest);
+app.get('/new_edit_request{/*document}', middleware.parseDocumentName, editAndEditRequest);
 app.get('/edit_request/:url/edit', async (req, res, next) => {
     const editRequest = await EditRequest.findOne({
         url: req.params.url
@@ -1045,7 +1045,7 @@ app.post('/edit_request/:url/reopen', async (req, res) => {
     res.redirect(`/edit_request/${editRequest.url}`);
 });
 
-app.post('/preview/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.post('/preview{/*document}', middleware.parseDocumentName, async (req, res) => {
     const isThread = req.body.mode === 'thread';
     const content = req.body.content;
     if(typeof content !== 'string') return res.status(400).send('내용을 입력해주세요.');
@@ -1238,8 +1238,8 @@ const postEditAndEditRequest = async (req, res) => {
 }
 module.exports.postEditAndEditRequest = postEditAndEditRequest;
 
-app.post('/edit/{*document}', middleware.parseDocumentName, postEditAndEditRequest);
-app.post('/new_edit_request/{*document}', middleware.parseDocumentName, postEditAndEditRequest);
+app.post('/edit{/*document}', middleware.parseDocumentName, postEditAndEditRequest);
+app.post('/new_edit_request{/*document}', middleware.parseDocumentName, postEditAndEditRequest);
 app.post('/edit_request/:url/edit', async (req, res, next) => {
     const editRequest = await EditRequest.findOne({
         url: req.params.url
@@ -1412,7 +1412,7 @@ app.post('/edit_request/:url/accept', async (req, res) => {
     res.redirect(`/edit_request/${editRequest.url}`);
 });
 
-app.get('/history/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/history{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1489,7 +1489,7 @@ app.get('/history/{*document}', middleware.parseDocumentName, async (req, res) =
     });
 });
 
-app.get('/raw/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/raw{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1527,7 +1527,7 @@ app.get('/raw/{*document}', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/revert/{*document}', middleware.parseDocumentName, middleware.checkCaptcha(), async (req, res) => {
+app.get('/revert{/*document}', middleware.parseDocumentName, middleware.checkCaptcha(), async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1589,7 +1589,7 @@ app.get('/revert/{*document}', middleware.parseDocumentName, middleware.checkCap
     });
 });
 
-app.post('/revert/{*document}', middleware.parseDocumentName, middleware.captcha(), async (req, res) => {
+app.post('/revert{/*document}', middleware.parseDocumentName, middleware.captcha(), async (req, res) => {
     if(req.body.log.length > 255) return res.error('요약의 값은 255글자 이하여야 합니다.');
 
     const document = req.document;
@@ -1651,7 +1651,7 @@ app.post('/revert/{*document}', middleware.parseDocumentName, middleware.captcha
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
-app.get('/diff/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/diff{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1711,7 +1711,7 @@ app.get('/diff/{*document}', middleware.parseDocumentName, async (req, res) => {
     });
 });
 
-app.get('/blame/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/blame{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1891,9 +1891,9 @@ const getBacklinks = async (req, res) => {
 }
 module.exports.getBacklinks = getBacklinks;
 
-app.get('/backlink/{*document}', middleware.parseDocumentName, getBacklinks);
+app.get('/backlink{/*document}', middleware.parseDocumentName, getBacklinks);
 
-app.get('/delete/{*document}', middleware.parseDocumentName, middleware.checkCaptcha(true), async (req, res) => {
+app.get('/delete{/*document}', middleware.parseDocumentName, middleware.checkCaptcha(true), async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1917,7 +1917,7 @@ app.get('/delete/{*document}', middleware.parseDocumentName, middleware.checkCap
     });
 });
 
-app.post('/delete/{*document}', middleware.parseDocumentName, middleware.captcha(true), async (req, res) => {
+app.post('/delete{/*document}', middleware.parseDocumentName, middleware.captcha(true), async (req, res) => {
     if(!req.permissions.includes('edit_protected_file')
         && Object.keys(config.external_link_icons).includes(globalUtils.doc_fulltitle(req.document)))
         return res.error('protect_file', 403);
@@ -1956,7 +1956,7 @@ app.post('/delete/{*document}', middleware.parseDocumentName, middleware.captcha
     res.redirect(globalUtils.doc_action_link(document, 'w'));
 });
 
-app.get('/move/{*document}', middleware.parseDocumentName, middleware.checkCaptcha(true), async (req, res) => {
+app.get('/move{/*document}', middleware.parseDocumentName, middleware.checkCaptcha(true), async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1980,7 +1980,7 @@ app.get('/move/{*document}', middleware.parseDocumentName, middleware.checkCaptc
     });
 });
 
-app.post('/move/{*document}', middleware.parseDocumentName, middleware.captcha(true), async (req, res) => {
+app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(true), async (req, res) => {
     if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
     if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
     if(!req.body.title || req.body.title.length > 255) return res.status(400).send('문서 이름이 올바르지 않습니다.');
@@ -2108,7 +2108,7 @@ app.post('/move/{*document}', middleware.parseDocumentName, middleware.captcha(t
     res.redirect(globalUtils.doc_action_link(otherDocument, 'w'));
 });
 
-app.post('/transfer_contribution/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.post('/transfer_contribution{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
     const dbDocument = await Document.findOne({

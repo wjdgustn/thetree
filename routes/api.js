@@ -90,7 +90,7 @@ const apiWrapper = fn => async (req, res, next) => {
     return finalData;
 }
 
-app.get('/api/edit/{*document}', middleware.parseDocumentName, apiWrapper(editAndEditRequest), async (req, res) => {
+app.get('/api/edit{/*document}', middleware.parseDocumentName, apiWrapper(editAndEditRequest), async (req, res) => {
     const baseuuid = req.apiData.body.baseuuid;
     const editToken = await EditToken.create({
         baseuuid,
@@ -106,7 +106,7 @@ app.get('/api/edit/{*document}', middleware.parseDocumentName, apiWrapper(editAn
     });
 });
 
-app.post('/api/edit/{*document}',
+app.post('/api/edit{/*document}',
     middleware.parseDocumentName,
     body('text')
         .exists()
@@ -143,7 +143,7 @@ app.post('/api/edit/{*document}',
     });
 });
 
-app.get('/api/backlink/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/api/backlink{/*document}', middleware.parseDocumentName, async (req, res) => {
     if(req.document.namespace === '분류') {
         const categoriesData = await getCategoryDocuments(req, { limit: 50 });
 
@@ -232,7 +232,7 @@ if(config.testwiki) {
     });
 }
 
-app.get('/api/discuss/{*document}', middleware.parseDocumentName, async (req, res) => {
+app.get('/api/discuss{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
     const { namespace, title } = document;
     const dbDocument = await Document.findOne({

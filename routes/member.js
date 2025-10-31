@@ -1830,8 +1830,8 @@ app.get('/member/starred_documents', middleware.isLogin, async (req, res) => {
     });
 });
 
-app.get('/member/star/{*document}', middleware.isLogin, middleware.parseDocumentName, starHandler(true));
-app.get('/member/unstar/{*document}', middleware.isLogin, middleware.parseDocumentName, starHandler(false));
+app.get('/member/star{/*document}', middleware.isLogin, middleware.parseDocumentName, starHandler(true));
+app.get('/member/unstar{/*document}', middleware.isLogin, middleware.parseDocumentName, starHandler(false));
 
 app.post('/member/register_webauthn',
     middleware.isLogin,
