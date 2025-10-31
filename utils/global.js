@@ -45,7 +45,7 @@ module.exports = {
         let str;
         if(specialUrls.includes(title) || route.startsWith('a/')) {
             query.doc = encodeURIComponent(title);
-            str = `/${route}/`;
+            str = `/${route}`;
         }
         else str = `/${route}/${this.encodeSpecialChars(title)}`;
         if(Object.keys(query).length > 0) {
