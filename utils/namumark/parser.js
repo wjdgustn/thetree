@@ -217,7 +217,7 @@ const Indent = createToken({
 });
 const Text = createToken({
     name: 'Text',
-    pattern: /[^\\'\r\n_\[\]~\-^,|{#]+|['\r\n_\[\]~\-^,|{#]/
+    pattern: /[^\\'\r\n_\[\]~\-^,|{#@]+|['\r\n_\[\]~\-^,|{#@]/
 });
 
 const Heading = createToken({
@@ -427,6 +427,18 @@ const CommentNumber = createToken({
     start_chars_hint: ['#'],
     line_breaks: false
 });
+const CommentMentionRegex = /(?<!\S)@\S+/y;
+const CommentMention = createToken({
+    name: 'CommentMention',
+    pattern: (text, startOffset) => {
+        if(!Store.thread) return null;
+
+        CommentMentionRegex.lastIndex = startOffset;
+        return CommentMentionRegex.exec(text);
+    },
+    start_chars_hint: ['@'],
+    line_breaks: false
+});
 const Folding = createToken({
     name: 'Folding',
     ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true, /{{{/),
@@ -545,6 +557,7 @@ const inlineTokens = [
     SyntaxSyntax,
     HtmlSyntax,
     CommentNumber,
+    CommentMention,
     Folding,
     IfSyntax,
     Literal,
@@ -1011,6 +1024,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.syntaxSyntax) },
                         { ALT: () => $.SUBRULE($.htmlSyntax) },
                         { ALT: () => $.SUBRULE($.commentNumber) },
+                        { ALT: () => $.SUBRULE($.commentMention) },
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
                         { ALT: () => $.SUBRULE($.literal) },
@@ -1125,6 +1139,21 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'commentNumber',
                 num
+            }
+        });
+
+        $.RULE('commentMention', () => {
+            const tok = $.CONSUME(CommentMention);
+            const name = tok.image.slice(1);
+            const link = `사용자:${name}`;
+
+            if(!Store.links.includes(link))
+                Store.links.push(link);
+
+            return {
+                type: 'commentMention',
+                name,
+                link
             }
         });
 

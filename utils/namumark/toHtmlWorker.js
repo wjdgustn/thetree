@@ -472,6 +472,22 @@ const topToHtml = module.exports = async parameter => {
             case 'commentNumber':
                 result += `<a href="#${obj.num}" class="wiki-self-link">#${obj.num}</a>`;
                 break;
+            case 'commentMention': {
+                let notExist = false;
+                const document = mainUtils.parseDocumentName(obj.link);
+                const cache = Store.dbDocuments.find(cache => cache.namespace === document.namespace && cache.title === document.title);
+                if(cache) notExist = !cache.contentExists;
+                else notExist = true;
+
+                const classList = ['wiki-link-internal'];
+                if(notExist) classList.push('not-exist');
+
+                const rel = [];
+                if(notExist) rel.push('nofollow');
+
+                result += `<a href="${utils.escapeHtml(globalUtils.doc_action_link({ namespace: '사용자', title: obj.name }, 'w'))}" title="사용자:${utils.escapeHtml(obj.name)}" class="${classList.join(' ')}" rel="${rel.join(' ')}">@${utils.escapeHtml(obj.name)}</a>`;
+                break;
+            }
             case 'scaleText':
                 result += `<span class="wiki-size-${obj.isSizeUp ? 'up' : 'down'}-${obj.size}">${await toHtml(obj.content)}</span>`;
                 break;
