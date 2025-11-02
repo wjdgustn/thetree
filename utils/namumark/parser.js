@@ -398,7 +398,7 @@ const Sub = createToken({
 });
 const ScaleText = createToken({
     name: 'ScaleText',
-    ...nestedRegex(/{{{[+-][1-5] /, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{[+-][1-5][\n ]/, /}}}/, true, /{{{/),
     start_chars_hint: ['{']
 });
 const WikiSyntax = createToken({
@@ -1206,7 +1206,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(Literal);
             const text = tok.image.slice(3, -3);
 
-            const splittedText = text.split(' ');
+            const splittedText = text.split(/[\n ]/);
             if(text.startsWith('#') && splittedText.length > 1) {
                 const colorParams = splittedText[0].split(',');
 
