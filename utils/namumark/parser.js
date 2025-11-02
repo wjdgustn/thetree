@@ -81,6 +81,8 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
                     const content = str.slice(0, closeIndex + closeMatch[0].length);
                     if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
                         return null;
+                    if(HeadingRegex.test(content))
+                        return null;
                     return [content];
                 }
 
@@ -220,9 +222,10 @@ const Text = createToken({
     pattern: /[^\\'\r\n_\[\]~\-^,|{#@]+|['\r\n_\[\]~\-^,|{#@]/
 });
 
+const HeadingRegex = /^(={1,6})(#)? +(.+?) +\2\1$/m;
 const Heading = createToken({
     name: 'Heading',
-    ...fullLineRegex(/^(={1,6})(#)? +(.+?) +\2\1$/m)
+    ...fullLineRegex(HeadingRegex)
 });
 const Hr = createToken({
     name: 'Hr',
@@ -269,6 +272,10 @@ const TableRow = createToken({
             let result = LineRegex.exec(str)[0];
             if(result.endsWith('\n')) result = result.slice(0, -1);
             else if(!result) result = null;
+
+            if(result != null && HeadingRegex.test(result))
+                result = null;
+
             if(result != null) {
                 const openOrCloses = (result.match(OpenOrClosesRegex) || []);
                 for(let match of openOrCloses) {
