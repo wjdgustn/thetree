@@ -356,7 +356,7 @@ const Italic = createToken({
     name: 'Italic',
     // pattern: /''([\s\S]+?)''/,
     // line_breaks: true
-    ...inlineRegex(/''/),
+    ...inlineRegex(/''(?!')/, /''/),
     start_chars_hint: [`'`]
 });
 const Strike = createToken({
