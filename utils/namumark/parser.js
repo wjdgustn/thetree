@@ -494,6 +494,8 @@ const Literal = createToken({
                 return null;
             if(/{{{[+-][1-5][\n ]/.test(content))
                 return null;
+
+            return true;
         }
     }),
     start_chars_hint: ['{']
