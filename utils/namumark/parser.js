@@ -491,6 +491,7 @@ const ColorText = createToken({
     name: 'ColorText',
     ...nestedRegex(/{{{#/, /}}}/, {
         allowNewline: true,
+        openCheckRegex: /{{{/,
         postCheck: (match, { payload }) => {
             const text = match.slice(3, -3);
             const splittedText = text.split(/[\n ]/);
