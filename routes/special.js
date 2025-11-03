@@ -156,7 +156,7 @@ let discussSidebarCache = [];
 let lastSidebarUpdate = 0;
 
 const updateSidebar = async () => {
-    if(Date.now() - lastSidebarUpdate > 1000 * 10) {
+    if(Date.now() - lastSidebarUpdate > 1000 * 5) {
         const documents = await Document.find({
             namespace: '문서'
         })
