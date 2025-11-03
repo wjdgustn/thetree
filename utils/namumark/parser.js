@@ -8,7 +8,7 @@ const {
 } = require('validate-color');
 
 const utils = require('./utils');
-const {AllowedLanguages} = require('./utils');
+const { AllowedLanguages } = require('./utils');
 
 const MAXIMUM_DEPTH = 15;
 
@@ -87,10 +87,17 @@ const nestedRegex = (openRegex, closeRegex, {
                     const content = str.slice(0, closeIndex + closeMatch[0].length);
                     if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
                         return null;
-                    if(breakByHeading && HeadingRegex.test(content))
+
+                    const result = [content];
+                    const payload = result.payload = {};
+                    if(postCheck && !postCheck(content, { payload, startOffset }))
                         return null;
-                    if(postCheck && !postCheck(content))
+
+                    if(breakByHeading && HeadingRegex.test(content)) {
+                        Store.noLiteralPos.push(startOffset);
                         return null;
+                    }
+
                     return [content];
                 }
 
@@ -480,22 +487,52 @@ const IfSyntax = createToken({
     }),
     start_chars_hint: ['{']
 });
+const ColorText = createToken({
+    name: 'ColorText',
+    ...nestedRegex(/{{{#/, /}}}/, {
+        allowNewline: true,
+        postCheck: (match, { payload }) => {
+            const text = match.slice(3, -3);
+            const splittedText = text.split(/[\n ]/);
+            if(splittedText.length <= 1) return null;
+
+            const colorParams = splittedText[0].split(',');
+
+            let color;
+            let darkColor;
+
+            if(validateHTMLColorHex(colorParams[0]))
+                color = colorParams[0];
+            else if(utils.validateHTMLColorName(colorParams[0].slice(1)))
+                color = colorParams[0].slice(1);
+
+            if(!color) return null;
+
+            if(!colorParams[1] || colorParams[1].startsWith('#')) {
+                if(colorParams[1]) {
+                    if(validateHTMLColorHex(colorParams[1]))
+                        darkColor = colorParams[1];
+                    else if(utils.validateHTMLColorName(colorParams[1].slice(1)))
+                        darkColor = colorParams[1].slice(1);
+                }
+            }
+
+            if(colorParams[1] && !darkColor) return null;
+
+            payload.content = splittedText.slice(1).join(' ');
+            payload.color = color;
+            payload.darkColor = darkColor;
+            return true;
+        }
+    })
+});
 const Literal = createToken({
     name: 'Literal',
     ...nestedRegex(/{{{/, /}}}/, {
         allowNewline: true,
         breakByHeading: false,
-        postCheck: content => {
-            if([
-                '{{{#!wiki',
-                '{{{#!folding',
-                '{{{#!if'
-            ].some(a => content.startsWith(a)))
-                return null;
-            if(/{{{[+-][1-5][\n ]/.test(content))
-                return null;
-
-            return true;
+        postCheck: (content, { startOffset }) => {
+            return !Store.noLiteralPos.includes(startOffset);
         }
     }),
     start_chars_hint: ['{']
@@ -606,6 +643,7 @@ const inlineTokens = [
     CommentMention,
     Folding,
     IfSyntax,
+    ColorText,
     Literal,
     // Comment,
     Bold,
@@ -681,7 +719,8 @@ let Store = {
     //     values: [],
     //     list: []
     // },
-    commentLines: []
+    commentLines: [],
+    noLiteralPos: []
 }
 const originalStore = { ...Store };
 
@@ -1073,6 +1112,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.commentMention) },
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
+                        { ALT: () => $.SUBRULE($.colorText) },
                         { ALT: () => $.SUBRULE($.literal) },
                         { ALT: () => $.SUBRULE($.categoryWithNewline) },
                         { ALT: () => $.SUBRULE($.link) },
@@ -1241,44 +1281,24 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
+        $.RULE('colorText', () => {
+            const tok = $.CONSUME(ColorText);
+            let { content, color, darkColor } = tok.payload || {};
+            $.ACTION(() => {
+                content = parseBlock(content, true);
+            });
+
+            return {
+                type: 'colorText',
+                color,
+                darkColor,
+                content
+            }
+        });
+
         $.RULE('literal', () => {
             const tok = $.CONSUME(Literal);
             const text = tok.image.slice(3, -3);
-
-            const splittedText = text.split(/[\n ]/);
-            if(text.startsWith('#') && splittedText.length > 1) {
-                const colorParams = splittedText[0].split(',');
-
-                let color;
-                let darkColor;
-
-                if(validateHTMLColorHex(colorParams[0]))
-                    color = colorParams[0];
-                else if(utils.validateHTMLColorName(colorParams[0].slice(1)))
-                    color = colorParams[0].slice(1);
-                if(color && (!colorParams[1] || colorParams[1].startsWith('#'))) {
-                    if(colorParams[1]) {
-                        if(validateHTMLColorHex(colorParams[1]))
-                            darkColor = colorParams[1];
-                        else if(utils.validateHTMLColorName(colorParams[1].slice(1)))
-                            darkColor = colorParams[1].slice(1);
-                    }
-
-                    if(!colorParams[1] || darkColor) {
-                        let content = splittedText.slice(1).join(' ');
-                        $.ACTION(() => {
-                            content = parseBlock(content, true);
-                        });
-
-                        return {
-                            type: 'colorText',
-                            color,
-                            darkColor,
-                            content
-                        }
-                    }
-                }
-            }
 
             return {
                 type: 'literal',
