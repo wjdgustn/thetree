@@ -98,7 +98,7 @@ const nestedRegex = (openRegex, closeRegex, {
                         return null;
                     }
 
-                    return [content];
+                    return result;
                 }
 
                 tokIndex = (
