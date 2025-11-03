@@ -1257,7 +1257,7 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, _) => {
-    console.error(`Server error from: ${req.method} ${req.originalUrl}`, err);
+    console.error(`Server error from: ${req.method} ${req.originalUrl}(${req.url})`, err);
     const inspectedError = util.inspect(err, { depth: 2, maxArrayLength: 200 });
     if(debug || req.permissions?.includes('developer')) res.status(500).send(inspectedError);
     else res.status(500).send('서버 오류<br>요청 ID: ' + req.requestId);
