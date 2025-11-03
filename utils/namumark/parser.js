@@ -49,7 +49,8 @@ const nestedRegex = (openRegex, closeRegex, {
     allowNewline = false,
     openCheckRegex = null,
     closeCheckRegex = null,
-    breakByHeading = true
+    breakByHeading = true,
+    postCheck = null
 } = {}) => {
     openCheckRegex ??= openRegex;
     closeCheckRegex ??= closeRegex;
@@ -87,6 +88,8 @@ const nestedRegex = (openRegex, closeRegex, {
                     if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
                         return null;
                     if(breakByHeading && HeadingRegex.test(content))
+                        return null;
+                    if(postCheck && !postCheck(content))
                         return null;
                     return [content];
                 }
@@ -481,7 +484,17 @@ const Literal = createToken({
     name: 'Literal',
     ...nestedRegex(/{{{/, /}}}/, {
         allowNewline: true,
-        breakByHeading: false
+        breakByHeading: false,
+        postCheck: content => {
+            if([
+                '#!wiki',
+                '#!folding',
+                '#!if'
+            ].some(a => content.startsWith(a)))
+                return null;
+            if(/{{{[+-][1-5][\n ]/.test(content))
+                return null;
+        }
     }),
     start_chars_hint: ['{']
 });
