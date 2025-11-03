@@ -487,9 +487,9 @@ const Literal = createToken({
         breakByHeading: false,
         postCheck: content => {
             if([
-                '#!wiki',
-                '#!folding',
-                '#!if'
+                '{{{#!wiki',
+                '{{{#!folding',
+                '{{{#!if'
             ].some(a => content.startsWith(a)))
                 return null;
             if(/{{{[+-][1-5][\n ]/.test(content))
