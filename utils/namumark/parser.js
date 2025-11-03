@@ -548,10 +548,18 @@ const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
     // line_breaks: true
-    ...nestedRegex(/\[\[/, /]]/, true, /\[/, /\]/),
+    ...nestedRegex(/\[\[/, /]]/, {
+        allowNewline: true,
+        openCheckRegex: /\[/,
+        closeCheckRegex: /]/
+    }),
     start_chars_hint: ['[']
 });
-const categoryWithNewlineRegex = nestedRegex(/\[\[분류:/, /]]\n/, true, /\[/, /\]/);
+const categoryWithNewlineRegex = nestedRegex(/\[\[분류:/, /]]\n/, {
+    allowNewline: true,
+    openCheckRegex: /\[/,
+    closeCheckRegex: /]/
+});
 const CategoryWithNewline = createToken({
     name: 'CategoryWithNewline',
     pattern: (text, startOffset) => {
@@ -589,7 +597,9 @@ const Footnote = createToken({
     //     }
     // },
     // line_breaks: true
-    ...nestedRegex(/\[\*/, /]/, false, /\[/),
+    ...nestedRegex(/\[\*/, /]/, {
+        openCheckRegex: /\[/
+    }),
     start_chars_hint: ['[']
 });
 const MacroRegex = /\[[^\]]+?\([\s\S]*?\)]|\[\S+?]/y;
