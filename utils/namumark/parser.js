@@ -45,7 +45,12 @@ const fullLineRegex = (regex, { laterRegex } = {}) => {
     });
 }
 
-const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex = null, closeCheckRegex = null) => {
+const nestedRegex = (openRegex, closeRegex, {
+    allowNewline = false,
+    openCheckRegex = null,
+    closeCheckRegex = null,
+    breakByHeading = true
+} = {}) => {
     openCheckRegex ??= openRegex;
     closeCheckRegex ??= closeRegex;
     openRegex = new RegExp('^' + openRegex.source, 'i');
@@ -81,7 +86,7 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
                     const content = str.slice(0, closeIndex + closeMatch[0].length);
                     if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
                         return null;
-                    if(HeadingRegex.test(content))
+                    if(breakByHeading && HeadingRegex.test(content))
                         return null;
                     return [content];
                 }
@@ -398,17 +403,27 @@ const Sub = createToken({
 });
 const ScaleText = createToken({
     name: 'ScaleText',
-    ...nestedRegex(/{{{[+-][1-5][\n ]/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{[+-][1-5][\n ]/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
 });
 const WikiSyntax = createToken({
     name: 'WikiSyntax',
-    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
 });
 const SyntaxSyntax = createToken({
     name: 'SyntaxSyntax',
-    ...nestedRegex(new RegExp(`{{{#!syntax (${utils.AllowedLanguages.join('|')})`), /}}}/, true, /{{{/),
+    ...nestedRegex(new RegExp(`{{{#!syntax (${utils.AllowedLanguages.join('|')})`), /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/,
+        breakByHeading: false
+    }),
     start_chars_hint: ['{']
 });
 const HtmlRegex = /{{{#!html([\s\S]*?)}}}/y;
@@ -448,17 +463,26 @@ const CommentMention = createToken({
 });
 const Folding = createToken({
     name: 'Folding',
-    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
 });
 const IfSyntax = createToken({
     name: 'IfSyntax',
-    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
 });
 const Literal = createToken({
     name: 'Literal',
-    ...nestedRegex(/{{{/, /}}}/, true),
+    ...nestedRegex(/{{{/, /}}}/, {
+        allowNewline: true,
+        breakByHeading: false
+    }),
     start_chars_hint: ['{']
 });
 const LegacyMath = createToken({
