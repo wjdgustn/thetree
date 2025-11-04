@@ -615,7 +615,7 @@ app.post('/admin/config/configjson', middleware.permission('config'), async (req
     }
 
     if(config !== 'devConfig.json') for(let key in parsedJson) {
-        if(global.devConfig.hasOwnProperty(key)) return res.status(400).send(`Invalid key "${key}"`);
+        if(key.startsWith('dev') || global.devConfig.hasOwnProperty(key)) return res.status(400).send(`Invalid key "${key}"`);
     }
 
     await fs.writeFile(filePath, content);

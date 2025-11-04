@@ -403,7 +403,8 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
             },
             categoriesData,
             isRedirect,
-            embed
+            embed,
+            docScript: (config.dev_use_experimental_document_script && config[`document.${globalUtils.doc_fulltitle(document)}.script`]) || null
         },
         date: Math.floor(rev.createdAt.getTime() / 1000),
         star_count,
