@@ -1158,7 +1158,7 @@ app.use(async (req, res, next) => {
             }
 
             if(req.method === 'GET'
-                && (versionHeader && req.url !== '/sidebar')
+                && (!versionHeader || req.url !== '/sidebar')
                 && versionHeader !== skinInfo.versionHeader
                 && ((!debug && !config.testwiki) || versionHeader !== 'bypass')) {
                 res.originalStatus(400).end();
