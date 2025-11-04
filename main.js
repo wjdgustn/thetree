@@ -24,6 +24,8 @@ const msgpack = require('@msgpack/msgpack');
 const JSON5 = require('json5');
 const { lookup: ipLookup } = require('ip-location-api');
 const mongoose = require('mongoose');
+const zlib = require('zlib');
+const deflate = promisify(zlib.deflate);
 
 global.debug = process.env.NODE_ENV === 'development';
 global.__THETREE__ = {};
@@ -1029,7 +1031,8 @@ app.use(async (req, res, next) => {
                 const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`));
                 let body = rendered.html;
                 if(rendered.state) {
-                    body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))).toString('base64')}'</script>`;
+                    const deflated = await deflate(Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))));
+                    body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${deflated.toString('base64')}'</script>`;
                 }
                 const html = skinInfo.template
                     .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
@@ -1103,16 +1106,16 @@ app.use(async (req, res, next) => {
 
             res.originalSend = res.send;
             res.json = data => {
-                const basicData = getFEBasicData();
-                if(!basicData) return;
-
-                const responseData = JSON.parse(JSON.stringify(data));
-                res.originalSend(Buffer.from(msgpack.encode({
-                    ...basicData,
-                    ...responseData
-                })));
-
                 (async () => {
+                    const basicData = getFEBasicData();
+                    if(!basicData) return;
+
+                    const responseData = JSON.parse(JSON.stringify(data));
+                    res.originalSend(await deflate(Buffer.from(msgpack.encode({
+                        ...basicData,
+                        ...responseData
+                    }))));
+
                     for(let item of global.plugins.postHook) {
                         if(!item.includeError && (data.code && !['2', '3'].includes(data.code.toString()[0]))) continue;
 
