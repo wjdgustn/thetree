@@ -386,6 +386,38 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
         user: req.user.uuid
     });
 
+    const fullTitle = globalUtils.doc_fulltitle(document);
+    const configDocNames = [
+        config[`document.${fullTitle}.top_document`]
+        || config[`namespace.${document.namespace}.top_document`],
+        config[`document.${fullTitle}.bottom_document`]
+        || config[`namespace.${document.namespace}.bottom_document`]
+    ];
+    const [topDocument, bottomDocument] = await Promise.all(configDocNames.map(async docName => {
+        if(!docName) return null;
+
+        const parsedDocName = utils.parseDocumentName(docName);
+        const helpDoc = await Document.findOne({
+            namespace: parsedDocName.namespace,
+            title: parsedDocName.title
+        });
+        if(!helpDoc?.contentExists) return null;
+
+        const docRev = await History.findOne({
+            document: helpDoc.uuid
+        }).sort({ rev: -1 });
+        if(!docRev?.content) return null;
+
+        const parseResult = parser(docRev.content);
+        const { html } = await toHtml(parseResult, {
+            document: parsedDocName,
+            aclData: req.aclData,
+            req,
+            includeData: {}
+        });
+        return html;
+    }));
+
     res.renderSkin(undefined, {
         ...defaultData,
         headings,
@@ -404,7 +436,9 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
             categoriesData,
             isRedirect,
             embed,
-            docScript: (config.dev_use_experimental_document_script && config[`document.${globalUtils.doc_fulltitle(document)}.script`]) || null
+            docScript: (config.dev_use_experimental_document_script && config[`document.${fullTitle}.script`]) || null,
+            topDocument,
+            bottomDocument
         },
         date: Math.floor(rev.createdAt.getTime() / 1000),
         star_count,
