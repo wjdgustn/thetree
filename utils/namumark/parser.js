@@ -451,7 +451,7 @@ const CommentNumberRegex = /(?<!\S)#\d+/y;
 const CommentNumber = createToken({
     name: 'CommentNumber',
     pattern: (text, startOffset) => {
-        if(!Store.thread) return null;
+        if(!Store.thread || Store.parentTypes.includes('link')) return null;
 
         CommentNumberRegex.lastIndex = startOffset;
         return CommentNumberRegex.exec(text);
@@ -463,7 +463,7 @@ const CommentMentionRegex = /(?<!\S)@\S+/y;
 const CommentMention = createToken({
     name: 'CommentMention',
     pattern: (text, startOffset) => {
-        if(!Store.thread) return null;
+        if(!Store.thread || Store.parentTypes.includes('link')) return null;
 
         CommentMentionRegex.lastIndex = startOffset;
         return CommentMentionRegex.exec(text);
@@ -733,7 +733,8 @@ let Store = {
     //     list: []
     // },
     commentLines: [],
-    noLiteralPos: []
+    noLiteralPos: [],
+    parentTypes: []
 }
 const originalStore = { ...Store };
 
@@ -868,7 +869,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let pureText;
             let sectionNum;
             $.ACTION(() => {
-                text = parseInline(text);
+                text = parseInline(text, 'heading');
                 linkText = filterInline(text, true);
                 pureText = filterInline(text, false);
                 if(level < Store.heading.lowestLevel)
@@ -948,7 +949,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
                             items.push({
                                 align,
-                                value: parseBlock(str, false, true)
+                                value: parseBlock(str, 'table', false, true)
                             });
                             lastIdx = t.endOffset + 1;
                         }
@@ -964,7 +965,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 }
             });
             $.ACTION(() => {
-                caption = parseInline(caption);
+                caption = parseInline(caption, 'table');
             });
             return {
                 type: 'table',
@@ -991,7 +992,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             });
             let content;
             $.ACTION(() => {
-                content = parseBlock(lines.join('\n'));
+                content = parseBlock(lines.join('\n'), 'blockquote');
             });
             return {
                 type: 'blockquote',
@@ -1030,7 +1031,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                     if(content.startsWith(' ')) content = content.slice(1);
 
                     $.ACTION(() => {
-                        content = parseBlock(content);
+                        content = parseBlock(content, 'list');
                     });
                     items.push(content);
                     $.OPTION({
@@ -1059,7 +1060,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             });
             let content;
             $.ACTION(() => {
-                content = parseBlock(lines.join('\n'));
+                content = parseBlock(lines.join('\n'), 'indent');
             });
             return {
                 type: 'indent',
@@ -1171,7 +1172,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             let content = tok.image.slice(6, -3);
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'scaleText', true);
             });
 
             return {
@@ -1191,7 +1192,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let content = lines.slice(1).join('\n');
 
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'wikiSyntax', true);
             });
 
             return {
@@ -1265,7 +1266,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let content = lines.slice(1).join('\n');
 
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'syntaxSyntax', true);
             });
 
             return {
@@ -1284,7 +1285,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let content = lines.slice(1).join('\n');
 
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'ifSyntax', true);
             });
 
             return {
@@ -1298,7 +1299,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(ColorText);
             let { content, color, darkColor } = tok.payload || {};
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'colorText', true);
             });
 
             return {
@@ -1319,12 +1320,12 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
-        const checkInline = (token, sliceStart, sliceEnd) => {
+        const checkInline = (name, token, sliceStart, sliceEnd) => {
             const tok = $.CONSUME(token);
             const content = tok.image.slice(sliceStart, sliceEnd);
             let parsedContent;
             $.ACTION(() => {
-                parsedContent = parseInline(content);
+                parsedContent = parseInline(content, name);
             });
             return {
                 success: true,
@@ -1381,7 +1382,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         }];
                     }
                 }
-                if(!isFile) parsedText &&= parseInline(parsedText);
+                if(!isFile) parsedText &&= parseInline(parsedText, 'link');
             });
 
             if(origParsedText && origParsedText.replace(LiteralRegex, '').includes('\n')) {
@@ -1458,7 +1459,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let value = valueInput;
 
             $.ACTION(() => {
-                value = parseInline(value);
+                value = parseInline(value, 'footnote');
             });
 
             // $.ACTION(() => {
@@ -1527,7 +1528,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 //     Store.footnote.list.length = 0;
                 // }
                 else if(name === 'vote') {
-                    data.parsedSplittedParams = splittedParams.map(a => parseInline(a));
+                    data.parsedSplittedParams = splittedParams.map(a => parseInline(a, 'macro'));
                 }
             });
 
@@ -1561,7 +1562,7 @@ class NamumarkParser extends EmbeddedActionsParser {
         });
 
         const inlineHandler = (name, token, sliceStart, sliceEnd) => {
-            const { success, content } = checkInline(token, sliceStart, sliceEnd);
+            const { success, content } = checkInline(name, token, sliceStart, sliceEnd);
             if(!success) return content;
             return {
                 type: name,
@@ -1593,7 +1594,8 @@ for(let i = 0; i < MAXIMUM_DEPTH; i++)
 
 const getParser = () => (currDepth >= MAXIMUM_DEPTH - 1) ? null : instances[currDepth++];
 
-const parseInline = text => {
+const parseInline = (text, name) => {
+    if(name) Store.parentTypes.push(name);
     const lexed = inlineLexer.tokenize(text);
     const inlineParser = getParser();
     if(!inlineParser) return text.split('\n').map(text => [{
@@ -1603,6 +1605,7 @@ const parseInline = text => {
     inlineParser.noTopParagraph = false;
     inlineParser.input = lexed.tokens;
     const result = inlineParser.inline();
+    if(name) Store.parentTypes.pop();
     currDepth--;
     // console.log(`"${text}"`);
     // console.log(lexed.tokens);
@@ -1610,7 +1613,8 @@ const parseInline = text => {
     return result;
 }
 
-const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
+const parseBlock = (text, name, noTopParagraph = false, noLineStart = false) => {
+    if(name) Store.parentTypes.push(name);
     noCheckStartAtFirst = noLineStart;
     const lexed = blockLexer.tokenize(text);
     noCheckStartAtFirst = false;
@@ -1629,6 +1633,7 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
     blockParser.noTopParagraph = noTopParagraph;
     blockParser.input = lexed.tokens;
     const result = blockParser.blockDocument();
+    if(name) Store.parentTypes.pop();
     currDepth--;
     // console.log(`"${text}"`);
     // console.log(lexed.tokens);
