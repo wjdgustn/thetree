@@ -833,6 +833,9 @@ app.get('/member/login/oauth2/:provider/callback',
                 });
             }
             else {
+                if(provider.disable_auto_register)
+                    return res.error('외부 계정과 연결된 계정을 찾을 수 없습니다.');
+
                 if(!provider.disable_email_whitelist) {
                     const emailDomain = email.split('@').pop();
                     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
