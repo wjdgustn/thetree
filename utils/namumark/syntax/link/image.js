@@ -3,6 +3,7 @@ const querystring = require('querystring');
 const utils = require('../../utils');
 const mainUtils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
+const {fit} = require('sharp');
 
 module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData, disableImageLinkButton }) => {
     const document = mainUtils.parseDocumentName(obj.link);
@@ -106,6 +107,14 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
         'crisp-edges'
     ].includes(options.rendering)) delete options.rendering;
 
+    if(![
+        'fill',
+        'contain',
+        'cover',
+        'none',
+        'scale-down'
+    ].includes(options['object-fit'])) delete options['object-fit'];
+
     const imgSpanClassList = [`wiki-image-align${options.align ? `-${options.align}` : ''}`];
     let imgSpanStyle = ``;
     let imgWrapperStyle = ``;
@@ -127,6 +136,10 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 
     if(options.borderRadius) imgStyle += `border-radius:${options.borderRadius}${borderRadiusUnit};`;
     if(options.rendering) imgStyle += `image-rendering:${options.rendering};`;
+    if(options['object-fit']) {
+        imgWrapperStyle += `object-fit:${options['object-fit']};`;
+        imgStyle += `object-fit:${options['object-fit']};`;
+    }
 
     if(options.theme) imgSpanClassList.push(`wiki-theme-${options.theme}`);
 
