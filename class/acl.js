@@ -261,8 +261,8 @@ module.exports = class ACL {
                 let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id, aclGroupItem?.ip != null)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
                 if(aclGroupItem) {
                     // if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
-                    // aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
-                    // aclMessage += `<br>\n사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
+                    aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
+                    aclMessage += `<br>\n사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
                     if(rule.aclGroup.aclMessage) {
                         aclMessage = rule.aclGroup.aclMessage;
                         for(let [key, value] of Object.entries({
