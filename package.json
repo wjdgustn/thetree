@@ -40,7 +40,7 @@
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "express-useragent": "^1.0.15",
-    "express-validator": "^7.2.0",
+    "express-validator": "^7.3.0",
     "fs-extra": "^11.3.0",
     "helmet": "^8.0.0",
     "highlight.js": "^11.10.0",
