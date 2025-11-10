@@ -306,13 +306,16 @@ app.get('/Upload', async (req, res) => {
     });
 });
 
-const uploadFile = multer({
-    storage: multer.memoryStorage(),
-    limits: {
-        fileSize: 1024 * 1024 * (config.max_file_size || 10)
-    }
-}).array('file', 10);
 app.post('/Upload', (req, res, next) => {
+        const uploadFile = multer({
+            storage: multer.memoryStorage(),
+            ...(req.permissions.includes('developer') ? {} : {
+                limits: {
+                    fileSize: 1024 * 1024 * (config.max_file_size || 10)
+                }
+            })
+        }).array('file', 10);
+
         uploadFile(req, res, err => {
             if(err instanceof multer.MulterError)
                 return res.status(400).send(err.message);
