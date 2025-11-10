@@ -3,9 +3,16 @@ const querystring = require('querystring');
 const utils = require('../../utils');
 const mainUtils = require('../../../../utils');
 const globalUtils = require('../../../../utils/global');
-const {fit} = require('sharp');
 
-module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData, disableImageLinkButton }) => {
+module.exports = async (obj, link, {
+    Store,
+    thread,
+    document: docDocument,
+    dbDocument: docDbDocument,
+    rev: docRev,
+    includeData,
+    isInternal
+}) => {
     const document = mainUtils.parseDocumentName(obj.link);
     let { namespace, title } = document;
 
@@ -25,7 +32,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
     const checkCache = Store.revDocCache.find(a => a.namespace === namespace && a.title === title);
     if(checkCache && checkCache.rev?.document !== docRev?.document) {
         if(!checkCache.readable) return fallback;
-        if(!checkCache.rev.fileKey) return fallback;
+        if(!checkCache.rev.fileKey && !checkCache.rev.videoFileKey) return fallback;
         rev = checkCache.rev;
     }
     else {
@@ -33,17 +40,19 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
         // let readable = false;
         if(namespace === docDbDocument?.namespace
             && title === docDbDocument?.title
-            && docRev?.fileKey) {
+            && (docRev?.fileKey || docRev?.videoFileKey)) {
             // dbDocument = docDbDocument;
             rev = docRev;
             // readable = true;
         }
 
-        if(!rev?.fileKey) return fallback;
+        if(!rev?.fileKey && !rev?.videoFileKey) return fallback;
     }
 
-    const imgUrl = new URL((process.env.S3_PUBLIC_HOST_PREFIX ?? '') + rev.fileKey, process.env.S3_PUBLIC_HOST);
-    if(!includeData) Store.embed.image ??= imgUrl.toString();
+    const imgUrl = rev.fileKey && new URL((process.env.S3_PUBLIC_HOST_PREFIX ?? '') + rev.fileKey, process.env.S3_PUBLIC_HOST);
+    if(!includeData && imgUrl) Store.embed.image ??= imgUrl.toString();
+
+    const videoUrl = rev.videoFileKey && new URL((process.env.S3_PUBLIC_HOST_PREFIX ?? '') + rev.videoFileKey, process.env.S3_PUBLIC_HOST);
 
     options.borderRadius = options['border-radius'];
     delete options['border-radius'];
@@ -145,15 +154,20 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 
     const fullTitle = utils.escapeHtml(globalUtils.doc_fulltitle(document));
 
-    // TODO: over 1MB remove option, loading lazy config
+    const b64Image = `data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}`;
+
     return `
 <span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
-<img${imgAttrib} style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
-<img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
-${disableImageLinkButton || (docDocument.namespace === namespace && docDocument.title === title) 
+<img${imgAttrib} style="${imgStyle}" src="${b64Image}">
+<img class="wiki-image wiki-image-loading"${imgAttrib} style="${imgStyle}" src="${b64Image}" alt="${fullTitle}"${imgUrl ? ` data-src="${imgUrl}" data-filesize="${rev.fileSize}"` : ''}${videoUrl ? ` data-video-src="${videoUrl}" data-video-filesize="${rev.videoFileSize}"` : ''}${(docDocument.namespace === namespace && docDocument.title === title) ? '' : ` data-doc="${utils.escapeHtml(globalUtils.doc_action_link(document, 'w'))}`}">
+${isInternal
     ? '' 
-    : `<a class="wiki-image-info" href="${utils.escapeHtml(globalUtils.doc_action_link(document, 'w'))}" rel="nofollow noopener"></a>`
+    : (
+        imgUrl
+            ? `<noscript><img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}"></noscript>`
+            : `<noscript><video class="wiki-image"${imgAttrib} style="${imgStyle}" src="${videoUrl}" alt="${fullTitle}" controls playsinline></video></noscript>`
+        )
 }
 </span>
 </span>`.replaceAll('\n', '');

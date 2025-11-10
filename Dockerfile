@@ -27,7 +27,7 @@ ENV GIT_COMMIT_DATE ${GIT_COMMIT_DATE}
 
 ENV ILA_DATA_DIR /usr/src/app/cache/geoip-db
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git ffmpeg
 
 #USER node
 WORKDIR /usr/src/app

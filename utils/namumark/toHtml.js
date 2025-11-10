@@ -27,6 +27,10 @@ module.exports = async (...params) => {
     const channel = new MessageChannel();
 
     const setupOptions = options => {
+        if(options.req) {
+            options.isInternal = options.req.isInternal;
+        }
+
         for(let [key, value] of Object.entries(options)) {
             if(key === 'req') delete options[key];
             else if(value?.toJSON) options[key] = value.toJSON();

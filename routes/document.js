@@ -1,6 +1,7 @@
 const express = require('express');
 const { Address4, Address6 } = require('ip-address');
 const { getChoseong } = require('es-hangul');
+const axios = require('axios');
 
 const parser = require('../utils/namumark/parser');
 const toHtml = require('../utils/namumark/toHtml');
@@ -308,7 +309,7 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
 
     let content = rev.content;
     if(content && isRedirect) content = `#redirect [[${rev.content.split('\n')[0].slice('#redirect '.length)}]]`;
-    if(rev.fileKey) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
+    if(rev.fileKey || rev.videoFileKey) content = `[[${globalUtils.doc_fulltitle(document)}]]\n` + rev.content;
 
     if(!debug) console.time(`parse ${document.title}`);
     const parseResult = parser(content);
@@ -1474,7 +1475,7 @@ app.get('/history{/*document}', middleware.parseDocumentName, async (req, res) =
 
         const revKeys = 'type rev uuid user createdAt diffLength log revertRev moveOldDoc moveNewDoc troll trollBy hideLog hideLogBy hidden editRequest sessionId -_id'.split(' ');
         if(req.permissions.includes('config'))
-            revKeys.push('fileKey');
+            revKeys.push('fileKey', 'videoFileKey');
         revs = await History.find(query)
             .sort({ rev: query.rev?.$gte ? 1 : -1 })
             .limit(30)

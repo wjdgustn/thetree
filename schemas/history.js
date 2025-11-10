@@ -56,7 +56,13 @@ const newSchema = new Schema({
     fileKey: {
         type: String
     },
+    videoFileKey: {
+        type: String
+    },
     fileSize: {
+        type: Number
+    },
+    videoFileSize: {
         type: Number
     },
     fileWidth: {
@@ -167,6 +173,13 @@ newSchema.pre('save', async function() {
     if(this.fileKey == null && last?.fileKey) {
         this.fileKey = last.fileKey;
         this.fileSize = last.fileSize;
+        this.fileWidth = last.fileWidth;
+        this.fileHeight = last.fileHeight;
+    }
+
+    if(this.videoFileKey == null && last?.videoFileKey) {
+        this.videoFileKey = last.videoFileKey;
+        this.videoFileSize = last.videoFileSize;
         this.fileWidth = last.fileWidth;
         this.fileHeight = last.fileHeight;
     }

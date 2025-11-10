@@ -14,7 +14,6 @@ const link = require('./syntax/link');
 const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
-
 const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
@@ -37,9 +36,9 @@ const topToHtml = module.exports = async parameter => {
         aclData = {},
         commentId,
         includeData = null,
-        disableImageLinkButton = false,
         config,
-        port
+        port,
+        isInternal
     } = options;
     global.config = config;
 
@@ -511,7 +510,7 @@ const topToHtml = module.exports = async parameter => {
                     toHtml,
                     Store,
                     includeData,
-                    disableImageLinkButton
+                    isInternal
                 });
                 break;
             case 'macro':

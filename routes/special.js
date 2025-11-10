@@ -2,13 +2,14 @@ const express = require('express');
 const { body } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 const multer = require('multer');
 const crypto = require('crypto');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const sharp = require('sharp');
 const { JSDOM } = require('jsdom');
 const createDOMPurify = require('dompurify');
+const ffmpeg = require('fluent-ffmpeg');
+const stream = require('stream');
 
 const utils = require('../utils');
 const globalUtils = require('../utils/global');
@@ -353,7 +354,8 @@ app.post('/Upload', (req, res, next) => {
             'image/webp',
             'image/bmp',
             'image/svg+xml',
-            'image/ico'
+            'image/ico',
+            'video/mp4'
         ].includes(file.mimetype)) return res.status(400).send(
             '올바르지 않은 파일입니다.'
             + (req.permissions.includes('developer') ? ` (${file.mimetype})` : '')
@@ -376,7 +378,7 @@ app.post('/Upload', (req, res, next) => {
         const possibleExts = [];
         if(file.mimetype === 'image/jpeg')
             possibleExts.push('jpg', 'jpeg');
-        else possibleExts.push(file.mimetype.replace('image/', '').match(/[a-z]*/i)[0]);
+        else possibleExts.push(file.mimetype.split('/')[1].match(/[a-z0-9]*/i)[0]);
 
         if(!possibleExts.some(a => title.endsWith('.' + a)))
             return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${possibleExts[0]})`);
@@ -404,19 +406,60 @@ app.post('/Upload', (req, res, next) => {
         }).sort({ rev: -1 });
         if(rev?.content != null) return res.status(409).send('문서가 이미 존재합니다.');
 
-        let metadata;
+        const isImage = file.mimetype.startsWith('image/');
+
         let buffer = file.buffer;
         let fileWidth = 0;
         let fileHeight = 0;
-        try {
-            metadata = await sharp(buffer).metadata();
+
+        if(isImage) {
+            let metadata;
+            try {
+                metadata = await sharp(buffer).metadata();
+                if(!metadata) return res.status(400).send('올바르지 않은 파일입니다.');
+                fileWidth = metadata.width;
+                fileHeight = metadata.height;
+            } catch(e) {}
+
+            if(metadata.format === 'svg') {
+                const svgCode = buffer.toString();
+                const window = new JSDOM('').window;
+                const DOMPurify = createDOMPurify(window);
+                DOMPurify.addHook('afterSanitizeAttributes', node => {
+                    const href = node.getAttribute('xlink:href') || node.getAttribute('href');
+                    if(href && !href.startsWith('#')) {
+                        node.removeAttribute('xlink:href');
+                        node.removeAttribute('href');
+                    }
+                });
+                const clean = DOMPurify.sanitize(svgCode, {
+                    USE_PROFILES: {
+                        svg: true
+                    },
+                    ADD_TAGS: ['use']
+                });
+                buffer = Buffer.from(clean);
+            }
+        }
+        else {
+            let metadata;
+            try {
+                metadata = await new Promise((resolve, reject) => {
+                    ffmpeg.ffprobe(stream.Readable.from(buffer), (err, data) => {
+                        if(err) return reject(err);
+                        resolve(data);
+                    });
+                });
+            } catch(e) {}
             if(!metadata) return res.status(400).send('올바르지 않은 파일입니다.');
-            fileWidth = metadata.width;
-            fileHeight = metadata.height;
-        } catch(e) {}
+
+            const videoStream = metadata.streams.find(s => s.codec_type === 'video');
+            fileWidth = videoStream?.width || 0;
+            fileHeight = videoStream?.height || 0;
+        }
 
         const hash = crypto.createHash('sha256').update(buffer).digest('hex');
-        const Key = 'i/' + hash + ext;
+        let Key = 'i/' + hash + ext;
 
         const checkExists = await History.findOne({
             fileKey: Key
@@ -436,32 +479,58 @@ app.post('/Upload', (req, res, next) => {
             }
         }
 
-        if(metadata.format === 'svg') {
-            const svgCode = buffer.toString();
-            const window = new JSDOM('').window;
-            const DOMPurify = createDOMPurify(window);
-            DOMPurify.addHook('afterSanitizeAttributes', node => {
-                const href = node.getAttribute('xlink:href') || node.getAttribute('href');
-                if(href && !href.startsWith('#')) {
-                    node.removeAttribute('xlink:href');
-                    node.removeAttribute('href');
+        let videoFileKey;
+        let videoFileSize;
+        let videoFileBuffer;
+        if(file.mimetype === 'image/gif') {
+            try {
+                videoFileBuffer = await utils.gifToMp4(buffer);
+                const videoHash = crypto.createHash('sha256').update(videoFileBuffer).digest('hex');
+                videoFileKey = 'i/' + videoHash + '.mp4';
+                videoFileSize = videoFileBuffer.length;
+            } catch (e) {}
+        }
+
+        if(videoFileKey) {
+            const checkExists = await History.findOne({
+                fileKey: Key
+            });
+            if(checkExists) {
+                const dupDoc = await Document.findOne({
+                    uuid: checkExists.document
+                });
+                let latestRev;
+                if(dupDoc.contentExists) latestRev = await History.findOne({
+                    document: dupDoc.uuid
+                }).sort({ rev: -1 });
+
+                if(latestRev?.fileKey === Key) {
+                    const doc = utils.dbDocumentToDocument(dupDoc);
+                    return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
                 }
-            });
-            const clean = DOMPurify.sanitize(svgCode, {
-                USE_PROFILES: {
-                    svg: true
-                },
-                ADD_TAGS: ['use']
-            });
-            buffer = Buffer.from(clean);
+            }
+        }
+
+        if(!isImage) {
+            videoFileBuffer = buffer;
+            videoFileSize = buffer.length;
+            buffer = null;
+            videoFileKey = Key;
+            Key = undefined;
         }
 
         if(!checkExists) try {
-            await S3.send(new PutObjectCommand({
+            if(Key) await S3.send(new PutObjectCommand({
                 Bucket: process.env.S3_BUCKET_NAME,
                 Key,
                 Body: buffer,
                 ContentType: file.mimetype
+            }));
+            if(videoFileKey) await S3.send(new PutObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: videoFileKey,
+                Body: videoFileBuffer,
+                ContentType: 'video/mp4'
             }));
         } catch(e) {
             console.error(e);
@@ -483,9 +552,11 @@ app.post('/Upload', (req, res, next) => {
             document: dbDocument.uuid,
             content,
             fileKey: Key,
-            fileSize: file.size,
+            fileSize: buffer?.length ?? undefined,
             fileWidth,
             fileHeight,
+            videoFileKey,
+            videoFileSize,
             log: req.body.log || `파일 ${Buffer.from(file.originalname, 'latin1').toString('utf-8')}을 올림`
         });
     }

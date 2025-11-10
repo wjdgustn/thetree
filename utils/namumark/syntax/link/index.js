@@ -167,7 +167,7 @@ module.exports = async (obj, options = {}) => {
     // }
 
     const safeLink = utils.escapeHtml(globalUtils.removeHtmlTags(link));
-    const parsedTitle = obj.textExists ? await toHtml(obj.parsedText, { disableImageLinkButton: true }) : utils.escapeHtml(text);
+    const parsedTitle = obj.textExists ? await toHtml(obj.parsedText) : utils.escapeHtml(text);
 
     const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
     const html = `<a href="${safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(titleDocName ?? link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;

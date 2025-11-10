@@ -976,9 +976,13 @@ app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentN
         if(!req.permissions.includes('config')) return res.status(403).send('missing config permission');
 
         try {
-            await S3.send(new DeleteObjectCommand({
+            if(history.fileKey) await S3.send(new DeleteObjectCommand({
                 Bucket: process.env.S3_BUCKET_NAME,
                 Key: history.fileKey
+            }));
+            if(history.videoFileKey) await S3.send(new DeleteObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: history.videoFileKey
             }));
         } catch(e) {
             console.error(e);
@@ -992,6 +996,13 @@ app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentN
         }, {
             $unset: {
                 fileKey: 1
+            }
+        });
+        await History.updateMany({
+            videoFileKey: history.videoFileKey
+        }, {
+            $unset: {
+                videoFileKey: 1
             }
         });
 

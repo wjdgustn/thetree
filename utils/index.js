@@ -6,6 +6,8 @@ const { generateSlug } = require('random-word-slugs');
 const axios = require('axios');
 const querystring = require('querystring');
 const { colorFromUuid } = require('uuid-color');
+const ffmpeg = require('fluent-ffmpeg');
+const stream = require('stream');
 
 const globalUtils = require('./global');
 const namumarkUtils = require('./namumark/utils');
@@ -958,5 +960,30 @@ module.exports = {
             const j = key[i % key.length] % arr.length;
             [arr[i], arr[j]] = [arr[j], arr[i]];
         }
+    },
+    gifToMp4(input) {
+        return new Promise((resolve, reject) => {
+            const inputStream = stream.Readable.from(input);
+            const pass = new stream.PassThrough();
+            const chunks = [];
+
+            pass.on('data', c => chunks.push(c));
+            pass.on('end', () => resolve(Buffer.concat(chunks)));
+            pass.on('error', e => reject(e));
+
+            ffmpeg(inputStream)
+                .inputFormat('gif')
+                .outputOptions([
+                    '-c:v libx264',
+                    '-profile:v main',
+                    '-level:v 3.1',
+                    '-pix_fmt yuv420p',
+                    '-an',
+                    '-movflags +frag_keyframe+empty_moov'
+                ])
+                .format('mp4')
+                .on('error', e => reject(e))
+                .pipe(pass, { end: true });
+        });
     }
 }
