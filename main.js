@@ -497,7 +497,6 @@ reloadPlugins();
 
 const parser = require('./utils/namumark/parser');
 const toHtml = require('./utils/namumark/toHtml');
-const {shuffleArray} = require('./utils');
 global.NamumarkParser = {
     parser,
     toHtml
