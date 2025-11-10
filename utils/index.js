@@ -659,11 +659,6 @@ module.exports = {
                 .lean();
         }
 
-        const link = query => `${req.path}?${querystring.stringify({
-            ...this.withoutKeys(req.query, [query.from ? 'until' : 'from']),
-            ...query
-        })}`;
-
         return {
             items,
             prevItem,
