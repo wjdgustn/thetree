@@ -732,6 +732,7 @@ app.get('/member/login/oauth2/:provider', async (req, res) => {
 
     const redirect = req.query.redirect;
     if(redirect) req.session.redirect = redirect;
+    req.session.autologin = req.query.autologin === 'Y';
 
     req.session.oauth2State = crypto.randomUUID();
 
@@ -873,8 +874,20 @@ app.get('/member/login/oauth2/:provider/callback',
     req.session.loginUser = map.user;
     req.session.oauth2Provider = req.params.provider;
 
+    if(req.session.autologin) {
+        const token = await AutoLoginToken.create({
+            uuid: user.uuid
+        });
+        res.cookie('honoka', token.token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+            sameSite: 'lax'
+        });
+    }
+
     res.redirect(req.session.redirect || '/');
     delete req.session.redirect;
+    delete req.session.autologin;
 });
 
 app.delete('/member/login/oauth2/:provider', middleware.isLogin, async (req, res) => {
