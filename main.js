@@ -548,8 +548,6 @@ SocketIO.on('new_namespace', namespace => {
     });
 });
 
-global.permTokens = Object.fromEntries(AllPermissions.map(a => [a, crypto.randomBytes(16).toString('hex')]));
-
 // app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
 app.use(cookieParser());
