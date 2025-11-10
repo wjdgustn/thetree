@@ -876,7 +876,7 @@ app.get('/member/login/oauth2/:provider/callback',
 
     if(req.session.autologin) {
         const token = await AutoLoginToken.create({
-            uuid: user.uuid
+            uuid: map.user
         });
         res.cookie('honoka', token.token, {
             httpOnly: true,
