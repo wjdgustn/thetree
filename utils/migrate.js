@@ -136,7 +136,7 @@ module.exports = [
         }
     },
     {
-        timestamp: 1762754409420,
+        timestamp: 1762954715144,
         code: async () => {
             console.log('starting gif to mp4 migration...');
             const revs = await History.find({
@@ -154,19 +154,23 @@ module.exports = [
                     const { data } = await axios.get(imgUrl, {
                         responseType: 'arraybuffer'
                     });
-                    const videoFileBuffer = await utils.gifToMp4(data);
-                    const videoHash = crypto.createHash('sha256').update(videoFileBuffer).digest('hex');
-                    const videoFileKey = 'i/' + videoHash + '.mp4';
+                    let videoFileKey;
+
+                    const checkOther = await History.findOne({
+                        fileKey: rev.fileKey,
+                        videoFileKey: { $exists: true }
+                    });
+                    if(checkOther) videoFileKey = checkOther.videoFileKey;
+                    else {
+                        const videoFileBuffer = await utils.gifToMp4(data);
+                        const videoHash = crypto.createHash('sha256').update(videoFileBuffer).digest('hex');
+                        videoFileKey = 'i/' + videoHash + '.mp4';
+                    }
 
                     const dupCheck = await History.exists({
                         videoFileKey
                     });
-                    if(dupCheck) {
-                        console.log(`skipped duplicate gif to mp4: ${rev.document}`);
-                        continue;
-                    }
-
-                    await S3.send(new PutObjectCommand({
+                    if(!dupCheck) await S3.send(new PutObjectCommand({
                         Bucket: process.env.S3_BUCKET_NAME,
                         Key: videoFileKey,
                         Body: videoFileBuffer,
