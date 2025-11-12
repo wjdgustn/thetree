@@ -136,7 +136,7 @@ module.exports = [
         }
     },
     {
-        timestamp: 1762954715144,
+        timestamp: 1762954979464,
         code: async () => {
             console.log('starting gif to mp4 migration...');
             const revs = await History.find({
@@ -155,14 +155,20 @@ module.exports = [
                         responseType: 'arraybuffer'
                     });
                     let videoFileKey;
+                    let videoFileSize;
+                    let videoFileBuffer;
 
                     const checkOther = await History.findOne({
                         fileKey: rev.fileKey,
                         videoFileKey: { $exists: true }
                     });
-                    if(checkOther) videoFileKey = checkOther.videoFileKey;
+                    if(checkOther) {
+                        videoFileKey = checkOther.videoFileKey;
+                        videoFileSize = checkOther.videoFileSize;
+                    }
                     else {
-                        const videoFileBuffer = await utils.gifToMp4(data);
+                        videoFileBuffer = await utils.gifToMp4(data);
+                        videoFileSize = videoFileBuffer.length;
                         const videoHash = crypto.createHash('sha256').update(videoFileBuffer).digest('hex');
                         videoFileKey = 'i/' + videoHash + '.mp4';
                     }
@@ -178,7 +184,7 @@ module.exports = [
                     }));
 
                     rev.videoFileKey = videoFileKey;
-                    rev.videoFileSize = videoFileBuffer.length;
+                    rev.videoFileSize = videoFileSize;
                     await rev.save();
                     console.log(`migrated gif to mp4: ${rev.document}`);
                 } catch(e) {
