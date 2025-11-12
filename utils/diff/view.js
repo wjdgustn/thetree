@@ -196,6 +196,8 @@ module.exports = {
                         addCellsInline(node, null, n++, newTextLines, change);
                     } else if (change == "replace") {
                         botrows.push(node2 = document.createElement("tr"));
+
+                        let charDiffFailed = false;
                         if (wordlevel) {
                             const baseTextLine = baseTextLines[b] || '';
                             const newTextLine = newTextLines[n] || '';
@@ -238,22 +240,26 @@ module.exports = {
                                     callback
                                 });
                             });
-                            diff ??= [];
 
-                            for(let d of diff) {
-                                if(d.added)
-                                    nnode.appendChild(ctelt("ins", "diff", d.value));
-                                else if(d.removed)
-                                    bnode.appendChild(ctelt("del", "diff", d.value));
-                                else {
-                                    bnode.appendChild(ctelt("span", "equal", d.value));
-                                    nnode.appendChild(ctelt("span", "equal", d.value));
+                            if(diff) {
+                                for(let d of diff) {
+                                    if(d.added)
+                                        nnode.appendChild(ctelt("ins", "diff", d.value));
+                                    else if(d.removed)
+                                        bnode.appendChild(ctelt("del", "diff", d.value));
+                                    else {
+                                        bnode.appendChild(ctelt("span", "equal", d.value));
+                                        nnode.appendChild(ctelt("span", "equal", d.value));
+                                    }
                                 }
-                            }
 
-                            if (b < be) addCellsNode(node, b++, null, bnode, "delete");
-                            if (n < ne) addCellsNode(node2, null, n++, nnode, "insert");
-                        } else {
+                                if (b < be) addCellsNode(node, b++, null, bnode, "delete");
+                                if (n < ne) addCellsNode(node2, null, n++, nnode, "insert");
+                            }
+                            else charDiffFailed = true;
+                        }
+
+                        if(!wordlevel || charDiffFailed) {
                             if (b < be) addCellsInline(node, b++, null, baseTextLines, "delete");
                             if (n < ne) addCellsInline(node2, null, n++, newTextLines, "insert");
                         }
