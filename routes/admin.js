@@ -37,7 +37,8 @@ const {
     EditRequestStatusTypes,
     disabledFeaturesTemplates,
     ThreadCommentTypes,
-    AuditLogTypes
+    AuditLogTypes,
+    ThreadStatusTypes
 } = require('../utils/types');
 const middleware = require('../utils/middleware');
 const docUtils = require('../utils/docUtils');
@@ -1146,6 +1147,16 @@ app.post('/admin/batch_revert',
     }
 
     if(hideThreadComments) {
+        const targetFirstComments = await ThreadComment.find({
+            user: user.uuid,
+            createdAt: {
+                $gte: date - duration
+            },
+            hidden: false,
+            type: ThreadCommentTypes.Default,
+            id: 1
+        });
+
         const result = await ThreadComment.updateMany({
             user: user.uuid,
             createdAt: {
@@ -1158,6 +1169,34 @@ app.post('/admin/batch_revert',
             hidden: true
         });
         resultText.push(`숨긴 토론 댓글 수 : ${result.modifiedCount}`);
+
+        let targetThreads = await Thread.find({
+            status: {
+                $ne: ThreadStatusTypes.Close
+            },
+            uuid: {
+                $in: targetFirstComments.map(c => c.thread)
+            }
+        });
+        targetThreads = await utils.findDocuments(targetThreads);
+        if(targetThreads.length) {
+            const closeResult = await Thread.updateMany({
+                uuid: {
+                    $in: targetThreads.map(a => a.uuid)
+                }
+            }, {
+                status: ThreadStatusTypes.Close
+            });
+            await Promise.all(targetThreads.map(a => ThreadComment.create({
+                thread: a.uuid,
+                user: req.user.uuid,
+                admin: req.permissions.includes('admin'),
+                type: ThreadCommentTypes.UpdateStatus,
+                content: ThreadStatusTypes.Close
+            })));
+
+            resultText.push(`닫은 스레드 수 : ${closeResult.modifiedCount}`);
+        }
     }
 
     if(revertContributions || revertEditRequests) {
