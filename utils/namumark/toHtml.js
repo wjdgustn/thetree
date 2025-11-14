@@ -61,7 +61,6 @@ module.exports = async (...params) => {
         }
     });
 
-    console.time('render');
     try {
         return await worker.run(params, {
             signal: AbortSignal.timeout(config.document_maximum_time ?? MAXIMUM_TIME),
@@ -86,7 +85,5 @@ module.exports = async (...params) => {
                 image: null
             }
         }
-    } finally {
-        console.timeEnd('render');
     }
 }
