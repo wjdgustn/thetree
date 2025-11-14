@@ -44,6 +44,10 @@ const aclGroupsQuery = req => ({
         ]
     })
 });
+const sortAclGroups = rawAclGroups => [...new Set([
+    ...(config.aclgroup_order ?? []).map(a => rawAclGroups.find(b => b.name === a)).filter(a => a),
+    ...rawAclGroups
+])];
 
 const groupPermChecker = (req, group, key) => {
     if(!group) return false;
@@ -62,10 +66,7 @@ const groupPermChecker = (req, group, key) => {
 
 const getACLGroup = async (req, res) => {
     const rawAclGroups = await ACLGroup.find(aclGroupsQuery(req));
-    const aclGroups = [...new Set([
-        ...(config.aclgroup_order ?? []).map(a => rawAclGroups.find(b => b.name === a)).filter(a => a),
-        ...rawAclGroups
-    ])];
+    const aclGroups = sortAclGroups(rawAclGroups);
     const selectedGroup = aclGroups.find(a => a.name === req.query.group) ?? aclGroups[0];
 
     let query;
@@ -141,8 +142,9 @@ module.exports.getACLGroup = getACLGroup;
 
 app.get('/aclgroup', getACLGroup);
 
-app.get('/aclgroup/groups', async (req, res) => {
-    const aclGroups = await ACLGroup.find(aclGroupsQuery(req));
+app.get('/aclgroup/groups', middleware.internal, async (req, res) => {
+    const rawAclGroups = await ACLGroup.find(aclGroupsQuery(req));
+    const aclGroups = sortAclGroups(rawAclGroups);
     res.json(aclGroups.map(a => ({
         uuid: a.uuid,
         name: a.name
