@@ -50,9 +50,10 @@ module.exports = {
                     status: err.msg + (isDefaultMsg ? `: ${err.path}` : '')
                 });
             }
-            else return res.status(400).send({
+            else if(req.isInternal) return res.status(400).send({
                 fieldErrors: result.mapped()
             });
+            else return res.error(result.array()[0].msg);
         }
         next();
     },
@@ -60,7 +61,7 @@ module.exports = {
         const result = validationResult(req);
         if(!result.isEmpty()) {
             const msg = result.array()[0].msg;
-            if(req.isAPI) return res.error(msg);
+            if(req.isAPI || !req.isInternal) return res.error(msg);
             else return res.status(400).send(msg);
         }
         next();
