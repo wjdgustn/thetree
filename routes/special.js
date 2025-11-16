@@ -536,7 +536,7 @@ app.post('/Upload', (req, res, next) => {
                 Bucket: process.env.S3_BUCKET_NAME,
                 Key: videoFileKey,
                 Body: videoFileBuffer,
-                ContentType: file.mimetype === 'image/gif' ? 'video/mp4' : fie.mimetype
+                ContentType: file.mimetype === 'image/gif' ? 'video/mp4' : file.mimetype
             }));
         } catch(e) {
             console.error(e);
