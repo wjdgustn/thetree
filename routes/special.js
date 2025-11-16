@@ -359,9 +359,9 @@ app.post('/Upload', (req, res, next) => {
             'image/svg+xml',
             'image/ico',
             'video/mp4',
-            'video/mkv',
-            'video/mov',
-            'video/avi'
+            'video/x-matroska',
+            'video/quicktime',
+            'video/x-msvideo'
         ].includes(file.mimetype)) return res.status(400).send(
             '올바르지 않은 파일입니다.'
             + (req.permissions.includes('developer') ? ` (${file.mimetype})` : '')
