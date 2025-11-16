@@ -377,8 +377,9 @@ app.post('/Upload', (req, res, next) => {
     if(!categories.includes(req.body.category)) return res.status(400).send('잘못된 분류입니다.');
 
     for(let file of req.files) {
-        const { ext } = path.parse(file.originalname);
-        const document = req.document ?? utils.parseDocumentName(`파일:${file.originalname}`);
+        const originalName = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+        const { ext } = path.parse(originalName);
+        const document = req.document ?? utils.parseDocumentName(`파일:${originalName}`);
         const { namespace, title } = document;
 
         const possibleExts = [];
@@ -563,7 +564,7 @@ app.post('/Upload', (req, res, next) => {
             fileHeight,
             videoFileKey,
             videoFileSize,
-            log: req.body.log || `파일 ${Buffer.from(file.originalname, 'latin1').toString('utf-8')}을 올림`
+            log: req.body.log || `파일 ${Buffer.from(originalName, 'latin1').toString('utf-8')}을 올림`
         });
     }
 
