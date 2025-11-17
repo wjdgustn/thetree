@@ -128,10 +128,14 @@ const updateOrphanedPages = async () => {
     }).lean();
     const notOrphaned = [];
 
-    if(config.edit_help_document)
-        notOrphaned.push(utils.parseDocumentName(config.edit_help_document));
-    if(config.upload_help_document)
-        notOrphaned.push(utils.parseDocumentName(config.upload_help_document));
+    if(config.edit_help_document) {
+        const parsedName = utils.parseDocumentName(config.edit_help_document);
+        notOrphaned.push(allDocuments.find(a => a.namespace === parsedName.namespace && a.title === parsedName.title));
+    }
+    if(config.upload_help_document) {
+        const parsedName = utils.parseDocumentName(config.upload_help_document);
+        notOrphaned.push(allDocuments.find(a => a.namespace === parsedName.namespace && a.title === parsedName.title));
+    }
 
     const frontPageName = utils.parseDocumentName(config.front_page);
     const checkDocs = [allDocuments.find(a => a.namespace === frontPageName.namespace && a.title === frontPageName.title)];
