@@ -18,13 +18,15 @@ const baseSanitizeHtmlOptions = {
             'code'
         ].includes(a)),
         'audio',
-        'video'
+        'video',
+        'iframe'
     ],
     allowedAttributes: {
         '*': ['style'],
         a: ['href', 'class', 'rel', 'target'],
         audio: ['width', 'height', 'src', 'controls', 'loop'],
-        video: ['width', 'height', 'src', 'controls', 'loop']
+        video: ['width', 'height', 'src', 'controls', 'loop'],
+        iframe: ['src', 'width', 'height', 'frameborder', 'allowfullscreen']
     },
     allowedSchemes: ['http', 'https', 'ftp'],
     transformTags: {
