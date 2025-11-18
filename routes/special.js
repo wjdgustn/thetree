@@ -382,10 +382,13 @@ app.post('/Upload', (req, res, next) => {
         const document = req.document ?? utils.parseDocumentName(`파일:${originalName}`);
         const { namespace, title } = document;
 
-        const possibleExts = [];
-        if(file.mimetype === 'image/jpeg')
-            possibleExts.push('jpg', 'jpeg');
-        else possibleExts.push(file.mimetype.split('/')[1].match(/[a-z0-9]*/i)[0]);
+        const possibleExts = [...({
+            'image/jpeg': ['jpg', 'jpeg'],
+            'video/x-matroska': ['mkv'],
+            'video/quicktime': ['mov'],
+            'video/x-msvideo': ['avi']
+        }[file.mimetype] ?? [])];
+        if(!possibleExts.length) possibleExts.push(file.mimetype.split('/')[1].match(/[a-z0-9]*/i)[0]);
 
         if(!possibleExts.some(a => title.endsWith('.' + a)))
             return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${possibleExts[0]})`);
