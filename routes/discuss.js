@@ -597,7 +597,7 @@ app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
         const user = await User.findOne({
             name: document.title
         });
-        if(user.lastUserDocumentDiscuss <= latestComment.createdAt) {
+        if(user && user.lastUserDocumentDiscuss <= latestComment.createdAt) {
             await User.updateOne({
                 uuid: user.uuid
             }, {
