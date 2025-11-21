@@ -18,7 +18,8 @@ const {
     HistoryTypes,
     ACLTypes,
     ThreadStatusTypes,
-    EditRequestStatusTypes
+    EditRequestStatusTypes,
+    BacklinkFlags
 } = require('../utils/types');
 
 const User = require('../schemas/user');
@@ -694,7 +695,14 @@ app.get('/RandomPage', async (req, res) => {
         {
             $match: {
                 namespace,
-                contentExists: true
+                contentExists: true,
+                backlinks: {
+                    $not: {
+                        $elemMatch: {
+                            flags: BacklinkFlags.Redirect
+                        }
+                    }
+                }
             }
         },
         { $sample: { size: 20 } }
@@ -721,7 +729,14 @@ app.get('/random', async (req, res) => {
         {
             $match: {
                 namespace: '문서',
-                contentExists: true
+                contentExists: true,
+                backlinks: {
+                    $not: {
+                        $elemMatch: {
+                            flags: BacklinkFlags.Redirect
+                        }
+                    }
+                }
             }
         },
         { $sample: { size: 1 } }
