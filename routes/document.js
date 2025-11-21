@@ -277,7 +277,8 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
         const redirectDoc = utils.parseDocumentName(redirectName);
         const checkDoc = await Document.exists({
             namespace: redirectDoc.namespace,
-            title: redirectDoc.title
+            title: redirectDoc.title,
+            contentExists: true
         });
         if(checkDoc) return res.redirect(globalUtils.doc_action_link(redirectDoc, 'w', {
             from: globalUtils.doc_fulltitle(document)
