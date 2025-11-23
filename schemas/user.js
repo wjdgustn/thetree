@@ -51,9 +51,6 @@ const newSchema = new Schema({
         type: Array,
         default: []
     },
-    otpToken: {
-        type: String
-    },
     skin: {
         type: String,
         default: 'default'
