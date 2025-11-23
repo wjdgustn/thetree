@@ -458,17 +458,13 @@ app.post('/member/login',
     const wrongCredentials = () => res.status(400).send('이메일 혹은 패스워드가 틀립니다.');
 
     let user;
+    let keepOldEmailPin = false;
     if(email) try {
-        const exUser = await User.findOneAndUpdate({
+        const exUser = await User.findOne({
             $or: [
                 { email },
                 { name: email }
             ]
-        }, {
-            emailPin: utils.getRandomInt(0, 999999).toString().padStart(6, '0'),
-            lastLoginRequest: new Date()
-        }, {
-            new: true
         });
         if(exUser != null) {
             const result = await bcrypt.compare(password, exUser.password);
@@ -476,7 +472,19 @@ app.post('/member/login',
                 if(config.disable_internal_login && !exUser.permissions.includes('developer'))
                     return res.status(400).send('internal_login이 비활성화되어 있습니다.');
 
-                user = exUser;
+                if(exUser.lastLoginRequest > Date.now() - 1000 * 60 * 10) {
+                    user = exUser;
+                    keepOldEmailPin = true;
+                }
+                else
+                    user = await User.findOneAndUpdate({
+                        uuid: exUser.uuid
+                    }, {
+                        emailPin: utils.getRandomInt(0, 999999).toString().padStart(6, '0'),
+                        lastLoginRequest: new Date()
+                    }, {
+                        new: true
+                    });
             }
             else {
                 return wrongCredentials();
@@ -597,7 +605,7 @@ app.post('/member/login',
         }
     });
 
-    if(!user.totpToken) await mailTransporter.sendMail({
+    if(!user.totpToken && !keepOldEmailPin) await mailTransporter.sendMail({
         from: config.smtp_sender,
         to: user.email,
         subject: `[${config.site_name}] 확인되지 않은 기기에서 로그인`,
