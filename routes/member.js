@@ -417,7 +417,7 @@ app.get('/member/login', middleware.isLogout, middleware.checkCaptcha(true), asy
         ...value.button
     }));
     if(disableInternal && externalProviders.length === 1 && !req.query.internal)
-        return res.redirect(`/member/login/oauth2/${externalProviders[0].name}`);
+        return res.redirect(`/member/login/oauth2/${externalProviders[0].name}?redirect=${encodeURIComponent(req.query.redirect || '/')}`);
 
     const passkeyData = await generateAuthenticationOptions({
         rpID: new URL(config.base_url).hostname
