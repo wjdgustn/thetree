@@ -1034,6 +1034,7 @@ app.use(async (req, res, next) => {
                     body += `<script nonce="${res.locals.cspNonce}">window.INITIAL_STATE='${deflated.toString('base64')}'</script>`;
                 }
                 const html = skinInfo.template
+                    .replaceAll('{cspNonce}', res.locals.cspNonce)
                     .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
                     .replace('<!--app-head-->', rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
                     .replace('<!--app-body-->', body);
