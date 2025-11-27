@@ -1526,7 +1526,11 @@ app.get('/history{/*document}', middleware.parseDocumentName, async (req, res) =
     });
 });
 
-app.get('/raw{/*document}', middleware.parseDocumentName, async (req, res) => {
+const documentRaw = async (req, res) => {
+    const section = parseInt(req.query.section);
+    const invalidSection = () => res.error('섹션이 올바르지 않습니다.');
+    if(req.isAPI && req.query.section && (isNaN(section) || section < 1)) return invalidSection();
+
     const document = req.document;
 
     const { namespace, title } = document;
@@ -1552,6 +1556,20 @@ app.get('/raw{/*document}', middleware.parseDocumentName, async (req, res) => {
 
     if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
 
+    let content = rev?.content ?? '';
+    if(req.isAPI && req.query.section) {
+        const lines = content.split('\n');
+        const parseResult = parser(rev.content);
+        const headings = parseResult.result.filter(a => a.type === 'heading');
+        const headingLines = headings.map(a => a.line - 1);
+        if(section > headingLines.length) return invalidSection();
+
+        const start = headingLines[section - 1];
+        const next = headingLines[section] ?? lines.length;
+
+        content = lines.slice(start, next).join('\n');
+    }
+
     res.renderSkin(undefined, {
         contentName: 'document/raw',
         viewName: 'raw',
@@ -1559,10 +1577,13 @@ app.get('/raw{/*document}', middleware.parseDocumentName, async (req, res) => {
         rev: rev.rev,
         uuid: rev.uuid,
         serverData: {
-            content: rev?.content ?? ''
+            content
         }
     });
-});
+}
+module.exports.documentRaw = documentRaw;
+
+app.get('/raw{/*document}', middleware.parseDocumentName, documentRaw);
 
 app.get('/revert{/*document}', middleware.parseDocumentName, middleware.checkCaptcha(), async (req, res) => {
     const document = req.document;

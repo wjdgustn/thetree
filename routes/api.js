@@ -15,7 +15,8 @@ const {
     editAndEditRequest,
     postEditAndEditRequest,
     getBacklinks,
-    getCategoryDocuments
+    getCategoryDocuments,
+    documentRaw
 } = require('./document');
 const {
     getACLGroup,
@@ -89,6 +90,12 @@ const apiWrapper = fn => async (req, res, next) => {
     next?.();
     return finalData;
 }
+
+app.get('/api/raw{/*document}', middleware.parseDocumentName, apiWrapper(documentRaw), (req, res) => {
+    res.json({
+        content: req.apiData.serverData.content
+    });
+});
 
 app.get('/api/edit{/*document}', middleware.parseDocumentName, apiWrapper(editAndEditRequest), async (req, res) => {
     const baseuuid = req.apiData.body.baseuuid;
