@@ -3,6 +3,9 @@ const parser = require('../../parser');
 const ivm = require('isolated-vm');
 
 module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj) => {
+    if (!obj.splittedParams || !obj.splittedParams[0]) {
+        return obj.image;
+    }
     if(includeData) return '';
 
     const docName = mainUtils.parseDocumentName(obj.splittedParams[0]);
