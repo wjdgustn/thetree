@@ -797,7 +797,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 {
                     GATE: () => {
                         const tok = $.LA(1);
-                        return tok.tokenType === Macro && tok.payload?.name === 'include';
+                        return tok.tokenType === Macro && tok.payload?.name === 'include' && tok.payload?.splittedParams?.[0];
                     },
                     ALT: () => $.SUBRULE($.include)
                 },
@@ -1515,11 +1515,13 @@ class NamumarkParser extends EmbeddedActionsParser {
             $.ACTION(() => {
                 if(name === 'include') {
                     const docName = splittedParams[0];
-                    Store.includes.push(docName);
-                    data.topParagraph = false;
-                    data.includeData = parseIncludeParams(splittedParams);
-                    const arr = Store.includeParams[docName] ??= [];
-                    arr.push(data.includeData);
+                    if(docName) {
+                        Store.includes.push(docName);
+                        data.topParagraph = false;
+                        data.includeData = parseIncludeParams(splittedParams);
+                        const arr = Store.includeParams[docName] ??= [];
+                        arr.push(data.includeData);
+                    }
                 }
                 // else if(name === 'footnote' || name === '각주') {
                 //     data.footnoteValues = [...Store.footnote.values];
@@ -1546,10 +1548,12 @@ class NamumarkParser extends EmbeddedActionsParser {
             let includeData;
             $.ACTION(() => {
                 const docName = tok.payload.splittedParams[0];
-                Store.includes.push(docName);
-                includeData = parseIncludeParams(tok.payload.splittedParams);
-                const arr = Store.includeParams[docName] ??= [];
-                arr.push(includeData);
+                if (docName) {
+                    Store.includes.push(docName);
+                    includeData = parseIncludeParams(tok.payload.splittedParams);
+                    const arr = Store.includeParams[docName] ??= [];
+                    arr.push(includeData);
+                }
             });
 
             return {
