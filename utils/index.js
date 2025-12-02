@@ -374,6 +374,8 @@ module.exports = {
         return s.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     },
     async getACLGroupPermissions(user) {
+        if(!user) return [];
+
         const permGroups = await models.ACLGroup.find({
             permissions: { $exists: true, $not: { $size: 0 } }
         });
