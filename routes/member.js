@@ -2275,4 +2275,15 @@ app.post('/member/signup_verify_code',
     res.redirect('/member/mypage');
 });
 
+app.post('/member/ipskin', middleware.isLogout, (req, res) => {
+    const allSkins = Object.keys(global.skinInfos).filter(a => a !== 'plain');
+    const skin = req.body.skin;
+    if(allSkins.includes(skin))
+        req.session.ipSkin = skin;
+    else
+        delete req.session.ipSkin;
+
+    res.reload();
+});
+
 module.exports.router = app;

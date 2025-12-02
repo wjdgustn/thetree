@@ -795,7 +795,9 @@ app.use(async (req, res, next) => {
             }
         }
 
-        let skin = req.user?.skin;
+        let skin = req.user?.type === UserTypes.Account
+            ? req.user?.skin
+            : req.session.skin;
         if(!skin || skin === 'default') skin = config.default_skin;
         if(!global.skinInfos[skin]) skin = Object.keys(global.skinInfos)[0];
         const skinInfo = global.skinInfos[skin];
@@ -917,7 +919,8 @@ app.use(async (req, res, next) => {
                         type: config.captcha.type,
                         site_key: config.captcha.site_key
                     }
-                } : {})
+                } : {}),
+                skins: Object.keys(global.skinInfos).filter(a => a !== 'plain')
             }
 
             const configMapper = {
