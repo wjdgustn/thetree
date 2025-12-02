@@ -294,7 +294,7 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
             name: title
         });
         const permissions = await utils.getACLGroupPermissions(user);
-        userPermissions = [...(user.permissions ?? []), ...permissions];
+        userPermissions = [...(user?.permissions ?? []), ...permissions];
         if(user
             && (user.type !== UserTypes.Deleted || req.permissions.includes('admin'))) {
             defaultData.user = {
