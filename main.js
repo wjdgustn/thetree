@@ -561,13 +561,13 @@ app.use((req, res, next) => {
     const cdnUrl = '*.' + new URL(config.base_url).hostname.split('.').slice(-2).join('.');
     const directives = {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com', '*.googletagmanager.com'],
+        scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "'unsafe-eval'", 'www.google.com', 'challenges.cloudflare.com', '*.googletagmanager.com', 'hcaptcha.com', '*.hcaptcha.com'],
         imgSrc: ["'self'", 'data:', 'secure.gravatar.com', '*.googletagmanager.com', '*.google-analytics.com', 'i.ytimg.com', cdnUrl, ...(debug ? ['*'] : [])],
         mediaSrc: ["'self'", cdnUrl, ...(debug ? ['*'] : [])],
-        styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'hcaptcha.com', '*.hcaptcha.com'],
         fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
-        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com', 'embed.nicovideo.jp'],
-        connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com'],
+        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com', 'embed.nicovideo.jp', 'hcaptcha.com', '*.hcaptcha.com'],
+        connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com', 'hcaptcha.com', '*.hcaptcha.com'],
         ...(debug ? {
             upgradeInsecureRequests: null
         } : {})
