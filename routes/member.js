@@ -2279,9 +2279,9 @@ app.post('/member/ipskin', middleware.isLogout, (req, res) => {
     const allSkins = Object.keys(global.skinInfos).filter(a => a !== 'plain');
     const skin = req.body.skin;
     if(allSkins.includes(skin))
-        req.session.ipSkin = skin;
+        req.session.skin = skin;
     else
-        delete req.session.ipSkin;
+        delete req.session.skin;
 
     res.reload();
 });
