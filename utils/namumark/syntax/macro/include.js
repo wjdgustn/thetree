@@ -3,7 +3,7 @@ const parser = require('../../parser');
 const ivm = require('isolated-vm');
 
 module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj) => {
-    if(includeData) return '';
+    if(includeData || !obj.splittedParams.length) return '';
 
     const docName = mainUtils.parseDocumentName(obj.splittedParams[0]);
     const doc = revDocCache.find(a => a.namespace === docName.namespace && a.title === docName.title);

@@ -797,7 +797,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 {
                     GATE: () => {
                         const tok = $.LA(1);
-                        return tok.tokenType === Macro && tok.payload?.name === 'include';
+                        return tok.tokenType === Macro
+                            && tok.payload?.name === 'include'
+                            && !!tok.payload?.splittedParams.length;
                     },
                     ALT: () => $.SUBRULE($.include)
                 },
@@ -1513,7 +1515,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             const data = {};
             $.ACTION(() => {
-                if(name === 'include') {
+                if(name === 'include' && splittedParams.length) {
                     const docName = splittedParams[0];
                     Store.includes.push(docName);
                     data.topParagraph = false;
