@@ -566,7 +566,7 @@ app.use((req, res, next) => {
         mediaSrc: ["'self'", cdnUrl, ...(debug ? ['*'] : [])],
         styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'hcaptcha.com', '*.hcaptcha.com'],
         fontSrc: ["'self'", 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net'],
-        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com', 'embed.nicovideo.jp', 'hcaptcha.com', '*.hcaptcha.com'],
+        frameSrc: ["'self'", 'www.youtube.com', 'www.google.com', 'challenges.cloudflare.com', 'embed.nicovideo.jp', 'hcaptcha.com', '*.hcaptcha.com', 'tv.naver.com'],
         connectSrc: ["'self'", '*.googletagmanager.com', '*.google-analytics.com', '*.analytics.google.com', 'hcaptcha.com', '*.hcaptcha.com'],
         ...(debug ? {
             upgradeInsecureRequests: null
