@@ -15,7 +15,7 @@ module.exports = async (obj, toHtml) => {
     let tableDarkStyle = ';';
 
     let prevColspan = 1;
-    const aliveRowSpans = [];
+    const aliveRowSpans = {};
 
     const htmlRows = [];
     for(let colIndex in rows) {
@@ -29,9 +29,8 @@ module.exports = async (obj, toHtml) => {
         let trStyle = ';';
         let trDarkStyle = ';';
 
-        for(let i = 0; i < aliveRowSpans.length; i++) {
-            const val = aliveRowSpans[i];
-            if(val > 0) aliveRowSpans[i]--;
+        for(let [key, value] of Object.entries(aliveRowSpans)) {
+            if(value > 0) aliveRowSpans[key]--;
         }
 
         let visualRowIndex = -1;
@@ -148,7 +147,7 @@ module.exports = async (obj, toHtml) => {
                     const num = parseInt(tagStr.slice(1));
                     if(isNaN(num) || num < 0) break;
 
-                    colspan = num;
+                    colspan = Math.min(num, 1000);
                     colspanAssigned = true;
                 }
                 else if(tagStr.startsWith('|') || tagStr.slice(1).startsWith('|')) {
