@@ -42,9 +42,23 @@ app.get('/RecentChanges', async (req, res) => {
         revert: HistoryTypes.Revert
     }[req.query.logtype];
 
+    const logTypeText = logType != null ? req.query.logtype : 'all';
+
+    const blacklistedNamespaces = [];
+    if(!req.permissions.includes('config'))
+        blacklistedNamespaces.push(...(config.hidden_namespaces ?? []));
+
+    if(logTypeText === 'all' && (!req.permissions.includes('admin') || req.query.userDoc !== '1'))
+        blacklistedNamespaces.push('사용자', '삭제된사용자');
+
     let revs = await History.find({
         ...(logType != null ? { type: logType } : {}),
-        api: false
+        api: false,
+        ...(blacklistedNamespaces.length ? {
+            namespace: {
+                $nin: blacklistedNamespaces
+            }
+        } : {})
     })
         .sort({ _id: -1 })
         .limit(100)
@@ -53,10 +67,6 @@ app.get('/RecentChanges', async (req, res) => {
 
     revs = await utils.findUsers(req, revs);
     revs = await utils.findDocuments(revs);
-
-    const logTypeText = logType != null ? req.query.logtype : 'all';
-    if(logTypeText === 'all'
-        && (!req.permissions.includes('admin') || req.query.userDoc !== '1')) revs = revs.filter(a => !['사용자', '삭제된사용자'].includes(a.document.parsedName.namespace));
 
     for(let rev of revs) {
         if(rev.troll || (rev.hideLog && !req.permissions.includes('hide_document_history_log')))

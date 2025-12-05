@@ -1047,13 +1047,26 @@ app.get('/contribution/:uuid/document',
         move: HistoryTypes.Move,
         revert: HistoryTypes.Revert
     }[req.query.logtype];
-    const baseQuery = {
+
+    const blacklistedNamespaces = [];
+    if(!req.permissions.includes('config'))
+        blacklistedNamespaces.push(...(config.hidden_namespaces ?? []));
+
+    const countQuery = {
         ...(logType != null ? { type: logType } : {}),
         user: req.params.uuid
     }
+    const baseQuery = {
+        ...countQuery,
+        ...(blacklistedNamespaces.length ? {
+            namespace: {
+                $nin: blacklistedNamespaces
+            }
+        } : {})
+    }
     const query = { ...baseQuery };
 
-    const total = await History.countDocuments(query);
+    const total = await History.countDocuments(countQuery);
     // if(!total) return res.error('계정을 찾을 수 없습니다.', 404);
 
     const pageQuery = req.query.until || req.query.from;
