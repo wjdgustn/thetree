@@ -220,7 +220,9 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
         });
     }
 
-    if(isOldVer && (rev.hidden || rev.troll)) {
+    const isHidden = rev.hidden && !req.permissions.includes('hide_revision');
+    const isTroll = rev.troll && !req.permissions.includes('mark_troll_revision');
+    if(isOldVer && (isHidden || isTroll)) {
         const msg = rev.hidden ? '숨겨진 리비전입니다.' : '이 리비전은 반달로 표시 되었습니다.';
         return res.renderSkin(undefined, {
             ...defaultData,
@@ -1554,7 +1556,7 @@ const documentRaw = async (req, res) => {
 
     if(req.query.uuid && !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
-    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
+    if(rev.hidden && !req.permissions.includes('hide_revision')) return res.error('숨겨진 리비전입니다.', 403);
 
     let content = rev?.content ?? '';
     if(req.isAPI && req.query.section) {
@@ -1745,7 +1747,8 @@ app.get('/diff{/*document}', middleware.parseDocumentName, async (req, res) => {
 
     if(!oldRev || oldRev.rev >= rev.rev) return noRev();
 
-    if(rev.hidden || oldRev.hidden) return res.error('숨겨진 리비전입니다.', 403);
+    if((rev.hidden || oldRev.hidden) && !req.permissions.includes('hide_revision'))
+        return res.error('숨겨진 리비전입니다.', 403);
 
     let diff;
     try {
@@ -1793,7 +1796,7 @@ app.get('/blame{/*document}', middleware.parseDocumentName, async (req, res) => 
 
     if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
 
-    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
+    if(rev.hidden && !req.permissions.includes('hide_revision')) return res.error('숨겨진 리비전입니다.', 403);
 
     if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
 
