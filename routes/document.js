@@ -220,8 +220,8 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
         });
     }
 
-    const isHidden = rev.hidden && !req.permissions.includes('hide_revision');
-    const isTroll = rev.troll && !req.permissions.includes('mark_troll_revision');
+    const isHidden = rev?.hidden && !req.permissions.includes('hide_revision');
+    const isTroll = rev?.troll && !req.permissions.includes('mark_troll_revision');
     if(isOldVer && (isHidden || isTroll)) {
         const msg = rev.hidden ? '숨겨진 리비전입니다.' : '이 리비전은 반달로 표시 되었습니다.';
         return res.renderSkin(undefined, {
