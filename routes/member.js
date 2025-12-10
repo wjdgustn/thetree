@@ -750,6 +750,13 @@ app.get('/member/login/oauth2/:provider', async (req, res) => {
     url.searchParams.set('redirect_uri', new URL(`/member/login/oauth2/${req.params.provider}/callback`, config.base_url).toString());
     url.searchParams.set('scope', typeof provider.scopes === 'string' ? provider.scopes : provider.scopes.join(' '));
     url.searchParams.set('state', req.session.oauth2State);
+
+    if(provider.code_challenge_method === 'S256') {
+        req.session.oauth2CodeChallenge = crypto.randomBytes(64).toString('base64url');
+        url.searchParams.set('code_challenge', crypto.createHash('sha256').update(req.session.oauth2CodeChallenge).digest('base64url'));
+        url.searchParams.set('code_challenge_method', 'S256');
+    }
+
     for(const [key, value] of Object.entries(provider.authorization_query || {})) {
         url.searchParams.set(key, value);
     }
@@ -773,12 +780,20 @@ app.get('/member/login/oauth2/:provider/callback',
     let tokenData;
     try {
         const { data } = await axios.post(provider.token_endpoint, new URLSearchParams({
-            client_id: provider.client_id,
-            client_secret: provider.client_secret,
+            // client_id: provider.client_id,
+            // client_secret: provider.client_secret,
             grant_type: 'authorization_code',
             code: req.query.code,
-            redirect_uri: `${new URL(req.path, config.base_url).toString()}`
-        }));
+            redirect_uri: `${new URL(req.path, config.base_url).toString()}`,
+            ...(provider.code_challenge_method === 'S256' ? {
+                code_verifier: req.session.oauth2CodeChallenge
+            } : {})
+        }), {
+            auth: {
+                username: provider.client_id,
+                password: provider.client_secret
+            }
+        });
         tokenData = data;
     } catch(e) {
         if(debug) console.error(e);

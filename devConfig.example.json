@@ -40,6 +40,7 @@
 //      "disable_email_whitelist": false,
 //      "client_id": "",
 //      "client_secret": "",
+//      "code_challenge_method": "",
 //      "authorization_endpoint": "",
 //      "token_endpoint": "",
 //      "userinfo_endpoint": "",
