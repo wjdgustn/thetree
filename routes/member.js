@@ -800,6 +800,9 @@ app.get('/member/login/oauth2/:provider/callback',
         return res.error('code가 유효하지 않습니다.');
     }
 
+    if(!tokenData.scope || !tokenData.access_token)
+        return res.error('토큰 데이터가 유효하지 않습니다. 관리자에게 문의하세요.');
+
     const scopes = tokenData.scope.split(' ');
     const missingScope = provider.scopes.find(a => !scopes.includes(a));
     if(missingScope)
