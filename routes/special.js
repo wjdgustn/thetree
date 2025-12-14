@@ -49,7 +49,7 @@ app.get('/RecentChanges', async (req, res) => {
     if(!req.permissions.includes('config'))
         blacklistedNamespaces.push(...(config.hidden_namespaces ?? []));
 
-    if(logTypeText === 'all' && (!req.permissions.includes('admin') || showAll))
+    if(logTypeText === 'all' && (!req.permissions.includes('admin') || !showAll))
         blacklistedNamespaces.push('사용자', '삭제된사용자');
 
     let revs = await History.find({
