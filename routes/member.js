@@ -920,6 +920,12 @@ app.delete('/member/login/oauth2/:provider', middleware.isLogin, async (req, res
     const provider = config.oauth2_providers?.[req.params.provider];
     if(!provider) return res.status(404).send('provider config를 찾을 수 없습니다.');
 
+    const mapCount = await OAuth2Map.countDocuments({
+        user: req.user.uuid
+    });
+    if(mapCount <= 1 && !req.user.password)
+        return res.status(400).send('외부 계정을 모두 연결 해제하려면 비밀번호를 설정해야 합니다.');
+
     const deleted = await OAuth2Map.findOneAndDelete({
         user: req.user.uuid,
         provider: req.params.provider
