@@ -43,17 +43,20 @@ app.get('/RecentChanges', async (req, res) => {
     }[req.query.logtype];
 
     const logTypeText = logType != null ? req.query.logtype : 'all';
+    const showAll = req.query.showAll === '1';
 
     const blacklistedNamespaces = [];
     if(!req.permissions.includes('config'))
         blacklistedNamespaces.push(...(config.hidden_namespaces ?? []));
 
-    if(logTypeText === 'all' && (!req.permissions.includes('admin') || req.query.userDoc !== '1'))
+    if(logTypeText === 'all' && (!req.permissions.includes('admin') || showAll))
         blacklistedNamespaces.push('사용자', '삭제된사용자');
 
     let revs = await History.find({
         ...(logType != null ? { type: logType } : {}),
-        api: false,
+        ...(showAll ? {} : {
+            api: false,
+        }),
         ...(blacklistedNamespaces.length ? {
             namespace: {
                 $nin: blacklistedNamespaces
