@@ -69,6 +69,7 @@ const filter = new CSSFilter.FilterCSS({
             'table',
             'table-caption',
             'table-cell',
+            'table-row',
             'table-column',
             'table-column-group',
             'table-footer-group',
