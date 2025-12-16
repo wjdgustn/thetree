@@ -57,6 +57,20 @@ const sanitizeHtmlOptions = {
 const filter = new CSSFilter.FilterCSS({
     whiteList: {
         ...Object.assign({}, ...allowedNames.map(a => ({[a]: true}))),
+        'align-items': v => [
+            'normal',
+            'stretch',
+            'center',
+            'start',
+            'end',
+            'flex-start',
+            'flex-end',
+            'self-start',
+            'self-end',
+            'baseline',
+            'first baseline',
+            'last baseline'
+        ].includes(v),
         display: v => [
             'block',
             'flex',
