@@ -4,8 +4,8 @@ services:
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
-    labels:
-      com.centurylinklabs.watchtower.enable: true
+#    labels:
+#      com.centurylinklabs.watchtower.enable: true
     ports:
       # 앞 3000을 원하는 포트로 수정
       - '3000:3000'
