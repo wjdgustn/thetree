@@ -30,6 +30,9 @@ const newSchema = new Schema({
     },
     error: {
         type: String
+    },
+    userAgent: {
+        type: String
     }
 });
 
