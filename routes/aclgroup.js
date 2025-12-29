@@ -335,49 +335,72 @@ const postACLGroupValidate = [
 ];
 module.exports.postACLGroupValidate = postACLGroupValidate;
 
-const postACLGroup = async (req, res) => {
-    const group = req.modifiedBody.group;
+const addACLGroupItem = async ({ createdUser, createdUserUuid, group, groupName, ip, uuid, user, duration, note, hideLog = false }) => {
+    if(groupName) group ??= await ACLGroup.findOne({ name });
+    if(createdUserUuid) createdUser ??= await User.findOne({ uuid: createdUserUuid });
+    if(uuid) user ??= await User.findOne({ uuid });
 
-    if(!groupPermChecker(req, group, 'addPerms')) return res.status(403).send('권한이 부족합니다.');
+    if(!group || !createdUser || (!ip && !user) || !note) throw new Error('Invalid parameters');
 
     const newItem = {
         aclGroup: group.uuid,
-        note: req.body.note
+        note
     }
 
-    const mode = req.body.mode;
-    if(mode === 'ip') newItem.ip = req.body.ip;
-    else newItem.user = req.modifiedBody.user.uuid;
+    if(ip) newItem.ip = ip;
+    else newItem.user = user.uuid;
 
-    const duration = req.modifiedBody.duration;
-    if(duration > 0) newItem.expiresAt = new Date(Date.now() + duration * 1000);
+    if(duration > 0) newItem.expiresAt = new Date(Date.now() + duration);
 
     let aclGroupItem;
     try {
         aclGroupItem = await ACLGroupItem.create(newItem);
     } catch (e) {
-        if(e.code === 11000) return res.status(409).send('이미 해당 요소가 존재합니다.');
+        if(e.code === 11000) return null;
         throw e;
     }
 
     await BlockHistory.create({
         type: BlockHistoryTypes.ACLGroupAdd,
-        createdUser: req.user.uuid,
-        ...(mode === 'ip' ? {
-            targetContent: req.body.ip
+        createdUser: createdUser.uuid,
+        ...(ip ? {
+            targetContent: ip
         } : {
-            targetUser: req.modifiedBody.user.uuid,
-            targetUsername: req.modifiedBody.user.name
+            targetUser: user.uuid,
+            targetUsername: user.name
         }),
         aclGroup: group.uuid,
         aclGroupName: group.name,
         aclGroupId: aclGroupItem.id,
         ...(duration > 0 ? {
-            duration: duration * 1000
+            duration
         } : {}),
-        content: req.body.note,
+        content: note,
+        hideLog
+    });
+
+    return aclGroupItem;
+}
+module.exports.addACLGroupItem = addACLGroupItem;
+
+const postACLGroup = async (req, res) => {
+    const group = req.modifiedBody.group;
+
+    if(!groupPermChecker(req, group, 'addPerms')) return res.status(403).send('권한이 부족합니다.');
+
+    const aclGroupItem = await addACLGroupItem({
+        createdUser: req.user,
+        group,
+        ...(req.body.mode === 'ip' ? {
+            ip: req.body.ip
+        } : {
+            user: req.modifiedBody.user
+        }),
+        duration: req.modifiedBody.duration * 1000,
+        note: req.body.note,
         hideLog: req.body.hidelog === 'Y'
     });
+    if(!aclGroupItem) return res.status(409).send('이미 해당 요소가 존재합니다.');
 
     if(req.isAPI) res.sendData({ id: aclGroupItem.id });
     else if(req.referer?.pathname.startsWith('/aclgroup')) {
@@ -435,26 +458,30 @@ const removeACLGroupValidate = [
 ];
 module.exports.removeACLGroupValidate = removeACLGroupValidate;
 
-const removeACLGroup = async (req, res) => {
-    const group = req.modifiedBody.group;
+const removeACLGroupItem = async ({ createdUser, createdUserUuid, group, id, uuid, note, hideLog = false }) => {
+    if(createdUserUuid) createdUser ??= await User.findOne({ uuid: createdUserUuid });
 
-    if(!groupPermChecker(req, group, 'removePerms')) return res.status(403).send('권한이 부족합니다.');
+    if(!createdUser || (!id && !uuid) || !note) throw new Error('Invalid parameters');
 
-    const deleted = await ACLGroupItem.findOneAndDelete(req.isAPI ? {
-        id: req.body.id
+    const deleted = await ACLGroupItem.findOneAndDelete(id ? {
+        id
     } : {
-        uuid: req.body.uuid
+        uuid
     });
-    if(!deleted) return res.status(404).send('ACL 요소가 존재하지 않습니다.');
+    if(!deleted) return null;
 
     let targetUser;
     if(deleted.user) targetUser = await User.findOne({
         uuid: deleted.user
     });
 
+    group ??= await ACLGroup.findOne({
+        uuid: deleted.aclGroup
+    });
+
     await BlockHistory.create({
         type: BlockHistoryTypes.ACLGroupRemove,
-        createdUser: req.user.uuid,
+        createdUser: createdUser.uuid,
         ...(deleted.user == null ? {
             targetContent: deleted.ip
         } : {
@@ -464,9 +491,30 @@ const removeACLGroup = async (req, res) => {
         aclGroup: deleted.aclGroup,
         aclGroupName: group.name,
         aclGroupId: deleted.id,
-        content: req.body.note,
+        content: note,
+        hideLog
+    });
+
+    return deleted;
+}
+
+const removeACLGroup = async (req, res) => {
+    const group = req.modifiedBody.group;
+
+    if(!groupPermChecker(req, group, 'removePerms')) return res.status(403).send('권한이 부족합니다.');
+
+    const deleted = await removeACLGroupItem({
+        createdUser: req.user,
+        group,
+        ...(req.isAPI ? {
+            id: req.body.id
+        } : {
+            uuid: req.body.uuid
+        }),
+        note: req.body.note,
         hideLog: req.body.hidelog === 'Y'
     });
+    if(!deleted) return res.status(404).send('ACL 요소가 존재하지 않습니다.');
 
     res.reload();
 }
