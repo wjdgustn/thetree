@@ -1077,53 +1077,33 @@ app.get('/admin/batch_revert', middleware.permission('batch_revert'), (req, res)
     });
 });
 
-app.post('/admin/batch_revert',
-    middleware.permission('batch_revert'),
-    (req, res, next) => {
-        req.modifiedBody = {};
-        next();
-    },
-    body('uuid')
-        .notEmpty().withMessage('uuid의 값은 필수입니다.')
-        .isUUID().withMessage('uuid의 값을 형식에 맞게 입력해주세요.')
-        .custom(async (value, { req }) => {
-            const user = await User.findOne({
-                uuid: value
-            });
-            if(!user || !value) throw new Error('계정을 찾을 수 없습니다.');
-
-            req.modifiedBody.user = user;
-        }),
-    body('duration')
-        .notEmpty().withMessage('기간은 필수입니다.')
-        .isLength({
-            max: 100
-        })
-        .custom(async (value, { req }) => {
-            req.modifiedBody.duration = ms(value);
-            if(!req.modifiedBody.duration) throw new Error('기간 형식이 잘못되었습니다.');
-            if(req.modifiedBody.duration > 1000 * 60 * 60 * 24) throw new Error('최대 기간은 24시간입니다.');
-        }),
-    body('reason')
-        .notEmpty().withMessage('reason의 값은 필수입니다.'),
-    body('hidelog')
-        .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('batch_revert_hidelog')) throw new Error('권한이 부족합니다.');
-            return true;
-        }),
-    middleware.fieldErrors,
-    async (req, res) => {
+const batchRevert = async (
+    {
+        createdUser,
+        createdUserUuid,
+        aclData,
+        user,
+        uuid,
+        duration,
+        reason,
+        closeEditRequests = false,
+        hideThreadComments = false,
+        revertContributions = false,
+        revertEditRequests = false,
+        hideLog = false
+    }
+) => {
     const date = new Date();
-    const { user, duration } = req.modifiedBody;
-    const reason = req.body.reason;
 
-    const closeEditRequests = req.body.closeEditRequests === 'Y';
-    const hideThreadComments = req.body.hideThreadComments === 'Y';
-    const revertContributions = req.body.revertContributions === 'Y';
-    const revertEditRequests = req.body.revertEditRequests === 'Y';
+    if(createdUserUuid) createdUser ??= await User.findOne({ uuid: createdUserUuid });
+    if(uuid) user ??= await User.findOne({ uuid });
+
+    if(!createdUser || !user) throw new Error('Invalid parameters');
 
     if(!closeEditRequests && !hideThreadComments && !revertContributions && !revertEditRequests)
-        return res.status(400).send('아무 작업도 선택하지 않았습니다.');
+        return null;
+
+    aclData ??= await utils.getACLData(createdUser);
 
     const resultText = [];
     const failResultText = [];
@@ -1138,7 +1118,7 @@ app.post('/admin/batch_revert',
                 $ne: EditRequestStatusTypes.Locked
             }
         }, {
-            lastUpdateUser: req.user.uuid,
+            lastUpdateUser: createdUser.uuid,
             status: EditRequestStatusTypes.Locked,
             closedReason: reason,
             lastUpdatedAt: date
@@ -1165,7 +1145,7 @@ app.post('/admin/batch_revert',
             hidden: false,
             type: ThreadCommentTypes.Default
         }, {
-            hiddenBy: req.user.uuid,
+            hiddenBy: createdUser.uuid,
             hidden: true
         });
         resultText.push(`숨긴 토론 댓글 수 : ${result.modifiedCount}`);
@@ -1189,8 +1169,8 @@ app.post('/admin/batch_revert',
             });
             await Promise.all(targetThreads.map(a => ThreadComment.create({
                 thread: a.uuid,
-                user: req.user.uuid,
-                admin: req.permissions.includes('admin'),
+                user: createdUser.uuid,
+                admin: aclData.permissions.includes('admin'),
                 type: ThreadCommentTypes.UpdateStatus,
                 content: ThreadStatusTypes.Close
             })));
@@ -1218,7 +1198,7 @@ app.post('/admin/batch_revert',
         const revs = await History.find(query).sort({ createdAt: 1 }).lean();
         const trollResult = await History.updateMany(query, {
             troll: true,
-            trollBy: req.user.uuid
+            trollBy: createdUser.uuid
         });
         resultText.push(`반달로 표시된 리비전 수 : ${trollResult.modifiedCount}`);
 
@@ -1262,14 +1242,14 @@ app.post('/admin/batch_revert',
                     return resolve();
                 }
 
-                const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
+                const { result, aclMessage } = await acl.check(ACLTypes.Edit, aclData);
                 if(!result) {
                     failResultText.push(`${fullTitleLink}: ${aclMessage}`);
                     return resolve();
                 }
 
                 await History.create({
-                    user: req.user.uuid,
+                    user: createdUser.uuid,
                     type: HistoryTypes.Revert,
                     document: docUuid,
                     revertRev: lastNormalRev.rev,
@@ -1293,14 +1273,14 @@ app.post('/admin/batch_revert',
                     return resolve();
                 }
 
-                const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
+                const { result, aclMessage } = await acl.check(ACLTypes.Delete, aclData);
                 if(!result) {
                     failResultText.push(`${fullTitleLink}: ${aclMessage}`);
                     return resolve();
                 }
 
                 await History.create({
-                    user: req.user.uuid,
+                    user: createdUser.uuid,
                     type: HistoryTypes.Delete,
                     document: docUuid,
                     content: null,
@@ -1329,21 +1309,74 @@ app.post('/admin/batch_revert',
 
     await BlockHistory.create({
         type: BlockHistoryTypes.BatchRevert,
-        createdUser: req.user.uuid,
+        createdUser: createdUser.uuid,
         targetUser: user.uuid,
         targetUsername: user.name || user.ip,
         content: reason,
-        hideLog: req.body.hidelog === 'Y'
+        hideLog
     });
 
     resultText.unshift(`작업 시간 : ${Date.now() - date}ms`);
 
-    const resultData = {
+    return {
         resultText,
         failResultText
     }
+}
+
+app.post('/admin/batch_revert',
+    middleware.permission('batch_revert'),
+    (req, res, next) => {
+        req.modifiedBody = {};
+        next();
+    },
+    body('uuid')
+        .notEmpty().withMessage('uuid의 값은 필수입니다.')
+        .isUUID().withMessage('uuid의 값을 형식에 맞게 입력해주세요.')
+        .custom(async (value, { req }) => {
+            const user = await User.findOne({
+                uuid: value
+            });
+            if(!user || !value) throw new Error('계정을 찾을 수 없습니다.');
+
+            req.modifiedBody.user = user;
+        }),
+    body('duration')
+        .notEmpty().withMessage('기간은 필수입니다.')
+        .isLength({
+            max: 100
+        })
+        .custom(async (value, { req }) => {
+            req.modifiedBody.duration = ms(value);
+            if(!req.modifiedBody.duration) throw new Error('기간 형식이 잘못되었습니다.');
+            if(req.modifiedBody.duration > 1000 * 60 * 60 * 24) throw new Error('최대 기간은 24시간입니다.');
+        }),
+    body('reason')
+        .notEmpty().withMessage('reason의 값은 필수입니다.'),
+    body('hidelog')
+        .custom((value, { req }) => {
+            if(value === 'Y' && !req.permissions.includes('batch_revert_hidelog')) throw new Error('권한이 부족합니다.');
+            return true;
+        }),
+    middleware.fieldErrors,
+    async (req, res) => {
+    const result = await batchRevert({
+        createdUser: req.user,
+        aclData: req.aclData,
+        user: req.modifiedBody.user,
+        duration: req.modifiedBody.duration,
+        reason: req.body.reason,
+        closeEditRequests: req.body.closeEditRequests === 'Y',
+        hideThreadComments: req.body.hideThreadComments === 'Y',
+        revertContributions: req.body.revertContributions === 'Y',
+        revertEditRequests: req.body.revertEditRequests === 'Y',
+        hideLog: req.body.hidelog === 'Y'
+    });
+    if(!result)
+        return res.status(400).send('아무 작업도 선택하지 않았습니다.');
+
     res.partial({
-        result: resultData
+        result
     });
 });
 
