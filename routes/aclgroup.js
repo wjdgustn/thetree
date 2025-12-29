@@ -336,7 +336,7 @@ const postACLGroupValidate = [
 module.exports.postACLGroupValidate = postACLGroupValidate;
 
 const addACLGroupItem = async ({ createdUser, createdUserUuid, group, groupName, ip, uuid, user, duration, note, hideLog = false }) => {
-    if(groupName) group ??= await ACLGroup.findOne({ name });
+    if(groupName) group ??= await ACLGroup.findOne({ name: groupName });
     if(createdUserUuid) createdUser ??= await User.findOne({ uuid: createdUserUuid });
     if(uuid) user ??= await User.findOne({ uuid });
 
