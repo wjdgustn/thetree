@@ -174,6 +174,12 @@ module.exports = {
             if(startPos === -1) break;
             const endPos = text.indexOf('@', startPos + 1);
             if(endPos === -1) break;
+            const newlinePos = text.indexOf('\n', startPos + 1);
+            if(newlinePos !== -1 && newlinePos < endPos) {
+                newText += text.slice(textPos, newlinePos + 1);
+                textPos = newlinePos + 1;
+                continue;
+            }
 
             newText += text.slice(textPos, startPos);
             textPos = endPos + 1;
