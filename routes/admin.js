@@ -1323,6 +1323,7 @@ const batchRevert = async (
         failResultText
     }
 }
+module.exports.batchRevert = batchRevert;
 
 app.post('/admin/batch_revert',
     middleware.permission('batch_revert'),
