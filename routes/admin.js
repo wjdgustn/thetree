@@ -1863,4 +1863,4 @@ app.post('/admin/manage_account/action',
     res.status(204).end();
 });
 
-module.exports = app;
+module.exports.router = app;
