@@ -1084,7 +1084,7 @@ const batchRevert = async (
         aclData,
         user,
         uuid,
-        duration,
+        duration = 1000 * 60 * 60 * 24,
         reason,
         closeEditRequests = false,
         hideThreadComments = false,
