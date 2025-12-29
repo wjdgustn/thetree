@@ -1110,6 +1110,8 @@ app.use(async (req, res, next) => {
 
             res.originalSend = res.send;
             res.json = data => {
+                res.jsonProcessing = true;
+
                 (async () => {
                     const basicData = getFEBasicData();
                     if(!basicData) return;
@@ -1223,7 +1225,7 @@ app.use(async (req, res, next) => {
                 } catch (e) {
                     console.error('error from preHook plugin action:', e);
                 }
-                if(res.headersSent) return;
+                if(res.headersSent || res.jsonProcessing) return;
             }
         }
 
