@@ -1172,7 +1172,8 @@ const batchRevert = async (
                 user: createdUser.uuid,
                 admin: aclData.permissions.includes('admin'),
                 type: ThreadCommentTypes.UpdateStatus,
-                content: ThreadStatusTypes.Close
+                content: ThreadStatusTypes.Close,
+                createdAt: date
             })));
 
             resultText.push(`닫은 스레드 수 : ${closeResult.modifiedCount}`);
@@ -1259,7 +1260,8 @@ const batchRevert = async (
                     fileSize: lastNormalRev.fileSize,
                     fileWidth: lastNormalRev.fileWidth,
                     fileHeight: lastNormalRev.fileHeight,
-                    log: reason
+                    log: reason,
+                    createdAt: date
                 });
             }
             else {
@@ -1284,7 +1286,8 @@ const batchRevert = async (
                     type: HistoryTypes.Delete,
                     document: docUuid,
                     content: null,
-                    log: reason
+                    log: reason,
+                    createdAt: date
                 });
             }
 
@@ -1313,7 +1316,8 @@ const batchRevert = async (
         targetUser: user.uuid,
         targetUsername: user.name || user.ip,
         content: reason,
-        hideLog
+        hideLog,
+        createdAt: date
     });
 
     resultText.unshift(`작업 시간 : ${Date.now() - date}ms`);
