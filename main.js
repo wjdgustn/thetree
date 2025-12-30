@@ -738,8 +738,10 @@ app.use(async (req, res, next) => {
 
         req.session.sessionId ??= crypto.randomUUID();
 
-        if(req.session.ipUser?.ip !== req.ip)
+        if(req.session.ipUser?.ip !== req.ip) {
             req.session.ipUser = null;
+            delete req.session.contributor;
+        }
         if(!req.session.ipUser && req.user?.type !== UserTypes.Account) {
             req.session.ipUser = await User.findOne({
                 ip: req.ip
