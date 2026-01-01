@@ -280,7 +280,7 @@ module.exports = {
                     macros[alias] = macro.format;
 
             if(macro.allowThread)
-                threadMacros.push(plugin.name, ...(macro.aliases ?? []));
+                threadMacros.push(macro.name, ...(macro.aliases ?? []));
         }
 
         if(global.__THETREE__)
