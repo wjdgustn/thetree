@@ -11,6 +11,7 @@ const {
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const User = require('../schemas/user');
+const EditRequest = require('../schemas/editRequest');
 
 module.exports = [
     {
@@ -191,6 +192,12 @@ module.exports = [
                     console.error(e);
                 }
             }
+        }
+    },
+    {
+        timestamp: 1767604258539,
+        code: async () => {
+            await EditRequest.syncIndexes();
         }
     }
 ]
