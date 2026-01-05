@@ -71,12 +71,12 @@ const newSchema = new Schema({
     }
 });
 
-newSchema.index({ document: 1, createdUser: 1 }, {
-    unique: true,
-    partialFilterExpression: {
-        status: EditRequestStatusTypes.Open
-    }
-});
+// newSchema.index({ document: 1, createdUser: 1 }, {
+//     unique: true,
+//     partialFilterExpression: {
+//         status: EditRequestStatusTypes.Open
+//     }
+// });
 
 newSchema.pre('updateOne', async function() {
     this._update.lastUpdatedAt = new Date();
