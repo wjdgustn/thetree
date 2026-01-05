@@ -635,6 +635,8 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     if(target === 'thread') newACL.thread = dbThread.uuid;
     else if(target === 'document') {
         if(!dbDocument) {
+            if(namespace === '사용자' || namespace === '삭제된사용자')
+                return res.status(400).send('문서가 존재하지 않습니다.');
             dbDocument = new Document({
                 namespace,
                 title
@@ -1241,7 +1243,7 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
-    if((namespace === '사용자' || namespace === '삭제된사용자') && isCreate && !title.includes('/')) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+    if(((namespace === '사용자' && !title.includes('/')) || namespace === '삭제된사용자') && isCreate) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
 
     if(isEditRequest) {
         const editRequest = await EditRequest.findOneAndUpdate({
