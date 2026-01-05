@@ -354,7 +354,7 @@ app.post('/member/signup/:token',
 
     const userExists = await User.exists({ type: UserTypes.Account });
     if(!userExists) {
-        newUserJson.permissions = ['developer'];
+        newUserJson.permissions.push('developer');
         await global.resetSearchIndex();
     }
 
