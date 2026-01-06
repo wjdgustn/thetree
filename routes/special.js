@@ -581,7 +581,7 @@ app.post('/Upload', (req, res, next) => {
             fileHeight,
             videoFileKey,
             videoFileSize,
-            log: req.body.log || `파일 ${Buffer.from(originalName, 'latin1').toString('utf-8')}을 올림`
+            log: req.body.log || `파일 ${originalName}을 올림`
         });
     }
 
