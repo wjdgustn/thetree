@@ -215,13 +215,13 @@ module.exports = {
     fullCssFilter(css, { skipWrap = false, classGenerator }) {
         if(!css) return css;
 
-        let hasError = false;
+        // let hasError = false;
         const ast = csstree.parse(css, {
-            onParseError() {
-                hasError = true;
-            }
+            // onParseError() {
+            //     hasError = true;
+            // }
         });
-        if(hasError) return '';
+        // if(hasError) return '';
 
         csstree.walk(ast, {
             enter(node, item, list) {
