@@ -248,8 +248,7 @@ module.exports = {
                             'td'
                         ].includes(node.name))
                             list.remove(item);
-
-                        if(item.prev?.data.type !== 'Combinator' && ![
+                        else if(item.prev?.data.type !== 'Combinator' && ![
                             'IdSelector',
                             'ClassSelector'
                         ].includes(item.next?.data.type))
