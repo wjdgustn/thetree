@@ -416,10 +416,10 @@ const topToHtml = module.exports = async parameter => {
             case 'wikiSyntax':
                 let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.isolateContext);
 
-                let style = wikiParamsStr.match(/(?<=style=")(.*?)(?=")/)?.[0] || '';
-                let darkStyle = wikiParamsStr.match(/(?<=dark-style=")(.*?)(?=")/)?.[0] || '';
-                let className = wikiParamsStr.match(/(?<=class=")(.*?)(?=")/)?.[0] || '';
-                const lang = wikiParamsStr.match(/(?<=lang=")(.*?)(?=")/)?.[0] || '';
+                let style = wikiParamsStr.match(/(?<= style=")(.*?)(?=")/)?.[0] || '';
+                let darkStyle = wikiParamsStr.match(/(?<= dark-style=")(.*?)(?=")/)?.[0] || '';
+                let className = wikiParamsStr.match(/(?<= class=")(.*?)(?=")/)?.[0] || '';
+                const lang = wikiParamsStr.match(/(?<= lang=")(.*?)(?=")/)?.[0] || '';
 
                 className = classGenerator(className);
 
