@@ -300,7 +300,9 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
             tdStyle = tdStyle.slice(1);
             tdDarkStyle = tdDarkStyle.slice(1);
 
-            htmlValues.push(`<td${tdClass ? ` class="${classGenerator(tdClass)}"` : ''}${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</td>`.trim());
+            tdClassList.push(...classGenerator(tdClass).split(' '));
+
+            htmlValues.push(`<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</td>`.trim());
 
             for(let i = 0; i < colspan; i++) {
                 aliveRowSpans[visualRowIndex + i] = rowspan ?? 0;
