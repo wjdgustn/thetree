@@ -300,7 +300,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
             tdStyle = tdStyle.slice(1);
             tdDarkStyle = tdDarkStyle.slice(1);
 
-            tdClassList.push(...classGenerator(tdClass));
+            tdClassList.push(...classGenerator(tdClass, true));
 
             htmlValues.push(`<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</td>`.trim());
 
