@@ -448,7 +448,11 @@ const topToHtml = module.exports = async parameter => {
                 if(evalResult) result += await toHtml(obj.content);
                 break;
             case 'styleSyntax':
-                result += `<style>${utils.escapeCss(utils.fullCssFilter(obj.content, { classGenerator }))}</style>`;
+                result += `<style>${
+                    utils.escapeCss(
+                        utils.fullCssFilter(await utils.parseIncludeParams(obj.content, Store.isolateContext), { classGenerator })
+                    )
+                }</style>`;
                 break;
 
             case 'text':
