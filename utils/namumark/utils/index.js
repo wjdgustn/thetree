@@ -273,6 +273,8 @@ module.exports = {
                     case 'Identifier':
                     case 'String':
                     case 'Number':
+                    case 'Percentage':
+                    case 'Hash':
                     case 'Operator':
                     case 'Dimension':
                     case 'Nth':
