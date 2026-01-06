@@ -18,6 +18,7 @@ module.exports = async (params, { toHtml, includeData, revDocCache, Store }, obj
     const final = await toHtml(result, {
         document: docName,
         includeData: obj.includeData,
+        includeIndex: ++Store.includeIndex,
         Store: {
             ...Store,
             heading: {

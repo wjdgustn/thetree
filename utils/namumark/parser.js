@@ -487,6 +487,14 @@ const IfSyntax = createToken({
     }),
     start_chars_hint: ['{']
 });
+const StyleSyntax = createToken({
+    name: 'StyleSyntax',
+    ...nestedRegex(/{{{#!style\n+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
+    start_chars_hint: ['{']
+});
 const ColorText = createToken({
     name: 'ColorText',
     ...nestedRegex(/{{{#/, /}}}/, {
@@ -656,6 +664,7 @@ const inlineTokens = [
     CommentMention,
     Folding,
     IfSyntax,
+    StyleSyntax,
     ColorText,
     Literal,
     // Comment,
@@ -1128,6 +1137,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.commentMention) },
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
+                        { ALT: () => $.SUBRULE($.styleSyntax) },
                         { ALT: () => $.SUBRULE($.colorText) },
                         { ALT: () => $.SUBRULE($.literal) },
                         { ALT: () => $.SUBRULE($.categoryWithNewline) },
@@ -1293,6 +1303,16 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'ifSyntax',
                 expression,
+                content
+            }
+        });
+
+        $.RULE('styleSyntax', () => {
+            const tok = $.CONSUME(StyleSyntax);
+            const content = tok.image.slice(10, -3).trim();
+
+            return {
+                type: 'styleSyntax',
                 content
             }
         });
