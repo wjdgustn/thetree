@@ -332,11 +332,16 @@ const topToHtml = module.exports = async parameter => {
         Store.heading.html = html;
     }
 
-    const classGenerator = className => className.split(' ').filter(a => a).map(str => '_' + crypto.createHash('sha256').update(JSON.stringify({
-        includeIndex,
-        commentId,
-        str
-    })).digest('hex').slice(0, 16)).join(' ');
+    const classGenerator = (className, noJoin = false) => {
+        const arr = className.split(' ').filter(a => a).map(str => '_' + crypto.createHash('sha256').update(JSON.stringify({
+            includeIndex,
+            commentId,
+            str
+        })).digest('hex').slice(0, 16));
+
+        if(noJoin) return arr;
+        return arr.join(' ');
+    }
 
     let result = '';
     for(let obj of doc) {
