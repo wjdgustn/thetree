@@ -277,6 +277,7 @@ module.exports = {
                     case 'Dimension':
                     case 'Nth':
                     case 'AnPlusB':
+                    case 'Function':
                         break;
                     default:
                         list?.remove(item);
