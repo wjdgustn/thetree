@@ -288,7 +288,7 @@ module.exports = {
             leave(node, item, list) {
                 switch(node.type) {
                     case 'Declaration': {
-                        if(node.value.children.isEmpty)
+                        if(node.value.type !== 'Value' || node.value.children.isEmpty)
                             list.remove(item);
                         break;
                     }
