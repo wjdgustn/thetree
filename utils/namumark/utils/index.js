@@ -227,7 +227,7 @@ module.exports = {
             enter(node, item, list) {
                 switch(node.type) {
                     case 'Declaration': {
-                        if(!allowedNames.includes(node.property))
+                        if(!allowedNames.includes(node.property) || node.value.type !== 'Value')
                             list.remove(item);
                         if(allowedValues[node.property]) {
                             const valueStr = csstree.generate(node.value);
@@ -288,7 +288,7 @@ module.exports = {
             leave(node, item, list) {
                 switch(node.type) {
                     case 'Declaration': {
-                        if(node.value.type !== 'Value' || node.value.children.isEmpty)
+                        if(node.value.type === 'Value' && node.value.children.isEmpty)
                             list.remove(item);
                         break;
                     }
@@ -349,7 +349,7 @@ module.exports = {
         });
 
         // console.log(JSON.stringify(ast, null, 2));
-        // console.log(csstree.generate(ast));
+        console.log(csstree.generate(ast));
         return csstree.generate(ast);
     },
     parsedToText(content, putSpace = false) {
