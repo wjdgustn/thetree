@@ -227,12 +227,16 @@ module.exports = {
             enter(node, item, list) {
                 switch(node.type) {
                     case 'Declaration': {
-                        if(!allowedNames.includes(node.property) || node.value.type !== 'Value')
+                        if(!allowedNames.includes(node.property) || node.value.type !== 'Value') {
                             list.remove(item);
+                            node.removed = true;
+                        }
                         else if(allowedValues[node.property]) {
                             const valueStr = csstree.generate(node.value);
-                            if(!allowedValues[node.property](valueStr))
+                            if(!allowedValues[node.property](valueStr)) {
                                 list.remove(item);
+                                node.removed = true;
+                            }
                         }
                         break;
                     }
@@ -288,7 +292,7 @@ module.exports = {
             leave(node, item, list) {
                 switch(node.type) {
                     case 'Declaration': {
-                        if(node.value.type === 'Value' && node.value.children.isEmpty)
+                        if(!node.removed && node.value.type === 'Value' && node.value.children.isEmpty)
                             list.remove(item);
                         break;
                     }
