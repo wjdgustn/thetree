@@ -229,7 +229,7 @@ module.exports = {
                     case 'Declaration': {
                         if(!allowedNames.includes(node.property) || node.value.type !== 'Value')
                             list.remove(item);
-                        if(allowedValues[node.property]) {
+                        else if(allowedValues[node.property]) {
                             const valueStr = csstree.generate(node.value);
                             if(!allowedValues[node.property](valueStr))
                                 list.remove(item);
@@ -349,7 +349,7 @@ module.exports = {
         });
 
         // console.log(JSON.stringify(ast, null, 2));
-        console.log(csstree.generate(ast));
+        // console.log(csstree.generate(ast));
         return csstree.generate(ast);
     },
     parsedToText(content, putSpace = false) {
