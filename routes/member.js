@@ -792,6 +792,9 @@ app.get('/member/login/oauth2/:provider/callback',
             auth: {
                 username: provider.client_id,
                 password: provider.client_secret
+            },
+            headers: {
+                Accept: 'application/json'
             }
         });
         tokenData = data;
