@@ -266,7 +266,7 @@ const TableSplit = createToken({
     pattern: /\|\|/
 });
 // {{{}}} 안 * 뒤에 ? 있었음, 넓게 잡으려고 빼 둠
-const CaptionRegex = /^\|[\s\S]*?\|/;
+const CaptionRegex = /^\|(?:\[\[[\s\S]*?]]|[\s\S])*?(?<!\\)(?:\\\\)*\|/;
 const TableRow = createToken({
     name: 'TableRow',
     // ...fullLineRegex(/^\|\|({{{[\s\S]*}}}|[\s\S])*?\|\|$/m)
