@@ -1190,7 +1190,8 @@ app.use(async (req, res, next) => {
             for(let item of global.disabledFeatures) {
                 if(item.method !== 'ALL' && item.method !== req.method) continue;
 
-                if(item.type === 'string' && !url.startsWith(item.condition)) continue;
+                if(item.type === 'string'
+                    && !url.toLowerCase().startsWith(item.condition.toLowerCase())) continue;
                 if(item.type === 'js' && !eval(item.condition)) continue;
 
                 const msg = (item.message || '비활성화된 기능입니다.')
