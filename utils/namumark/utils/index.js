@@ -186,7 +186,7 @@ module.exports = {
             const key = splittedContent[0];
             const value = splittedContent.slice(1).join('=');
 
-            if(splittedContent.length > 1 && !value) {
+            if(key.includes(' ') || (splittedContent.length > 1 && !value)) {
                 newText += `@${content}@`;
                 continue;
             }
