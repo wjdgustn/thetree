@@ -31,7 +31,7 @@
 	// "forwardPorts": [3000, 27017],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "cp .env.example .env"
+	"postCreateCommand": "npm i && cp .env.example .env"
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
