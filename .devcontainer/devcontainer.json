@@ -20,7 +20,11 @@
 		}
 	},
 	"features": {
-		"ghcr.io/devcontainers-extra/features/ffmpeg-apt-get:1": {}
+		"ghcr.io/devcontainers-extra/features/ffmpeg-apt-get:1": {},
+		"ghcr.io/devcontainers/features/git-lfs:1": {
+			"autoPull": true,
+			"version": "latest"
+		}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
