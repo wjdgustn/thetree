@@ -30,6 +30,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
         const trClassList = [];
         let trStyle = ';';
         let trDarkStyle = ';';
+        let hasRowClass = false;
 
         for(let [key, value] of Object.entries(aliveRowSpans)) {
             if(value > 0) aliveRowSpans[key]--;
@@ -256,6 +257,11 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
                 else if(name === 'class') {
                     if(!value) break;
                     tdClass = value;
+                }
+                else if(name === 'rowclass') {
+                    if(!value || hasRowClass) break;
+                    trClassList.push(classGenerator(value));
+                    hasRowClass = true;
                 }
                 else if([1, 2].includes(splittedValue.length)
                     && splittedValue.every(a => utils.validateColor(a))) {
