@@ -327,7 +327,7 @@ const topToHtml = module.exports = async parameter => {
             });
         }
         for(let i = 0; i < indentLevel + 1; i++)
-            html += '</details></div>';
+            html += (i === indentLevel ? '</details>' : '') + '</div>';
 
         Store.heading.html = html;
     }
