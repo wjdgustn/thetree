@@ -305,7 +305,7 @@ const topToHtml = module.exports = async parameter => {
     }
 
     if(isTop) {
-        let html = '<div class="wiki-macro-toc">';
+        let html = '<div class="wiki-macro-toc"><details open><summary></summary>';
         let indentLevel = 0;
         for(let heading of parsed.data.headings) {
             const prevIndentLevel = indentLevel;
@@ -327,7 +327,7 @@ const topToHtml = module.exports = async parameter => {
             });
         }
         for(let i = 0; i < indentLevel + 1; i++)
-            html += '</div>';
+            html += '</details></div>';
 
         Store.heading.html = html;
     }
