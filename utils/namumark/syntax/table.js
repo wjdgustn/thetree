@@ -19,6 +19,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
     let prevColspan = 1;
     const aliveRowSpans = {};
 
+    const headRows = [];
     const htmlRows = [];
     for(let colIndex in rows) {
         colIndex = parseInt(colIndex);
@@ -31,6 +32,8 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
         let trStyle = ';';
         let trDarkStyle = ';';
         let hasRowClass = false;
+
+        let isTableHead = false;
 
         for(let [key, value] of Object.entries(aliveRowSpans)) {
             if(value > 0) aliveRowSpans[key]--;
@@ -263,6 +266,16 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
                     trClassList.push(classGenerator(value));
                     hasRowClass = true;
                 }
+                else if(name === 'th') {
+                    // caption 사용 시 th를 사용할 수 없는 건 변경될수도
+                    if(obj.caption || isTableHead || colIndex !== 0 || rowIndex !== 0)
+                        break;
+                    isTableHead = true;
+                }
+                else if(name === 'sortable') {
+                    if(!isTableHead || tdClassList.includes('wiki-table-sortable')) break;
+                    tdClassList.push('wiki-table-sortable');
+                }
                 else if([1, 2].includes(splittedValue.length)
                     && splittedValue.every(a => utils.validateColor(a))) {
                     if(tdStyle.includes(';background-color:')) break;
@@ -308,7 +321,8 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
 
             tdClassList.push(...classGenerator(tdClass, true));
 
-            htmlValues.push(`<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</td>`.trim());
+            const cellTag = isTableHead ? 'th' : 'td';
+            htmlValues.push(`<${cellTag}${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</${cellTag}>`.trim());
 
             for(let i = 0; i < colspan; i++) {
                 aliveRowSpans[visualRowIndex + i] = rowspan ?? 0;
@@ -320,7 +334,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
 
         trStyle = trStyle.slice(1);
         trDarkStyle = trDarkStyle.slice(1);
-        htmlRows.push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}${trClassList.length ? ` class="${trClassList.join(' ')}"` : ''}>${htmlValues.join('')}</tr>`);
+        (isTableHead ? headRows : htmlRows).push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}${trClassList.length ? ` class="${trClassList.join(' ')}"` : ''}>${htmlValues.join('')}</tr>`);
 
         prevColspan = 1;
     }
@@ -334,5 +348,5 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
     tableStyle = tableStyle.slice(1);
     tableDarkStyle = tableDarkStyle.slice(1);
 
-    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="${tableClass}"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}<tbody>${htmlRows.join('')}</tbody></table></div>`;
+    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="${tableClass}"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}${headRows.length ? `<thead>${headRows.join('')}</thead>` : ''}<tbody>${htmlRows.join('')}</tbody></table></div>`;
 }
