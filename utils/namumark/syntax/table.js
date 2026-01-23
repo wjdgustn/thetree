@@ -20,7 +20,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
     const aliveRowSpans = {};
 
     const headRows = [];
-    const htmlRows = [];
+    const bodyRows = [];
     for(let colIndex in rows) {
         colIndex = parseInt(colIndex);
         const row = rows[colIndex];
@@ -268,7 +268,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
                 }
                 else if(name === 'th') {
                     // caption 사용 시 th를 사용할 수 없는 건 변경될수도
-                    if(obj.caption || isTableHead || colIndex !== 0 || rowIndex !== 0)
+                    if(obj.caption || isTableHead || bodyRows.length)
                         break;
                     isTableHead = true;
                 }
@@ -334,7 +334,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
 
         trStyle = trStyle.slice(1);
         trDarkStyle = trDarkStyle.slice(1);
-        (isTableHead ? headRows : htmlRows).push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}${trClassList.length ? ` class="${trClassList.join(' ')}"` : ''}>${htmlValues.join('')}</tr>`);
+        (isTableHead ? headRows : bodyRows).push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}${trClassList.length ? ` class="${trClassList.join(' ')}"` : ''}>${htmlValues.join('')}</tr>`);
 
         prevColspan = 1;
     }
@@ -348,5 +348,5 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
     tableStyle = tableStyle.slice(1);
     tableDarkStyle = tableDarkStyle.slice(1);
 
-    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="${tableClass}"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}${headRows.length ? `<thead>${headRows.join('')}</thead>` : ''}<tbody>${htmlRows.join('')}</tbody></table></div>`;
+    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="${tableClass}"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}${headRows.length ? `<thead>${headRows.join('')}</thead>` : ''}<tbody>${bodyRows.join('')}</tbody></table></div>`;
 }
