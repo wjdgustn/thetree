@@ -2,6 +2,6 @@ module.exports = {
     aliases: ['목차'],
     allowThread: true,
     async format(params, { heading }) {
-        return heading.html;
+        return heading.getHtml(params === 'hide');
     }
 }
