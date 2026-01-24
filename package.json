@@ -26,7 +26,7 @@
     "@simplewebauthn/server": "^13.1.1",
     "axios": "^1.7.9",
     "bcrypt": "^6.0.0",
-    "chevrotain": "^10.5.0",
+    "chevrotain": "^11.1.0",
     "clean-css": "^5.3.3",
     "compression": "^1.7.5",
     "connect-redis": "^7.1.1",
