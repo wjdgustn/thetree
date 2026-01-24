@@ -454,5 +454,15 @@ module.exports = {
             }
         });
         return isValid;
+    },
+    async runJavascript(isolateContext, expression, timeout = 100) {
+        if(!this.checkJavascriptValid(expression)) return;
+        let evalResult;
+        try {
+            evalResult = await isolateContext.eval(`with(safeGlobal){${expression}}`, {
+                timeout
+            });
+        } catch(e) {}
+        return evalResult;
     }
 }

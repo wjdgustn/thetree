@@ -384,7 +384,8 @@ const topToHtml = module.exports = async parameter => {
             case 'table':
                 result += await table(obj, {
                     toHtml,
-                    classGenerator
+                    classGenerator,
+                    Store
                 });
                 break;
             case 'indent':
@@ -439,13 +440,7 @@ const topToHtml = module.exports = async parameter => {
                 result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(obj.content)}</dd></dl>`;
                 break;
             case 'ifSyntax':
-                if(!utils.checkJavascriptValid(obj.expression)) break;
-                let evalResult;
-                try {
-                    evalResult = await Store.isolateContext.eval(`with(safeGlobal){${obj.expression}}`, {
-                        timeout: 100
-                    });
-                } catch(e) {}
+                const evalResult = await utils.runJavascript(Store.isolateContext, obj.expression);
                 if(evalResult) result += await toHtml(obj.content);
                 break;
             case 'styleSyntax':

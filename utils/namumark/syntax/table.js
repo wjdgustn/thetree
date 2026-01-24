@@ -1,6 +1,6 @@
 const utils = require('../utils');
 
-module.exports = async (obj, { toHtml, classGenerator }) => {
+module.exports = async (obj, { toHtml, classGenerator, Store }) => {
     const rows = obj.rows;
 
     let tableAlign;
@@ -40,7 +40,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
         }
 
         let visualRowIndex = -1;
-        for(let rowIndex in row) {
+        rowLoop: for(let rowIndex in row) {
             rowIndex = parseInt(rowIndex);
             const valueObj = row[rowIndex];
             const value = valueObj?.value;
@@ -275,6 +275,10 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
                 else if(name === 'sortable') {
                     if(!isTableHead || tdClassList.includes('wiki-table-sortable')) break;
                     tdClassList.push('wiki-table-sortable');
+                }
+                else if(name === 'rowif') {
+                    const evalResult = await utils.runJavascript(Store.isolateContext, value);
+                    if(!evalResult) continue rowLoop;
                 }
                 else if([1, 2].includes(splittedValue.length)
                     && splittedValue.every(a => utils.validateColor(a))) {
