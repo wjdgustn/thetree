@@ -2058,8 +2058,8 @@ app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(t
         return res.error('protect_file', 403);
 
     if(document.namespace.includes('파일')) {
-        const ext = document.title.split('.').pop();
-        const newExt = otherDocument.title.split('.').pop();
+        const ext = document.title.split('.').pop().toLowerCase();
+        const newExt = otherDocument.title.split('.').pop().toLowerCase();
         if(ext !== newExt) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext})`);
     }
 

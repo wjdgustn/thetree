@@ -404,7 +404,7 @@ app.post('/Upload', (req, res, next) => {
         }[file.mimetype] ?? [])];
         if(!possibleExts.length) possibleExts.push(file.mimetype.split('/')[1].match(/[a-z0-9]*/i)[0]);
 
-        if(!possibleExts.some(a => title.endsWith('.' + a)))
+        if(!possibleExts.some(a => title.toLowerCase().endsWith('.' + a.toLowerCase())))
             return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${possibleExts[0]})`);
 
         let dbDocument = await Document.findOne({
