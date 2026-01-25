@@ -21,7 +21,7 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
 
     const headRows = [];
     const bodyRows = [];
-    for(let colIndex in rows) {
+    colLoop: for(let colIndex in rows) {
         colIndex = parseInt(colIndex);
         const row = rows[colIndex];
         const htmlValues = [];
@@ -40,7 +40,7 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
         }
 
         let visualRowIndex = -1;
-        rowLoop: for(let rowIndex in row) {
+        for(let rowIndex in row) {
             rowIndex = parseInt(rowIndex);
             const valueObj = row[rowIndex];
             const value = valueObj?.value;
@@ -278,7 +278,7 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
                 }
                 else if(name === 'rowif') {
                     const evalResult = await utils.runJavascript(Store.isolateContext, value);
-                    if(!evalResult) continue rowLoop;
+                    if(!evalResult) continue colLoop;
                 }
                 else if([1, 2].includes(splittedValue.length)
                     && splittedValue.every(a => utils.validateColor(a))) {
