@@ -30,7 +30,7 @@ module.exports = (params, { Store }) => {
         }
     }
 
-    if(!videoId) return;
+    if(!videoId) return '';
 
     videoId = utils.escapeHtml(videoId);
     width = utils.escapeHtml(width);

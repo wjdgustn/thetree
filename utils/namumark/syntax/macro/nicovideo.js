@@ -22,7 +22,7 @@ module.exports = params => {
         }
     }
 
-    if(!videoId) return;
+    if(!videoId) return '';
 
     if(!videoId.startsWith('sm')) videoId = `sm${videoId}`;
 
