@@ -294,17 +294,36 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
 
             if(paramStr != null) firstTextObj.text = originalParamStr.slice(prevParamStrLength - paramStr.length);
 
-            if(valueObj.align === 'center' && firstTextObj && lastTextObj) {
-                align ??= 'center';
-                firstTextObj.text = firstTextObj.text.slice(1);
-                lastTextObj.text = lastTextObj.text.slice(0, -1);
-            } else if(valueObj.align === 'right' && firstTextObj) {
-                align ??= 'right';
-                firstTextObj.text = firstTextObj.text.slice(1);
-            } else if(valueObj.align === 'left' && lastTextObj) {
-                align ??= 'left';
-                lastTextObj.text = lastTextObj.text.slice(0, -1);
+            // if(valueObj.align === 'center' && firstTextObj && lastTextObj) {
+            //     align ??= 'center';
+            //     firstTextObj.text = firstTextObj.text.slice(1);
+            //     lastTextObj.text = lastTextObj.text.slice(0, -1);
+            // } else if(valueObj.align === 'right' && firstTextObj) {
+            //     align ??= 'right';
+            //     firstTextObj.text = firstTextObj.text.slice(1);
+            // } else if(valueObj.align === 'left' && lastTextObj) {
+            //     align ??= 'left';
+            //     lastTextObj.text = lastTextObj.text.slice(0, -1);
+            // }
+
+            const startsWithSpace = firstTextObj?.text.startsWith(' ');
+            const endsWithSpace = lastTextObj?.text.endsWith(' ');
+            if(!align) {
+                if(startsWithSpace && endsWithSpace) {
+                    align = 'center';
+                    firstTextObj.text = firstTextObj.text.slice(1);
+                    lastTextObj.text = lastTextObj.text.slice(0, -1);
+                }
+                else if(startsWithSpace) {
+                    align = 'right';
+                    firstTextObj.text = firstTextObj.text.slice(1);
+                }
+                else if(endsWithSpace) {
+                    align = 'left';
+                    lastTextObj.text = lastTextObj.text.slice(0, -1);
+                }
             }
+
             if(align) tdStyle += `text-align:${align};`;
 
             if(!tdStyle.includes(';background-color:') && colBgColors[visualRowIndex])
