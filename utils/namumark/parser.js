@@ -374,21 +374,15 @@ const Italic = createToken({
     ...inlineRegex(/''(?!')/, /''/),
     start_chars_hint: [`'`]
 });
-const Strike = createToken({
-    name: 'Strike',
-    // pattern: (text, startOffset) => {
-    //     const str = text.slice(startOffset);
-    //     const match = str.match(/(~~|--)([\s\S]+?)\1/);
-    //     if(!match || match.index > 0) return null;
-    //     if(match?.[0][0] === '-') {
-    //         const content = match[0].slice(2, -2);
-    //         if(!content.replaceAll('-', '').trim()) return null;
-    //     }
-    //     return match;
-    // },
-    // line_breaks: true
-    ...inlineRegex(/^~~|^--/, /(?<!\\)(?:\\\\)*~~|(?<!\\)(?:\\\\)*--/, true),
-    start_chars_hint: ['-', '~']
+const Strike1 = createToken({
+    name: 'Strike1',
+    ...inlineRegex(/~~/),
+    start_chars_hint: [`~`]
+});
+const Strike2 = createToken({
+    name: 'Strike2',
+    ...inlineRegex(/--/),
+    start_chars_hint: [`-`]
 });
 const Underline = createToken({
     name: 'Underline',
@@ -670,7 +664,8 @@ const inlineTokens = [
     // Comment,
     Bold,
     Italic,
-    Strike,
+    Strike1,
+    Strike2,
     Underline,
     Sup,
     Sub,
@@ -1125,7 +1120,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                     const tok = $.OR([
                         { ALT: () => $.SUBRULE($.bold) },
                         { ALT: () => $.SUBRULE($.italic) },
-                        { ALT: () => $.SUBRULE($.strike) },
+                        { ALT: () => $.SUBRULE($.strike1) },
+                        { ALT: () => $.SUBRULE($.strike2) },
                         { ALT: () => $.SUBRULE($.underline) },
                         { ALT: () => $.SUBRULE($.sup) },
                         { ALT: () => $.SUBRULE($.sub) },
@@ -1594,7 +1590,8 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('bold', () => inlineHandler('bold', Bold, 3, -3));
         $.RULE('italic', () => inlineHandler('italic', Italic, 2, -2));
-        $.RULE('strike', () => inlineHandler('strike', Strike, 2, -2));
+        $.RULE('strike1', () => inlineHandler('strike', Strike1, 2, -2));
+        $.RULE('strike2', () => inlineHandler('strike', Strike2, 2, -2));
         $.RULE('underline', () => inlineHandler('underline', Underline, 2, -2));
         $.RULE('sup', () => inlineHandler('sup', Sup, 2, -2));
         $.RULE('sub', () => inlineHandler('sub', Sub, 2, -2));
