@@ -22,7 +22,8 @@ app.get('/Complete', async (req, res) => {
 
     const document = utils.parseDocumentName(req.query.q, true);
 
-    const filter = ['anyoneReadable = true'];
+    const filter = [];
+    if(!req.permissions.includes('developer')) filter.push('anyoneReadable = true');
     if(document.namespaceExists) filter.push(`namespace = '${document.namespace}'`);
     else filter.push(`namespace = 문서`);
 
