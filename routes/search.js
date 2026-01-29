@@ -67,7 +67,7 @@ const getSearch = async (req, res) => {
     if(!req.query.q) return res.error('검색어가 없습니다.');
 
     // const readableNamespaces = await utils.getReadableNamespaces(req.aclData);
-    const readableNamespaces = config.namespaces.filter(a => req.permissions.includes('config') || !(config.hidden_namespaces ?? []).includes(a));
+    const readableNamespaces = config.namespaces.filter(a => req.permissions.includes('developer') || !(config.hidden_namespaces ?? []).includes(a));
     if(!readableNamespaces.length) return res.error('읽을 수 있는 이름공간이 없습니다.');
 
     const filter = [];
