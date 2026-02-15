@@ -26,6 +26,9 @@ const { lookup: ipLookup } = require('ip-location-api');
 const mongoose = require('mongoose');
 const zlib = require('zlib');
 const deflate = promisify(zlib.deflate);
+const i18next = require('i18next');
+const i18nBackend = require('i18next-fs-backend');
+const i18nMiddleware = require('i18next-http-middleware');
 
 global.debug = process.env.NODE_ENV === 'development';
 global.__THETREE__ = {};
@@ -51,6 +54,22 @@ const LoginHistory = require('./schemas/loginHistory');
 const Notification = require('./schemas/notification');
 
 const ACL = require('./class/acl');
+
+i18next
+    .use(i18nBackend)
+    .use(i18nMiddleware.LanguageDetector)
+    .init({
+        detection: {
+            order: ['cookie', 'header'],
+            lookupCookie: 'thetree.lang',
+            cookieExpirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)
+        },
+        fallbackLng: 'ko',
+        backend: {
+            loadPath: './locale/{{lng}}.json'
+        }
+    });
+
 
 global.publicConfig = {};
 global.serverConfig = {};
@@ -552,6 +571,8 @@ SocketIO.on('new_namespace', namespace => {
 
 app.use(cookieParser());
 
+app.use(i18nMiddleware.handle(i18next));
+
 app.use((req, res, next) => {
     res.locals.cspNonce = crypto.randomBytes(32).toString('hex');
     next();
@@ -602,6 +623,8 @@ app.use((req, res, next) => {
 if(!debug) {
     app.use(compression());
 }
+
+app.use('/locale', express.static('./locale'));
 app.use(express.static(`./customStatic`));
 app.use(express.static(`./public`));
 
@@ -1033,7 +1056,7 @@ app.use(async (req, res, next) => {
             if(req.isInternal) res.json(resData);
             else {
                 const render = require(`./skins/${skin}/server/server.cjs`).render;
-                const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`));
+                const rendered = await render(req.originalUrl, resData, require(`./skins/${skin}/client/.vite/ssr-manifest.json`), req.i18n);
                 let body = rendered.html;
                 if(rendered.state) {
                     const deflated = await deflate(Buffer.from(msgpack.encode(JSON.parse(JSON.stringify(rendered.state)))));
