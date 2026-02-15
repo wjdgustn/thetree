@@ -1,9 +1,4 @@
 {
-  "minify": {
-    "css": true,
-    "js": true
-  },
-
   "captcha": {
     "enabled": false,
     "type": "turnstile",
