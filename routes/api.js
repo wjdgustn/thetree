@@ -1,5 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
+const fs = require('fs-extra');
 
 const middleware = require('../utils/middleware');
 
@@ -236,6 +237,22 @@ if(config.testwiki) {
             hidden: false
         });
         res.json({ result: !!exists });
+    });
+
+    let localeListCache = null;
+    app.get('/engine/locale_list', async (req, res) => {
+        if(!localeListCache) {
+            localeListCache = [];
+            const fileList = await fs.readdir('./locales');
+            for(let file of fileList) {
+                try {
+                    const langText = await fs.readFile(`./locales/${file}`);
+                    const langData = JSON.parse(langText);
+                    localeListCache.push(langData.lang_name ?? file);
+                } catch {}
+            }
+        }
+        res.json(localeListCache);
     });
 }
 
