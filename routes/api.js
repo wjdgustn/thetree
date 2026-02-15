@@ -248,7 +248,11 @@ if(config.testwiki) {
                 try {
                     const langText = await fs.readFile(`./locale/${file}`, 'utf8');
                     const langData = JSON.parse(langText);
-                    localeListCache.push(langData.lang_name ?? file);
+                    const code = file.replace('.json', '');
+                    localeListCache.push({
+                        name: langData.lang_name ?? code,
+                        code
+                    });
                 } catch {}
             }
         }
