@@ -243,10 +243,10 @@ if(config.testwiki) {
     app.get('/engine/locale_list', async (req, res) => {
         if(!localeListCache) {
             localeListCache = [];
-            const fileList = await fs.readdir('./locales');
+            const fileList = await fs.readdir('./locale');
             for(let file of fileList) {
                 try {
-                    const langText = await fs.readFile(`./locales/${file}`);
+                    const langText = await fs.readFile(`./locale/${file}`, 'utf8');
                     const langData = JSON.parse(langText);
                     localeListCache.push(langData.lang_name ?? file);
                 } catch {}
