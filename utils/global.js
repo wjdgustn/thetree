@@ -6,13 +6,23 @@ dayjs.extend(dayjsUtc);
 let specialUrls;
 let specialChars;
 
+const langFiles = {};
+
 module.exports = {
     doc_fulltitle(document) {
         const type = typeof document;
 
         if(type === 'object') {
             if(document.forceShowNamespace === false) return document.title;
-            return `${document.namespace}:${document.title}`;
+
+            let namespace = document.namespace;
+            if(config.lang) {
+                const langFile = langFiles[config.lang] = require(`../locale/${config.lang.slice(0, 2)}.json`);
+                let nsStr = langFile[`namespaces.${namespace}`];
+                if(nsStr) namespace = nsStr;
+            }
+
+            return `${namespace}:${document.title}`;
         }
         else return document;
     },

@@ -1,4 +1,11 @@
 {
   "lang_name": "English",
-  "sans": "wa sans"
+  "sans": "wa sans",
+
+  "namespaces.문서": "Document",
+  "namespaces.틀": "Frame",
+  "namespaces.분류": "Category",
+  "namespaces.파일": "File",
+  "namespaces.사용자": "User",
+  "namespaces.삭제된사용자": "DeletedUser"
 }

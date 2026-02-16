@@ -55,21 +55,32 @@ const Notification = require('./schemas/notification');
 
 const ACL = require('./class/acl');
 
+const langDetector = new i18nMiddleware.LanguageDetector();
+langDetector.addDetector({
+    name: 'configDetector',
+    lookup() {
+        if(!config.lang) return
+        return config.lang
+    }
+})
+
 i18next
     .use(i18nBackend)
-    .use(i18nMiddleware.LanguageDetector)
+    .use(langDetector)
     .init({
         detection: {
-            order: ['cookie', 'header'],
+            order: ['cookie', 'configDetector', 'header'],
             lookupCookie: 'thetree.lang',
             cookieExpirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)
         },
+        preload: fs.readdirSync('./locale').filter(a => a.endsWith('.json')).map(a => a.replace('.json', '')),
         fallbackLng: 'ko',
         backend: {
             loadPath: './locale/{{lng}}.json'
-        }
+        },
+        showSupportNotice: false
     });
-
+global.i18next = i18next;
 
 global.publicConfig = {};
 global.serverConfig = {};

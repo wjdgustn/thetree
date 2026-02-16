@@ -1,4 +1,11 @@
 {
   "lang_name": "한국어",
-  "sans": "와 샌즈"
+  "sans": "와 샌즈",
+
+  "namespaces.문서": "문서",
+  "namespaces.틀": "틀",
+  "namespaces.분류": "분류",
+  "namespaces.파일": "파일",
+  "namespaces.사용자": "사용자",
+  "namespaces.삭제된사용자": "삭제된사용자"
 }

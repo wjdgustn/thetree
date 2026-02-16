@@ -2,6 +2,7 @@
   "site_name": "테스트위키",
   "front_page": "FrontPage",
   "base_url": "http://localhost:3000",
+  "lang": "",
 
   "logo_text": "테스트위키",
   "logo_url": "테스트위키",

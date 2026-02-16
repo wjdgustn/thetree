@@ -24,6 +24,9 @@ const {
 const diffLib = require('./diff/lib');
 const diffView = require('./diff/view');
 
+const langFiles = {};
+const localeNamespaces = {};
+
 module.exports = {
     getRandomInt(min, max) {
         min = Math.ceil(min);
@@ -50,7 +53,21 @@ module.exports = {
         name = name.slice(0, 255);
         const originalName = name.trim();
         const splitedName = originalName.split(':');
-        const probablyNamespace = splitedName.length > 1 ? splitedName[0] : null;
+
+        let probablyNamespace = splitedName.length > 1 ? splitedName[0] : null;
+        if(config.lang) {
+            if(!Object.hasOwn(localeNamespaces, config.lang)) {
+                const langFile = langFiles[config.lang] = require(`../locale/${config.lang.slice(0, 2)}.json`);
+                localeNamespaces[config.lang] = {};
+                for(let key in langFile) {
+                    if(!key.startsWith('namespaces.')) continue;
+                    localeNamespaces[config.lang][langFile[key]] = key.slice('namespaces.'.length);
+                }
+            }
+
+            probablyNamespace = localeNamespaces[config.lang][probablyNamespace] ?? probablyNamespace;
+        }
+
         const namespaceExists = config.namespaces.includes(probablyNamespace);
         const namespace = namespaceExists ? probablyNamespace : '문서';
         let title = namespaceExists ? splitedName.slice(1).join(':') : originalName;
