@@ -59,6 +59,7 @@ const AuditLog = require('../schemas/auditLog');
 const Thread = require('../schemas/thread');
 const ACLGroup = require('../schemas/aclGroup');
 const ACLModel = require('../schemas/acl');
+const OAuth2Map = require('../schemas/oauth2Map');
 
 const ACL = require('../class/acl');
 
@@ -1648,11 +1649,16 @@ app.get('/admin/manage_account', middleware.permission('manage_account'), async 
         if(targetUser) return res.redirect('/admin/manage_account?uuid=' + targetUser.uuid);
     }
 
+    let oauth2Maps;
     let searchData;
     if(targetUser) {
         if(targetUser.permissions.includes('developer')
             && !req.permissions.includes('developer'))
             return res.status(403).send('invalid_permission');
+
+        oauth2Maps = await OAuth2Map.find({
+            user: targetUser.uuid
+        }).select('provider name email -_id');
 
         const auditLogContent = {
             user: req.user.uuid,
@@ -1709,8 +1715,13 @@ app.get('/admin/manage_account', middleware.permission('manage_account'), async 
                     'uuid', 'name', 'email', 'usePasswordlessLogin'
                 ]),
                 mobileVerified: targetUser.permissions.includes('mobile_verified_member'),
-                useTotp: !!targetUser.totpToken
-            }
+                useTotp: !!targetUser.totpToken,
+                oauth2Maps
+            },
+            externalProviders: Object.entries(config.oauth2_providers || {}).filter(([name, value]) => !value.hidden).map(([name, value]) => ({
+                name,
+                displayName: value.display_name
+            }))
         }
     });
 });
