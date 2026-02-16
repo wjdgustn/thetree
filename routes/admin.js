@@ -1716,7 +1716,7 @@ app.get('/admin/manage_account', middleware.permission('manage_account'), async 
                 ]),
                 mobileVerified: targetUser.permissions.includes('mobile_verified_member'),
                 useTotp: !!targetUser.totpToken,
-                oauth2Maps
+                oauth2Maps: Object.fromEntries(oauth2Maps.map(a => [a.provider, a]))
             },
             externalProviders: Object.entries(config.oauth2_providers || {}).filter(([name, value]) => !value.hidden).map(([name, value]) => ({
                 name,
