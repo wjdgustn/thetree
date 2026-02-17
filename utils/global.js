@@ -18,7 +18,7 @@ module.exports = {
             let namespace = document.namespace;
             if(config.lang) {
                 const langFile = langFiles[config.lang] = require(`../locale/${config.lang.slice(0, 2)}.json`);
-                let nsStr = langFile[`namespaces.${namespace}`];
+                let nsStr = langFile.namespaces[namespace];
                 if(nsStr) namespace = nsStr;
             }
 

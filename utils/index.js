@@ -59,9 +59,8 @@ module.exports = {
             if(!Object.hasOwn(localeNamespaces, config.lang)) {
                 const langFile = langFiles[config.lang] = require(`../locale/${config.lang.slice(0, 2)}.json`);
                 localeNamespaces[config.lang] = {};
-                for(let key in langFile) {
-                    if(!key.startsWith('namespaces.')) continue;
-                    localeNamespaces[config.lang][langFile[key]] = key.slice('namespaces.'.length);
+                for(let [key, value] of Object.entries(langFile.namespaces)) {
+                    localeNamespaces[config.lang][value] = key;
                 }
             }
 
