@@ -13,7 +13,9 @@
 
   "namumark": {
     "errors": {
-      "maximum_length_html": "문서 길이가 너무 깁니다."
+      "maximum_length_html": "문서 길이가 너무 깁니다.",
+      "render_failed": "문서 렌더링이 실패했습니다.",
+      "render_timeout": "문서 렌더링이 너무 오래 걸립니다."
     },
     "heading_edit": "편집",
     "vote": {
