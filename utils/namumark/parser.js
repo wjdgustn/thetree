@@ -557,8 +557,12 @@ const Link = createToken({
     }),
     start_chars_hint: ['[']
 });
-const localFile = i18next.t(`namespaces.파일`, { lng: config.lang || 'ko', defaultValue: '파일' });
-const localCategory = i18next.t(`namespaces.분류`, { lng: config.lang || 'ko', defaultValue: '분류' });
+let localFile = '파일';
+let localCategory = '분류';
+if(global.config?.localNamespaces) {
+    localFile = global.config.localNamespaces[localFile];
+    localCategory = global.config.localNamespaces[localCategory];
+}
 const categoryWithNewlineRegex = nestedRegex(new RegExp(`\\[\\[(분류|${localCategory}):`), /]]\n/, {
     allowNewline: true,
     openCheckRegex: /\[/,

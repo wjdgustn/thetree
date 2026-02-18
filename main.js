@@ -90,11 +90,15 @@ global.stringConfig = {};
 
 Object.defineProperty(global, 'config', {
     get() {
-        return {
+        const configObject = {
             ...global.publicConfig,
             ...global.serverConfig,
             ...global.devConfig,
-            ...global.stringConfig,
+            ...global.stringConfig
+        }
+        if(!configObject.lang) console.trace();
+        return {
+            ...configObject,
             namespaces: [...new Set([
                 '문서',
                 '틀',
@@ -105,7 +109,8 @@ Object.defineProperty(global, 'config', {
                 // publicConfig.site_name,
                 // '휴지통',
                 ...(global.serverConfig.namespaces ?? [])
-            ])]
+            ])],
+            localNamespaces: i18next.getResourceBundle(configObject.lang || i18next.language).namespaces
         }
     }
 });

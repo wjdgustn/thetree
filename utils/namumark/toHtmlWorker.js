@@ -2,6 +2,9 @@ const { highlight } = require('highlight.js');
 const crypto = require('crypto');
 const ivm = require('isolated-vm');
 const fs = require('fs');
+const { workerData } = require('piscina');
+
+global.config = workerData.config;
 
 const utils = require('./utils');
 const mainUtils = require('../');
