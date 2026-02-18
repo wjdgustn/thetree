@@ -78,6 +78,7 @@ i18next
         backend: {
             loadPath: './locale/{{lng}}.json'
         },
+        initAsync: false,
         showSupportNotice: false
     });
 global.i18next = i18next;
