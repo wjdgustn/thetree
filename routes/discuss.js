@@ -405,9 +405,9 @@ app.get('/thread/:url/acl', async (req, res) => {
     const { result: editableACL } = await acl.check(ACLTypes.ACL, req.aclData);
     const editableNSACL = req.permissions.includes('nsacl');
 
-    const aclData = acl.aclTypes.map(a => a.map(b => utils.aclStrMapper(b)));
-    const docaclData = documentACL.aclTypes.map(a => a.map(b => utils.aclStrMapper(b)));
-    const nsaclData = namespaceACL.aclTypes.map(a => a.map(b => utils.aclStrMapper(b)));
+    const aclData = acl.aclTypes.map(a => a.map(b => utils.aclStrMapper(b, req.i18n.language)));
+    const docaclData = documentACL.aclTypes.map(a => a.map(b => utils.aclStrMapper(b, req.i18n.language)));
+    const nsaclData = namespaceACL.aclTypes.map(a => a.map(b => utils.aclStrMapper(b, req.i18n.language)));
 
     res.renderSkin(undefined, {
         viewName: 'acl',

@@ -1084,7 +1084,7 @@ app.use(async (req, res, next) => {
             }
         }
 
-        res.error = (contentHtml, status = 400) => res.renderSkin('오류', {
+        res.error = (contentHtml, status = 400) => res.renderSkin(req.t('titles.error'), {
             contentHtml,
             status,
             serverData: {
@@ -1217,8 +1217,8 @@ app.use(async (req, res, next) => {
                     '/edit/', '/move/', '/delete/', '/revert/',
                     '/member/login', '/member/logout', '/member/star/', '/member/unstar/'
                 ].some(a => url.startsWith(a)) || req.method !== 'GET')) {
-                if(req.method === 'GET') return res.error('위키가 읽기 전용 모드입니다.');
-                else return res.status(403).send('위키가 읽기 전용 모드입니다.');
+                if(req.method === 'GET') return res.error(req.t('errors.read_only'));
+                else return res.status(403).send(req.t('errors.read_only'));
             }
 
             for(let item of global.disabledFeatures) {
@@ -1228,7 +1228,7 @@ app.use(async (req, res, next) => {
                     && !url.toLowerCase().startsWith(item.condition.toLowerCase())) continue;
                 if(item.type === 'js' && !eval(item.condition)) continue;
 
-                const msg = (item.message || '비활성화된 기능입니다.')
+                const msg = (item.message || req.t('errors.disabled_feature'))
                     .replaceAll('{cspNonce}', res.locals.cspNonce);
 
                 let messageType = item.messageType;
@@ -1306,7 +1306,7 @@ app.use((err, req, res, _) => {
     console.error(`Server error from: ${req.method} ${req.originalUrl}(${req.url})`, err);
     const inspectedError = util.inspect(err, { depth: 2, maxArrayLength: 200 });
     if(debug || req.permissions?.includes('developer')) res.status(500).send(inspectedError);
-    else res.status(500).send('서버 오류<br>요청 ID: ' + req.requestId);
+    else res.status(500).send(req.t('errors.server_error') + ' ' + req.requestId);
 
     RequestLog.updateOne({
         _id: req.requestId

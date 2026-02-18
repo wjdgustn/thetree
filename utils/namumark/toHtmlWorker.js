@@ -15,7 +15,6 @@ const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
 const MAXIMUM_LENGTH = 1000000;
-const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
 const jsGlobalRemover = fs.readFileSync('./utils/namumark/utils/jsGlobalRemover.js', 'utf8');
 
@@ -373,7 +372,7 @@ const topToHtml = module.exports = async parameter => {
 <span class="wiki-edit-section">
 <a href="${utils.escapeHtml(globalUtils.doc_action_link(document, 'edit', {
                     section: obj.sectionNum
-                }))}" rel="nofollow">[편집]</a>
+                }))}" rel="nofollow">[${await parentAction('t', { key: 'namumark.heading_edit' })}]</a>
 </span>`.trim();
                 result += `</span></h${obj.level}>`;
                 result += `<div class="wiki-heading-content${obj.closed ? ' wiki-heading-content-folded' : ''}">`;
@@ -569,7 +568,7 @@ const topToHtml = module.exports = async parameter => {
         }
 
         if(result.length > config.document_maximum_length ?? MAXIMUM_LENGTH) {
-            Store.error = MAXIMUM_LENGTH_HTML;
+            Store.error = await parentAction('t', { key: 'namumark.errors.maximum_length_html' });
             Store.errorCode = 'too_large_document';
             break;
         }

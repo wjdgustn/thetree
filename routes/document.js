@@ -473,8 +473,8 @@ app.get('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
 
     let aclData = aclMapper(acl);
     let nsaclData = aclMapper(namespaceACL);
-    aclData = aclData.map(a => a.map(b => utils.aclStrMapper(b)));
-    nsaclData = nsaclData.map(a => a.map(b => utils.aclStrMapper(b)));
+    aclData = aclData.map(a => a.map(b => utils.aclStrMapper(b, req.i18n.language)));
+    nsaclData = nsaclData.map(a => a.map(b => utils.aclStrMapper(b, req.i18n.language)));
 
     res.renderSkin(undefined, {
         viewName: 'acl',

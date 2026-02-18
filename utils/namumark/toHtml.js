@@ -58,6 +58,12 @@ module.exports = async (...params) => {
                 const result = await acl.check(...msg.checkOptions);
                 return reply(result);
             }
+            case 't': {
+                return reply(i18next.t(msg.key, {
+                    defaultValue: msg.defaultValue,
+                    lng: config.lang
+                }));
+            }
         }
     });
 

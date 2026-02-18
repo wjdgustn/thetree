@@ -48,14 +48,14 @@ module.exports = {
 <div>
 <label>
 <input type="radio" name="vote-${options.Store.voteIndex}" value="${i}"${prevVote?.value === parseInt(i) ? ' checked' : ''}>
-${option} (${voteCount}표)
+${option} (${voteCount}${await options.parentAction('t', { key: 'namumark.vote.votes' })})
 </label>
 </div>
             `;
         }
 
         result += `
-<button class="thetree-square-button thetree-blue-button">투표</button>
+<button class="thetree-square-button thetree-blue-button">${await options.parentAction('t', { key: 'namumark.vote.vote' })}</button>
 </form>
 </fieldset>
         `;

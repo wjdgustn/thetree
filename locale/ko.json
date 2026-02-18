@@ -9,5 +9,81 @@
     "파일": "파일",
     "사용자": "사용자",
     "삭제된사용자": "삭제된사용자"
+  },
+
+  "namumark": {
+    "errors": {
+      "maximum_length_html": "문서 길이가 너무 깁니다."
+    },
+    "heading_edit": "편집",
+    "vote": {
+      "votes": "표",
+      "vote": "투표"
+    }
+  },
+
+  "titles": {
+    "error": "오류"
+  },
+
+  "errors": {
+    "read_only": "위키가 읽기 전용 모드입니다.",
+    "disabled_feature": "비활성화된 기능입니다.",
+    "server_error": "서버 오류<br>요청 ID:"
+  },
+
+  "permissions": {
+    "any": "아무나",
+    "ip": "아이피 사용자",
+    "member": "로그인된 사용자",
+    "admin": "관리자",
+    "member_signup_15days_ago": "가입한지 15일 지난 사용자",
+    "document_contributor": "해당 문서 기여자",
+    "contributor": "위키 기여자",
+    "match_username_and_document_title": "문서 제목과 사용자 이름이 일치",
+    "mobile_verified_member": "모바일 인증된 사용자",
+    "auto_verified_member": "자동 인증된 사용자"
+  },
+  "acl": {
+    "acl_tab_message": "해당 {{target}}의 {{-linkOpen}}ACL 탭{{-linkClose}}을 확인하시기 바랍니다.",
+    "acl_target_document": "문서",
+    "acl_target_thread": "토론",
+    "types": {
+      "-1": "작업",
+      "0": "읽기",
+      "1": "편집",
+      "2": "이동",
+      "3": "삭제",
+      "4": "토론 생성",
+      "5": "토론 댓글",
+      "6": "편집 요청",
+      "7": "ACL 편집"
+    },
+    "actions": {
+      "0": "거부",
+      "1": "허용",
+      "2": "이름공간ACL 실행",
+      "3": "{{-namespace}} ACL 실행",
+      "other_namespace": "다른 이름공간"
+    },
+    "required_string": {
+      "user": "특정 사용자",
+      "ip": "특정 IP",
+      "aclgroup": "ACL그룹 {{group}}에 속해 있는 사용자"
+    },
+    "deny_string": {
+      "using_ip": "현재 사용중인 아이피가 ",
+      "in_group": "{{usingIpStr}}ACL그룹 {{group}} #{{groupId}}에 있기",
+      "not_in_group": "{{usingIpStr}}ACL그룹 {{group}}에 없기",
+      "condition": "{{condition}}이기",
+      "message": "{{rule}} 때문에 {{type}} 권한이 부족합니다.",
+      "expiry": "만료일",
+      "reason": "사유",
+      "forever": "무기한"
+    },
+    "allowed_listing_deny": "{{type}} 권한이 부족합니다. {{rules}}(이)여야 합니다.",
+    "allowed_listing_deny_many": "{{type}} 권한이 부족합니다. {{rules}} 그 외 {{count}}개의 규칙(이)여야 합니다.",
+    "deep_other_ns": "다른 이름공간 ACL 실행이 이중으로 사용되었습니다.",
+    "no_rules_deny": "ACL에 허용 규칙이 없기 때문에 {{type}} 권한이 부족합니다."
   }
 }

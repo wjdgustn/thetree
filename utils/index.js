@@ -460,7 +460,8 @@ module.exports = {
         const result = {
             permissions: [...permissions],
             user,
-            ip: req?.ip
+            ip: req?.ip,
+            lang: req.i18n.language
         }
 
         if(req) req.aclData = result;
@@ -936,11 +937,11 @@ module.exports = {
         }
         return result;
     },
-    aclStrMapper(a) {
+    aclStrMapper(a, lang = 'ko') {
         return {
             ...this.onlyKeys(a, ['uuid', 'expiresAt']),
-            condition: global.ACLClass.ruleToConditionString(a, false),
-            action: global.ACLClass.actionToString(a)
+            condition: global.ACLClass.ruleToConditionString(a, lang, false),
+            action: global.ACLClass.actionToString(a, lang)
         }
     },
     getObjectValue(obj, path) {

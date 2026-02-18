@@ -13,19 +13,6 @@ const checkDefaultData = {
     ip: null
 }
 
-const PermissionsNameMap = {
-    any: '아무나',
-    ip: '아이피 사용자',
-    member: '로그인된 사용자',
-    admin: '관리자',
-    member_signup_15days_ago: '가입한지 15일 지난 사용자',
-    document_contributor: '해당 문서 기여자',
-    contributor: '위키 기여자',
-    match_username_and_document_title: '문서 제목과 사용자 이름이 일치',
-    mobile_verified_member: '모바일 인증된 사용자',
-    auto_verified_member: '자동 인증된 사용자'
-}
-
 module.exports = class ACL {
     static async get(filter = {}, document = null, noOtherNS = false) {
         let thread;
@@ -106,80 +93,96 @@ module.exports = class ACL {
 
         if(document) {
             this.document = document;
-            this.aclTabMessage = ` 해당 ${thread ? '토론' : '문서'}의 <a href="${thread ? `/thread/${thread.url}/acl` : globalUtils.doc_action_link(document, 'acl')}">ACL 탭</a>을 확인하시기 바랍니다.`;
         }
 
         if(documentACL) this.documentACL = documentACL;
         if(namespaceACL) this.namespaceACL = namespaceACL;
 
+        this.thread = thread;
         this.noOtherNS = noOtherNS;
     }
 
-    static aclTypeToString(aclType = ACLTypes.None) {
-        return {
-            [ACLTypes.None]: '작업',
-            [ACLTypes.Read]: '읽기',
-            [ACLTypes.Edit]: '편집',
-            [ACLTypes.Move]: '이동',
-            [ACLTypes.Delete]: '삭제',
-            [ACLTypes.CreateThread]: '토론 생성',
-            [ACLTypes.WriteThreadComment]: '토론 댓글',
-            [ACLTypes.EditRequest]: '편집 요청',
-            [ACLTypes.ACL]: 'ACL 편집'
-        }[aclType] ?? utils.getKeyFromObject(ACLTypes, aclType) ?? aclType;
+    static aclTabMessage(lang = 'ko') {
+        return ' ' + i18next.t('acl.acl_tab_message', {
+            lng: lang,
+            target: i18next.t(`acl.acl_target_${this.thread ? 'thread' : 'document'}`, {
+                lng: lang
+            }),
+            linkOpen: `<a href="${this.thread ? `/thread/${this.thread.url}/acl` : globalUtils.doc_action_link(this.document, 'acl')}">`,
+            linkClose: '</a>'
+        })
     }
 
-    static permissionToString(permission, withPrefix = false) {
-        let result = Object.hasOwn(PermissionsNameMap, permission)
-            ? PermissionsNameMap[permission]
-            : permission;
+    static aclTypeToString(aclType = ACLTypes.None, lang = 'ko') {
+        return i18next.t(`acl.types.${aclType}`, {
+            lng: lang,
+            defaultValue: utils.getKeyFromObject(ACLTypes, aclType) ?? aclType.toString()
+        });
+    }
+
+    static permissionToString(permission, lang = 'ko', withPrefix = false) {
+        let result = i18next.t(`permissions.${permission}`, {
+            lng: lang,
+            defaultValue: permission
+        });
 
         return `${withPrefix && permission === result ? 'perm:' : ''}${namumarkUtils.escapeHtml(result)}`;
     }
 
-    static conditionToString(condition) {
-        return {
-            [ACLConditionTypes.Perm]: '권한',
-            [ACLConditionTypes.User]: '사용자',
-            [ACLConditionTypes.IP]: '아이피',
-            [ACLConditionTypes.GeoIP]: 'GeoIP',
-            [ACLConditionTypes.ACLGroup]: 'ACL그룹'
-        }[condition] ?? utils.getKeyFromObject(ACLConditionTypes, condition) ?? condition;
-    }
+    // static conditionToString(condition) {
+    //     return {
+    //         [ACLConditionTypes.Perm]: '권한',
+    //         [ACLConditionTypes.User]: '사용자',
+    //         [ACLConditionTypes.IP]: '아이피',
+    //         [ACLConditionTypes.GeoIP]: 'GeoIP',
+    //         [ACLConditionTypes.ACLGroup]: 'ACL그룹'
+    //     }[condition] ?? utils.getKeyFromObject(ACLConditionTypes, condition) ?? condition;
+    // }
 
-    static ruleToRequiredString(rule) {
+    static ruleToRequiredString(rule, lang = 'ko') {
         let str = rule.not ? 'NOT ' : '';
         if(rule.conditionType === ACLConditionTypes.Perm) {
-            str += ACL.permissionToString(rule.conditionContent, true)
+            str += ACL.permissionToString(rule.conditionContent, lang, true);
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
-            str += `특정 사용자`
+            str += i18next.t('acl.required_string.user', { lng: lang });
         }
         else if(rule.conditionType === ACLConditionTypes.IP) {
-            str += `특정 IP`
+            str += i18next.t('acl.required_string.ip', { lng: lang });
         }
         else if(rule.conditionType === ACLConditionTypes.GeoIP) {
-            str += `geoip:${namumarkUtils.escapeHtml(rule.conditionContent)}`
+            str += `geoip:${namumarkUtils.escapeHtml(rule.conditionContent)}`;
         }
         else if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            str += `ACL그룹 ${namumarkUtils.escapeHtml(rule.aclGroup?.name ?? rule.conditionContent)}에 속해 있는 사용자`
+            str += i18next.t('acl.required_string.aclgroup', {
+                lng: lang,
+                group: namumarkUtils.escapeHtml(rule.aclGroup?.name ?? rule.conditionContent)
+            });
         }
         return str;
     }
 
-    static ruleToDenyString(rule, aclGroupId = null, isIp = false) {
+    static ruleToDenyString(rule, lang = 'ko', aclGroupId = null, isIp = false) {
         if(rule.conditionType === ACLConditionTypes.ACLGroup) {
-            return `${isIp ? '현재 사용중인 아이피가 ' : ''}ACL그룹 ${namumarkUtils.escapeHtml(rule.aclGroup.name)}${aclGroupId ? ` #${aclGroupId}에 있기` : '에 없기'}`
+            return i18next.t(`acl.deny_string.${aclGroupId ? 'in_group' : 'not_in_group'}`, {
+                lng: lang,
+                usingIpStr: isIp ? i18next.t('acl.deny_string.using_ip', { lng: lang }) : '',
+                group: namumarkUtils.escapeHtml(rule.aclGroup.name),
+                groupId: aclGroupId.toString()
+            });
         }
         else {
-            return `${ACL.ruleToConditionString(rule, false)}이기`
+            return i18next.t('acl.deny_string.condition', {
+                lng: lang,
+                condition: ACL.ruleToConditionString(rule, lang, false)
+            });
         }
     }
 
-    static ruleToConditionString(rule, formatPerm = true) {
+    static ruleToConditionString(rule, lang = 'ko', formatPerm = true) {
         let str = rule.not ? 'NOT ' : '';
         if(rule.conditionType === ACLConditionTypes.Perm) {
-            str += `${ACL.permissionToString(rule.conditionContent, !formatPerm)}`
+            str += `${ACL.permissionToString(rule.conditionContent, lang, !formatPerm)}`
         }
         else if(rule.conditionType === ACLConditionTypes.User) {
             str += `user:${namumarkUtils.escapeHtml(rule.user?.name ?? rule.conditionContent)}`
@@ -193,16 +196,17 @@ module.exports = class ACL {
         return str;
     }
 
-    static actionToString(ruleOrActionType) {
+    static actionToString(ruleOrActionType, lang = 'ko') {
         const safeActionContent = namumarkUtils.escapeHtml(ruleOrActionType.actionContent);
-        return {
-            [ACLActionTypes.Deny]: `거부`,
-            [ACLActionTypes.Allow]: `허용`,
-            [ACLActionTypes.GotoNS]: `이름공간ACL 실행`,
-            [ACLActionTypes.GotoOtherNS]: `${ruleOrActionType.actionContent
-                ? `<a href="/acl/${safeActionContent}:문서#namespace.${utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, ruleOrActionType.type))}">${safeActionContent}</a>`
-                : '다른 이름공간'} ACL 실행`
-        }[typeof ruleOrActionType === 'object' ? ruleOrActionType.actionType : ruleOrActionType];
+        const actionType = typeof ruleOrActionType === 'object' ? ruleOrActionType.actionType : ruleOrActionType;
+        return i18next.t(`acl.actions.${actionType}`, {
+            lng: lang,
+            ...(actionType === ACLActionTypes.GotoOtherNS ? {
+                namespace: ruleOrActionType.actionContent
+                    ? `<a href="/acl/${safeActionContent}:document#namespace.${utils.camelToSnakeCase(utils.getKeyFromObject(ACLTypes, ruleOrActionType.type))}">${safeActionContent}</a>`
+                    : i18next.t('acl.actions.other_namespace', { lng: lang })
+            } : {})
+        });
     }
 
     async check(aclType = ACLTypes.None, data = {}, noReadCheck = false) {
@@ -258,25 +262,29 @@ module.exports = class ACL {
 
             if(action === ACLActionTypes.Allow) return { result: true };
             else if(action === ACLActionTypes.Deny) {
-                let aclMessage = `${ACL.ruleToDenyString(rule, aclGroupItem?.id, aclGroupItem?.ip != null)} 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
+                let aclMessage = i18next.t('acl.deny_string.message', {
+                    lng: data.lang,
+                    rule: ACL.ruleToDenyString(rule, data.lang, aclGroupItem?.id, aclGroupItem?.ip != null),
+                    type: ACL.aclTypeToString(aclType, data.lang)
+                });
                 if(aclGroupItem) {
                     // if(rule.aclGroup.aclMessage) aclMessage = rule.aclGroup.aclMessage + ` (#${aclGroupItem.id})`;
-                    aclMessage += `<br>만료일 : ${aclGroupItem.expiresAt?.toString() ?? '무기한'}`;
-                    aclMessage += `<br>\n사유 : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? '없음')}`;
+                    aclMessage += `<br>${i18next.t('acl.deny_string.expiry', { lng: data.lang })} : ${aclGroupItem.expiresAt?.toString() ?? i18next.t('acl.deny_string.forever', { lng: data.lang })}`;
+                    aclMessage += `<br>\n${i18next.t('acl.deny_string.reason', { lng: data.lang })} : ${namumarkUtils.escapeHtml(aclGroupItem.note ?? 'null')}`;
                     if(rule.aclGroup.aclMessage) {
                         aclMessage = rule.aclGroup.aclMessage;
                         for(let [key, value] of Object.entries({
                             name: rule.aclGroup.name,
                             id: aclGroupItem.id,
                             note: aclGroupItem.note,
-                            expired: aclGroupItem.expiresAt?.toString() ?? '무기한'
+                            expired: aclGroupItem.expiresAt?.toString() ?? i18next.t('acl.deny_string.forever', { lng: data.lang })
                         })) {
                             aclMessage = aclMessage.replaceAll(`{${key}}`, namumarkUtils.escapeHtml(value));
                         }
                     }
                 }
 
-                if(this.document && !aclGroupItem) aclMessage += this.aclTabMessage;
+                if(this.document && !aclGroupItem) aclMessage += ACL.aclTabMessage(data.lang);
 
                 return {
                     result: false,
@@ -285,17 +293,22 @@ module.exports = class ACL {
             }
             else if(action === ACLActionTypes.GotoNS) return nsResult;
             else if(action === ACLActionTypes.GotoOtherNS) {
-                if(this.noOtherNS) return { result: false, aclMessage: '다른 이름공간 ACL 실행이 이중으로 사용되었습니다.' };
+                if(this.noOtherNS) return { result: false, aclMessage: i18next.t('acl.deep_other_ns', { lang: data.lang }) };
                 else return await rule.otherNamespaceACL.check(aclType, data, true);
             }
         }
 
         if(allowedRules.length) {
-            let aclMessage = `${ACL.aclTypeToString(aclType)} 권한이 부족합니다. ${allowedRules
-                .slice(0, 5)
-                .map(r => ACL.ruleToRequiredString(r))
-                .join(' OR ')}${allowedRules.length > 5 ? ` 그 외 ${allowedRules.length - 5}개의 규칙` : ''}(이)여야 합니다.`;
-            if(this.document) aclMessage += this.aclTabMessage;
+            let aclMessage = i18next.t('acl.allowed_listing_deny' + (allowedRules.length > 5 ? '_many' : ''), {
+                lng: data.lang,
+                type: ACL.aclTypeToString(aclType, data.lang),
+                rules: allowedRules
+                    .slice(0, 5)
+                    .map(r => ACL.ruleToRequiredString(r, data.lang))
+                    .join(' OR '),
+                count: allowedRules.length - 5
+            });
+            if(this.document) aclMessage += ACL.aclTabMessage(data.lang);
 
             return {
                 result: false,
@@ -303,8 +316,11 @@ module.exports = class ACL {
             }
         }
         else {
-            let aclMessage = `ACL에 허용 규칙이 없기 때문에 ${ACL.aclTypeToString(aclType)} 권한이 부족합니다.`;
-            if(this.document) aclMessage += this.aclTabMessage;
+            let aclMessage = i18next.t('acl.no_rules_deny', {
+                lng: data.lang,
+                type: ACL.aclTypeToString(aclType, data.lang)
+            });
+            if(this.document) aclMessage += ACL.aclTabMessage(data.lang);
 
             return {
                 result: false,
