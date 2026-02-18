@@ -96,7 +96,6 @@ Object.defineProperty(global, 'config', {
             ...global.devConfig,
             ...global.stringConfig
         }
-        if(!configObject.lang) console.trace();
         return {
             ...configObject,
             namespaces: [...new Set([
