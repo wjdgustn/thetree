@@ -583,6 +583,7 @@ SocketIO.on('new_namespace', namespace => {
 app.use(cookieParser());
 
 app.use(i18nMiddleware.handle(i18next));
+SocketIO.engine.use(onlyForHandshake(i18nMiddleware.handle(i18next)));
 
 app.use((req, res, next) => {
     res.locals.cspNonce = crypto.randomBytes(32).toString('hex');
