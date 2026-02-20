@@ -687,7 +687,7 @@ const uploadStaticFile = multer({
             cb(null, path);
         },
         filename: (req, file, cb) => {
-            const filename = req.body.filename || file.originalname;
+            const filename = req.body.filename || file.originalname.replace(/\[(\d+)]/, '');
             if(filename.includes('/') || filename.includes('..')) return cb('invalid filename');
 
             cb(null, filename);
