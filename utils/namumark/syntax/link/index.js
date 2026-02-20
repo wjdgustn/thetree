@@ -129,7 +129,7 @@ module.exports = async (obj, options = {}) => {
             if(hash) hasHash = true;
             title = link;
 
-            if(mainUtils.parseDocumentName(link).namespace === '문서') link = link.slice(3);
+            link = globalUtils.doc_fulltitle(mainUtils.parseDocumentName(link));
             if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}${hash ? `#${hash}` : ''}`;
             else link = `/w/${globalUtils.encodeSpecialChars(link)}${hash ? `#${hash}` : ''}`;
 
