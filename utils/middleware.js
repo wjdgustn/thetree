@@ -47,13 +47,18 @@ module.exports = {
                 const err = result.array()[0];
                 const isDefaultMsg = err.msg === 'Invalid value';
                 return res.status(400).send({
-                    status: err.msg + (isDefaultMsg ? `: ${err.path}` : '')
+                    status: req.t(err.msg) + (isDefaultMsg ? `: ${err.path}` : '')
                 });
             }
             else if(req.isInternal) return res.status(400).send({
-                fieldErrors: result.mapped()
+                fieldErrors: Object.fromEntries(Object.entries(result.mapped()).map(([key, value]) => [key, {
+                    ...value,
+                    msg: req.t(value.msg, {
+                        key
+                    })
+                }]))
             });
-            else return res.error(result.array()[0].msg);
+            else return res.error(req.t(result.array()[0].msg));
         }
         next();
     },

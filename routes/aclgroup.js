@@ -104,7 +104,7 @@ const getACLGroup = async (req, res) => {
         groupItems = await utils.findUsers(req, groupItems);
     }
 
-    res.renderSkin('ACLGroup', {
+    res.renderSkin('aclgroup', {
         contentName: 'admin/aclgroup',
         serverData: {
             aclGroups: aclGroups.map(a => ({
@@ -154,16 +154,16 @@ app.get('/aclgroup/groups', middleware.internal, async (req, res) => {
 app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, res) => {
     const name = req.body.name;
 
-    if(!name) return res.status(400).send('그룹 이름을 입력해주세요.');
+    if(!name) return res.status(400).send(req.t('routes.aclgroup.errors.missing_group_name'));
 
     const checkExists = await ACLGroup.exists({ name });
-    if(checkExists) return res.status(409).send('이미 존재하는 그룹 이름입니다.');
+    if(checkExists) return res.status(409).send(req.t('routes.aclgroup.errors.dup_group_name'));
 
     const newGroup = {
         name
     };
 
-    if(name === '차단된 사용자') {
+    if(name === req.t('default_aclgroups.blocked_user')) {
         newGroup.forBlock = true;
         newGroup.signupPolicy = SignupPolicy.Block;
         newGroup.userCSS = 'color: gray !important; text-decoration: line-through !important;';
@@ -172,29 +172,31 @@ app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, r
         newGroup.removePerms = ['admin'];
         newGroup.managePerms = ['developer'];
     }
-    else if(name === '편집요청 차단') {
+    else if(name === req.t('default_aclgroups.block_edit_request')) {
         newGroup.accessPerms = ['admin'];
         newGroup.addPerms = ['admin'];
         newGroup.removePerms = ['admin'];
     }
-    else if(name === '로그인 허용 차단' || name.includes('통신사') || name.toLowerCase().includes('vpn')) {
+    else if(name === req.t('default_aclgroups.login_allowed_block')
+        || name.includes(req.t('default_aclgroups.isp_keyword'))
+        || name.toLowerCase().includes('vpn')) {
         newGroup.signupPolicy = SignupPolicy.RequireVerification;
         newGroup.userCSS = 'color: green !important; text-decoration: line-through !important;';
         newGroup.accessPerms = ['admin'];
         newGroup.addPerms = ['admin'];
         newGroup.removePerms = ['admin'];
     }
-    else if(name.startsWith('경고')) {
+    else if(name.startsWith(req.t('default_aclgroups.warn_keyword'))) {
         newGroup.selfRemovable = true;
         newGroup.accessPerms = ['any'];
         newGroup.addPerms = ['admin'];
         newGroup.removePerms = ['admin'];
-        newGroup.selfRemoveNote = '확인했습니다.';
+        newGroup.selfRemoveNote = req.t('default_aclgroups.checked_message');
         newGroup.aclMessage = `
-경고를 받았습니다.
+${req.t('default_aclgroups.warn_message')}
 
-<a href="/aclgroup/self_remove?id={id}">[확인했습니다. #{id}]</a>
-사유: {note}
+<a href="/aclgroup/self_remove?id={id}">[${req.t('default_aclgroups.checked_message')} #{id}]</a>
+${req.t('acl.deny_string.reason')}: {note}
         `.trim().replaceAll('\n', '<br>');
     }
 
@@ -212,8 +214,8 @@ app.post('/aclgroup/group_remove', async (req, res) => {
     const uuid = req.body.uuid;
     const target = await ACLGroup.findOne({ ...aclGroupsQuery(req), uuid });
 
-    if(!target) return res.status(404).send('존재하지 않는 그룹입니다.');
-    if(!groupPermChecker(req, target, 'managePerms')) return res.status(403).send('권한이 부족합니다.');
+    if(!target) return res.status(404).send(req.t('routes.aclgroup.errors.group_not_found'));
+    if(!groupPermChecker(req, target, 'managePerms')) return res.status(403).send(req.t('errors.missing_permission'));
 
     const deleted = await ACLGroup.findOneAndDelete({ uuid });
     await AuditLog.create({
@@ -238,7 +240,7 @@ const postACLGroupValidate = [
                 ...aclGroupsQuery(req),
                 name: req.body.group
             });
-            if(!group) throw new Error('존재하지 않는 그룹입니다.');
+            if(!group) throw new Error(req.t('routes.aclgroup.errors.group_not_found'));
             req.modifiedBody.group = group;
         }),
     body('group')
@@ -249,7 +251,7 @@ const postACLGroupValidate = [
                 ...aclGroupsQuery(req),
                 uuid: req.body.group
             });
-            if(!group) throw new Error('존재하지 않는 그룹입니다.');
+            if(!group) throw new Error(req.t('routes.aclgroup.errors.group_not_found'));
             req.modifiedBody.group = group;
         }),
     body('mode')
@@ -266,12 +268,12 @@ const postACLGroupValidate = [
             if(ipv4 && req.modifiedBody.group.maxIpv4Cidr) {
                 const addr = new Address4(value);
                 if(addr.subnetMask < req.modifiedBody.group.maxIpv4Cidr)
-                    throw new Error(`max_ipv4_cidr은 /${req.modifiedBody.group.maxIpv4Cidr}입니다.`);
+                    throw new Error(req.t('routes.aclgroup.errors.aclgroup_config', { key: 'max_ipv4_cidr', value: '/' + req.modifiedBody.group.maxIpv4Cidr }));
             }
             if(ipv6 && req.modifiedBody.group.maxIpv6Cidr) {
                 const addr = new Address6(value);
                 if(addr.subnetMask < req.modifiedBody.group.maxIpv6Cidr)
-                    throw new Error(`max_ipv6_cidr은 /${req.modifiedBody.group.maxIpv6Cidr}입니다.`);
+                    throw new Error(req.t('routes.aclgroup.errors.aclgroup_config', { key: 'max_ipv6_cidr', value: '/' + req.modifiedBody.group.maxIpv6Cidr }));
             }
 
             return true;
@@ -285,13 +287,13 @@ const postACLGroupValidate = [
                     $regex: new RegExp(`^${utils.escapeRegExp(value)}$`, 'i')
                 }
             });
-            if(!user || !value) throw new Error('사용자 이름이 올바르지 않습니다.');
+            if(!user || !value) throw new Error(req.t('routes.aclgroup.errors.invalid_username'));
 
             req.modifiedBody.user = user;
         }),
     body('note')
         .notEmpty()
-        .withMessage('note의 값은 필수입니다.'),
+        .withMessage('errors.required_field'),
     body('duration')
         .custom((value, { req }) => {
             let result;
@@ -299,36 +301,36 @@ const postACLGroupValidate = [
                 const rawDuration = req.body.rawDuration;
                 const rawMultiplier = req.body.rawMultiplier;
 
-                if(!rawDuration) throw new Error('duration의 값은 필수입니다.');
+                if(!rawDuration) throw new Error(req.t('errors.required_field'));
 
                 const customValue = rawDuration * rawMultiplier;
                 req.modifiedBody.duration = customValue;
-                if(customValue < 0) throw new Error('duration의 값은 0 이상이여야 합니다.');
+                if(customValue < 0) throw new Error(req.t('routes.aclgroup.errors.min_duration'));
                 result = !isNaN(customValue);
             }
             else {
                 req.modifiedBody.duration = Number(value);
-                if(value < 0) throw new Error('duration의 값은 0 이상이여야 합니다.');
+                if(value < 0) throw new Error(req.t('routes.aclgroup.errors.min_duration'));
                 result = !isNaN(value);
             }
 
             if(req.body.mode === 'username'
                 && req.modifiedBody.group.maxDurationAccount
                 && (!req.modifiedBody.duration || req.modifiedBody.duration > req.modifiedBody.group.maxDurationAccount))
-                throw new Error(`max_duration_account는 ${req.modifiedBody.group.maxDurationAccount}입니다.`);
+                throw new Error(req.t('routes.aclgroup.errors.aclgroup_config', { key: 'max_duration_account', value: req.modifiedBody.group.maxDurationAccount }));
             if(req.body.mode === 'ip'
                 && req.modifiedBody.group.maxDurationIp
                 && (!req.modifiedBody.duration || req.modifiedBody.duration > req.modifiedBody.group.maxDurationIp))
-                throw new Error(`max_duration_ip는 ${req.modifiedBody.group.maxDurationIp}입니다.`);
+                throw new Error(req.t('routes.aclgroup.errors.aclgroup_config', { key: 'max_duration_ip', value: req.modifiedBody.group.maxDurationIp }));
             if(req.modifiedBody.group.maxDuration
                 && (!req.modifiedBody.duration || req.modifiedBody.duration > req.modifiedBody.group.maxDuration))
-                throw new Error(`max_duration은 ${req.modifiedBody.group.maxDuration}입니다.`);
+                throw new Error(req.t('routes.aclgroup.errors.aclgroup_config', { key: 'max_duration', value: req.modifiedBody.group.maxDuration }));
 
             return result;
         }),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error(req.t('errors.missing_permission'));
             return true;
         }),
     middleware.fieldErrors
@@ -386,7 +388,7 @@ module.exports.addACLGroupItem = addACLGroupItem;
 const postACLGroup = async (req, res) => {
     const group = req.modifiedBody.group;
 
-    if(!groupPermChecker(req, group, 'addPerms')) return res.status(403).send('권한이 부족합니다.');
+    if(!groupPermChecker(req, group, 'addPerms')) return res.status(403).send(req.t('errors.missing_permission'));
 
     const aclGroupItem = await addACLGroupItem({
         createdUser: req.user,
@@ -400,7 +402,7 @@ const postACLGroup = async (req, res) => {
         note: req.body.note,
         hideLog: req.body.hidelog === 'Y'
     });
-    if(!aclGroupItem) return res.status(409).send('이미 해당 요소가 존재합니다.');
+    if(!aclGroupItem) return res.status(409).send(req.t('routes.aclgroup.errors.dup_aclgroup_item'));
 
     if(req.isAPI) res.sendData({ id: aclGroupItem.id });
     else if(req.referer?.pathname.startsWith('/aclgroup')) {
@@ -432,7 +434,7 @@ const removeACLGroupValidate = [
                 ...aclGroupsQuery(req),
                 name: req.body.group
             });
-            if(!group) throw new Error('존재하지 않는 그룹입니다.');
+            if(!group) throw new Error(req.t('routes.aclgroup.errors.group_not_found'));
             req.modifiedBody.group = group;
         }),
     body('group')
@@ -443,15 +445,15 @@ const removeACLGroupValidate = [
                 ...aclGroupsQuery(req),
                 uuid: req.body.group
             });
-            if(!group) throw new Error('존재하지 않는 그룹입니다.');
+            if(!group) throw new Error(req.t('routes.aclgroup.errors.group_not_found'));
             req.modifiedBody.group = group;
         }),
     body('note')
         .notEmpty()
-        .withMessage('note의 값은 필수입니다.'),
+        .withMessage('errors.required_field'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('aclgroup_hidelog')) throw new Error(req.t('errors.missing_permission'));
             return true;
         }),
     middleware.fieldErrors
@@ -501,7 +503,7 @@ const removeACLGroupItem = async ({ createdUser, createdUserUuid, group, id, uui
 const removeACLGroup = async (req, res) => {
     const group = req.modifiedBody.group;
 
-    if(!groupPermChecker(req, group, 'removePerms')) return res.status(403).send('권한이 부족합니다.');
+    if(!groupPermChecker(req, group, 'removePerms')) return res.status(403).send(req.t('errors.missing_permission'));
 
     const deleted = await removeACLGroupItem({
         createdUser: req.user,
@@ -514,7 +516,7 @@ const removeACLGroup = async (req, res) => {
         note: req.body.note,
         hideLog: req.body.hidelog === 'Y'
     });
-    if(!deleted) return res.status(404).send('ACL 요소가 존재하지 않습니다.');
+    if(!deleted) return res.status(404).send(req.t('routes.aclgroup.errors.aclgroup_item_not_found'));
 
     res.reload();
 }
@@ -528,9 +530,9 @@ app.get('/aclgroup/group_manage', async (req, res) => {
     });
     if(!group
         || !groupPermChecker(req, group, 'managePerms'))
-        return res.error('존재하지 않는 그룹입니다.', 404);
+        return res.error(req.t('routes.aclgroup.errors.group_not_found'), 404);
 
-    return res.renderSkin('ACLGroup 설정', {
+    return res.renderSkin('aclgroup_manage', {
         contentName: 'admin/aclgroupManage',
         serverData: {
             group: Object.fromEntries(Object.entries(utils.withoutKeys(group, [
@@ -550,13 +552,13 @@ const permValidator = field => body(field)
     .custom((value, { req }) => {
         const invalid = value.find(a => !['any', ...AllPermissions].includes(a));
         if(invalid)
-            throw new Error(`${namumarkUtils.escapeHtml(invalid)} 권한은 유효하지 않습니다.`);
+            throw new Error(req.t('routes.aclgroup.errors.invalid_permission', { value: invalid }));
         if(field === 'managePerms'
             && (
                 (value.length && !req.permissions.some(a => value.includes(a)))
                 || (!value.length && !req.permissions.includes('aclgroup'))
             ))
-            throw new Error('본인이 가진 권한이 포함되지 않았습니다.');
+            throw new Error(req.t('routes.aclgroup.errors.missing_self_permission'));
         if(field === 'permissions') {
             const groupPermissions = req.body.group.permissions;
             const addedPermissions = value.filter(a => !groupPermissions.includes(a));
@@ -568,7 +570,7 @@ const permValidator = field => body(field)
                 ...removedPermissions
             ];
             if(modifiedPermissions.length && !req.permissions.includes('grant'))
-                throw new Error('이 값을 수정하려면 grant 권한이 필요합니다.');
+                throw new Error(req.t('routes.aclgroup.errors.modify_value_missing_permission', { value: 'grant' }));
 
             const addablePermissions = AllPermissions.filter(a =>
                 !NoGrantPermissions.includes(a)
@@ -578,7 +580,7 @@ const permValidator = field => body(field)
 
             const noGrantablePermission = modifiedPermissions.find(a => !addablePermissions.includes(a));
             if(noGrantablePermission)
-                throw new Error(`${namumarkUtils.escapeHtml(noGrantablePermission)} 권한을 수정할 권한이 없습니다.`);
+                throw new Error(req.t('routes.aclgroup.errors.missing_permission_edit_permission', { value: noGrantablePermission }));
         }
         return true;
     });
@@ -591,13 +593,13 @@ app.post('/aclgroup/group_manage',
             });
             if(!group
                 || !groupPermChecker(req, group, 'managePerms'))
-                throw new Error('존재하지 않는 그룹입니다.');
+                throw new Error(req.t('routes.aclgroup.errors.group_not_found'));
 
             req.body.group = group;
         }),
     body('name')
         .notEmpty()
-        .withMessage('그룹 이름은 필수입니다.'),
+        .withMessage('routes.aclgroup.errors.group_name_required'),
     body('withdrawPeriodHours')
         .isInt({ min: 0 }),
     body('signupPolicy')
@@ -672,7 +674,7 @@ app.get('/aclgroup/self_remove', async (req, res) => {
     const group = await ACLGroup.findOne({
         uuid: item.aclGroup
     });
-    if(!group.selfRemovable) return res.error('해제할 수 없는 요소입니다.');
+    if(!group.selfRemovable) return res.error(req.t('routes.aclgroup.errors.not_self_removable'));
 
     await ACLGroupItem.deleteOne({
         uuid: item.uuid

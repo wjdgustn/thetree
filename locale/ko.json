@@ -30,7 +30,30 @@
   },
 
   "titles": {
-    "error": "오류"
+    "error": "오류",
+    "aclgroup": "ACLGroup",
+    "aclgroup_manage": "ACLGroup 설정"
+  },
+
+  "routes": {
+    "aclgroup": {
+      "errors": {
+        "missing_group_name": "그룹 이름을 입력해주세요.",
+        "dup_group_name": "이미 존재하는 그룹 이름입니다.",
+        "group_not_found": "존재하지 않는 그룹입니다.",
+        "aclgroup_config": "{{key}}는 {{value}}입니다.",
+        "invalid_username": "사용자 이름이 올바르지 않습니다.",
+        "min_duration": "duration의 값은 0 이상이여야 합니다.",
+        "dup_aclgroup_item": "이미 해당 요소가 존재합니다.",
+        "aclgroup_item_not_found": "ACL 요소가 존재하지 않습니다.",
+        "invalid_permission": "{{value}} 권한은 유효하지 않습니다.",
+        "missing_self_permission": "본인이 가진 권한이 포함되지 않았습니다.",
+        "modify_value_missing_permission": "이 값을 수정하려면 {{value}} 권한이 필요합니다.",
+        "missing_permission_edit_permission": "{{value}} 권한을 수정할 권한이 없습니다.",
+        "group_name_required": "그룹 이름은 필수입니다.",
+        "not_self_removable": "해제할 수 없는 요소입니다."
+      }
+    }
   },
 
   "errors": {
@@ -40,7 +63,18 @@
     "missing_permission": "권한이 부족합니다.",
     "invalid_request": "잘못된 요청입니다.",
     "missing_document_name": "문서 이름이 없습니다.",
-    "invalid_document_name": "문서 이름이 올바르지 않습니다."
+    "invalid_document_name": "문서 이름이 올바르지 않습니다.",
+    "required_field": "{{key}}의 값은 필수입니다."
+  },
+
+  "default_aclgroups": {
+    "blocked_user": "차단된 사용자",
+    "block_edit_request": "편집요청 차단",
+    "login_allowed_block": "로그인 허용 차단",
+    "isp_keyword": "통신사",
+    "warn_keyword": "경고",
+    "warn_message": "경고를 받았습니다.",
+    "checked_message": "확인했습니다."
   },
 
   "permissions": {

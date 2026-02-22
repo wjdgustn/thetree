@@ -1012,6 +1012,8 @@ app.use(async (req, res, next) => {
         const renderSkin = async (title, data = {}) => {
             makeConfigAndSession();
 
+            title = req.t(`titles.${title}`, { defaultValue: title });
+
             const status = data.status || 200;
             delete data.status;
 
