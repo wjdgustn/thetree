@@ -11,6 +11,11 @@
     "삭제된사용자": "삭제된사용자"
   },
 
+  "special_document_name": {
+    "file_license": "이미지 라이선스",
+    "file_category": "파일"
+  },
+
   "namumark": {
     "errors": {
       "maximum_length_html": "문서 길이가 너무 깁니다.",

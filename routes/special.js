@@ -256,16 +256,36 @@ app.get('/License', (req, res) => {
 
 const getImageDropdowns = async () => {
     const licenses = await Document.find({
-        isFileLicense: true,
+        $or: [
+            {
+                isFileLicense: true
+            },
+            ...(config.lang && i18next.exists('special_document_name.file_license', { lng: config.lang }) ? [{
+                namespace: '틀',
+                title: {
+                    $regex: new RegExp('^' + i18next.t('special_document_name.file_license', { lng: config.lang }) + '\\/.+')
+                }
+            }] : [])
+        ],
         contentExists: true
     })
         .sort({ title: 1 })
         .select('title')
         .lean();
-    const mappedLicenses = licenses.map(doc => doc.title.slice('이미지 라이선스/'.length));
+    const mappedLicenses = licenses.map(doc => doc.title.slice(doc.title.indexOf('/') + 1));
 
-    const catgories = await Document.find({
-        isFileCategory: true,
+    const categories = await Document.find({
+        $or: [
+            {
+                isFileCategory: true
+            },
+            ...(config.lang && i18next.exists('special_document_name.file_category', { lng: config.lang }) ? [{
+                namespace: '분류',
+                title: {
+                    $regex: new RegExp('^' + i18next.t('special_document_name.file_category', { lng: config.lang }) + '\\/.+')
+                }
+            }] : [])
+        ],
         contentExists: true
     })
         .sort({ title: 1 })
@@ -277,7 +297,7 @@ const getImageDropdowns = async () => {
             ...(config.file_top_license ?? []).filter(a => mappedLicenses.includes(a)),
             ...mappedLicenses.filter(a => !config.file_top_license || !config.file_top_license.includes(a))
         ],
-        categories: catgories.map(doc => doc.title.slice('파일/'.length))
+        categories: categories.map(doc => doc.title.slice(doc.title.indexOf('/') + 1))
     }
 }
 
