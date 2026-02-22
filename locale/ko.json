@@ -106,6 +106,44 @@
         "invalid_email": "이메일의 형식이 올바르지 않습니다.",
         "dup_username": "사용자 이름이 이미 존재합니다."
       }
+    },
+    "document": {
+      "errors": {
+        "invalid_rev": "해당 리비전이 존재하지 않습니다.",
+        "secret_rev": "숨겨진 리비전입니다.",
+        "marked_troll_rev": "이 리비전은 반달로 표시 되었습니다.",
+        "namespace_nsacl_permission_required": "이름공간 ACL 수정은 nsacl 권한이 필요합니다!",
+        "acl_nsacl_permission_required": "ACL 카테고리 수정은 nsacl 권한이 필요합니다!",
+        "missing_permission_value": "권한 값을 입력해주세요!",
+        "missing_acl_username": "해당 이름의 사용자를 찾을 수 없습니다!",
+        "invalid_ip": "유효하지 않은 IP",
+        "invalid_geoip": "유효하지 않은 GeoIP",
+        "invalid_aclgroup_name": "해당 이름의 ACL 그룹을 찾을 수 없습니다!",
+        "missing_other_ns": "이동할 이름공간을 입력하세요!",
+        "invalid_namespace": "{{value}} 이름공간은 존재하지 않습니다!",
+        "same_gotons_target": "같은 이름공간으로 이동할 수 없습니다.",
+        "missing_document": "문서가 존재하지 않습니다.",
+        "invalid_section": "섹션이 올바르지 않습니다.",
+        "missing_edit_request": "편집 요청을 찾을 수 없습니다.",
+        "edit_self_edit_request_only": "자신의 편집 요청만 수정할 수 있습니다.",
+        "invalid_edit_request_status": "편집 요청 상태가 올바르지 않습니다.",
+        "cant_reopen_locked_edit_request": "이 편집 요청은 잠겨있어서 다시 열 수 없습니다.",
+        "missing_edit_agree": "수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.",
+        "max_log_length": "요약의 값은 {{value}}글자 이하여야 합니다.",
+        "edit_request_same_document": "이미 해당 문서에 편집요청이 존재합니다. 해당 편집요청을 수정하시기 바랍니다.",
+        "edit_conflict": "편집 도중에 다른 사용자가 먼저 편집을 했습니다.",
+        "cant_create_user_document": "사용자 문서는 생성할 수 없습니다.",
+        "deleted_document": "삭제된 문서입니다.",
+        "edit_request_conflict": "이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.",
+        "invalid_revert_rev_type": "이 리비전으로 되돌릴 수 없습니다.",
+        "troll_revert_rev": "이 리비전은 반달로 표시되었기 때문에 되돌릴 수 없습니다.",
+        "missing_delete_agree": "문서 삭제에 대한 안내를 확인해 주세요.",
+        "min_log_length": "{{value}}자 이상의 요약을 입력해 주세요.",
+        "file_ext_mismatch": "문서 이름과 확장자가 맞지 않습니다. (파일 확장자: {{value}})",
+        "cant_move_document_to_target_namespace": "이 문서를 해당 이름공간으로 이동할 수 없습니다.",
+        "dup_document": "문서가 이미 존재합니다."
+      },
+      "auto_merged": "자동 병합됨"
     }
   },
 
@@ -118,7 +156,9 @@
     "missing_document_name": "문서 이름이 없습니다.",
     "invalid_document_name": "문서 이름이 올바르지 않습니다.",
     "required_field": "{{key}}의 값은 필수입니다.",
-    "account_not_found": "계정을 찾을 수 없습니다."
+    "account_not_found": "계정을 찾을 수 없습니다.",
+    "same_document_content": "문서 내용이 같습니다.",
+    "document_not_found": "문서를 찾을 수 없습니다."
   },
 
   "default_aclgroups": {
