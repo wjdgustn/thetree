@@ -36,7 +36,11 @@
   "errors": {
     "read_only": "위키가 읽기 전용 모드입니다.",
     "disabled_feature": "비활성화된 기능입니다.",
-    "server_error": "서버 오류<br>요청 ID:"
+    "server_error": "서버 오류<br>요청 ID:",
+    "missing_permission": "권한이 부족합니다.",
+    "invalid_request": "잘못된 요청입니다.",
+    "missing_document_name": "문서 이름이 없습니다.",
+    "invalid_document_name": "문서 이름이 올바르지 않습니다."
   },
 
   "permissions": {
