@@ -239,20 +239,20 @@ app.post('/discuss{/*document}', middleware.parseDocumentName,
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('topic의 값은 필수입니다.')
+        .withMessage('errors.required_field')
         .isLength({
             max: 255
         })
-        .withMessage('topic의 값은 255글자 이하여야 합니다.'),
+        .withMessage('routes.discuss.errors.max_topic_length'),
     body('text')
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('본문의 값은 필수입니다.')
+        .withMessage('routes.discuss.errors.text_required')
         .isLength({
             max: 65536
         })
-        .withMessage('본문의 값은 65536글자 이하여야 합니다.'),
+        .withMessage('routes.discuss.errors.max_text_length'),
     middleware.fieldErrors,
     middleware.captcha(false, true),
     async (req, res) => {
@@ -310,7 +310,7 @@ app.get('/thread/:url', middleware.checkCaptcha(), async (req, res) => {
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const dbDocument = await Document.findOne({
         uuid: thread.document
@@ -391,7 +391,7 @@ app.get('/thread/:url/acl', async (req, res) => {
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const dbDocument = await Document.findOne({
         uuid: thread.document
@@ -432,7 +432,7 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const dbDocument = await Document.findOne({
         uuid: thread.document
@@ -475,14 +475,14 @@ app.get('/thread/:url/:num', middleware.referer('/thread'), async (req, res) => 
 });
 
 app.post('/thread/:url', middleware.captcha(), async (req, res) => {
-    if(!req.body.text?.trim()) return res.status(400).send('본문의 값은 필수입니다.');
-    if(req.body.text.length > 65536) return res.status(400).send('본문의 값은 65536글자 이하여야 합니다.');
+    if(!req.body.text?.trim()) return res.status(400).send(req.t('routes.discuss.errors.text_required'));
+    if(req.body.text.length > 65536) return res.status(400).send(req.t('routes.discuss.errors.max_text_length'));
 
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     if(thread.status !== ThreadStatusTypes.Normal) return res.status(403).send('thread_invalid_status');
 
@@ -543,14 +543,14 @@ app.post('/thread/:url', middleware.captcha(), async (req, res) => {
 app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
     body('status')
         .isIn(Object.keys(ThreadStatusTypes))
-        .withMessage('status의 값이 올바르지 않습니다.'),
+        .withMessage('errors.invalid_field'),
     middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const document = await Document.findOne({
         uuid: thread.document
@@ -562,7 +562,7 @@ app.post('/admin/thread/:url/status', middleware.permission('manage_thread'),
 
     const status = ThreadStatusTypes[req.body.status];
 
-    if(thread.status === status) return res.status(409).send(`이미 ${req.body.status.toLowerCase()} 상태입니다.`);
+    if(thread.status === status) return res.status(409).send(`same_thread_status`);
 
     await Thread.updateOne({
         uuid: thread.uuid
@@ -622,18 +622,18 @@ app.post('/admin/thread/:url/topic', middleware.permission('manage_thread'),
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('topic의 값은 필수입니다.')
+        .withMessage('errors.required_field')
         .isLength({
             max: 255
         })
-        .withMessage('topic의 값은 255글자 이하여야 합니다.'),
+        .withMessage('routes.discuss.errors.max_topic_length'),
     middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const document = await Document.findOne({
         uuid: thread.document
@@ -645,7 +645,7 @@ app.post('/admin/thread/:url/topic', middleware.permission('manage_thread'),
 
     const topic = req.body.topic;
 
-    if(thread.topic === topic) return res.status(409).send('현재 주제와 동일합니다.');
+    if(thread.topic === topic) return res.status(409).send(req.t('routes.discuss.errors.same_topic'));
 
     await Thread.updateOne({
         uuid: thread.uuid
@@ -677,18 +677,18 @@ app.post('/admin/thread/:url/document', middleware.permission('manage_thread'),
         .notEmpty({
             ignore_whitespace: true
         })
-        .withMessage('document의 값은 필수입니다.')
+        .withMessage('errors.required_field')
         .isLength({
             max: 255
         })
-        .withMessage('문서 이름이 올바르지 않습니다.'),
+        .withMessage('errors.invalid_document_name'),
     middleware.fieldErrors,
     async (req, res) => {
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const dbDocument = await Document.findOne({
         uuid: thread.document
@@ -705,7 +705,7 @@ app.post('/admin/thread/:url/document', middleware.permission('manage_thread'),
         title: targetDocument.title
     });
 
-    if(dbTargetDocument?.uuid === dbDocument.uuid) return res.status(409).send('현재 문서와 동일합니다.');
+    if(dbTargetDocument?.uuid === dbDocument.uuid) return res.status(409).send(req.t('routes.discuss.errors.same_document'));
 
     dbTargetDocument ??= await Document.create({
         namespace: targetDocument.namespace,
@@ -781,7 +781,7 @@ app.post('/admin/thread/:url/delete', middleware.permission('delete_thread'), as
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const document = await Document.findOne({
         uuid: thread.document
@@ -842,7 +842,7 @@ app.post('/admin/thread/:url/:id/pin', middleware.permission('manage_thread'), a
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const document = await Document.findOne({
         uuid: thread.document
@@ -854,16 +854,16 @@ app.post('/admin/thread/:url/:id/pin', middleware.permission('manage_thread'), a
 
     const commentId = parseInt(req.params.id);
     if(commentId === 0) {
-        if(!thread.pinnedComment) return res.status(409).send('고정된 댓글이 없습니다.');
+        if(!thread.pinnedComment) return res.status(409).send('missing_pinned_comment');
     }
     else {
-        if(thread.pinnedComment === commentId) return res.status(409).send('이미 고정된 댓글입니다.');
+        if(thread.pinnedComment === commentId) return res.status(409).send('already_pinned_comment');
 
         const comment = await ThreadComment.findOne({
             thread: thread.uuid,
             id: commentId
         });
-        if(!comment) return res.status(404).send('댓글이 존재하지 않습니다.');
+        if(!comment) return res.status(404).send('invalid_comment');
 
         await threadCommentEvent({
             req,
@@ -902,14 +902,14 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('manage_thread'
     if(![
         'hide',
         'show'
-    ].includes(req.params.action)) return res.error('잘못된 요청입니다.');
+    ].includes(req.params.action)) return res.error(req.t('errors.invalid_request'));
     const isHide = req.params.action === 'hide';
 
     const thread = await Thread.findOne({
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const document = await Document.findOne({
         uuid: thread.document
@@ -923,9 +923,9 @@ app.post('/admin/thread/:url/:id/:action', middleware.permission('manage_thread'
         thread: thread.uuid,
         id: parseInt(req.params.id)
     });
-    if(!dbComment) return res.status(404).send('댓글이 존재하지 않습니다.');
-    if(isHide && dbComment.hidden) return res.status(409).send('이미 숨겨진 댓글입니다.');
-    if(!isHide && !dbComment.hidden) return res.status(409).send('숨겨지지 않은 댓글입니다.');
+    if(!dbComment) return res.status(404).send('comment_not_found');
+    if(isHide && dbComment.hidden) return res.status(409).send('already_hidden_comment');
+    if(!isHide && !dbComment.hidden) return res.status(409).send('not_hidden_comment');
 
     dbComment = await ThreadComment.findOneAndUpdate({
         uuid: dbComment.uuid
@@ -951,7 +951,7 @@ app.get('/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) 
         url: req.params.url,
         deleted: false
     });
-    if(!thread) return res.error('토론이 존재하지 않습니다.', 404);
+    if(!thread) return res.error(req.t('routes.discuss.errors.missing_thread'), 404);
 
     const document = await Document.findOne({
         uuid: thread.document
@@ -965,11 +965,11 @@ app.get('/thread/:url/:id/raw', middleware.referer('/thread'), async (req, res) 
         thread: thread.uuid,
         id: parseInt(req.params.id)
     });
-    if(!dbComment) return res.status(404).send('댓글이 존재하지 않습니다.');
+    if(!dbComment) return res.status(404).send('invalid_comment');
     if(dbComment.hidden
         && !req.permissions.includes('manage_thread'))
-        return res.status(403).send('권한이 부족합니다.');
-    if(dbComment.type !== ThreadCommentTypes.Default) return res.status(400).send('원문을 볼 수 없는 댓글입니다.');
+        return res.status(403).send(req.t('errors.missing_permission'));
+    if(dbComment.type !== ThreadCommentTypes.Default) return res.status(400).send('invalid_comment_type');
 
     res.send(dbComment.content);
 });
@@ -978,13 +978,13 @@ app.post('/vote/:commentId/:voteIndex', async (req, res) => {
     const comment = await ThreadComment.findOne({
         uuid: req.params.commentId
     });
-    if(!comment) return res.status(404).send('댓글이 존재하지 않습니다.');
+    if(!comment) return res.status(404).send(req.t('routes.discuss.errors.missing_thread'));
 
     const thread = await Thread.findOne({
         uuid: comment.thread,
         deleted: false
     });
-    if(!thread) return res.status(404).send('댓글이 존재하지 않습니다.');
+    if(!thread) return res.status(404).send(req.t('routes.discuss.errors.missing_thread'));
 
     if(thread.status !== ThreadStatusTypes.Normal) return res.status(403).send('thread_invalid_status');
 
@@ -1008,7 +1008,7 @@ app.post('/vote/:commentId/:voteIndex', async (req, res) => {
             value: parseInt(req.body[`vote-${req.params.voteIndex}`])
         });
     } catch(e) {
-        return res.status(403).send('유효성 검사에 실패했습니다.');
+        return res.status(403).send('invalid_vote');
     }
 
     await threadCommentEvent({
