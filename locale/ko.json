@@ -62,7 +62,8 @@
     "recover_password": "계정 찾기",
     "starred_documents": "내 문서함",
     "notifications": "알림",
-    "signup_verify": "모바일 인증"
+    "signup_verify": "모바일 인증",
+    "search": "검색"
   },
 
   "routes": {
@@ -249,6 +250,12 @@
         "missing_thread": "토론이 존재하지 않습니다.",
         "same_topic": "현재 주제와 동일합니다.",
         "same_document": "현재 문서와 동일합니다."
+      }
+    },
+    "search": {
+      "errors": {
+        "search_engine_disabled": "검색 엔진이 비활성화되어 있습니다.",
+        "no_readable_namespace": "읽을 수 있는 이름공간이 없습니다."
       }
     }
   },
