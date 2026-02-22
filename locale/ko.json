@@ -99,5 +99,15 @@
     "user_discuss": "{user} 사용자가 {topic} #{id} 사용자 토론 댓글 작성",
     "mention": "{user} 사용자가 {topic} #{id} 댓글에서 호출",
     "default": "알림"
+  },
+
+  "thread": {
+    "comment": {
+      "update_status": "스레드 상태를 {{-value}}로 변경",
+      "update_topic": "스레드 주제를 {{-oldValue}}에서 {{-newValue}}로 변경",
+      "update_document": "스레드를 {{-oldValue}}에서 {{-newValue}}로 이동",
+      "pin_comment": "{{-value}} 댓글을 고정",
+      "unpin_comment": "댓글 고정 해제"
+    }
   }
 }

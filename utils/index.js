@@ -786,6 +786,8 @@ module.exports = {
         }
 
         if(!isHidden || canSeeHidden) {
+            const $t = req?.t ?? i18next.getFixedT(config.lang);
+
             if(comment.type === ThreadCommentTypes.Default) {
                 const parseResult = global.NamumarkParser.parser(comment.content, { thread: true });
                 if(lightMode) comment.contentHtml = namumarkUtils.escapeHtml(namumarkUtils.parsedToText(parseResult.result)).trim();
@@ -800,19 +802,29 @@ module.exports = {
                 }
             }
             else if(comment.type === ThreadCommentTypes.UpdateStatus) {
-                comment.contentHtml = `스레드 상태를 <b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
+                comment.contentHtml = $t('thread.comment.update_status', {
+                    value: `<b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.UpdateTopic) {
-                comment.contentHtml = `스레드 주제를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 변경`;
+                comment.contentHtml = $t('thread.comment.update_topic', {
+                    oldValue: `<b>${namumarkUtils.escapeHtml(comment.prevContent)}</b>`,
+                    newValue: `<b>${namumarkUtils.escapeHtml(comment.content)}</b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.UpdateDocument) {
-                comment.contentHtml = `스레드를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 이동`;
+                comment.contentHtml = $t('thread.comment.update_document', {
+                    oldValue: `<b>${namumarkUtils.escapeHtml(comment.prevContent)}</b>`,
+                    newValue: `<b>${namumarkUtils.escapeHtml(comment.content)}</b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.PinComment) {
-                comment.contentHtml = `<b><a href="#${comment.content}">#${comment.content}</a></b> 댓글을 고정`;
+                comment.contentHtml = $t('thread.comment.pin_comment', {
+                    value: `<b><a href="#${comment.content}">#${comment.content}</a></b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.UnpinComment) {
-                comment.contentHtml = `댓글 고정 해제`;
+                comment.contentHtml = $t('thread.comment.unpin_comment');
             }
 
             if(lightMode && comment.type !== ThreadCommentTypes.Default)
