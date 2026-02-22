@@ -40,7 +40,14 @@
     "login_history_result": "{{value}} 로그인 내역",
     "audit_log": "감사 로그",
     "initial_setup": "초기 설정",
-    "manage_account": "계정 관리"
+    "manage_account": "계정 관리",
+    "uncategorized_pages": "분류가 되지 않은 문서",
+    "old_pages": "편집된 지 오래된 문서",
+    "short_title_pages": "내용이 짧은 문서",
+    "long_title_pages": "내용이 긴 문서",
+    "needed_pages": "작성이 필요한 문서",
+    "orphaned_pages": "고립된 문서",
+    "orphaned_categories": "고립된 분류"
   },
 
   "routes": {
