@@ -63,7 +63,12 @@
     "starred_documents": "내 문서함",
     "notifications": "알림",
     "signup_verify": "모바일 인증",
-    "search": "검색"
+    "search": "검색",
+    "recent_changes": "최근 변경내역",
+    "recent_discuss": "최근 토론",
+    "license": "라이선스",
+    "upload": "파일 올리기",
+    "block_history": "차단 내역"
   },
 
   "routes": {
@@ -257,6 +262,23 @@
         "search_engine_disabled": "검색 엔진이 비활성화되어 있습니다.",
         "no_readable_namespace": "읽을 수 있는 이름공간이 없습니다."
       }
+    },
+    "special": {
+      "errors": {
+        "document_required": "문서 제목을 입력해주세요.",
+        "document_max_length": "document의 값은 200글자 이하여야 합니다.",
+        "document_file_namespace_only": "업로드는 파일 이름공간에서만 가능합니다.",
+        "license_required": "라이선스를 선택해주세요.",
+        "category_required": "카테고리를 선택해주세요.",
+        "log_max_length": "요약의 값은 255글자 이하여야 합니다.",
+        "file_required": "파일이 업로드되지 않았습니다.",
+        "invalid_file_type": "올바르지 않은 파일입니다.",
+        "dup_file": "이미 업로드된 파일입니다.\n중복 파일: {{-link}}",
+        "file_upload_error": "파일 업로드 중 오류가 발생했습니다.",
+        "no_document": "문서가 없습니다."
+      },
+      "file_upload_log": "파일 {{-value}}을 올림",
+      "multiple_file_uploaded": "{{count}}개의 파일을 업로드했습니다."
     }
   },
 

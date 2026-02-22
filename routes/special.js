@@ -76,7 +76,7 @@ app.get('/RecentChanges', async (req, res) => {
             delete rev.log;
     }
 
-    res.renderSkin('최근 변경내역', {
+    res.renderSkin('recent_changes', {
         contentName: 'special/recentChanges',
         serverData: {
             revs: revs.map(a => utils.addHistoryData(req, a, req.permissions.includes('admin'), null)),
@@ -156,7 +156,7 @@ app.get('/RecentDiscuss', async (req, res) => {
     editRequests = await utils.findUsers(req, editRequests, 'lastUpdateUser');
     editRequests = await utils.findDocuments(editRequests);
 
-    res.renderSkin('최근 토론', {
+    res.renderSkin('recent_discuss', {
         contentName: 'special/recentDiscuss',
         serverData: {
             threads,
@@ -241,7 +241,7 @@ app.get('/License', (req, res) => {
 
     openSourceLicense ??= fs.readFileSync('./OPEN_SOURCE_LICENSE.txt').toString();
 
-    res.renderSkin('라이선스', {
+    res.renderSkin('license', {
         viewName: 'license',
         contentName: 'special/license',
         serverData: {
@@ -323,11 +323,11 @@ app.get('/Upload', async (req, res) => {
     }
 
     let defaultLicense = config.file_default_license;
-    const imageLicensePrefix = '틀:이미지 라이선스/';
-    if(defaultLicense?.startsWith(imageLicensePrefix))
-        defaultLicense = defaultLicense.slice(imageLicensePrefix.length);
+    const parsedDefaultLicense = utils.parseDocumentName(defaultLicense);
+    if(parsedDefaultLicense.namespace === '틀')
+        defaultLicense = defaultLicense.slice(defaultLicense.indexOf('/') + 1);
 
-    res.renderSkin('파일 올리기', {
+    res.renderSkin('upload', {
         contentName: 'special/upload',
         serverData: {
             licenses,
@@ -362,26 +362,26 @@ app.post('/Upload', (req, res, next) => {
     body('document')
         .if((value, { req }) => req.files.length === 1)
         .notEmpty()
-        .withMessage('문서 제목을 입력해주세요.')
+        .withMessage('routes.special.errors.document_required')
         .isLength({ max: 200 })
-        .withMessage('document의 값은 200글자 이하여야 합니다.')
+        .withMessage('routes.special.errors.document_max_length')
         .custom((value, { req }) => {
             req.document = utils.parseDocumentName(value);
             return req.document.namespace.includes('파일');
         })
-        .withMessage('업로드는 파일 이름공간에서만 가능합니다.'),
+        .withMessage('routes.special.errors.document_file_namespace_only'),
     body('license')
         .notEmpty()
-        .withMessage('라이선스를 선택해주세요.'),
+        .withMessage('routes.special.errors.license_required'),
     body('category')
         .notEmpty()
-        .withMessage('카테고리를 선택해주세요.'),
+        .withMessage('routes.special.errors.category_required'),
     body('log')
         .isLength({ max: 255 })
-        .withMessage('요약의 값은 255글자 이하여야 합니다.'),
+        .withMessage('routes.special.errors.log_max_length'),
     middleware.fieldErrors,
     async (req, res) => {
-    if(!req.files.length) return res.status(400).send('파일이 업로드되지 않았습니다.');
+    if(!req.files.length) return res.status(400).send('routes.special.errors.file_required');
 
     for(let file of req.files) {
         if(![
@@ -397,7 +397,7 @@ app.post('/Upload', (req, res, next) => {
             'video/quicktime',
             'video/x-msvideo'
         ].includes(file.mimetype)) return res.status(400).send(
-            '올바르지 않은 파일입니다.'
+            req.t('routes.special.errors.invalid_file_type')
             + (req.permissions.includes('developer') ? ` (${file.mimetype})` : '')
         );
     }
@@ -407,8 +407,8 @@ app.post('/Upload', (req, res, next) => {
         categories
     } = await getImageDropdowns();
 
-    if(!licenses.includes(req.body.license)) return res.status(400).send('잘못된 라이선스입니다.');
-    if(!categories.includes(req.body.category)) return res.status(400).send('잘못된 분류입니다.');
+    if(!licenses.includes(req.body.license)) return res.status(400).send('invalid_license');
+    if(!categories.includes(req.body.category)) return res.status(400).send('invalid_category');
 
     for(let file of req.files) {
         const originalName = Buffer.from(file.originalname, 'latin1').toString('utf-8');
@@ -425,7 +425,7 @@ app.post('/Upload', (req, res, next) => {
         if(!possibleExts.length) possibleExts.push(file.mimetype.split('/')[1].match(/[a-z0-9]*/i)[0]);
 
         if(!possibleExts.some(a => title.toLowerCase().endsWith('.' + a.toLowerCase())))
-            return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${possibleExts[0]})`);
+            return res.status(400).send(req.t('routes.document.errors.file_ext_mismatch', { value: possibleExts[0] }));
 
         let dbDocument = await Document.findOne({
             namespace,
@@ -448,7 +448,7 @@ app.post('/Upload', (req, res, next) => {
         const rev = await History.findOne({
             document: dbDocument.uuid
         }).sort({ rev: -1 });
-        if(rev?.content != null) return res.status(409).send('문서가 이미 존재합니다.');
+        if(rev?.content != null) return res.status(409).send(req.t('routes.document.errors.dup_document'));
 
         const isImage = file.mimetype.startsWith('image/');
 
@@ -460,7 +460,7 @@ app.post('/Upload', (req, res, next) => {
             let metadata;
             try {
                 metadata = await sharp(buffer).metadata();
-                if(!metadata) return res.status(400).send('올바르지 않은 파일입니다.');
+                if(!metadata) return res.status(400).send(req.t('routes.special.errors.invalid_file_type'));
                 fileWidth = metadata.width;
                 fileHeight = metadata.height;
             } catch(e) {}
@@ -495,7 +495,7 @@ app.post('/Upload', (req, res, next) => {
                     });
                 });
             } catch(e) {}
-            if(!metadata) return res.status(400).send('올바르지 않은 파일입니다.');
+            if(!metadata) return res.status(400).send(req.t('routes.special.errors.invalid_file_type'));
 
             const videoStream = metadata.streams.find(s => s.codec_type === 'video');
             fileWidth = videoStream?.width || 0;
@@ -519,7 +519,9 @@ app.post('/Upload', (req, res, next) => {
 
             if(latestRev?.fileKey === Key) {
                 const doc = utils.dbDocumentToDocument(dupDoc);
-                return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
+                return res.status(409).send(req.t('routes.special.errors.dup_file', {
+                    link: `<a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`
+                }).replaceAll('\n', '<br>'));
             }
         }
 
@@ -550,7 +552,9 @@ app.post('/Upload', (req, res, next) => {
 
                 if(latestRev?.fileKey === Key) {
                     const doc = utils.dbDocumentToDocument(dupDoc);
-                    return res.status(409).send(`이미 업로드된 파일입니다.<br>중복 파일: <a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`);
+                    return res.status(409).send(req.t('routes.special.errors.dup_file', {
+                        link: `<a href="${globalUtils.doc_action_link(doc, 'w')}">${globalUtils.doc_fulltitle(doc)}</a>`
+                    }).replaceAll('\n', '<br>'));
                 }
             }
         }
@@ -580,7 +584,7 @@ app.post('/Upload', (req, res, next) => {
             console.error(e);
             return res.status(500).send((debug || req.permissions.includes('developer'))
                 ? e.toString()
-                : '파일 업로드 중 오류가 발생했습니다.');
+                : req.t('routes.special.errors.file_upload_error'));
         }
 
         const content = [
@@ -601,13 +605,13 @@ app.post('/Upload', (req, res, next) => {
             fileHeight,
             videoFileKey,
             videoFileSize,
-            log: req.body.log || `파일 ${originalName}을 올림`
+            log: req.body.log || req.t('routes.special.file_upload_log', { filename: originalName })
         });
     }
 
     if(req.files.length === 1) res.redirect(globalUtils.doc_action_link(req.document, 'w'));
-    else res.renderSkin('파일 업로드', {
-        contentHtml: `${req.files.length}개의 파일을 업로드했습니다.`
+    else res.renderSkin('upload', {
+        contentHtml: req.t('routes.special.multiple_file_uploaded', { count: req.files.length })
     });
 });
 
@@ -709,7 +713,7 @@ app.get('/BlockHistory', async (req, res) => {
         }
     }
 
-    res.renderSkin('차단 내역', {
+    res.renderSkin('block_history', {
         contentName: 'special/blockHistory',
         serverData: {
             logs: utils.withoutKeys(logs, ['_id', '__v']),
@@ -774,7 +778,7 @@ app.get('/random', async (req, res) => {
         },
         { $sample: { size: 1 } }
     ]);
-    if(!docs.length) return res.status(404).send('문서가 없습니다.');
+    if(!docs.length) return res.status(404).send(req.t('routes.special.errors.no_document'));
     const document = utils.dbDocumentToDocument(docs[0]);
 
     res.redirect(globalUtils.doc_action_link(document, 'w'));
