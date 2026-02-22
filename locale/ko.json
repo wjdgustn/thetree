@@ -32,7 +32,15 @@
   "titles": {
     "error": "오류",
     "aclgroup": "ACLGroup",
-    "aclgroup_manage": "ACLGroup 설정"
+    "aclgroup_manage": "ACLGroup 설정",
+    "developer": "개발자 설정",
+    "grant": "권한 부여",
+    "batch_revert": "일괄 되돌리기",
+    "login_history": "로그인 내역",
+    "login_history_result": "{{value}} 로그인 내역",
+    "audit_log": "감사 로그",
+    "initial_setup": "초기 설정",
+    "manage_account": "계정 관리"
   },
 
   "routes": {
@@ -53,6 +61,51 @@
         "group_name_required": "그룹 이름은 필수입니다.",
         "not_self_removable": "해제할 수 없는 요소입니다."
       }
+    },
+    "admin": {
+      "errors": {
+        "missing_opennamu_data_dir": "서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.",
+        "missing_sqlite3": "sqlite3 import 중 오류가 발생하였습니다. sqlite3 라이브러리 설치 후 시도하세요.",
+        "update_in_progress": "이미 업데이트가 진행중입니다.",
+        "dup_email_user": "이미 계정이 생성된 이메일입니다.",
+        "least_one_developer_permission": "최소 1명은 developer 권한을 보유해야 합니다.",
+        "revision_not_found": "리비전을 찾을 수 없습니다.",
+        "file_delete_error": "파일 삭제 중 오류가 발생했습니다.",
+        "migrate_old_user_not_found": "이전 기여자 계정을 찾을 수 없습니다.",
+        "migrate_old_user_type_mismatch": "이전 기여자 계정이 openNAMU 계정이 아닙니다.",
+        "migrate_new_user_not_found": "대상 계정을 찾을 수 없습니다.",
+        "migrate_new_user_type_mismatch": "대상 계정이 가입된 계정이 아닙니다.",
+        "method_type_condition_required": "method와 type과 condition은 필수입니다.",
+        "whitelisted_js_only": "템플릿에 등록된 js 코드만 사용할 수 있습니다.",
+        "invalid_uuid": "uuid의 값을 형식에 맞게 입력해주세요.",
+        "required_duration": "기간은 필수입니다.",
+        "invalid_duration": "기간 형식이 잘못되었습니다.",
+        "maximum_duration": "최대 기간은 24시간입니다.",
+        "no_action_selected": "아무 작업도 선택하지 않았습니다.",
+        "log_not_found": "로그를 찾을 수 없습니다.",
+        "missing_diff_content": "비교할 내용이 없습니다.",
+        "email_used_by_another_user": "이미 {{value}} 사용자가 사용중인 이메일입니다."
+      },
+      "batch_revert": {
+        "closed_edit_request_count": "닫힌 편집 요청 수",
+        "hidden_comment_count": "숨긴 토론 댓글 수",
+        "closed_thread_count": "닫은 스레드 수",
+        "marked_troll_revision_count": "반달로 표시된 리비전 수",
+        "reverted_document_count": "되돌린 문서 수",
+        "reopen_edit_request_count": "다시 열린 편집 요청 수",
+        "processing_time": "작업 시간",
+        "has_normal_contribution_later": "이후 정상 기여 존재",
+        "same_revert_target_rev": "되돌릴 기여 동일",
+        "no_rev_to_revert": "되돌릴 기여 없음"
+      }
+    },
+    "member": {
+      "errors": {
+        "email_verification_disabled": "이메일 인증이 비활성화돼 있습니다.",
+        "email_required": "이메일의 값은 필수입니다.",
+        "invalid_email": "이메일의 형식이 올바르지 않습니다.",
+        "dup_username": "사용자 이름이 이미 존재합니다."
+      }
     }
   },
 
@@ -64,7 +117,8 @@
     "invalid_request": "잘못된 요청입니다.",
     "missing_document_name": "문서 이름이 없습니다.",
     "invalid_document_name": "문서 이름이 올바르지 않습니다.",
-    "required_field": "{{key}}의 값은 필수입니다."
+    "required_field": "{{key}}의 값은 필수입니다.",
+    "account_not_found": "계정을 찾을 수 없습니다."
   },
 
   "default_aclgroups": {

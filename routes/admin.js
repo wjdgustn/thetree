@@ -115,7 +115,7 @@ app.get('/admin/developer', middleware.permission('developer'), async (req, res)
         ));
     } catch(e) {}
 
-    res.renderSkin('개발자 설정', {
+    res.renderSkin('developer', {
         contentName: 'admin/developer',
         serverData: {
             customStaticFiles,
@@ -170,7 +170,7 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
         return res.reload();
     }
 
-    if(!req.permissions.includes('developer')) return res.status(403).send('권한이 부족합니다.');
+    if(!req.permissions.includes('developer')) return res.status(403).send(req.t('errors.missing_permission'));
 
     if(tool === 'deletestaticfile') {
         const path = req.query.path;
@@ -345,12 +345,12 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'migrateopennamu') {
-        if(!(await fs.exists('./opennamu_data/data.db'))) return res.status(400).send('서버 폴더에 opennamu_data 폴더를 생성한 후 opennamu의 data 폴더 파일들을 넣고 시도하세요.');
+        if(!(await fs.exists('./opennamu_data/data.db'))) return res.status(400).send(req.t('routes.admin.errors.missing_opennamu_data_dir'));
 
         try {
             sqlite3 ??= require('sqlite3').verbose();
         } catch(e) {
-            return res.status(400).send('sqlite3 import 중 오류가 발생하였습니다. sqlite3 라이브러리 설치 후 시도하세요.');
+            return res.status(400).send(req.t('routes.admin.errors.missing_sqlite3'));
         }
 
         res.status(204).end();
@@ -532,14 +532,14 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
 
     else if(tool === 'update') {
         if(global.updatingEngine)
-            return res.status(409).send('이미 업데이트가 진행중입니다.');
+            return res.status(409).send(req.t('routes.admin.errors.update_in_progress'));
         res.status(204).end();
         global.updateEngine();
     }
 
     else if(tool === 'updatesubmodule') {
         if(global.updatingEngine)
-            return res.status(409).send('이미 업데이트가 진행중입니다.');
+            return res.status(409).send(req.t('routes.admin.errors.update_in_progress'));
         res.status(204).end();
         global.updateEngine(false);
     }
@@ -562,15 +562,16 @@ app.get('/admin/config/tools/:tool', middleware.permission('config'), middleware
     }
 
     else if(tool === 'mailtest') {
-        if(!config.use_email_verification) return res.status(400).send('이메일 인증이 비활성화되어 있습니다.');
+        if(!config.use_email_verification) return res.status(400).send(req.t('routes.member.errors.email_verification_disabled'));
 
         try {
             await mailTransporter.sendMail({
                 from: config.smtp_sender,
                 to: req.user.email,
-                subject: `[${config.site_name}] 이메일 전송 테스트`,
+                subject: `[${config.site_name}] 이메일 전송 테스트 / Email Test`,
                 html: `
 축하합니다! 이메일을 읽으셨습니다.
+Congratulations! You have read the email.
         `.trim().replaceAll('\n', '<br>')
             });
         } catch(e) {
@@ -779,8 +780,8 @@ app.post('/admin/developer/skin/build', middleware.permission('developer'), asyn
 app.post('/admin/developer/signup',
     middleware.permission('developer'),
     body('email')
-        .notEmpty().withMessage('이메일의 값은 필수입니다.')
-        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .notEmpty().withMessage('routes.member.errors.email_required')
+        .isEmail().withMessage('routes.member.errors.invalid_email')
         .normalizeEmail(),
     async (req, res) => {
     const email = req.body.email;
@@ -792,7 +793,7 @@ app.post('/admin/developer/signup',
     if(checkUserExists) return res.status(409).json({
         fieldErrors: {
             email: {
-                msg: '이미 계정이 생성된 이메일입니다.'
+                msg: req.t('routes.admin.errors.dup_email_user')
             }
         }
     });
@@ -828,7 +829,7 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
             && (req.permissions.includes(a) || !ProtectedPermissions.includes(a))
             && !AlwaysProtectedPermissions.includes(a));
 
-    res.renderSkin('권한 부여', {
+    res.renderSkin('grant', {
         contentName: 'admin/grant',
         serverData: {
             targetUser: targetUser ? {
@@ -846,7 +847,7 @@ app.post('/admin/grant',
     middleware.permission('grant'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('grant_hidelog')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('grant_hidelog')) throw new Error(req.t('errors.missing_permission'));
             return true;
         }),
     middleware.fieldErrors,
@@ -890,7 +891,7 @@ app.post('/admin/grant',
         const devCount = await User.countDocuments({
             permissions: 'developer'
         });
-        if(devCount <= 1) return res.status(400).send('최소 1명은 developer 권한을 보유해야 합니다.');
+        if(devCount <= 1) return res.status(400).send(req.t('routes.admin.errors.least_one_developer_permission'));
     }
 
     await User.updateOne({
@@ -921,7 +922,7 @@ app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentN
     const history = await History.findOne({
         uuid: req.query.uuid
     });
-    if(!history) return res.status(404).send('리비전을 찾을 수 없습니다.');
+    if(!history) return res.status(404).send(req.t('routes.admin.errors.revision_not_found'));
 
     const dbDocument = await Document.findOne({
         uuid: history.document
@@ -990,7 +991,7 @@ app.get('/a/:action', middleware.referer('/history/'), middleware.parseDocumentN
             console.error(e);
             return res.status(500).send((debug || req.permissions.includes('developer'))
                 ? e.toString()
-                : '파일 삭제 중 오류가 발생했습니다.');
+                : req.t('routes.admin.errors.file_delete_error'));
         }
 
         await History.updateMany({
@@ -1018,14 +1019,14 @@ app.post('/admin/config/migratecontribution', middleware.permission('config'), a
     const fromUser = await User.findOne({
         name: req.body.from
     });
-    if(!fromUser || !req.body.from) return res.status(404).send('이전 기여자 계정을 찾을 수 없습니다.');
-    if(fromUser.type !== UserTypes.Migrated) return res.status(400).send('이전 기여자 계정이 openNAMU 계정이 아닙니다.');
+    if(!fromUser || !req.body.from) return res.status(404).send(req.t('routes.admin.errors.migrate_old_user_not_found'));
+    if(fromUser.type !== UserTypes.Migrated) return res.status(400).send(req.t('routes.admin.errors.migrate_old_user_type_mismatch'));
 
     const toUser = await User.findOne({
         name: req.body.to
     });
-    if(!toUser || !req.body.to) return res.status(404).send('대상 계정을 찾을 수 없습니다.');
-    if(toUser.type !== UserTypes.Account) return res.status(400).send('대상 계정이 가입된 계정이 아닙니다.');
+    if(!toUser || !req.body.to) return res.status(404).send(req.t('routes.admin.errors.migrate_new_user_not_found'));
+    if(toUser.type !== UserTypes.Account) return res.status(400).send(req.t('routes.admin.errors.migrate_new_user_type_mismatch'));
 
     await History.updateMany({
         user: fromUser.uuid
@@ -1050,11 +1051,11 @@ app.post('/admin/config/disabledfeatures', middleware.permission('config'), asyn
         messageType
     } = req.body;
 
-    if(!method || !type || !condition) return res.status(400).send('method와 type과 condition은 필수입니다.');
+    if(!method || !type || !condition) return res.status(400).send(req.t('routes.admin.errors.method_type_condition_required'));
 
     if((!req.permissions.includes('developer') || process.env.DISABLE_EVAL === 'true') && type === 'js') {
         const whitelistedCodes = disabledFeaturesTemplates.filter(a => a.type === 'js').map(a => a.condition);
-        if(!whitelistedCodes.includes(condition)) return res.status(400).send('템플릿에 등록된 js 코드만 사용할 수 있습니다.');
+        if(!whitelistedCodes.includes(condition)) return res.status(400).send(req.t('routes.admin.errors.whitelisted_js_only'));
     }
 
     global.disabledFeatures.push({
@@ -1070,7 +1071,7 @@ app.post('/admin/config/disabledfeatures', middleware.permission('config'), asyn
 });
 
 app.get('/admin/batch_revert', middleware.permission('batch_revert'), (req, res) => {
-    res.renderSkin('일괄 되돌리기', {
+    res.renderSkin('batch_revert', {
         contentName: 'admin/batch_revert',
         serverData: {
             hidelogPerm: req.permissions.includes('batch_revert_hidelog')
@@ -1080,6 +1081,7 @@ app.get('/admin/batch_revert', middleware.permission('batch_revert'), (req, res)
 
 const batchRevert = async (
     {
+        req,
         createdUser,
         createdUserUuid,
         aclData,
@@ -1094,6 +1096,8 @@ const batchRevert = async (
         hideLog = false
     }
 ) => {
+    const $t = req?.t ?? i18next.getFixedT(config.lang);
+
     const date = new Date();
 
     if(createdUserUuid) createdUser ??= await User.findOne({ uuid: createdUserUuid });
@@ -1124,7 +1128,7 @@ const batchRevert = async (
             closedReason: reason,
             lastUpdatedAt: date
         });
-        resultText.push(`닫힌 편집 요청 수 : ${result.modifiedCount}`);
+        resultText.push(`${req.t('routes.admin.batch_revert.closed_edit_request_count')} : ${result.modifiedCount}`);
     }
 
     if(hideThreadComments) {
@@ -1149,7 +1153,7 @@ const batchRevert = async (
             hiddenBy: createdUser.uuid,
             hidden: true
         });
-        resultText.push(`숨긴 토론 댓글 수 : ${result.modifiedCount}`);
+        resultText.push(`${req.t('routes.admin.batch_revert.hidden_comment_count')} : ${result.modifiedCount}`);
 
         let targetThreads = await Thread.find({
             status: {
@@ -1177,7 +1181,7 @@ const batchRevert = async (
                 createdAt: date
             })));
 
-            resultText.push(`닫은 스레드 수 : ${closeResult.modifiedCount}`);
+            resultText.push(`${req.t('routes.admin.batch_revert.closed_thread_count')} : ${closeResult.modifiedCount}`);
         }
     }
 
@@ -1202,7 +1206,7 @@ const batchRevert = async (
             troll: true,
             trollBy: createdUser.uuid
         });
-        resultText.push(`반달로 표시된 리비전 수 : ${trollResult.modifiedCount}`);
+        resultText.push(`${req.t('routes.admin.batch_revert.marked_troll_revision_count')} : ${trollResult.modifiedCount}`);
 
         let revertedCount = 0;
         const documents = [...new Set(revs.map(rev => rev.document))];
@@ -1219,7 +1223,7 @@ const batchRevert = async (
             const firstTrollRev = revs.find(rev => rev.document === docUuid);
 
             if(!lastTrollRev.latest) {
-                failResultText.push(`${fullTitleLink}: 이후 정상 기여 존재`);
+                failResultText.push(`${fullTitleLink}: ${req.t('routes.admin.batch_revert.has_normal_contribution_later')}`);
                 return resolve();
             }
 
@@ -1240,7 +1244,7 @@ const batchRevert = async (
 
             if(lastNormalRev) {
                 if(lastTrollRev.type === HistoryTypes.Revert && lastTrollRev.revertRev === lastNormalRev.rev) {
-                    failResultText.push(`${fullTitleLink}: 되돌릴 기여 동일`);
+                    failResultText.push(`${fullTitleLink}: ${req.t('routes.admin.batch_revert.same_revert_target_rev')}`);
                     return resolve();
                 }
 
@@ -1272,7 +1276,7 @@ const batchRevert = async (
                 }
 
                 if(lastTrollRev.type === HistoryTypes.Delete) {
-                    failResultText.push(`${fullTitleLink}: 되돌릴 기여 없음`);
+                    failResultText.push(`${fullTitleLink}: ${req.t('routes.admin.batch_revert.no_rev_to_revert')}`);
                     return resolve();
                 }
 
@@ -1295,7 +1299,7 @@ const batchRevert = async (
             revertedCount++;
             resolve();
         })));
-        resultText.push(`되돌린 문서 수 : ${revertedCount}`);
+        resultText.push(`${req.t('routes.admin.batch_revert.reverted_document_count')} : ${revertedCount}`);
     }
 
     if(revertEditRequests) {
@@ -1308,7 +1312,7 @@ const batchRevert = async (
         }, {
             status: EditRequestStatusTypes.Open
         });
-        resultText.push(`다시 열린 편집 요청 수 : ${result.modifiedCount}`);
+        resultText.push(`${req.t('routes.admin.batch_revert.reopen_edit_request_count')} : ${result.modifiedCount}`);
     }
 
     await BlockHistory.create({
@@ -1321,7 +1325,7 @@ const batchRevert = async (
         createdAt: date
     });
 
-    resultText.unshift(`작업 시간 : ${Date.now() - date}ms`);
+    resultText.unshift(`${req.t('routes.admin.batch_revert.processing_time')} : ${Date.now() - date}ms`);
 
     return {
         resultText,
@@ -1337,36 +1341,37 @@ app.post('/admin/batch_revert',
         next();
     },
     body('uuid')
-        .notEmpty().withMessage('uuid의 값은 필수입니다.')
-        .isUUID().withMessage('uuid의 값을 형식에 맞게 입력해주세요.')
+        .notEmpty().withMessage('errors.required_field')
+        .isUUID().withMessage('routes.admin.errors.invalid_uuid')
         .custom(async (value, { req }) => {
             const user = await User.findOne({
                 uuid: value
             });
-            if(!user || !value) throw new Error('계정을 찾을 수 없습니다.');
+            if(!user || !value) throw new Error(req.t('errors.account_not_found'));
 
             req.modifiedBody.user = user;
         }),
     body('duration')
-        .notEmpty().withMessage('기간은 필수입니다.')
+        .notEmpty().withMessage('routes.admin.errors.required_duration')
         .isLength({
             max: 100
         })
         .custom(async (value, { req }) => {
             req.modifiedBody.duration = ms(value);
-            if(!req.modifiedBody.duration) throw new Error('기간 형식이 잘못되었습니다.');
-            if(req.modifiedBody.duration > 1000 * 60 * 60 * 24) throw new Error('최대 기간은 24시간입니다.');
+            if(!req.modifiedBody.duration) throw new Error(req.t('routes.admin.errors.invalid_duration'));
+            if(req.modifiedBody.duration > 1000 * 60 * 60 * 24) throw new Error(req.t('routes.admin.errors.maximum_duration'));
         }),
     body('reason')
-        .notEmpty().withMessage('reason의 값은 필수입니다.'),
+        .notEmpty().withMessage('errors.required_field'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('batch_revert_hidelog')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('batch_revert_hidelog')) throw new Error(req.t('errors.missing_permission'));
             return true;
         }),
     middleware.fieldErrors,
     async (req, res) => {
     const result = await batchRevert({
+        req,
         createdUser: req.user,
         aclData: req.aclData,
         user: req.modifiedBody.user,
@@ -1379,7 +1384,7 @@ app.post('/admin/batch_revert',
         hideLog: req.body.hidelog === 'Y'
     });
     if(!result)
-        return res.status(400).send('아무 작업도 선택하지 않았습니다.');
+        return res.status(400).send(req.t('routes.admin.errors.no_action_selected'));
 
     res.partial({
         result
@@ -1387,7 +1392,7 @@ app.post('/admin/batch_revert',
 });
 
 app.get('/admin/login_history', middleware.permission('login_history'), async (req, res) => {
-    res.renderSkin('로그인 내역', {
+    res.renderSkin('login_history', {
         contentName: 'admin/login_history',
         serverData: {
             hidelogPerm: req.permissions.includes('login_history_hidelog')
@@ -1399,7 +1404,7 @@ app.post('/admin/login_history',
     middleware.permission('login_history'),
     body('hidelog')
         .custom((value, { req }) => {
-            if(value === 'Y' && !req.permissions.includes('login_history_hidelog')) throw new Error('권한이 부족합니다.');
+            if(value === 'Y' && !req.permissions.includes('login_history_hidelog')) throw new Error(req.t('errors.missing_permission'));
             return true;
         }),
     async (req, res) => {
@@ -1408,7 +1413,7 @@ app.post('/admin/login_history',
             $regex: new RegExp(`^${utils.escapeRegExp(req.body.username)}$`, 'i')
         }
     });
-    if(!targetUser) return res.status(404).send('사용자 이름이 올바르지 않습니다.');
+    if(!targetUser) return res.status(404).send(req.t('routes.aclgroup.errors.invalid_username'));
     if(!req.permissions.includes('hideip')
         && (targetUser.permissions.includes('developer') || targetUser.permissions.includes('hideip')))
         return res.status(403).send('invalid_permission');
@@ -1491,7 +1496,7 @@ app.get('/admin/login_history/:session', middleware.permission('login_history'),
             .select('_id');
     }
 
-    res.renderSkin(`${targetUser?.name} 로그인 내역`, {
+    res.renderSkin(req.t('titles.login_history_result', { value: targetUser?.name }), {
         contentName: 'admin/login_history_result',
         targetUser: {
             ...await utils.getPublicUser(targetUser),
@@ -1580,7 +1585,7 @@ app.get('/admin/audit_log', middleware.permission('config'), async (req, res) =>
         delete item.diffNew;
     }
 
-    res.renderSkin('감사 로그', {
+    res.renderSkin('audit_log', {
         contentName: 'admin/auditLog',
         serverData: data
     });
@@ -1593,8 +1598,8 @@ app.get('/admin/audit_log/:id/diff', middleware.permission('config'), async (req
         }),
         _id: req.params.id
     });
-    if(!log) return res.status(404).send('로그를 찾을 수 없습니다.');
-    if(!log.diffOld || !log.diffNew) return res.status(400).send('비교할 내용이 없습니다.');
+    if(!log) return res.status(404).send(req.t('routes.admin.errors.log_not_found'));
+    if(!log.diffOld || !log.diffNew) return res.status(400).send(req.t('routes.admin.errors.missing_diff_content'));
 
     if(log.devOnly && !req.permissions.includes('developer'))
         return res.status(403).send('invalid_permission');
@@ -1606,7 +1611,7 @@ app.get('/admin/initial_setup', middleware.permission('developer'), async (req, 
     const docAcl = await ACL.get({ namespace: '문서' });
     const hasAclGroup = await ACLGroup.exists();
 
-    res.renderSkin('초기 설정', {
+    res.renderSkin('initial_setup', {
         contentName: 'admin/initialSetup',
         serverData: {
             namespaces: config.namespaces,
@@ -1705,7 +1710,7 @@ app.get('/admin/manage_account', middleware.permission('manage_account'), async 
         searchData.items = utils.onlyKeys(searchData.items, ['uuid', 'name']);
     }
 
-    res.renderSkin('계정 관리', {
+    res.renderSkin('manage_account', {
         contentName: 'admin/manageAccount',
         serverData: {
             searchData,
@@ -1749,17 +1754,17 @@ app.post('/admin/manage_account',
                     $regex: new RegExp(`^${value}$`, 'i')
                 }
             });
-            if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
+            if(existingUser) throw new Error(req.t('routes.member.errors.dup_username'));
         }),
     body('email')
         .if((value, { req }) => value !== req.body.targetUser.email)
         .isEmail()
         .normalizeEmail()
-        .custom(async (value) => {
+        .custom(async (value, { req }) => {
             const existingUser = await User.findOne({
                 email: value
             });
-            if(existingUser) throw new Error(`이미 ${namumarkUtils.escapeHtml(existingUser.name)} 사용자가 사용중인 이메일입니다.`);
+            if(existingUser) throw new Error(req.t('routes.admin.errors.email_used_by_another_user', { value: existingUser.name }));
         }),
     middleware.fieldErrors,
     middleware.permission('manage_account'), async (req, res) => {
