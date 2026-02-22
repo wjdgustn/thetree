@@ -461,7 +461,7 @@ module.exports = {
             permissions: [...permissions],
             user,
             ip: req?.ip,
-            lang: req.i18n.language
+            lang: req?.i18n.language ?? config.lang
         }
 
         if(req) req.aclData = result;

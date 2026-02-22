@@ -68,19 +68,37 @@ newSchema.post('save', function() {
 
         const [item] = await utils.notificationMapper({ permissions: [] }, [notification]);
 
-        let title = `[${config.site_name ?? '위키'}] `;
+        const $t = i18next.getFixedT(config.lang);
+        const defaultOptions = {
+            interpolation: {
+                prefix: '{',
+                suffix: '}'
+            }
+        }
+
+        let title = `[${config.site_name ?? $t('notification.site_name_placeholder')}] `;
         let body;
         switch(item.type) {
             case NotificationTypes.UserDiscuss:
-                title += `${item.comment.user.name} 사용자가 ${item.thread.topic} #${item.comment.id} 사용자 토론 댓글 작성`;
+                title += $t('notification.user_discuss', {
+                    ...defaultOptions,
+                    user: item.comment.user.name,
+                    topic: item.thread.topic,
+                    id: item.comment.id
+                });
                 body = globalUtils.removeHtmlTags(item.comment.contentHtml);
                 break;
             case NotificationTypes.Mention:
-                title += `${item.comment.user.name} 사용자가 ${item.thread.topic} #${item.comment.id} 댓글에서 호출`;
+                title += $t('notification.mention', {
+                    ...defaultOptions,
+                    user: item.comment.user.name,
+                    topic: item.thread.topic,
+                    id: item.comment.id
+                });
                 body = globalUtils.removeHtmlTags(item.comment.contentHtml);
                 break;
             default:
-                title += '알림';
+                title += $t('notification.default');
                 body = globalUtils.removeHtmlTags(item.data);
                 break;
         }

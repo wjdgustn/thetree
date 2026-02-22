@@ -92,5 +92,12 @@
     "allowed_listing_deny_many": "{{type}} 권한이 부족합니다. {{rules}} 그 외 {{count}}개의 규칙(이)여야 합니다.",
     "deep_other_ns": "다른 이름공간 ACL 실행이 이중으로 사용되었습니다.",
     "no_rules_deny": "ACL에 허용 규칙이 없기 때문에 {{type}} 권한이 부족합니다."
+  },
+
+  "notification": {
+    "site_name_placeholder": "위키",
+    "user_discuss": "{user} 사용자가 {topic} #{id} 사용자 토론 댓글 작성",
+    "mention": "{user} 사용자가 {topic} #{id} 댓글에서 호출",
+    "default": "알림"
   }
 }
