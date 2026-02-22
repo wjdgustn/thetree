@@ -47,7 +47,22 @@
     "long_title_pages": "내용이 긴 문서",
     "needed_pages": "작성이 필요한 문서",
     "orphaned_pages": "고립된 문서",
-    "orphaned_categories": "고립된 분류"
+    "orphaned_categories": "고립된 분류",
+    "signup": "계정 만들기",
+    "login": "로그인",
+    "mypage": "내 정보",
+    "change_password": "비밀번호 변경",
+    "user_contribution": "{{value}} 기여 목록",
+    "withdraw": "계정 삭제",
+    "change_name": "이름 변경",
+    "change_email": "이메일 변경",
+    "email_verified": "인증 완료",
+    "activate_otp": "OTP 활성화",
+    "deactivate_otp": "OTP 비활성화",
+    "recover_password": "계정 찾기",
+    "starred_documents": "내 문서함",
+    "notifications": "알림",
+    "signup_verify": "모바일 인증"
   },
 
   "routes": {
@@ -91,7 +106,8 @@
         "no_action_selected": "아무 작업도 선택하지 않았습니다.",
         "log_not_found": "로그를 찾을 수 없습니다.",
         "missing_diff_content": "비교할 내용이 없습니다.",
-        "email_used_by_another_user": "이미 {{value}} 사용자가 사용중인 이메일입니다."
+        "email_used_by_another_user": "이미 {{value}} 사용자가 사용중인 이메일입니다.",
+        "invalid_email": "이메일의 형식이 올바르지 않습니다."
       },
       "batch_revert": {
         "closed_edit_request_count": "닫힌 편집 요청 수",
@@ -109,10 +125,83 @@
     "member": {
       "errors": {
         "email_verification_disabled": "이메일 인증이 비활성화돼 있습니다.",
+        "withdraw_disabled": "계정 삭제가 비활성화돼 있습니다.",
         "email_required": "이메일의 값은 필수입니다.",
-        "invalid_email": "이메일의 형식이 올바르지 않습니다.",
-        "dup_username": "사용자 이름이 이미 존재합니다."
-      }
+        "invalid_email": "이메일의 값을 형식에 맞게 입력해주세요.",
+        "password_required": "비밀번호의 값은 필수입니다.",
+        "password_confirm_required": "비밀번호 확인의 값은 필수입니다.",
+        "dup_username": "사용자 이름이 이미 존재합니다.",
+        "signup_disabled": "가입이 비활성화되어 있습니다.",
+        "signup_blacklist": "재가입 대기 기간 입니다.",
+        "already_registered_email": "이미 가입된 이메일입니다.",
+        "email_signup_already_sent": "해당 이메일로 이미 계정 생성 인증 메일을 보냈습니다.",
+        "ip_signup_already_in_progress": "해당 아이피에서 이미 계정 생성이 진행 중입니다.",
+        "agree_required": "동의의 값은 필수입니다.",
+        "email_not_whitelisted": "이메일 허용 목록에 있는 이메일이 아닙니다.",
+        "invalid_email_token": "인증 요청이 만료되었거나 올바르지 않습니다.",
+        "username_required": "사용자 이름의 값은 필수입니다.",
+        "username_length_range": "사용자 이름의 길이는 3자 이상 32자 이하입니다.",
+        "username_valid_chars": "사용자 이름은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.",
+        "username_startswith_en": "사용자 이름은 영문으로 시작해야 합니다.",
+        "username_invalid_keyword": "사용자 이름으로 사용할 수 없는 단어가 포함되어 있습니다.",
+        "invalid_password": "패스워드가 올바르지 않습니다.",
+        "invalid_password_confirm": "패스워드 확인이 올바르지 않습니다.",
+        "email_already_exists": "이메일이 이미 존재합니다.",
+        "wrong_credentials": "이메일 혹은 패스워드가 틀립니다.",
+        "passkey_not_found": "패스키를 찾을 수 없습니다.",
+        "passkey_auth_failed": "패스키 인증이 실패했습니다.",
+        "passwordless_login_disabled": "비밀번호 없이 로그인 옵션이 비활성화되어 있습니다.",
+        "pin_length": "pin의 값은 6글자여야 합니다.",
+        "invalid_pin": "PIN이 올바르지 않습니다.",
+        "dup_oauth2_map": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
+        "invalid_oauth2_token_data": "토큰 데이터가 유효하지 않습니다. 관리자에게 문의하세요.",
+        "missing_oauth2_scope": "{{value}} scope가 누락되었습니다.",
+        "oauth2_userinfo_failed": "사용자 정보를 불러오지 못했습니다.",
+        "oauth2_connected_to_other_internal_account": "이미 다른 내부 계정에 연결된 외부 계정입니다.",
+        "oauth2_dup_provider": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
+        "oauth2_not_connected_and_email_dup": "연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.",
+        "oauth2_internal_account_not_found": "외부 계정과 연결된 계정을 찾을 수 없습니다.",
+        "oauth2_not_connected_account": "연결되지 않은 외부 계정입니다. 내부 계정과 연결 후 사용해 주세요.",
+        "set_password_for_clear_oauth2": "외부 계정을 모두 연결 해제하려면 비밀번호를 설정해야 합니다.",
+        "oauth2_map_not_found": "해당 provider에 등록된 계정이 없습니다.",
+        "withdraw_last_activity": "마지막 활동으로부터 시간이 경과해야 계정 삭제가 가능합니다.",
+        "pledge_different": "동일하게 입력해주세요.",
+        "recent_change_name": "최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.",
+        "doing_change_email": "이메일 인증이 이미 진행 중입니다.",
+        "passkey_name_required": "이름의 값은 필수입니다.",
+        "passkey_name_max_length": "이름의 값은 80글자 이하여야 합니다.",
+        "passkey_name_dup": "이름이 이미 존재합니다.",
+        "mobile_verify_disabled": "이 기능이 활성화되어있지 않습니다.",
+        "phone_number_and_ip_country_mismatch": "전화 번호와 사용중인 IP의 국가가 일치해야 합니다.",
+        "invalid_phone_number": "번호가 올바르지 않습니다.",
+        "phone_number_verify_in_progress": "이미 해당 번호로 인증이 진행중입니다.",
+        "mobile_verify_internal_error": "내부 오류가 발생했습니다.",
+        "phone_number_already_used": "이 번호로는 더 이상 인증할 수 없습니다."
+      },
+      "default_agree_text": "동의합니다.",
+      "email": {
+        "titles": {
+          "signup": "계정 생성 이메일 주소 인증",
+          "pin": "확인되지 앟은 기기에서 로그인",
+          "change_email": "{{value}}님의 이메일 변경 인증 메일 입니다.",
+          "recover_password": "{{value}}님의 비밀번호 찾기 메일 입니다."
+        },
+        "contents": {
+          "hello": "안녕하세요. {{siteName}} 입니다.",
+          "signup_content": "{{siteName}} 계정 생성 이메일 인증 메일입니다.",
+          "signup_email_dup": "누군가 이 이메일로 계정 생성을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
+          "signup_email_link": "직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.\n{{-linkOpen}}[인증]]{{-linkClose}}\n이 메일은 24시간동안 유효합니다.",
+          "pin_content": "확인되지 않은 기기에서 로그인을 시도하셨습니다.\n본인이 맞다면 아래 PIN 번호를 입력해주세요.\nPIN: {{-pin}}\n\n이 메일은 10분동안 유효합니다.",
+          "change_email_content": "{{value}}님의 이메일 변경 인증 메일입니다.",
+          "change_email_dup": "이 이메일로 이메일 변경을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
+          "change_email_link": "해당 아이디로 변경한게 맞으시면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
+          "recover_password_content": "{{user}}님의 비밀번호 찾기 메일입니다.\n해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
+          "request_ip": "요청 아이피"
+        }
+      },
+      "signup_welcome": "환영합니다! {{-value}}님 계정 생성이 완료되었습니다.",
+      "deleted_user": "삭제된 사용자",
+      "email_verified": "{{-name}}님 이메일 인증이 완료되었습니다.\n{{-linkOpen}}[로그인]{{-linkClose}} 해주세요."
     },
     "document": {
       "errors": {
@@ -167,7 +256,8 @@
   "errors": {
     "read_only": "위키가 읽기 전용 모드입니다.",
     "disabled_feature": "비활성화된 기능입니다.",
-    "server_error": "서버 오류<br>요청 ID:",
+    "server_error": "서버 오류",
+    "request_id": "요청 ID",
     "missing_permission": "권한이 부족합니다.",
     "invalid_request": "잘못된 요청입니다.",
     "missing_document_name": "문서 이름이 없습니다.",
@@ -214,7 +304,8 @@
       "4": "토론 생성",
       "5": "토론 댓글",
       "6": "편집 요청",
-      "7": "ACL 편집"
+      "7": "ACL 편집",
+      "create_account": "계정 생성"
     },
     "actions": {
       "0": "거부",

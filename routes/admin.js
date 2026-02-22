@@ -781,7 +781,7 @@ app.post('/admin/developer/signup',
     middleware.permission('developer'),
     body('email')
         .notEmpty().withMessage('routes.member.errors.email_required')
-        .isEmail().withMessage('routes.member.errors.invalid_email')
+        .isEmail().withMessage('routes.admin.errors.invalid_email')
         .normalizeEmail(),
     async (req, res) => {
     const email = req.body.email;

@@ -54,13 +54,13 @@ const PushSubscription = require('../schemas/pushSubscription');
 const app = express.Router();
 
 app.get('/member/signup', middleware.isLogout, middleware.checkCaptcha(true), (req, res) => {
-    if(config.disable_signup || config.disable_internal_login) return res.error('가입이 비활성화되어 있습니다.');
+    if(config.disable_signup || config.disable_internal_login) return res.error(req.t('routes.member.errors.signup_disabled'));
 
-    res.renderSkin('계정 만들기', {
+    res.renderSkin('signup', {
         contentName: 'member/signup',
         serverData: {
             terms: config.terms,
-            agreeText: config.terms_agree_text || '동의합니다.',
+            agreeText: config.terms_agree_text || req.t('routes.member.signup.default_agree_text'),
             emailWhitelist: config.email_whitelist
         }
     });
@@ -73,7 +73,7 @@ const signupAction = async (email, req, res, phoneNumber) => {
     if(checkBlacklist) return res.status(403).send({
         fieldErrors: {
             email: {
-                msg: '재가입 대기 기간 입니다.'
+                msg: req.t('routes.member.errors.signup_blacklist')
             }
         }
     });
@@ -83,7 +83,7 @@ const signupAction = async (email, req, res, phoneNumber) => {
     });
     if(!!checkUserExists) {
         if(config.use_email_verification) {
-            res.renderSkin('계정 만들기', {
+            res.renderSkin('signup', {
                 contentName: 'member/signup_email_sent',
                 serverData: { email }
             });
@@ -91,17 +91,17 @@ const signupAction = async (email, req, res, phoneNumber) => {
             await mailTransporter.sendMail({
                 from: config.smtp_sender,
                 to: email,
-                subject: `[${config.site_name}] 계정 생성 이메일 주소 인증`,
+                subject: `[${config.site_name}] ${req.t('routes.member.email.titles.signup')}`,
                 html: `
-안녕하세요. ${config.site_name} 입니다.
-${config.site_name} 계정 생성 이메일 인증 메일입니다.
-누군가 이 이메일로 계정 생성을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.
+${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
+${req.t('routes.member.email.contents.signup_content', { siteName: config.site_name })}
+${req.t('routes.member.email.contents.signup_email_dup')}
 
-요청 아이피 : ${req.ip}
+${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
         `.trim().replaceAll('\n', '<br>')
             });
         }
-        else res.status(409).send('이미 가입된 이메일입니다.');
+        else res.status(409).send(req.t('routes.member.errors.already_registered_email'));
 
         return;
     }
@@ -113,7 +113,7 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
         return res.status(409).json({
             fieldErrors: {
                 email: {
-                    msg: '해당 이메일로 이미 계정 생성 인증 메일을 보냈습니다.'
+                    msg: req.t('routes.member.errors.email_signup_already_sent')
                 }
             }
         });
@@ -125,7 +125,7 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
         return res.status(409).json({
             fieldErrors: {
                 email: {
-                    msg: '해당 아이피에서 이미 계정 생성이 진행 중입니다.'
+                    msg: req.t('routes.member.errors.ip_signup_already_in_progress')
                 }
             }
         });
@@ -146,7 +146,7 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
 
     const signupUrl = `/member/signup/${newToken.token}`;
     if(config.use_email_verification) {
-        res.renderSkin('계정 만들기', {
+        res.renderSkin('signup', {
             contentName: 'member/signup_email_sent',
             serverData: { email }
         });
@@ -154,14 +154,15 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
         await mailTransporter.sendMail({
             from: config.smtp_sender,
             to: email,
-            subject: `[${config.site_name}] 계정 생성 이메일 주소 인증`,
+            subject: `[${config.site_name}] ${req.t('routes.member.email.titles.signup')}`,
             html: `
-안녕하세요. ${config.site_name} 입니다.
-${config.site_name} 계정 생성 이메일 인증 메일입니다.
-직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.
-<a href="${new URL(signupUrl, config.base_url)}">[인증]</a>
-이 메일은 24시간동안 유효합니다.
-요청 아이피 : ${req.ip}
+${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
+${req.t('routes.member.email.contents.signup_content', { siteName: config.site_name })}
+${req.t('routes.member.email.contents.signup_email_link', {
+    linkOpen: `<a href="${new URL(signupUrl, config.base_url)}">`,
+    linkClose: '</a>'
+})}
+${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
         `.trim().replaceAll('\n', '<br>')
         });
     }
@@ -171,18 +172,18 @@ ${config.site_name} 계정 생성 이메일 인증 메일입니다.
 app.post('/member/signup',
     middleware.isLogout,
     body('email')
-        .notEmpty().withMessage('이메일의 값은 필수입니다.')
-        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .notEmpty().withMessage('routes.member.errors.email_required')
+        .isEmail().withMessage('routes.member.errors.invalid_email')
         .normalizeEmail(),
-    body('agree').exists().withMessage('동의의 값은 필수입니다.'),
+    body('agree').exists().withMessage('routes.member.errors.agree_required'),
     middleware.fieldErrors,
     middleware.captcha(true),
     async (req, res) => {
-    if(config.disable_signup || config.disable_internal_login) return res.status(400).send('가입이 비활성화되어 있습니다.');
+    if(config.disable_signup || config.disable_internal_login) return res.status(400).send(req.t('routes.member.errors.signup_disabled'));
 
     const emailDomain = req.body.email.split('@').pop();
     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
-        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
+        return res.status(400).send(req.t('routes.member.errors.email_not_whitelisted'));
 
     let ipArr;
     if(Address4.isValid(req.ip)) ipArr = new Address4(req.ip).toArray();
@@ -224,14 +225,23 @@ app.post('/member/signup',
 
     if(blockItem) {
         const aclGroup = aclGroups.find(group => group.uuid === blockItem.aclGroup);
-        let aclMessage = `현재 사용중인 아이피가 ACL그룹 ${namumarkUtils.escapeHtml(aclGroup.name)} #${blockItem.id}에 있기 때문에 계정 생성 권한이 부족합니다.<br>만료일 : ${blockItem.expiresAt?.toString() ?? '무기한'}<br>사유 : ${namumarkUtils.escapeHtml(blockItem.note ?? '없음')}`;
+        let aclMessage = req.t('acl.deny_string.message', {
+            rule: req.t('acl.deny_string.in_group', {
+                usingIpStr: req.t('acl.deny_string.using_ip'),
+                group: aclGroup.name,
+                groupId: blockItem.id
+            }),
+            type: req.t('acl.types.create_account')
+        });
+        aclMessage += `<br>${req.t('acl.deny_string.expiry')} : ${blockItem.expiresAt?.toString() ?? req.t('acl.deny_string.forever')}`;
+        aclMessage += `<br>req.t('acl.deny_string.reason') : ${namumarkUtils.escapeHtml(blockItem.note ?? 'null')}`;
         if(aclGroup.aclMessage) {
             aclMessage = aclGroup.aclMessage;
             for(let [key, value] of Object.entries({
                 name: aclGroup.name,
                 id: blockItem.id,
                 note: blockItem.note,
-                expired: blockItem.expiresAt?.toString() ?? '무기한'
+                expired: blockItem.expiresAt?.toString() ?? req.t('acl.deny_string.forever')
             })) {
                 aclMessage = aclMessage.replaceAll(`{${key}}`, namumarkUtils.escapeHtml(value));
             }
@@ -253,11 +263,11 @@ app.get('/member/signup/:token', async (req, res) => {
     const token = await SignupToken.findOne({
         token: req.params.token
     });
-    if(!token || Date.now() - token.createdAt > 1000 * 60 * 60 * 24) return res.error('인증 요청이 만료되었거나 올바르지 않습니다.');
+    if(!token || Date.now() - token.createdAt > 1000 * 60 * 60 * 24) return res.error(req.t('routes.member.errors.invalid_email_token'));
 
     // if(token.ip && token.ip !== req.ip) return res.error('보안 상의 이유로 요청한 아이피 주소와 현재 아이피 주소가 같아야 합니다.');
 
-    res.renderSkin('계정 만들기', {
+    res.renderSkin('signup', {
         contentName: 'member/signup_final',
         serverData: {
             email: token.email,
@@ -270,17 +280,17 @@ app.get('/member/signup/:token', async (req, res) => {
 const nameChecker = field => body(field)
     .if(body(field).not().equals('special:bypass'))
     .notEmpty()
-    .withMessage('사용자 이름의 값은 필수입니다.')
+    .withMessage('routes.member.errors.username_required')
     .custom((value, { req }) => !req.user?.name || req.user.name !== value)
-    .withMessage('문서 내용이 같습니다.')
+    .withMessage('errors.same_document_content')
     .isLength({ min: 3, max: 32 })
-    .withMessage('사용자 이름의 길이는 3자 이상 32자 이하입니다.')
+    .withMessage('routes.member.errors.username_length_range')
     .custom(value => /^[a-zA-Z0-9_]+$/.test(value))
-    .withMessage('사용자 이름은 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.')
+    .withMessage('routes.member.errors.username_valid_chars')
     .custom(value => value[0].match(/[a-zA-Z]/))
-    .withMessage('사용자 이름은 영문으로 시작해야 합니다.')
+    .withMessage('routes.member.errors.username_startswith_en')
     .custom(value => !(config.name_blacklist ?? []).some(a => value.toLowerCase().includes(a.toLowerCase())))
-    .withMessage('사용자 이름으로 사용할 수 없는 단어가 포함되어 있습니다.')
+    .withMessage('routes.member.errors.username_invalid_keyword')
     .custom(async (value, {req}) => {
         const existingUser = await User.exists({
             name: {
@@ -292,14 +302,14 @@ const nameChecker = field => body(field)
                 }
             } : {})
         });
-        if(existingUser) throw new Error('사용자 이름이 이미 존재합니다.');
+        if(existingUser) throw new Error(req.t('routes.member.errors.dup_username'));
     });
 const passwordChecker = field => body(field)
     .if((value, { req }) => !!req.user.password)
-    .notEmpty().withMessage(`${field === 'password' ? '비밀번호' : field}의 값은 필수입니다.`)
-    .custom(async (value, {req}) => {
+    .notEmpty().withMessage(field === 'password' ? 'routes.member.errors.password_required' : 'errors.required_field')
+    .custom(async (value, { req }) => {
         const result = await bcrypt.compare(value, req.user.password);
-        if(!result) throw new Error('패스워드가 올바르지 않습니다.');
+        if(!result) throw new Error(req.t('routes.member.errors.invalid_password'));
         return true;
     });
 app.post('/member/signup/:token',
@@ -307,13 +317,13 @@ app.post('/member/signup/:token',
     body('password')
         .if(body('from_oauth2').not().equals('Y'))
         .notEmpty()
-        .withMessage('비밀번호의 값은 필수입니다.'),
+        .withMessage('routes.member.errors.password_required'),
     body('password_confirm')
         .if(body('from_oauth2').not().equals('Y'))
         .notEmpty()
-        .withMessage('비밀번호 확인의 값은 필수입니다.')
+        .withMessage('routes.member.errors.password_confirm_required')
         .custom((value, { req }) => value === req.body.password)
-        .withMessage('패스워드 확인이 올바르지 않습니다.'),
+        .withMessage('routes.member.errors.invalid_password_confirm'),
     middleware.fieldErrors,
     async (req, res) => {
     const token = await SignupToken.findOne({
@@ -321,12 +331,12 @@ app.post('/member/signup/:token',
     });
     if(!token
         || Date.now() - token.createdAt > 1000 * 60 * 60 * 24
-        || (token.ip && token.ip !== req.ip)) return res.status(400).send('유효하지 않은 토큰');
+        || (token.ip && token.ip !== req.ip)) return res.status(400).send('invalid_email_token');
 
     if(!!token.name !== (req.body.username === 'special:bypass')) return res.status(400).json({
         fieldErrors: {
             username: {
-                msg: '사용자 이름이 유효하지 않습니다.'
+                msg: 'invalid_username'
             }
         }
     });
@@ -337,7 +347,7 @@ app.post('/member/signup/:token',
     if(!!emailDupCheck) return res.status(409).json({
         fieldErrors: {
             email: {
-                msg: '이메일이 이미 존재합니다.'
+                msg: req.t('routes.member.errors.email_already_exists')
             }
         }
     });
@@ -398,8 +408,8 @@ app.post('/member/signup/:token',
 
         if(!userExists) return res.redirect('/admin/initial_setup');
 
-        return res.renderSkin('계정 만들기', {
-            contentHtml: `<p>환영합니다! <b>${newUser.name}</b>님 계정 생성이 완료되었습니다.</p>`
+        return res.renderSkin('signup', {
+            contentHtml: `<p>${req.t('routes.member.signup_welcome', { value: `<b>${namumarkUtils.escapeHtml(newUser.name)}</b>` })}</p>`
         });
     }
 });
@@ -424,7 +434,7 @@ app.get('/member/login', middleware.isLogout, middleware.checkCaptcha(true), asy
     });
     req.session.passkeyAuthOptions = passkeyData;
 
-    res.renderSkin('로그인', {
+    res.renderSkin('login', {
         contentName: 'member/login',
         serverData: {
             disableSignup: !!config.disable_signup,
@@ -440,11 +450,11 @@ app.post('/member/login',
     body('email')
         .if(body('challenge').isEmpty())
         .notEmpty()
-        .withMessage('이메일의 값은 필수입니다.'),
+        .withMessage('routes.member.errors.email_required'),
     body('password')
         .if(body('challenge').isEmpty())
         .notEmpty()
-        .withMessage('비밀번호의 값은 필수입니다.'),
+        .withMessage('routes.member.errors.password_required'),
     body('challenge')
         .if(body('email').isEmpty())
         .notEmpty(),
@@ -455,7 +465,7 @@ app.post('/member/login',
 
     if(!req.body.challenge && !await utils.middleValidateCaptcha(req, res, true)) return;
 
-    const wrongCredentials = () => res.status(400).send('이메일 혹은 패스워드가 틀립니다.');
+    const wrongCredentials = () => res.status(400).send(req.t('routes.member.errors.wrong_credentials'));
 
     let user;
     let keepOldEmailPin = false;
@@ -470,7 +480,7 @@ app.post('/member/login',
             const result = await bcrypt.compare(password, exUser.password);
             if(result) {
                 if(config.disable_internal_login && !exUser.permissions.includes('developer'))
-                    return res.status(400).send('internal_login이 비활성화되어 있습니다.');
+                    return res.status(400).send('internal_login_disabled');
 
                 if(exUser.lastLoginRequest > Date.now() - 1000 * 60 * 10) {
                     user = exUser;
@@ -495,7 +505,7 @@ app.post('/member/login',
         }
     } catch(err) {
         console.error(err);
-        return res.status(500).send('서버 오류');
+        return res.status(500).send(req.t('errors.server_error'));
     }
     else {
         const options = req.session.passkeyAuthOptions;
@@ -503,7 +513,7 @@ app.post('/member/login',
         const passkey = await Passkey.findOne({
             id: response.id
         });
-        if(!passkey) return res.status(400).send('패스키를 찾을 수 없습니다.');
+        if(!passkey) return res.status(400).send(req.t('routes.member.errors.passkey_not_found'));
 
         let verification;
         try {
@@ -521,7 +531,7 @@ app.post('/member/login',
             });
         } catch(e) {
             if(debug) console.error(e);
-            return res.status(400).send('패스키 인증이 실패했습니다.');
+            return res.status(400).send(req.t('routes.member.errors.passkey_auth_failed'));
         }
 
         await Passkey.updateOne({
@@ -535,7 +545,7 @@ app.post('/member/login',
         });
 
         if(!user.usePasswordlessLogin)
-            return res.status(400).send('비밀번호 없이 로그인 옵션이 비활성화되어 있습니다.');
+            return res.status(400).send(req.t('routes.member.errors.passwordless_login_disabled'));
     }
 
     let trusted = req.session.trustedAccounts?.includes(user.uuid);
@@ -590,7 +600,7 @@ app.post('/member/login',
 
     req.session.pinUser = user.uuid;
     req.session.redirect = req.body.redirect;
-    res.renderSkin('로그인', {
+    res.renderSkin('login', {
         contentName: 'member/pin_verification',
         passkeyData,
         serverData: {
@@ -608,15 +618,11 @@ app.post('/member/login',
     if(!user.totpToken && !keepOldEmailPin) await mailTransporter.sendMail({
         from: config.smtp_sender,
         to: user.email,
-        subject: `[${config.site_name}] 확인되지 않은 기기에서 로그인`,
+        subject: `[${config.site_name}] ${req.t('routes.member.email.titles.pin')}`,
         html: `
-안녕하세요. ${config.site_name} 입니다.
-확인되지 않은 기기에서 로그인을 시도하셨습니다.
-본인이 맞다면 아래 PIN 번호를 입력해주세요.
-PIN: <b>${user.emailPin}</b>
-
-이 메일은 10분동안 유효합니다.
-요청 아이피: ${req.ip}
+${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
+${req.t('routes.member.email.contents.pin_content', { pin: `<b>${user.emailPin}</b>` })}
+${req.t('routes.member.email.contents.request_ip')}: ${req.ip}
     `.trim().replaceAll('\n', '<br>')
     });
 });
@@ -627,11 +633,11 @@ app.post('/member/login/pin',
         body('pin')
             .notEmpty()
             .isLength(6)
-            .withMessage('pin의 값은 6글자여야 합니다.'),
+            .withMessage('routes.member.errors.pin_length'),
         body('challenge')
             .notEmpty()
     ], {
-        message: 'pin의 값은 필수입니다.'
+        message: 'errors.required_field'
     }),
     middleware.singleFieldError,
     async (req, res) => {
@@ -656,7 +662,7 @@ app.post('/member/login/pin',
             const passkey = await Passkey.findOne({
                 id: response.id
             });
-            if(!passkey) return res.status(400).send('패스키를 찾을 수 없습니다.');
+            if(!passkey) return res.status(400).send(req.t('routes.member.errors.passkey_not_found'));
 
             let verification;
             try {
@@ -674,7 +680,7 @@ app.post('/member/login/pin',
                 });
             } catch(e) {
                 if(debug) console.error(e);
-                return res.status(400).send('패스키 인증이 실패했습니다.');
+                return res.status(400).send(req.t('routes.member.errors.passkey_auth_failed'));
             }
 
             await Passkey.updateOne({
@@ -689,11 +695,11 @@ app.post('/member/login/pin',
                 secret: user.totpToken
             });
             const delta = totp.validate({ token: req.body.pin });
-            if(delta == null) return res.status(400).send('PIN이 올바르지 않습니다.');
+            if(delta == null) return res.status(400).send(req.t('routes.member.errors.invalid_pin'));
         }
     }
     else {
-        if(req.body.pin !== user.emailPin) return res.status(400).send('PIN이 올바르지 않습니다.');
+        if(req.body.pin !== user.emailPin) return res.status(400).send(req.t('routes.member.errors.invalid_pin'));
     }
 
     delete req.session.pinUser;
@@ -728,14 +734,14 @@ app.post('/member/login/pin',
 
 app.get('/member/login/oauth2/:provider', async (req, res) => {
     const provider = config.oauth2_providers?.[req.params.provider];
-    if(!provider) return res.error('provider config를 찾을 수 없습니다.', 404);
+    if(!provider) return res.error('provider_config_not_found', 404);
 
     if(req.user?.type === UserTypes.Account) {
         const map = await OAuth2Map.exists({
             provider: req.params.provider,
             user: req.user.uuid
         });
-        if(map) return res.error('이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.', 409);
+        if(map) return res.error(req.t('routes.member.errors.dup_oauth2_map'), 409);
     }
 
     const redirect = req.query.redirect;
@@ -772,10 +778,10 @@ app.get('/member/login/oauth2/:provider/callback',
     middleware.singleFieldError,
     async (req, res) => {
     const provider = config.oauth2_providers?.[req.params.provider];
-    if(!provider) return res.error('provider config를 찾을 수 없습니다.', 404);
+    if(!provider) return res.error('provider_config_not_found', 404);
 
     if(req.session.oauth2State !== req.query.state)
-        return res.error('state가 유효하지 않습니다.');
+        return res.error('invalid_state');
 
     let tokenData;
     try {
@@ -800,16 +806,16 @@ app.get('/member/login/oauth2/:provider/callback',
         tokenData = data;
     } catch(e) {
         if(debug) console.error(e);
-        return res.error('code가 유효하지 않습니다.');
+        return res.error('invalid_code');
     }
 
     if(!tokenData.scope || !tokenData.access_token)
-        return res.error('토큰 데이터가 유효하지 않습니다. 관리자에게 문의하세요.');
+        return res.error(req.t('routes.member.errors.invalid_oauth2_token_data'));
 
     const scopes = tokenData.scope.split(' ');
     const missingScope = provider.scopes.find(a => !scopes.includes(a));
     if(missingScope)
-        return res.error(`${missingScope} scope가 누락되었습니다.`);
+        return res.error(req.t('routes.member.errors.missing_oauth2_scope', { value: missingScope }));
 
     let userData;
     try {
@@ -821,7 +827,7 @@ app.get('/member/login/oauth2/:provider/callback',
         userData = data;
     } catch(e) {
         if(debug) console.error(e);
-        return res.error('사용자 정보를 불러오지 못했습니다.');
+        return res.error(req.t('routes.member.errors.oauth2_userinfo_failed'));
     }
 
     let map = await OAuth2Map.findOne({
@@ -830,12 +836,12 @@ app.get('/member/login/oauth2/:provider/callback',
     });
 
     if(req.user?.type === UserTypes.Account) {
-        if(map) return res.error('이미 다른 내부 계정에 연결된 외부 계정입니다.', 409);
+        if(map) return res.error(req.t('routes.member.errors.oauth2_connected_to_other_internal_account'), 409);
         const providerCheck = await OAuth2Map.exists({
             provider: req.params.provider,
             user: req.user.uuid
         });
-        if(providerCheck) return res.error('이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.', 409);
+        if(providerCheck) return res.error(req.t('routes.member.errors.oauth2_dup_provider'), 409);
 
         await OAuth2Map.create({
             provider: req.params.provider,
@@ -853,7 +859,7 @@ app.get('/member/login/oauth2/:provider/callback',
             const checkUser = await User.findOne({ email });
             if(checkUser) {
                 if(provider.disable_auto_register)
-                    return res.error('연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.');
+                    return res.error(req.t('routes.member.errors.oauth2_not_connected_and_email_dup'));
                 map = await OAuth2Map.create({
                     provider: req.params.provider,
                     sub: utils.getObjectValueFallback(userData, [...[provider.sub_key].flat(), 'sub']),
@@ -864,18 +870,18 @@ app.get('/member/login/oauth2/:provider/callback',
             }
             else {
                 if(provider.disable_auto_register)
-                    return res.error('외부 계정과 연결된 계정을 찾을 수 없습니다.');
+                    return res.error(req.t('routes.member.errors.oauth2_internal_account_not_found'));
 
                 if(!provider.disable_email_whitelist) {
                     const emailDomain = email.split('@').pop();
                     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
-                        return res.error('이메일 허용 목록에 있는 이메일이 아닙니다.');
+                        return res.error(req.t('routes.member.errors.email_not_whitelisted'));
                 }
 
                 const checkBlacklist = await Blacklist.exists({
                     email: crypto.createHash('sha256').update(email).digest('hex')
                 });
-                if(checkBlacklist) return res.error('재가입 대기 기간 입니다.', 403);
+                if(checkBlacklist) return res.error(req.t('routes.member.errors.signup_blacklist'), 403);
 
                 await SignupToken.deleteMany({
                     email
@@ -897,7 +903,7 @@ app.get('/member/login/oauth2/:provider/callback',
                 return res.redirect(`/member/signup/${newToken.token}`);
             }
         }
-        else return res.error('연결되지 않은 외부 계정입니다. 내부 계정과 연결 후 사용해 주세요.');
+        else return res.error(req.t('routes.member.errors.oauth2_not_connected_account'));
     }
 
     req.session.loginUser = map.user;
@@ -921,19 +927,19 @@ app.get('/member/login/oauth2/:provider/callback',
 
 app.delete('/member/login/oauth2/:provider', middleware.isLogin, async (req, res) => {
     const provider = config.oauth2_providers?.[req.params.provider];
-    if(!provider) return res.status(404).send('provider config를 찾을 수 없습니다.');
+    if(!provider) return res.status(404).send('provider_config_not_found');
 
     const mapCount = await OAuth2Map.countDocuments({
         user: req.user.uuid
     });
     if(mapCount <= 1 && !req.user.password)
-        return res.status(400).send('외부 계정을 모두 연결 해제하려면 비밀번호를 설정해야 합니다.');
+        return res.status(400).send(req.t('routes.member.errors.set_password_for_clear_oauth2'));
 
     const deleted = await OAuth2Map.findOneAndDelete({
         user: req.user.uuid,
         provider: req.params.provider
     });
-    if(!deleted) return res.status(404).send('해당 provider에 등록된 계정이 없습니다.');
+    if(!deleted) return res.status(404).send(req.t('routes.member.errors.oauth2_map_not_found'));
 
     res.reload();
 });
@@ -965,7 +971,7 @@ app.get('/member/mypage', middleware.isLogin, async (req, res) => {
         user: req.user.uuid
     }).select('provider name email -_id');
 
-    res.renderSkin('내 정보', {
+    res.renderSkin('mypage', {
         contentName: 'member/mypage',
         serverData: {
             skins: Object.keys(global.skinInfos).filter(a => a !== 'plain'),
@@ -1021,7 +1027,7 @@ app.post('/member/generate_api_token',
 });
 
 app.get('/member/change_password', middleware.isLogin, (req, res) => {
-    res.renderSkin('비밀번호 변경', {
+    res.renderSkin('change_password', {
         contentName: 'member/change_password'
     });
 });
@@ -1030,11 +1036,11 @@ app.post('/member/change_password',
     middleware.isLogin,
     passwordChecker('old_password'),
     body('password')
-        .notEmpty().withMessage('비밀번호의 값은 필수입니다.'),
+        .notEmpty().withMessage('routes.member.errors.password_required'),
     body('password_confirm')
-        .notEmpty().withMessage('비밀번호 확인의 값은 필수입니다.')
+        .notEmpty().withMessage('routes.member.errors.password_confirm_required')
         .custom((value, { req }) => value === req.body.password)
-        .withMessage('패스워드 확인이 올바르지 않습니다.'),
+        .withMessage('routes.member.errors.invalid_password_confirm'),
     middleware.fieldErrors,
     async (req, res) => {
 
@@ -1052,7 +1058,7 @@ app.get('/contribution/ip/:ip', async (req, res) => {
     const user = await User.findOne({
         ip: req.params.ip
     });
-    if(!user) return res.error('계정을 찾을 수 없습니다.', 404);
+    if(!user) return res.error(req.t('errors.account_not_found'), 404);
 
     res.redirect(`/contribution/${user.uuid}/document`);
 });
@@ -1140,7 +1146,7 @@ app.get('/contribution/:uuid/document',
             delete rev.log;
     }
 
-    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution',
         contentName: 'userContribution/document',
         account: {
@@ -1181,7 +1187,7 @@ app.get('/contribution/:uuid/discuss',
     data.items = await utils.findThreads(data.items);
     data.items = utils.onlyKeys(data.items, ['thread', 'id', 'createdAt']);
 
-    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution_discuss',
         contentName: 'userContribution/discuss',
         account: {
@@ -1256,7 +1262,7 @@ app.get('/contribution/:uuid/edit_request',
         items = await utils.findDocuments(items);
     }
 
-    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution_edit_request',
         contentName: 'userContribution/editRequest',
         account: {
@@ -1297,7 +1303,7 @@ app.get('/contribution/:uuid/accepted_edit_request',
     data.items = await utils.findDocuments(data.items);
     data.items = utils.onlyKeys(data.items, ['url', 'document', 'status', 'lastUpdatedAt', 'diffLength', 'createdUser']);
 
-    res.renderSkin(`${user ? `"${user.name || user.ip}"` : '<삭제된 사용자>'} 기여 목록`, {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution_edit_request',
         contentName: 'userContribution/editRequest',
         account: {
@@ -1356,15 +1362,15 @@ const checkDeletable = async user => {
 
 app.get('/member/withdraw', middleware.isLogin, async (req, res) => {
     if(config.can_withdraw === false)
-        return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
+        return res.error(req.t('routes.member.errors.withdraw_disabled'), 403);
 
     const { deletable, blacklistDuration, noActivityTime } = await checkDeletable(req.user);
 
-    res.renderSkin('계정 삭제', {
+    res.renderSkin('withdraw', {
         contentName: 'member/withdraw',
         serverData: {
             blacklistDays: blacklistDuration && Math.round(blacklistDuration / 1000 / 60 / 60 / 24),
-            alert: deletable ? null : '마지막 활동으로부터 시간이 경과해야 계정 삭제가 가능합니다.',
+            alert: deletable ? null : req.t('routes.member.errors.withdraw_last_activity'),
             noActivityTime,
             pledge: config.withdraw_pledge
         }
@@ -1429,15 +1435,15 @@ app.post('/member/withdraw',
     middleware.isLogin,
     passwordChecker('password'),
     body('pledge')
-        .notEmpty().withMessage('pledge의 값은 필수입니다.')
-        .equals(config.withdraw_pledge).withMessage('동일하게 입력해주세요.'),
+        .notEmpty().withMessage('errors.required_field')
+        .equals(config.withdraw_pledge).withMessage('routes.member.errors.pledge_different'),
     middleware.fieldErrors,
     async (req, res) => {
     if(config.can_withdraw === false)
-        return res.error('계정 삭제가 비활성화돼 있습니다.', 403);
+        return res.error(req.t('routes.member.errors.withdraw_disabled'), 403);
 
     const { deletable, blacklistDuration } = await checkDeletable(req.user);
-    if(!deletable) return res.status(403).send('마지막 활동으로부터 시간이 경과해야 계정 삭제가 가능합니다.');
+    if(!deletable) return res.status(403).send(req.t('routes.member.errors.withdraw_last_activity'));
 
     if(blacklistDuration == null || blacklistDuration > 0)
         await Blacklist.create({
@@ -1456,11 +1462,11 @@ app.post('/member/withdraw',
 });
 
 app.get('/member/change_name', middleware.isLogin, (req, res) => {
-    res.renderSkin('이름 변경', {
+    res.renderSkin('change_name', {
         contentName: 'member/change_name',
         serverData: {
             ...(Date.now() - req.user.lastNameChange < 1000 * 60 * 60 * 24 * 30 ? {
-                alert: '최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.'
+                alert: req.t('routes.member.errors.recent_change_name')
             } : {})
         }
     });
@@ -1515,7 +1521,7 @@ app.post('/member/change_name',
     middleware.fieldErrors,
     async (req, res) => {
     if(Date.now() - req.user.lastNameChange < 1000 * 60 * 60 * 24 * 30)
-        return res.status(403).send('최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.');
+        return res.status(403).send(req.t('routes.member.errors.recent_change_name'));
 
     await changeNameAction(req.user, req.body.name);
 
@@ -1524,11 +1530,11 @@ app.post('/member/change_name',
 
 app.get('/member/change_email', middleware.isLogin, (req, res) => {
     const doingChangeEmail = Date.now() - req.user.lastChangeEmail < 1000 * 60 * 10;
-    res.renderSkin('이메일 변경', {
+    res.renderSkin('change_email', {
         contentName: 'member/change_email',
         serverData: {
             ...(doingChangeEmail ? {
-                alert: '이메일 인증이 이미 진행 중입니다.'
+                alert: req.t('routes.member.errors.doing_change_email')
             } : {}),
             doingChangeEmail,
             email: req.user.email,
@@ -1541,20 +1547,20 @@ app.post('/member/change_email',
     middleware.isLogin,
     passwordChecker('password'),
     body('email')
-        .notEmpty().withMessage('이메일의 값은 필수입니다.')
-        .isEmail().withMessage('이메일의 값을 형식에 맞게 입력해주세요.')
+        .notEmpty().withMessage('routes.member.errors.email_required')
+        .isEmail().withMessage('routes.member.errors.invalid_email')
         .normalizeEmail()
-        .custom((value, {req}) => value !== req.user.email).withMessage('문서 내용이 같습니다.'),
+        .custom((value, {req}) => value !== req.user.email).withMessage('errors.same_document_content'),
     middleware.fieldErrors,
     async (req, res) => {
     if(Date.now() - req.user.lastChangeEmail < 1000 * 60 * 10)
-        return res.status(409).send('이메일 인증이 이미 진행 중입니다.');
+        return res.status(409).send(req.t('routes.member.errors.doing_change_email'));
 
     const email = req.body.email;
 
     const emailDomain = email.split('@').pop();
     if(config.email_whitelist.length && !config.email_whitelist.includes(emailDomain))
-        return res.status(400).send('이메일 허용 목록에 있는 이메일이 아닙니다.');
+        return res.status(400).send(req.t('routes.member.errors.email_not_whitelisted'));
 
     const checkBlacklist = await Blacklist.exists({
         email: crypto.createHash('sha256').update(email).digest('hex')
@@ -1562,7 +1568,7 @@ app.post('/member/change_email',
     if(checkBlacklist) return res.status(403).send({
         fieldErrors: {
             email: {
-                msg: '재가입 대기 기간 입니다.'
+                msg: req.t('routes.member.errors.signup_blacklist')
             }
         }
     });
@@ -1590,18 +1596,18 @@ app.post('/member/change_email',
             await mailTransporter.sendMail({
                 from: config.smtp_sender,
                 to: email,
-                subject: `[${config.site_name}] ${req.user.name}님의 이메일 변경 인증 메일 입니다.`,
+                subject: `[${config.site_name}] ${req.t('routes.member.email.titles.change_email', { value: req.user.name })}`,
                 html: `
-안녕하세요. ${config.site_name} 입니다.
+${req.t('routes.member.email.contents.hello', { value: config.site_name })}
 
-${req.user.name}님의 이메일 변경 인증 메일입니다.
-이 이메일로 이메일 변경을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.
+${req.t('routes.member.email.contents.change_email_content', { value: req.user.name })}
+${req.t('routes.member.email.contents.change_email_dup')}
 
-요청 아이피 : ${req.ip}
+${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
     `.trim().replaceAll('\n', '<br>')
             });
         }
-        else res.status(409).send('이미 가입된 이메일입니다.');
+        else res.status(409).send(req.t('routes.member.errors.already_registered_email'));
 
         return;
     }
@@ -1613,16 +1619,16 @@ ${req.user.name}님의 이메일 변경 인증 메일입니다.
         await mailTransporter.sendMail({
             from: config.smtp_sender,
             to: email,
-            subject: `[${config.site_name}] ${req.user.name}님의 이메일 변경 인증 메일 입니다.`,
+            subject: `[${config.site_name}] ${req.t('routes.member.email.titles.change_email', { value: req.user.name })}`,
             html: `
-안녕하세요. ${config.site_name} 입니다.
+${req.t('routes.member.email.contents.hello', { value: config.site_name })}
 
-${req.user.name}님의 이메일 변경 인증 메일입니다.
-해당 아이디로 변경한게 맞으시면 아래 링크를 클릭해주세요.
-<a href="${new URL(authUrl, config.base_url)}">[인증]</a>
-
-이 메일은 24시간동안 유효합니다.
-요청 아이피 : ${req.ip}
+${req.t('routes.member.email.contents.change_email_content', { value: req.user.name })}
+${req.t('routes.member.email.contents.change_email_link', {
+    linkOpen: `<a href="${new URL(authUrl, config.base_url)}">`,
+    linkClose: '</a>'
+})}
+${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
         `.trim().replaceAll('\n', '<br>')
         });
     }
@@ -1634,12 +1640,12 @@ app.get('/member/auth/:name/:token', async (req, res) => {
         name: req.params.name
     });
     if(!user || Date.now() - user.lastChangeEmail > 1000 * 60 * 60 * 24 || user.changeEmailToken !== req.params.token)
-        return res.error('인증 요청이 만료되었거나 올바르지 않습니다.');
+        return res.error(req.t('routes.member.errors.invalid_email_token'));
 
     const emailDupCheck = await User.exists({
         email: user.changeEmail
     });
-    if(!!emailDupCheck) return res.error('이메일이 이미 존재합니다.', 409);
+    if(!!emailDupCheck) return res.error(req.t('routes.member.errors.email_already_exists'), 409);
 
     await User.updateOne({
         uuid: user.uuid
@@ -1650,8 +1656,12 @@ app.get('/member/auth/:name/:token', async (req, res) => {
         lastChangeEmail: null
     });
 
-    res.renderSkin('인증 완료', {
-        contentHtml: `<strong>${user.name}</strong>님 이메일 인증이 완료되었습니다.<br><a href="/member/login">[로그인]</a> 해주세요.`
+    res.renderSkin('email_verified', {
+        contentHtml: req.t('routes.member.email_verified', {
+            name: `<strong>${namumarkUtils.escapeHtml(user.name)}</strong>`,
+            linkOpen: `<a href="/member/login">`,
+            linkClose: '</a>'
+        }).replaceAll('\n', '<br>')
     });
 });
 
@@ -1668,7 +1678,7 @@ app.get('/member/activate_otp', middleware.isLogin, async (req, res) => {
     const qrUrl = totp.toString();
     const qrcode = await QRCode.toDataURL(qrUrl);
 
-    res.renderSkin('OTP 활성화', {
+    res.renderSkin('activate_otp', {
         contentName: 'member/activate_otp',
         serverData: {
             secret,
@@ -1681,11 +1691,11 @@ app.get('/member/activate_otp', middleware.isLogin, async (req, res) => {
 app.post('/member/activate_otp',
     middleware.isLogin,
     body('pin')
-        .notEmpty().withMessage('pin의 값은 필수입니다.')
+        .notEmpty().withMessage('errors.required_field')
         .isLength({
             min: 6,
             max: 6
-        }).withMessage('pin의 값은 6글자여야 합니다.'),
+        }).withMessage('routes.member.errors.pin_length'),
     middleware.fieldErrors,
     async (req, res) => {
     if(req.user.totpToken) return res.error('already_activated_otp');
@@ -1697,7 +1707,7 @@ app.post('/member/activate_otp',
     if(delta == null) return res.status(400).json({
         fieldErrors: {
             pin: {
-                msg: 'PIN이 올바르지 않습니다.'
+                msg: req.t('routes.member.errors.invalid_pin')
             }
         }
     });
@@ -1714,7 +1724,7 @@ app.post('/member/activate_otp',
 app.get('/member/deactivate_otp', middleware.isLogin, (req, res) => {
     if(!req.user.totpToken) return res.error('not_activated_otp');
 
-    res.renderSkin('OTP 비활성화', {
+    res.renderSkin('deactivate_otp', {
         contentName: 'member/deactivate_otp'
     });
 });
@@ -1722,11 +1732,11 @@ app.get('/member/deactivate_otp', middleware.isLogin, (req, res) => {
 app.post('/member/deactivate_otp',
     middleware.isLogin,
     body('pin')
-        .notEmpty().withMessage('pin의 값은 필수입니다.')
+        .notEmpty().withMessage('errors.required_field')
         .isLength({
             min: 6,
             max: 6
-        }).withMessage('pin의 값은 6글자여야 합니다.'),
+        }).withMessage('routes.member.errors.pin_length'),
     middleware.fieldErrors,
     async (req, res) => {
     if(!req.user.totpToken) return res.error('not_activated_otp');
@@ -1738,7 +1748,7 @@ app.post('/member/deactivate_otp',
     if(delta == null) return res.status(400).json({
         fieldErrors: {
             pin: {
-                msg: 'PIN이 올바르지 않습니다.'
+                msg: req.t('routes.member.errors.invalid_pin')
             }
         }
     });
@@ -1753,20 +1763,20 @@ app.post('/member/deactivate_otp',
 });
 
 app.get('/member/recover_password', middleware.isLogout, middleware.checkCaptcha(true), (req, res) => {
-    if(!config.use_email_verification) return res.error('이메일 인증이 비활성화돼 있습니다.');
+    if(!config.use_email_verification) return res.error(req.t('routes.member.errors.email_verification_disabled'));
 
-    res.renderSkin('계정 찾기', {
+    res.renderSkin('recover_password', {
         contentName: 'member/recover_password'
     });
 });
 
 app.post('/member/recover_password', middleware.isLogout, middleware.captcha(true), async (req, res) => {
-    if(!config.use_email_verification) return res.error('이메일 인증이 비활성화돼 있습니다.');
+    if(!config.use_email_verification) return res.error(req.t('routes.member.errors.email_verification_disabled'));
 
     const email = req.body.email;
-    if(!email) return res.status(400).send('이메일의 값은 필수입니다.');
+    if(!email) return res.status(400).send(req.t('routes.member.errors.email_required'));
 
-    res.renderSkin('계정 찾기', {
+    res.renderSkin('recover_password', {
         contentName: 'member/recover_password_email_sent',
         serverData: { email }
     });
@@ -1788,22 +1798,27 @@ app.post('/member/recover_password', middleware.isLogout, middleware.captcha(tru
     await mailTransporter.sendMail({
         from: config.smtp_sender,
         to: email,
-        subject: `[${config.site_name}] ${newUser.name}님의 비밀번호 찾기 메일 입니다.`,
+        subject: `[${config.site_name}] ${req.t('routes.member.email.titles.recover_password', { value: newUser.name })}`,
         html: `
-안녕하세요. ${config.site_name}입니다.
+${req.t('routes.member.email.contents.hello', { value: config.site_name })}
 
 ${newUser.name}님의 비밀번호 찾기 메일입니다.
 해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.
 <a href="${new URL(authUrl, config.base_url)}">[인증]</a>
 
 이 메일은 24시간동안 유효합니다.
-요청 아이피 : ${req.ip}
+${req.t('routes.member.email.contents.recover_password_content', {
+    user: namumarkUtils.escapeHtml(newUser.name), 
+    linkOpen: `<a href="${new URL(authUrl, config.base_url)}">`,
+    linkClose: '</a>'
+})}
+${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
         `.trim().replaceAll('\n', '<br>')
     });
 });
 
 app.get('/member/recover_password/auth/:name/:token', (req, res) => {
-    res.renderSkin('계정 찾기', {
+    res.renderSkin('recover_password', {
         contentName: 'member/recover_password_final'
     });
 });
@@ -1811,12 +1826,12 @@ app.get('/member/recover_password/auth/:name/:token', (req, res) => {
 app.post('/member/recover_password/auth/:name/:token',
     body('password')
         .notEmpty()
-        .withMessage('비밀번호의 값은 필수입니다.'),
+        .withMessage('routes.member.errors.password_required'),
     body('password_confirm')
         .notEmpty()
-        .withMessage('비밀번호 확인의 값은 필수입니다.')
+        .withMessage('routes.member.errors.password_confirm_required')
         .custom((value, { req }) => value === req.body.password)
-        .withMessage('패스워드 확인이 올바르지 않습니다.'),
+        .withMessage('routes.member.errors.invalid_password_confirm'),
     middleware.fieldErrors,
     async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, 12);
@@ -1831,7 +1846,7 @@ app.post('/member/recover_password/auth/:name/:token',
         changePasswordToken: null,
         lastChangePassword: null
     });
-    if(!user) return res.status(400).send('인증 요청이 만료되었거나 올바르지 않습니다.');
+    if(!user) return res.status(400).send(req.t('routes.member.errors.invalid_email_token'));
 
     res.redirect('/member/login');
 });
@@ -1842,7 +1857,7 @@ const starHandler = starred => async (req, res) => {
         namespace: document.namespace,
         title: document.title
     });
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.document_not_found'), 404);
 
     if(starred) {
         try {
@@ -1886,7 +1901,7 @@ app.get('/member/starred_documents', middleware.isLogin, async (req, res) => {
         star.document = utils.withoutKeys(star.document, ['updatedAt']);
     }
 
-    res.renderSkin('내 문서함', {
+    res.renderSkin('starred_documents', {
         contentName: 'member/starred_documents',
         serverData: {
             stars
@@ -1900,17 +1915,17 @@ app.get('/member/unstar{/*document}', middleware.isLogin, middleware.parseDocume
 app.post('/member/register_webauthn',
     middleware.isLogin,
     body('name')
-        .notEmpty().withMessage('이름의 값은 필수입니다.')
+        .notEmpty().withMessage('routes.member.errors.passkey_name_required')
         .isLength({
             max: 80
-        }).withMessage('이름의 값은 80글자 이하여야 합니다.'),
+        }).withMessage('routes.member.errors.passkey_name_max_length'),
     middleware.singleFieldError,
     async (req, res) => {
     const userPasskeys = await Passkey.find({
         user: req.user.uuid
     });
     if(userPasskeys.some(a => a.name === req.body.name))
-        return res.status(409).send('이름이 이미 존재합니다.');
+        return res.status(409).send('routes.member.errors.passkey_name_dup');
 
     const options = await generateRegistrationOptions({
         rpName: config.site_name,
@@ -1969,7 +1984,7 @@ app.post('/member/register_webauthn/challenge', async (req, res) => {
 
 app.post('/member/delete_webauthn',
     body('name')
-        .notEmpty().withMessage('이름의 값은 필수입니다.'),
+        .notEmpty().withMessage('routes.member.errors.passkey_name_required'),
     middleware.singleFieldError,
     async (req, res) => {
     await Passkey.deleteOne({
@@ -2003,7 +2018,7 @@ app.get('/member/notifications', middleware.isLogin, async (req, res) => {
     data.items = utils.onlyKeys(data.items, ['uuid', 'type', 'read', 'data', 'createdAt']);
     data.items = await utils.notificationMapper(req, data.items);
 
-    res.renderSkin('알림', {
+    res.renderSkin('notifications', {
         contentName: 'member/notifications',
         serverData: data
     });
@@ -2143,7 +2158,7 @@ app.post('/member/remove_developer_perm', middleware.permission('engine_develope
 });
 
 app.get('/member/signup_verify', async (req, res) => {
-    if(!config.verify_enabled || !global.plugins.mobileVerify.length) return res.error('이 기능이 활성화되어있지 않습니다.');
+    if(!config.verify_enabled || !global.plugins.mobileVerify.length) return res.error(req.t('routes.member.errors.mobile_verify_disabled'));
 
     if(req.user?.type !== UserTypes.Account && !req.session.signupVerifyInfo)
         return res.redirect('/member/signup');
@@ -2157,7 +2172,7 @@ app.get('/member/signup_verify', async (req, res) => {
 
     const countryCodes = CountryCodes.filter(a => !config.verify_countries?.length
         || (config.verify_countries?.includes(a.code) === (config.verify_countries_whitelist ?? true)));
-    res.renderSkin('모바일 인증', {
+    res.renderSkin('signup_verify', {
         contentName: 'member/signup_verify',
         serverData: {
             countryCodes,
@@ -2171,25 +2186,25 @@ app.get('/member/signup_verify', async (req, res) => {
 app.post('/member/signup_verify',
     body('countryCode')
         .custom(value => CountryCodes.some(a => a.code === value) && (!config.verify_countries?.length || (config.verify_countries?.includes(value) === (config.verify_countries_whitelist ?? true))))
-        .withMessage('countryCode의 값이 올바르지 않습니다.')
+        .withMessage('errors.invalid_field')
         .custom((value, { req }) => config.verify_countries_ip_match === false || req.countryCode.toLowerCase() === value)
-        .withMessage('전화 번호와 사용중인 IP의 국가가 일치해야 합니다.'),
+        .withMessage('routes.member.errors.phone_number_and_ip_country_mismatch'),
     body('phoneNumber')
-        .notEmpty().withMessage('phoneNumber의 값은 필수입니다.')
+        .notEmpty().withMessage('errors.required_field')
         .customSanitizer((value, { req }) => parsePhoneNumber(value, req.body.countryCode.toUpperCase()))
         .custom(async value => {
             const isValid = value?.isValid();
-            if(!isValid) throw new Error('번호가 올바르지 않습니다.');
+            if(!isValid) throw new Error(req.t('routes.member.errors.invalid_phone_number'));
 
             const plugin = global.plugins.mobileVerify[0];
             if(plugin.validate) {
                 const pluginValid = await plugin.validate(value);
-                if(!pluginValid) throw new Error('번호가 올바르지 않습니다.');
+                if(!pluginValid) throw new Error(req.t('routes.member.errors.invalid_phone_number'));
             }
         }),
     middleware.fieldErrors,
     async (req, res) => {
-    if(!config.verify_enabled || !global.plugins.mobileVerify.length) return res.error('이 기능이 활성화되어있지 않습니다.');
+    if(!config.verify_enabled || !global.plugins.mobileVerify.length) return res.error(req.t('routes.member.errors.mobile_verify_disabled'));
 
     if(req.user?.type !== UserTypes.Account && !req.session.signupVerifyInfo)
         return res.redirect('/member/signup');
@@ -2198,7 +2213,7 @@ app.post('/member/signup_verify',
     const existingVerify = await MobileVerifyInfo.exists({
         phoneNumber: req.body.phoneNumber.number
     });
-    if(existingVerify) return res.status(409).send('이미 해당 번호로 인증이 진행중입니다.');
+    if(existingVerify) return res.status(409).send(req.t('routes.member.errors.phone_number_verify_in_progress'));
 
     const pin = utils.getRandomInt(0, 999999).toString().padStart(6, '0');
     const plugin = global.plugins.mobileVerify[0];
@@ -2207,7 +2222,7 @@ app.post('/member/signup_verify',
         await plugin.verify(req.body.phoneNumber, pin);
     } catch (e) {
         console.error(e);
-        return res.status(500).send('내부 오류가 발생했습니다.');
+        return res.status(500).send(req.t('routes.member.errors.mobile_verify_internal_error'));
     }
 
     await MobileVerifyInfo.create({
@@ -2228,7 +2243,7 @@ app.get('/member/signup_verify_code', async (req, res) => {
     });
     if(!mobileVerifyInfo) return res.redirect('/');
 
-    res.renderSkin('모바일 인증', {
+    res.renderSkin('signup_verify', {
         contentName: 'member/signup_verify_code'
     });
 });
@@ -2236,7 +2251,7 @@ app.get('/member/signup_verify_code', async (req, res) => {
 app.post('/member/signup_verify_code',
     body('pin')
         .if(body('cancel').not().equals('true'))
-        .notEmpty().withMessage('pin의 값은 필수입니다.'),
+        .notEmpty().withMessage('errors.required_field'),
     middleware.fieldErrors,
     async (req, res) => {
     if(req.body.cancel === 'true') {
@@ -2265,7 +2280,7 @@ app.post('/member/signup_verify_code',
         return res.status(400).json({
             fieldErrors: {
                 pin: {
-                    msg: 'PIN이 올바르지 않습니다.'
+                    msg: req.t('routes.member.errors.invalid_pin')
                 }
             }
         });
@@ -2274,7 +2289,7 @@ app.post('/member/signup_verify_code',
     const checkBlacklist = await Blacklist.exists({
         phone: crypto.createHash('sha256').update(mobileVerifyInfo.phoneNumber).digest('hex')
     });
-    if(checkBlacklist) return res.status(403).send('재가입 대기 기간 입니다.');
+    if(checkBlacklist) return res.status(403).send(req.t('routes.member.errors.signup_blacklist'));
 
     const checkNumberExists = await User.exists({
         phoneNumber: mobileVerifyInfo.phoneNumber,
@@ -2283,7 +2298,7 @@ app.post('/member/signup_verify_code',
             $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * (config.verify_change_cooldown_days ?? 0))
         }
     });
-    if(checkNumberExists) return res.status(409).send('이 번호로는 더 이상 인증할 수 없습니다.');
+    if(checkNumberExists) return res.status(409).send(req.t('routes.member.errors.phone_number_already_used'));
 
     await MobileVerifyInfo.deleteOne({
         sessionId: req.session.sessionId

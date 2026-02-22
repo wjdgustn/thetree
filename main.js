@@ -1314,7 +1314,7 @@ app.use((err, req, res, _) => {
     console.error(`Server error from: ${req.method} ${req.originalUrl}(${req.url})`, err);
     const inspectedError = util.inspect(err, { depth: 2, maxArrayLength: 200 });
     if(debug || req.permissions?.includes('developer')) res.status(500).send(inspectedError);
-    else res.status(500).send(req.t('errors.server_error') + ' ' + req.requestId);
+    else res.status(500).send(`${req.t('errors.server_error')}<br>${req.t('errors.request_id')}: ` + req.requestId);
 
     RequestLog.updateOne({
         _id: req.requestId
