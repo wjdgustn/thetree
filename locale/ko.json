@@ -52,7 +52,7 @@
     "login": "로그인",
     "mypage": "내 정보",
     "change_password": "비밀번호 변경",
-    "user_contribution": "{{value}} 기여 목록",
+    "user_contribution": "{{-value}} 기여 목록",
     "withdraw": "계정 삭제",
     "change_name": "이름 변경",
     "change_email": "이메일 변경",

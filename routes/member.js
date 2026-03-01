@@ -1146,7 +1146,7 @@ app.get('/contribution/:uuid/document',
             delete rev.log;
     }
 
-    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${namumarkUtils.escapeHtml(user.name || user.ip)}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution',
         contentName: 'userContribution/document',
         account: {
@@ -1187,7 +1187,7 @@ app.get('/contribution/:uuid/discuss',
     data.items = await utils.findThreads(data.items);
     data.items = utils.onlyKeys(data.items, ['thread', 'id', 'createdAt']);
 
-    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${namumarkUtils.escapeHtml(user.name || user.ip)}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution_discuss',
         contentName: 'userContribution/discuss',
         account: {
@@ -1262,7 +1262,7 @@ app.get('/contribution/:uuid/edit_request',
         items = await utils.findDocuments(items);
     }
 
-    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${namumarkUtils.escapeHtml(user.name || user.ip)}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution_edit_request',
         contentName: 'userContribution/editRequest',
         account: {
@@ -1303,7 +1303,7 @@ app.get('/contribution/:uuid/accepted_edit_request',
     data.items = await utils.findDocuments(data.items);
     data.items = utils.onlyKeys(data.items, ['url', 'document', 'status', 'lastUpdatedAt', 'diffLength', 'createdUser']);
 
-    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${user.name || user.ip}"` : `<${req.t('routes.member.deleted_user')}>` }), {
+    res.renderSkin(req.t('titles.user_contribution', { value: user ? `"${namumarkUtils.escapeHtml(user.name || user.ip)}"` : `<${req.t('routes.member.deleted_user')}>` }), {
         viewName: 'contribution_edit_request',
         contentName: 'userContribution/editRequest',
         account: {
