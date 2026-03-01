@@ -186,7 +186,7 @@ const updateOrphanedCategories = async () => {
     }).lean();
     const notOrphaned = [];
 
-    const topCategoryName = utils.parseDocumentName('분류:분류');
+    const topCategoryName = utils.parseDocumentName(`분류:${i18next.t('namespaces.분류')}`);
     const checkDocs = [allDocuments.find(a => a.namespace === topCategoryName.namespace && a.title === topCategoryName.title)];
     while(true) {
         const currDoc = checkDocs.shift();
