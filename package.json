@@ -89,6 +89,7 @@
       "views/",
       "frontend/",
       "skins/",
+      "locale/",
       "serverConfig.json",
       "publicConfig.json",
       "stringConfig.json",
