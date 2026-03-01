@@ -78,6 +78,7 @@ i18next
         backend: {
             loadPath: './locale/{{lng}}.json'
         },
+        initAsync: false,
         showSupportNotice: false
     });
 global.i18next = i18next;
@@ -89,11 +90,14 @@ global.stringConfig = {};
 
 Object.defineProperty(global, 'config', {
     get() {
-        return {
+        const configObject = {
             ...global.publicConfig,
             ...global.serverConfig,
             ...global.devConfig,
-            ...global.stringConfig,
+            ...global.stringConfig
+        }
+        return {
+            ...configObject,
             namespaces: [...new Set([
                 '문서',
                 '틀',
@@ -104,7 +108,8 @@ Object.defineProperty(global, 'config', {
                 // publicConfig.site_name,
                 // '휴지통',
                 ...(global.serverConfig.namespaces ?? [])
-            ])]
+            ])],
+            localNamespaces: i18next.getResourceBundle(configObject.lang || i18next.language).namespaces
         }
     }
 });
@@ -196,11 +201,14 @@ global.updateSkinInfo = () => {
     const skinDir = fs.readdirSync('./skins').filter(a => !a.startsWith('.'));
     global.skinInfos = {};
     for(let skin of skinDir) {
+        const isDir = fs.statSync(path.join('./skins', skin)).isDirectory();
+        if(!isDir) continue;
+
         const metadataPath = path.join('./skins', skin, 'metadata.json');
-        const isSPA = fs.existsSync(metadataPath);
+        const templatePath = path.join('./skins', skin, 'client/index.html');
+        const isSPA = fs.existsSync(metadataPath) && fs.existsSync(templatePath);
         if(!isSPA) continue;
 
-        const templatePath = path.join('./skins', skin, 'client/index.html');
         global.skinInfos[skin] = {
             ...JSON.parse(fs.readFileSync(metadataPath).toString()),
             template: fs.readFileSync(templatePath).toString()
@@ -1007,6 +1015,8 @@ app.use(async (req, res, next) => {
         const renderSkin = async (title, data = {}) => {
             makeConfigAndSession();
 
+            title &&= title.includes(' ') ? title : req.t(`titles.${title}`, { defaultValue: title });
+
             const status = data.status || 200;
             delete data.status;
 
@@ -1307,7 +1317,7 @@ app.use((err, req, res, _) => {
     console.error(`Server error from: ${req.method} ${req.originalUrl}(${req.url})`, err);
     const inspectedError = util.inspect(err, { depth: 2, maxArrayLength: 200 });
     if(debug || req.permissions?.includes('developer')) res.status(500).send(inspectedError);
-    else res.status(500).send(req.t('errors.server_error') + ' ' + req.requestId);
+    else res.status(500).send(`${req.t('errors.server_error')}<br>${req.t('errors.request_id')}: ` + req.requestId);
 
     RequestLog.updateOne({
         _id: req.requestId

@@ -168,7 +168,7 @@ module.exports = class ACL {
                 lng: lang,
                 usingIpStr: isIp ? i18next.t('acl.deny_string.using_ip', { lng: lang }) : '',
                 group: namumarkUtils.escapeHtml(rule.aclGroup.name),
-                groupId: aclGroupId.toString()
+                groupId: aclGroupId?.toString()
             });
         }
         else {

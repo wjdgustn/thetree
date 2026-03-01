@@ -5,8 +5,6 @@ const os = require('os');
 const ACL = require('../../class/acl');
 
 const MAXIMUM_TIME = 10000;
-const ERROR_HTML = '문서 렌더링이 실패했습니다.';
-const MAXIMUM_TIME_HTML = '문서 렌더링이 너무 오래 걸립니다.';
 
 let minThreads = parseInt(process.env.MULTITHREAD_MIN_THREADS);
 if(isNaN(minThreads) || minThreads < 1) minThreads = Math.min(4, os.cpus().length);
@@ -76,11 +74,14 @@ module.exports = async (...params) => {
         const isTimeout = e.name === 'AbortError';
         if(!isTimeout) console.error(e);
 
-        const errorMsg = isTimeout ? MAXIMUM_TIME_HTML : ERROR_HTML;
+        const errorCode = isTimeout ? 'render_timeout' : 'render_failed';
+        const errorMsg = i18next.t('namumark.errors.' + errorCode, {
+            lng: config.lang || 'ko'
+        });
         return {
             html: `<h2>${errorMsg}</h2>`,
             errorMsg,
-            errorCode: isTimeout ? 'render_timeout' : 'render_failed',
+            errorCode,
             links: [],
             files: [],
             categories: [],

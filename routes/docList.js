@@ -38,7 +38,7 @@ app.get('/UncategorizedPages', async (req, res) => {
     serverData.items = utils.onlyKeys(serverData.items, ['parsedName']);
     serverData.namespaces = config.namespaces;
 
-    res.renderSkin('분류가 되지 않은 문서', {
+    res.renderSkin('uncategorized_pages', {
         contentName: 'docList/UncategorizedPages',
         serverData
     });
@@ -60,7 +60,7 @@ app.get('/OldPages', async (req, res) => {
         item.document = utils.onlyKeys(item.document, ['parsedName']);
     }
 
-    res.renderSkin('편집된 지 오래된 문서', {
+    res.renderSkin('old_pages', {
         contentName: 'docList/OldPages',
         serverData
     });
@@ -82,7 +82,7 @@ const contentLengthHandler = shortest => async (req, res) => {
         item.document = utils.onlyKeys(item.document, ['parsedName']);
     }
 
-    res.renderSkin(`내용이 ${shortest ? '짧은' : '긴'} 문서`, {
+    res.renderSkin(`${shortest ? 'short' : 'long'}_title_pages`, {
         contentName: 'docList/ContentLength',
         serverData
     });
@@ -186,7 +186,7 @@ const updateOrphanedCategories = async () => {
     }).lean();
     const notOrphaned = [];
 
-    const topCategoryName = utils.parseDocumentName('분류:분류');
+    const topCategoryName = utils.parseDocumentName(`분류:${i18next.t('namespaces.분류')}`);
     const checkDocs = [allDocuments.find(a => a.namespace === topCategoryName.namespace && a.title === topCategoryName.title)];
     while(true) {
         const currDoc = checkDocs.shift();
@@ -243,7 +243,7 @@ app.get('/NeededPages', (req, res) => {
     const fullItems = (neededPages[namespace] ?? []);
     const items = fullItems.slice(skipCount, skipCount + displayCount);
 
-    res.renderSkin('작성이 필요한 문서', {
+    res.renderSkin('needed_pages', {
         contentName: 'docList/NeededPages',
         serverData: {
             items: items.map(a => utils.parseDocumentName(a)),
@@ -278,7 +278,7 @@ app.get('/OrphanedPages', async (req, res) => {
     const { result: readable } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) items.length = 0;
 
-    res.renderSkin('고립된 문서', {
+    res.renderSkin('orphaned_pages', {
         contentName: 'docList/OrphanedPages',
         serverData: {
             items: items.map(a => utils.parseDocumentName(a)),
@@ -305,7 +305,7 @@ app.get('/OrphanedCategories', async (req, res) => {
     const fullItems = (orphanedCategories ?? []);
     const items = fullItems.slice(skipCount, skipCount + displayCount);
 
-    res.renderSkin('고립된 분류', {
+    res.renderSkin('orphaned_categories', {
         contentName: 'docList/OrphanedCategories',
         serverData: {
             items: items.map(a => utils.parseDocumentName(a)),

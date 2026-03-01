@@ -1,7 +1,6 @@
 const express = require('express');
 const { Address4, Address6 } = require('ip-address');
 const { getChoseong } = require('es-hangul');
-const axios = require('axios');
 
 const parser = require('../utils/namumark/parser');
 const toHtml = require('../utils/namumark/toHtml');
@@ -16,7 +15,6 @@ const {
     HistoryTypes,
     BacklinkFlags,
     ThreadStatusTypes,
-    ThreadCommentTypes,
     UserTypes,
     EditRequestStatusTypes,
     AuditLogTypes
@@ -208,7 +206,7 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
     }
 
     if(req.query.uuid && !rev) {
-        const msg = '해당 리비전이 존재하지 않습니다.';
+        const msg = req.t('routes.document.errors.invalid_rev');
         return res.renderSkin(undefined, {
             ...defaultData,
             date: null,
@@ -223,14 +221,15 @@ app.get('/w{/*document}', middleware.parseDocumentName, async (req, res) => {
     const isHidden = rev?.hidden && !req.permissions.includes('hide_revision');
     const isTroll = rev?.troll && !req.permissions.includes('mark_troll_revision');
     if(isOldVer && (isHidden || isTroll)) {
-        const msg = rev.hidden ? '숨겨진 리비전입니다.' : '이 리비전은 반달로 표시 되었습니다.';
+        const code = rev.hidden ? 'secret_rev' : 'marked_troll_rev';
+        const msg = req.t(`routes.document.errors.${code}`);
         return res.renderSkin(undefined, {
             ...defaultData,
             date: null,
             rev: null,
             uuid: null,
             error: {
-                code: rev.hidden ? 'secret_rev' : 'marked_troll_rev',
+                code,
                 msg
             },
             contentHtml: `<h2>${msg}</h2>`
@@ -508,15 +507,16 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     const document = req.document;
 
     const { namespace, title } = document;
-    if(!title && target === 'document') return res.status(400).send('문서 이름이 없습니다.');
+    if(!title && target === 'document') return res.status(400).send(req.t('errors.missing_document_name'));
 
     let dbDocument;
     let dbThread;
     if(target === 'thread') {
         dbThread = await Thread.findOne({
-            url: req.body.thread
+            url: req.body.thread,
+            deleted: false
         });
-        if(!dbThread) return res.status(404).send('존재하지 않는 thread');
+        if(!dbThread) return res.status(404).send('thread_not_found');
     }
     if(target === 'document' || target === 'thread') {
         dbDocument = await Document.findOne({
@@ -530,25 +530,25 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
         if(!editable) return res.status(403).send(aclMessage);
     }
     else if(target === 'namespace') {
-        if(!req.permissions.includes('nsacl')) return res.status(403).send('이름공간 ACL 수정은 nsacl 권한이 필요합니다!');
+        if(!req.permissions.includes('nsacl')) return res.status(403).send(req.t('routes.document.errors.nsacl_permission_required'));
         if(!req.permissions.includes('config') && config.protected_namespaces?.includes(namespace)) return res.status(403).send('protected_namespace');
     }
-    else return res.status(400).send('유효하지 않은 target');
+    else return res.status(400).send('invalid_target');
 
     const aclType = ACLTypes[req.body.aclType];
     const conditionType = ACLConditionTypes[req.body.conditionType];
     const actionType = ACLActionTypes[req.body.actionType];
 
     if(aclType == null || conditionType == null || actionType == null)
-        return res.status(400).send('유효하지 않은 type');
+        return res.status(400).send('invalid_type');
 
-    if(aclType === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
+    if(aclType === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send(req.t('routes.document.errors.acl_nsacl_permission_required'));
 
     let duration;
     if(req.body.duration === 'raw') duration = req.body.rawDuration * req.body.rawMultiplier;
     else duration = parseInt(req.body.duration);
 
-    if(isNaN(duration)) return res.status(400).send('유효하지 않은 duration');
+    if(isNaN(duration)) return res.status(400).send('invalid_duration');
 
     let conditionContent = req.body.conditionContent;
     let rawConditionContent = req.body.conditionContent;
@@ -556,7 +556,7 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     if(conditionType === ACLConditionTypes.Perm) {
         let value = req.body.permission;
         if(!value
-            && !req.permissions.includes('developer')) return res.status(400).send('권한 값을 입력해주세요!');
+            && !req.permissions.includes('developer')) return res.status(400).send(req.t('routes.document.errors.missing_permission_value'));
         value ||= 'any';
         conditionContent = value;
         rawConditionContent = value;
@@ -565,23 +565,23 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
         const member = await User.findOne({
             name: conditionContent
         });
-        if(!member) return res.status(400).send('해당 이름의 사용자를 찾을 수 없습니다!');
+        if(!member) return res.status(400).send(req.t('routes.document.errors.missing_acl_username'));
 
         conditionContent = member.uuid;
     }
     else if(conditionType === ACLConditionTypes.IP) {
         if(!Address4.isValid(conditionContent) && !Address6.isValid(conditionContent))
-            return res.status(400).send('유효하지 않은 IP');
+            return res.status(400).send(req.t('routes.document.errors.invalid_ip'));
     }
     else if(conditionType === ACLConditionTypes.GeoIP) {
         if(conditionContent.length !== 2 || !/^[A-Z]+$/.test(conditionContent))
-            return res.status(400).send('유효하지 않은 GeoIP');
+            return res.status(400).send(req.t('routes.document.errors.invalid_geoip'));
     }
     else if(conditionType === ACLConditionTypes.ACLGroup) {
         const aclGroup = await ACLGroup.findOne({
             name: conditionContent
         });
-        if(!aclGroup) return res.status(400).send('해당 이름의 ACL그룹을 찾을 수 없습니다!');
+        if(!aclGroup) return res.status(400).send(req.t('routes.document.errors.invalid_aclgroup_name'));
 
         conditionContent = aclGroup.uuid;
     }
@@ -589,7 +589,7 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     if(actionType < ACLActionTypes.Deny
         || (target === 'document' && actionType > ACLActionTypes.GotoOtherNS)
         || (target === 'namespace' && actionType === ACLActionTypes.GotoNS)) {
-        return res.status(400).send(`${req.body.actionType}는 이 카테고리에 사용할 수 없습니다!`);
+        return res.status(400).send(`invalid_action_type`);
     }
 
     const newACL = {
@@ -603,9 +603,9 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     if(actionType === ACLActionTypes.GotoOtherNS) {
         // if(!req.permissions.includes('developer')) return res.status(403).send(`${req.body.actionType}는 개발자 전용입니다!`);
 
-        if(!req.body.actionContent) return res.status(400).send('이동할 이름공간을 입력하세요!');
-        if(!config.namespaces.includes(req.body.actionContent)) return res.status(400).send(`${req.body.actionContent} 이름공간은 존재하지 않습니다!`);
-        if(req.body.actionContent === namespace) return res.status(400).send('같은 이름공간으로 이동할 수 없습니다.');
+        if(!req.body.actionContent) return res.status(400).send(req.t('routes.document.errors.missing_other_ns'));
+        if(!config.namespaces.includes(req.body.actionContent)) return res.status(400).send(req.t('routes.document.errors.invalid_namespace', { value: req.body.actionContent }));
+        if(req.body.actionContent === namespace) return res.status(400).send(req.t('routes.document.errors.same_gotons_target'));
 
         newACL.actionContent = req.body.actionContent;
     }
@@ -636,7 +636,7 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
     else if(target === 'document') {
         if(!dbDocument) {
             if(namespace === '사용자' || namespace === '삭제된사용자')
-                return res.status(400).send('문서가 존재하지 않습니다.');
+                return res.status(400).send(req.t('routes.document.errors.missing_document'));
             dbDocument = new Document({
                 namespace,
                 title
@@ -688,14 +688,14 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
 
 app.get('/action/acl/delete', async (req, res) => {
     const aclId = req.query.acl;
-    if(!aclId) return res.status(400).send('ACL UUID 없음');
+    if(!aclId) return res.status(400).send('missing_acl_uuid');
 
     const dbACL = await ACLModel.findOne({
         uuid: aclId
     });
-    if(!dbACL) return res.status(400).send('ACL 찾을 수 없음');
+    if(!dbACL) return res.status(400).send('missing_acl');
 
-    if(dbACL.type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
+    if(dbACL.type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send(req.t('routes.document.errors.acl_nsacl_permission_required'));
 
     let dbDocument;
     let dbThread;
@@ -716,7 +716,7 @@ app.get('/action/acl/delete', async (req, res) => {
         if(!editable) return res.status(403).send(aclMessage);
     }
     else {
-        if(!req.permissions.includes('nsacl')) return res.status(403).send('이름공간 ACL 수정은 nsacl 권한이 필요합니다!');
+        if(!req.permissions.includes('nsacl')) return res.status(403).send(req.t('routes.document.errors.namespace_nsacl_permission_required'));
         if(!req.permissions.includes('config') && config.protected_namespaces?.includes(dbACL.namespace)) return res.status(403).send('protected_namespace');
     }
 
@@ -790,7 +790,7 @@ app.patch('/action/acl/reorder', async (req, res) => {
         }
     });
 
-    if(acls.length !== uuids.length) return res.status(400).send('유효하지 않은 ACL 개수');
+    if(acls.length !== uuids.length) return res.status(400).send('invalid_acl_length');
 
     const sameTypeACLs = await ACLModel.find({
         document: acls[0].document,
@@ -798,9 +798,9 @@ app.patch('/action/acl/reorder', async (req, res) => {
         type: acls[0].type
     });
 
-    if(acls.some(a => !sameTypeACLs.find(b => a.uuid === b.uuid))) return res.status(400).send('유효하지 않은 ACL 포함');
+    if(acls.some(a => !sameTypeACLs.find(b => a.uuid === b.uuid))) return res.status(400).send('invalid_acl_included');
 
-    if(acls[0].type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send('ACL 카테고리 수정은 nsacl 권한이 필요합니다!');
+    if(acls[0].type === ACLTypes.ACL && !req.permissions.includes('nsacl')) return res.status(403).send(req.t('routes.document.errors.acl_nsacl_permission_required'));
 
     let dbDocument;
     let dbThread;
@@ -821,7 +821,7 @@ app.patch('/action/acl/reorder', async (req, res) => {
         if(!editable) return res.status(403).send(aclMessage);
     }
     else {
-        if(!req.permissions.includes('nsacl')) return res.status(403).send('이름공간 ACL 수정은 nsacl 권한이 필요합니다!');
+        if(!req.permissions.includes('nsacl')) return res.status(403).send(req.t('routes.document.errors.namespace_nsacl_permission_required'));
         if(!req.permissions.includes('config') && config.protected_namespaces?.includes(acls[0].namespace)) return res.status(403).send('protected_namespace');
     }
 
@@ -856,7 +856,7 @@ const editAndEditRequest = async (req, res) => {
 
     const section = parseInt(req.query.section);
 
-    const invalidSection = () => res.error('섹션이 올바르지 않습니다.');
+    const invalidSection = () => res.error(req.t('routes.document.errors.invalid_section'));
 
     if(req.query.section && (isNaN(section) || section < 1)) return invalidSection();
 
@@ -999,9 +999,9 @@ app.get('/edit_request/:url/edit', async (req, res, next) => {
     const editRequest = await EditRequest.findOne({
         url: req.params.url
     });
-    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
-    if(editRequest.createdUser !== req.user.uuid) return res.error('자신의 편집 요청만 수정할 수 있습니다.', 403);
-    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error('편집 요청 상태가 올바르지 않습니다.');
+    if(!editRequest) return res.error(req.t('routes.document.errors.missing_edit_request'), 404);
+    if(editRequest.createdUser !== req.user.uuid) return res.error(req.t('routes.document.errors.edit_self_edit_request_only'), 403);
+    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error(req.t('routes.document.errors.invalid_edit_request_status'));
 
     req.editRequest = editRequest;
     req.dbDocument = await Document.findOne({
@@ -1015,16 +1015,16 @@ app.get('/edit_request/:url/edit', async (req, res, next) => {
 app.post('/edit_request/:url/close', async (req, res) => {
     const lock = req.body.lock === 'Y';
     if(lock && !req.permissions.includes('manage_thread'))
-        return res.status(403).send('권한이 부족합니다.');
+        return res.status(403).send(req.t('errors.missing_permission'));
 
     const editRequest = await EditRequest.findOne({
         url: req.params.url
     });
-    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if(!editRequest) return res.error(req.t('routes.documet.errors.missing_edit_request'), 404);
     if([
         EditRequestStatusTypes.Closed,
         EditRequestStatusTypes.Locked
-    ].includes(editRequest.status)) return res.error('편집 요청 상태가 올바르지 않습니다.');
+    ].includes(editRequest.status)) return res.error(req.t('routes.document.errors.invalid_edit_request_status'));
 
     if(editRequest.createdUser !== req.user.uuid) {
         const dbDocument = await Document.findOne({
@@ -1052,11 +1052,11 @@ app.post('/edit_request/:url/reopen', async (req, res) => {
     const editRequest = await EditRequest.findOne({
         url: req.params.url
     });
-    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if(!editRequest) return res.error(req.t('routes.document.errors.missing_edit_request'), 404);
     if(![
         EditRequestStatusTypes.Closed,
         EditRequestStatusTypes.Locked
-    ].includes(editRequest.status)) return res.error('편집 요청 상태가 올바르지 않습니다.');
+    ].includes(editRequest.status)) return res.error(req.t('routes.document.errors.invalid_edit_request_status'));
 
     const dbDocument = await Document.findOne({
         uuid: editRequest.document
@@ -1070,11 +1070,11 @@ app.post('/edit_request/:url/reopen', async (req, res) => {
     const statusPerm = req.permissions.includes('manage_thread');
     if(editRequest.createdUser === req.user.uuid && !statusPerm) {
         if(editRequest.status === EditRequestStatusTypes.Locked)
-            return res.error('이 편집 요청은 잠겨있어서 다시 열 수 없습니다.', 403);
+            return res.error(req.t('routes.document.errors.cant_reopen_locked_edit_request'), 403);
     }
     else {
         if(!statusPerm)
-            return res.status(403).send('권한이 부족합니다.');
+            return res.status(403).send(req.t('errors.missing_permission'));
     }
 
     await EditRequest.updateOne({
@@ -1089,7 +1089,7 @@ app.post('/edit_request/:url/reopen', async (req, res) => {
 app.post('/preview{/*document}', middleware.parseDocumentName, async (req, res) => {
     const isThread = req.body.mode === 'thread';
     const content = req.body.content;
-    if(typeof content !== 'string') return res.status(400).send('내용을 입력해주세요.');
+    if(typeof content !== 'string') return res.status(400).send('missing_content');
 
     const document = req.document;
 
@@ -1121,14 +1121,14 @@ const postEditAndEditRequest = async (req, res) => {
     const editingEditRequest = req.url.startsWith('/edit_request/');
     const isEditRequest = editingEditRequest || req.url.startsWith('/new_edit_request/');
 
-    if(req.body.agree !== 'Y') return res.status(400).send('수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.');
-    if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+    if(req.body.agree !== 'Y') return res.status(400).send(req.t('routes.document.errors.missing_edit_agree'));
+    if(req.body.log.length > 255) return res.status(400).send(req.t('routes.document.errors.max_log_length', { value: 255 }));
 
     req.session.editagreeAgreed = true;
 
     const section = parseInt(req.body.section);
 
-    const invalidSection = () => res.status(400).send('섹션이 올바르지 않습니다.');
+    const invalidSection = () => res.status(400).send(req.t('routes.document.errors.invalid_section'));
 
     if(req.body.section && (isNaN(section) || section < 1)) return invalidSection();
 
@@ -1169,7 +1169,7 @@ const postEditAndEditRequest = async (req, res) => {
             createdUser: req.user.uuid,
             status: EditRequestStatusTypes.Open
         });
-        if(checkEditRequest) return res.status(409).send('이미 해당 문서에 편집요청이 존재합니다. 해당 편집요청을 수정하시기 바랍니다.');
+        if(checkEditRequest) return res.status(409).send(req.t('routes.document.errors.edit_request_same_document'));
     }
 
     let editedRev = rev;
@@ -1177,13 +1177,13 @@ const postEditAndEditRequest = async (req, res) => {
         editedRev = await History.findOne({
             uuid: req.body.baseuuid
         });
-        if(!editedRev) return res.status(400).send('baseuuid가 올바르지 않습니다.');
+        if(!editedRev) return res.status(400).send('invalid_baseuuid');
     }
 
     let content = req.body.text;
     let log = req.body.log;
 
-    if(content == null) return res.status(400).send('content가 올바르지 않습니다.');
+    if(content == null) return res.status(400).send('invalid_content');
 
     if(rev?.content != null && req.body.section && !editingEditRequest) {
         const newLines = [];
@@ -1209,26 +1209,26 @@ const postEditAndEditRequest = async (req, res) => {
         if(content.startsWith('#redirect 문서:')) content = content.replace('#redirect 문서:', '#redirect ');
     }
 
-    if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
+    if(rev?.content === content) return res.status(400).send(req.t('errors.same_document_content'));
 
     isCreate = rev?.content == null;
-    if(isCreate && isEditRequest) return res.status(404).send('문서를 찾을 수 없습니다.');
+    if(isCreate && isEditRequest) return res.status(404).send(req.t('errors.document_not_found'));
 
     if(isCreate ? (req.body.baseuuid !== 'create') : (rev.uuid !== req.body.baseuuid)) {
         const mergedContent = utils.mergeText(editedRev.content, content, rev.content);
         if(mergedContent != null) {
             content = mergedContent;
-            if(!isEditRequest) log ||= `자동 병합됨 (r${editedRev.rev})`;
+            if(!isEditRequest) log ||= `${req.t('routes.document.auto_merged')} (r${editedRev.rev})`;
         }
         else {
-            if(req.isAPI) return res.status(409).send('편집 도중에 다른 사용자가 먼저 편집을 했습니다.');
+            if(req.isAPI) return res.status(409).send(req.t('routes.document.errors.edit_conflict'));
 
             const conflictData = {
                 editedRev: editedRev.rev,
                 diff: await utils.generateDiff(editedRev.content, content)
             }
             return res.partial({
-                errorAlert: '편집 도중에 다른 사용자가 먼저 편집을 했습니다.',
+                errorAlert: req.t('routes.document.errors.edit_conflict'),
                 conflict: conflictData,
                 content: rev.content,
                 publicData: {
@@ -1243,7 +1243,7 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
-    if(((namespace === '사용자' && !title.includes('/')) || namespace === '삭제된사용자') && isCreate) return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+    if(((namespace === '사용자' && !title.includes('/')) || namespace === '삭제된사용자') && isCreate) return res.status(400).send(req.t('routes.document.errors.cant_create_user_document'));
 
     if(isEditRequest) {
         const editRequest = await EditRequest.findOneAndUpdate({
@@ -1285,9 +1285,9 @@ app.post('/edit_request/:url/edit', async (req, res, next) => {
     const editRequest = await EditRequest.findOne({
         url: req.params.url
     });
-    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
-    if(editRequest.createdUser !== req.user.uuid) return res.error('자신의 편집 요청만 수정할 수 있습니다.', 403);
-    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error('편집 요청 상태가 올바르지 않습니다.');
+    if(!editRequest) return res.error(req.t('routes.document.errors.missing_edit_request'), 404);
+    if(editRequest.createdUser !== req.user.uuid) return res.error(req.t('routes.document.errors.edit_self_edit_request_only'), 403);
+    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error(req.t('routes.document.errors.invalid_edit_request_status'));
 
     req.editRequest = editRequest;
     req.dbDocument = await Document.findOne({
@@ -1302,7 +1302,7 @@ app.get('/edit_request/:url', async (req, res) => {
     let editRequest = await EditRequest.findOne({
         url: req.params.url
     }).lean();
-    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
+    if(!editRequest) return res.error(req.t('routes.document.errors.edit_self_edit_request_only'), 404);
 
     const dbDocument = await Document.findOne({
         uuid: editRequest.document
@@ -1345,13 +1345,13 @@ app.get('/edit_request/:url', async (req, res) => {
     editRequest = await utils.findUsers(req, editRequest, 'createdUser');
     editRequest = await utils.findUsers(req, editRequest, 'lastUpdateUser');
 
-    const userHtmlOptions = {
-        isAdmin: req.permissions.includes('admin'),
-        note: `편집 요청 ${editRequest.url} 긴급차단`
-    }
-    editRequest.createdUser.userHtml = utils.userHtml(editRequest.createdUser, userHtmlOptions);
-    if(editRequest.lastUpdateUser)
-        editRequest.lastUpdateUser.userHtml = utils.userHtml(editRequest.lastUpdateUser, userHtmlOptions);
+    // const userHtmlOptions = {
+    //     isAdmin: req.permissions.includes('admin'),
+    //     note: `편집 요청 ${editRequest.url} 긴급차단`
+    // }
+    // editRequest.createdUser.userHtml = utils.userHtml(editRequest.createdUser, userHtmlOptions);
+    // if(editRequest.lastUpdateUser)
+    //     editRequest.lastUpdateUser.userHtml = utils.userHtml(editRequest.lastUpdateUser, userHtmlOptions);
 
     editRequest.acceptedRev &&= await History.findOne({
         uuid: editRequest.acceptedRev
@@ -1399,8 +1399,8 @@ app.post('/edit_request/:url/accept', async (req, res) => {
     const editRequest = await EditRequest.findOne({
         url: req.params.url
     });
-    if(!editRequest) return res.error('편집 요청을 찾을 수 없습니다.', 404);
-    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error('편집 요청 상태가 올바르지 않습니다.');
+    if(!editRequest) return res.error(req.t('routes.document.errors.missing_edit_request'), 404);
+    if(editRequest.status !== EditRequestStatusTypes.Open) return res.error(req.t('routes.document.errors.invalid_edit_request_status'));
 
     const dbDocument = await Document.findOne({
         uuid: editRequest.document
@@ -1417,10 +1417,10 @@ app.post('/edit_request/:url/accept', async (req, res) => {
 
     let content = editRequest.content;
 
-    if(rev?.content === content) return res.status(400).send('문서 내용이 같습니다.');
+    if(rev?.content === content) return res.status(400).send(req.t('errors.same_document_content'));
 
     const isCreate = rev?.content == null;
-    if(isCreate) return res.status(400).send('삭제된 문서입니다.');
+    if(isCreate) return res.status(400).send(req.t('routes.document.errors.deleted_document'));
 
     if(rev.uuid !== editRequest.baseUuid) {
         const baseRev = await History.findOne({
@@ -1428,7 +1428,7 @@ app.post('/edit_request/:url/accept', async (req, res) => {
         });
 
         content = utils.mergeText(baseRev.content, editRequest.content, rev.content);
-        if(content == null) return res.status(403).send('이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.');
+        if(content == null) return res.status(403).send(req.t('routes.document.errors.edit_request_conflict'));
     }
 
     const newRev = await History.create({
@@ -1496,7 +1496,7 @@ app.get('/history{/*document}', middleware.parseDocumentName, async (req, res) =
             .select('uuid -_id');
     }
 
-    if(!dbDocument || !revs.length) return res.error('문서를 찾을 수 없습니다.');
+    if(!dbDocument || !revs.length) return res.error(req.t('errors.document_not_found'));
 
     revs = await utils.findUsers(req, revs);
     revs = await utils.findUsers(req, revs, 'trollBy');
@@ -1532,7 +1532,7 @@ app.get('/history{/*document}', middleware.parseDocumentName, async (req, res) =
 
 const documentRaw = async (req, res) => {
     const section = parseInt(req.query.section);
-    const invalidSection = () => res.error('섹션이 올바르지 않습니다.');
+    const invalidSection = () => res.error(req.t('routes.document.errors.invalid_section'));
     if(req.isAPI && req.query.section && (isNaN(section) || section < 1)) return invalidSection();
 
     const document = req.document;
@@ -1549,16 +1549,16 @@ const documentRaw = async (req, res) => {
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(read_acl_message, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.document_not_found'), 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         ...(req.query.uuid ? { uuid: req.query.uuid } : {})
     }).sort({ rev: -1 });
 
-    if(req.query.uuid && !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
+    if(req.query.uuid && !rev) return res.error(req.t('routes.document.errors.invalid_rev'), 404);
 
-    if(rev.hidden && !req.permissions.includes('hide_revision')) return res.error('숨겨진 리비전입니다.', 403);
+    if(rev.hidden && !req.permissions.includes('hide_revision')) return res.error(req.t('routes.document.errors.secret_rev'), 403);
 
     let content = rev?.content ?? '';
     if(req.isAPI && req.query.section) {
@@ -1604,23 +1604,23 @@ app.get('/revert{/*document}', middleware.parseDocumentName, middleware.checkCap
     const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
     if(!result) return res.error(aclMessage, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.document_not_found'), 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         uuid: req.query.uuid
     });
 
-    if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
+    if(!req.query.uuid || !rev) return res.error(req.t('routes.document.errors.invalid_rev'), 404);
 
     if(![
         HistoryTypes.Create,
         HistoryTypes.Modify,
         HistoryTypes.Revert
-    ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
+    ].includes(rev.type)) return res.error(req.t('routes.document.errors.invalid_revert_rev_type'));
 
-    if(rev.troll) return res.error('이 리비전은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
-    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
+    if(rev.troll) return res.error(req.t('routes.document.errors.troll_revert_rev'), 403);
+    if(rev.hidden) return res.error(req.t('routes.document.errors.secret_rev'), 403);
 
     let contentHtml;
     const latestRev = await History.findOne({
@@ -1652,7 +1652,7 @@ app.get('/revert{/*document}', middleware.parseDocumentName, middleware.checkCap
 });
 
 app.post('/revert{/*document}', middleware.parseDocumentName, middleware.captcha(), async (req, res) => {
-    if(req.body.log.length > 255) return res.error('요약의 값은 255글자 이하여야 합니다.');
+    if(req.body.log.length > 255) return res.error(req.t('routes.document.errors.max_log_length', { value: 255 }));
 
     const document = req.document;
 
@@ -1668,32 +1668,32 @@ app.post('/revert{/*document}', middleware.parseDocumentName, middleware.captcha
     const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
     if(!result) return res.error(aclMessage, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.document_not_found'), 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         uuid: req.body.uuid
     });
 
-    if(!req.body.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
+    if(!req.body.uuid || !rev) return res.error(req.t('routes.document.errors.invalid_rev'), 404);
 
     if(![
         HistoryTypes.Create,
         HistoryTypes.Modify,
         HistoryTypes.Revert
-    ].includes(rev.type)) return res.error('이 리비전으로 되돌릴 수 없습니다.');
+    ].includes(rev.type)) return res.error(req.t('routes.document.errors.invalid_revert_rev_type'));
 
-    if(rev.troll) return res.error('이 리비전은 반달로 표시되었기 때문에 되돌릴 수 없습니다.', 403);
-    if(rev.hidden) return res.error('숨겨진 리비전입니다.', 403);
+    if(rev.troll) return res.error(req.t('routes.document.errors.troll_revert_Rev'), 403);
+    if(rev.hidden) return res.error(req.t('routes.document.errors.secret_rev'), 403);
 
     const currentRev = await History.findOne({
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
     if(currentRev.content == null && (namespace === '사용자' || namespace === '삭제된사용자') && (!title.includes('/') || title.startsWith('*')))
-        return res.status(400).send('사용자 문서는 생성할 수 없습니다.');
+        return res.status(400).send(req.t('routes.document.errors.cant_create_user_document'));
 
-    if(rev.content === currentRev.content) return res.error('문서 내용이 같습니다.');
+    if(rev.content === currentRev.content) return res.error(req.t('errors.same_document_content'));
 
     await History.create({
         user: req.user.uuid,
@@ -1728,9 +1728,9 @@ app.get('/diff{/*document}', middleware.parseDocumentName, async (req, res) => {
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(read_acl_message, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.same_document_content'), 404);
 
-    const noRev = () => res.error('해당 리비전이 존재하지 않습니다.', 404);
+    const noRev = () => res.error(req.t('routes.document.errors.invalid_rev'), 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
@@ -1750,7 +1750,7 @@ app.get('/diff{/*document}', middleware.parseDocumentName, async (req, res) => {
     if(!oldRev || oldRev.rev >= rev.rev) return noRev();
 
     if((rev.hidden || oldRev.hidden) && !req.permissions.includes('hide_revision'))
-        return res.error('숨겨진 리비전입니다.', 403);
+        return res.error(req.t('routes.document.errors.secret_rev'), 403);
 
     let diff;
     try {
@@ -1789,18 +1789,18 @@ app.get('/blame{/*document}', middleware.parseDocumentName, async (req, res) => 
     const { result: readable, aclMessage: read_acl_message } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) return res.error(read_acl_message, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.document_not_found'), 404);
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         uuid: req.query.uuid
     });
 
-    if(!req.query.uuid || !rev) return res.error('해당 리비전이 존재하지 않습니다.', 404);
+    if(!req.query.uuid || !rev) return res.error(req.t('routes.document.errors.invalid_rev'), 404);
 
-    if(rev.hidden && !req.permissions.includes('hide_revision')) return res.error('숨겨진 리비전입니다.', 403);
+    if(rev.hidden && !req.permissions.includes('hide_revision')) return res.error(req.t('routes.document.errors.secret_rev'), 403);
 
-    if(!rev.blame?.length) return res.error('blame 데이터를 찾을 수 없습니다.');
+    if(!rev.blame?.length) return res.error('missing_blame_data');
 
     let blame = await utils.findHistories(req, rev.blame, req.permissions.includes('admin'));
     blame = await utils.findUsers(req, blame, 'user', { getColor: true });
@@ -1971,7 +1971,7 @@ app.get('/delete{/*document}', middleware.parseDocumentName, middleware.checkCap
     const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
     if(!result) return res.error(aclMessage, 403);
 
-    if(!dbDocument?.contentExists) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument?.contentExists) return res.error(req.t('errors.document_not_found'), 404);
 
     res.renderSkin(undefined, {
         contentName: 'document/delete',
@@ -1985,9 +1985,9 @@ app.post('/delete{/*document}', middleware.parseDocumentName, middleware.captcha
         && Object.keys(config.external_link_icons).includes(globalUtils.doc_fulltitle(req.document)))
         return res.error('protect_file', 403);
 
-    if(req.body.agree !== 'Y') return res.status(400).send('문서 삭제에 대한 안내를 확인해 주세요.');
-    if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
-    if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
+    if(req.body.agree !== 'Y') return res.status(400).send(req.t('routes.document.errors.missing_delete_agree'));
+    if(req.body.log.length < 5) return res.status(400).send(req.t('routes.document.errors.min_log_length', { value: 5 }));
+    if(req.body.log.length > 255) return res.status(400).send(req.t('routes.document.errors.max_log_length', { value: 255 }));
 
     const document = req.document;
 
@@ -2005,7 +2005,7 @@ app.post('/delete{/*document}', middleware.parseDocumentName, middleware.captcha
     const { result, aclMessage } = await acl.check(ACLTypes.Delete, req.aclData);
     if(!result) return res.status(403).send(aclMessage);
 
-    if(!dbDocument?.contentExists) return res.status(404).send('문서를 찾을 수 없습니다.');
+    if(!dbDocument?.contentExists) return res.status(404).send(req.t('errors.document_not_found'));
 
     await History.create({
         user: req.user.uuid,
@@ -2034,7 +2034,7 @@ app.get('/move{/*document}', middleware.parseDocumentName, middleware.checkCaptc
     const { result, aclMessage } = await acl.check(ACLTypes.Move, req.aclData);
     if(!result) return res.error(aclMessage, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.document_not_found'), 404);
 
     res.renderSkin(undefined, {
         contentName: 'document/move',
@@ -2044,9 +2044,9 @@ app.get('/move{/*document}', middleware.parseDocumentName, middleware.checkCaptc
 });
 
 app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(true), async (req, res) => {
-    if(req.body.log.length < 5) return res.status(400).send('5자 이상의 요약을 입력해 주세요.');
-    if(req.body.log.length > 255) return res.status(400).send('요약의 값은 255글자 이하여야 합니다.');
-    if(!req.body.title || req.body.title.length > 255) return res.status(400).send('문서 이름이 올바르지 않습니다.');
+    if(req.body.log.length < 5) return res.status(400).send(req.t('routes.document.errors.min_log_length', { value: 5 }));
+    if(req.body.log.length > 255) return res.status(400).send(req.t('routes.document.errors.max_log_length', { value: 255 }));
+    if(!req.body.title || req.body.title.length > 255) return res.status(400).send(req.t('errors.invalid_document_name'));
 
     const document = req.document;
     const otherDocument = utils.parseDocumentName(req.body.title);
@@ -2060,7 +2060,7 @@ app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(t
     if(document.namespace.includes('파일')) {
         const ext = document.title.split('.').pop().toLowerCase();
         const newExt = otherDocument.title.split('.').pop().toLowerCase();
-        if(ext !== newExt) return res.status(400).send(`문서 이름과 확장자가 맞지 않습니다. (파일 확장자: ${ext})`);
+        if(ext !== newExt) return res.status(400).send(req.t('routes.document.errors.file_ext_mismatch', { value: ext }));
     }
 
     const isSwap = req.body.mode === 'swap';
@@ -2075,7 +2075,7 @@ app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(t
     const { result, aclMessage } = await acl.check(ACLTypes.Move, req.aclData);
     if(!result) return res.error(aclMessage, 403);
 
-    if(!dbDocument) return res.error('문서를 찾을 수 없습니다.', 404);
+    if(!dbDocument) return res.error(req.t('errors.document_not_found'), 404);
 
     let dbOtherDocument = await Document.findOne({
         namespace: otherDocument.namespace,
@@ -2098,14 +2098,14 @@ app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(t
     const isUserDoc = ['사용자', '삭제된사용자'].includes(document.namespace) && !document.title.includes('/');
     const otherIsUserDoc = ['사용자', '삭제된사용자'].includes(otherDocument.namespace) && !otherDocument.title.includes('/');
     if(isUserDoc || otherIsUserDoc || (document.namespace.includes('파일') !== otherDocument.namespace.includes('파일')))
-        return res.error('이 문서를 해당 이름공간으로 이동할 수 없습니다.', 403);
+        return res.error(req.t('routes.document.errors.cant_move_document_to_target_namespace'), 403);
 
     const revExists = await History.exists({
         document: dbOtherDocument.uuid
     });
 
     if(isSwap) {
-        if(!revExists || dbDocument.uuid === dbOtherDocument.uuid) return res.error('문서를 찾을 수 없습니다.', 404);
+        if(!revExists || dbDocument.uuid === dbOtherDocument.uuid) return res.error(req.t('errors.document_not_found'), 404);
 
         if(!dbOtherDocumentExists) await dbOtherDocument.save();
 
@@ -2128,7 +2128,7 @@ app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(t
         });
     }
     else {
-        if(revExists) return res.error('문서가 이미 존재합니다.', 409);
+        if(revExists) return res.error(req.t('routes.document.errors.dup_document'), 409);
 
         if(dbOtherDocumentExists) {
             await Document.deleteOne({
@@ -2183,13 +2183,13 @@ app.post('/transfer_contribution{/*document}', middleware.parseDocumentName, asy
     const { result, aclMessage } = await acl.check(ACLTypes.Edit, req.aclData);
     if(!result) return res.status(403).send(aclMessage);
 
-    if(!dbDocument?.contentExists) return res.status(404).send('문서를 찾을 수 없습니다.');
+    if(!dbDocument?.contentExists) return res.status(404).send(req.t('errors.document_not_found'));
 
     const rev = await History.findOne({
         document: dbDocument.uuid,
         uuid: req.body.uuid
     });
-    if(!rev) return res.status(404).send('rev를 찾을 수 없습니다.');
+    if(!rev) return res.status(404).send('missing_rev');
 
     const user = await User.findOne({
         uuid: rev.user

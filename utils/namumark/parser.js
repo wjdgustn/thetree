@@ -557,7 +557,13 @@ const Link = createToken({
     }),
     start_chars_hint: ['[']
 });
-const categoryWithNewlineRegex = nestedRegex(/\[\[분류:/, /]]\n/, {
+let localFile = '파일';
+let localCategory = '분류';
+if(global.config?.localNamespaces) {
+    localFile = global.config.localNamespaces[localFile];
+    localCategory = global.config.localNamespaces[localCategory];
+}
+const categoryWithNewlineRegex = nestedRegex(new RegExp(`\\[\\[(분류|${localCategory}):`), /]]\n/, {
     allowNewline: true,
     openCheckRegex: /\[/,
     closeCheckRegex: /]/
@@ -567,7 +573,7 @@ const CategoryWithNewline = createToken({
     pattern: (text, startOffset) => {
         const openLineIndex = text.lastIndexOf('\n', startOffset);
         const openLine = text.slice(openLineIndex + 1, text.indexOf('\n', openLineIndex + 1));
-        if(openLine.replace(/\[\[분류:(.*?)]]/, '')) return null;
+        if(openLine.replace(new RegExp(`\\[\\[(분류|${localCategory}):(.*?)]]`), '')) return null;
 
         return categoryWithNewlineRegex.pattern(text, startOffset);
     },
@@ -1392,7 +1398,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 if(!parsedUrl && link) {
                     const maybeNamespace = link.split(':')[0];
                     if(maybeNamespace === '파일'
-                        || (maybeNamespace.includes('파일') && global.config?.namespaces?.length && global.config.namespaces.includes(maybeNamespace))) {
+                        || maybeNamespace === localFile
+                        || ((maybeNamespace.includes('파일') || maybeNamespace.includes(localFile)) && global.config?.namespaces?.length && global.config.namespaces.includes(maybeNamespace))) {
                         isFile = true;
                         parsedText = [{
                             type: 'text',
@@ -1425,8 +1432,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             let isCategory = false;
             $.ACTION(() => {
                 if(!parsedUrl) {
-                    if(link.startsWith('분류:') && !Store.thread) {
-                        link = link.slice(3);
+                    const startsWithOriginalCategory = link.startsWith('분류:');
+                    if((startsWithOriginalCategory || link.startsWith(localCategory + ':')) && !Store.thread) {
+                        link = link.slice(startsWithOriginalCategory ? '분류:'.length : (localCategory + ':').length);
 
                         let blur;
                         if(hash === 'blur') {

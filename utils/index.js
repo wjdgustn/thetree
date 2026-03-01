@@ -226,40 +226,40 @@ module.exports = {
         if(wasNotArr) return arr[0];
         return arr;
     },
-    userHtml(user, {
-        isAdmin = false,
-        note = null,
-        thread = false,
-        threadAdmin = false
-    } = {}) {
-        const name = user?.name ?? user?.ip;
-        const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
-
-        let dataset = '';
-        const data = {};
-
-        if(isAdmin) {
-            if(note) data.note = note;
-        }
-        if(user.type !== UserTypes.Deleted || isAdmin) data.uuid = user.uuid;
-        data.type = user.type;
-        if(threadAdmin) data.threadadmin = '1';
-        if(user.admin || ['admin', 'developer'].some(a => user.permissions?.includes(a))) data.admin = '1';
-
-        for(let [key, value] of Object.entries(data))
-            dataset += ` data-${key}="${value}"`;
-
-        let nameClass = '';
-        if(thread) {
-            if(threadAdmin) nameClass = ' user-text-admin';
-        }
-        else nameClass = user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : '';
-
-        return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
-                ? `<a class="user-text-name${nameClass}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
-                : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
-            + '</span>';
-    },
+    // userHtml(user, {
+    //     isAdmin = false,
+    //     note = null,
+    //     thread = false,
+    //     threadAdmin = false
+    // } = {}) {
+    //     const name = user?.name ?? user?.ip;
+    //     const link = user?.type === UserTypes.Account ? `/w/사용자:${name}` : `/contribution/${user?.uuid}/document`;
+    //
+    //     let dataset = '';
+    //     const data = {};
+    //
+    //     if(isAdmin) {
+    //         if(note) data.note = note;
+    //     }
+    //     if(user.type !== UserTypes.Deleted || isAdmin) data.uuid = user.uuid;
+    //     data.type = user.type;
+    //     if(threadAdmin) data.threadadmin = '1';
+    //     if(user.admin || ['admin', 'developer'].some(a => user.permissions?.includes(a))) data.admin = '1';
+    //
+    //     for(let [key, value] of Object.entries(data))
+    //         dataset += ` data-${key}="${value}"`;
+    //
+    //     let nameClass = '';
+    //     if(thread) {
+    //         if(threadAdmin) nameClass = ' user-text-admin';
+    //     }
+    //     else nameClass = user.type ? ` user-text-${this.getKeyFromObject(UserTypes, user.type).toLowerCase()}` : '';
+    //
+    //     return '<span class="user-text">' + (user && user.type !== UserTypes.Deleted
+    //             ? `<a class="user-text-name${nameClass}" href="${link}"${user.userCSS ? ` style="${user.userCSS}"` : ''}${dataset}>${name}</a>`
+    //             : `<span class="user-text-name user-text-deleted"${dataset}>(삭제된 사용자)</span>`)
+    //         + '</span>';
+    // },
     async getPublicUser(user) {
         if(!user) return null;
 
@@ -461,7 +461,7 @@ module.exports = {
             permissions: [...permissions],
             user,
             ip: req?.ip,
-            lang: req.i18n.language
+            lang: req?.i18n.language ?? config.lang
         }
 
         if(req) req.aclData = result;
@@ -786,6 +786,8 @@ module.exports = {
         }
 
         if(!isHidden || canSeeHidden) {
+            const $t = req?.t ?? i18next.getFixedT(config.lang);
+
             if(comment.type === ThreadCommentTypes.Default) {
                 const parseResult = global.NamumarkParser.parser(comment.content, { thread: true });
                 if(lightMode) comment.contentHtml = namumarkUtils.escapeHtml(namumarkUtils.parsedToText(parseResult.result)).trim();
@@ -800,19 +802,29 @@ module.exports = {
                 }
             }
             else if(comment.type === ThreadCommentTypes.UpdateStatus) {
-                comment.contentHtml = `스레드 상태를 <b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>로 변경`;
+                comment.contentHtml = $t('thread.comment.update_status', {
+                    value: `<b>${this.getKeyFromObject(ThreadStatusTypes, parseInt(comment.content)).toLowerCase()}</b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.UpdateTopic) {
-                comment.contentHtml = `스레드 주제를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 변경`;
+                comment.contentHtml = $t('thread.comment.update_topic', {
+                    oldValue: `<b>${namumarkUtils.escapeHtml(comment.prevContent)}</b>`,
+                    newValue: `<b>${namumarkUtils.escapeHtml(comment.content)}</b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.UpdateDocument) {
-                comment.contentHtml = `스레드를 <b>${comment.prevContent}</b>에서 <b>${comment.content}</b>로 이동`;
+                comment.contentHtml = $t('thread.comment.update_document', {
+                    oldValue: `<b>${namumarkUtils.escapeHtml(comment.prevContent)}</b>`,
+                    newValue: `<b>${namumarkUtils.escapeHtml(comment.content)}</b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.PinComment) {
-                comment.contentHtml = `<b><a href="#${comment.content}">#${comment.content}</a></b> 댓글을 고정`;
+                comment.contentHtml = $t('thread.comment.pin_comment', {
+                    value: `<b><a href="#${comment.content}">#${comment.content}</a></b>`
+                });
             }
             else if(comment.type === ThreadCommentTypes.UnpinComment) {
-                comment.contentHtml = `댓글 고정 해제`;
+                comment.contentHtml = $t('thread.comment.unpin_comment');
             }
 
             if(lightMode && comment.type !== ThreadCommentTypes.Default)

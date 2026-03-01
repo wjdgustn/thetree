@@ -12,7 +12,7 @@ const ACL = require('../class/acl');
 const app = express.Router();
 
 app.get('/Complete', async (req, res) => {
-    if(!req.get('Referer')) return res.error('잘못된 요청입니다.');
+    if(!req.get('Referer')) return res.error(req.t('errors.invalid_request'));
 
     if(!req.query.q) return res.status(400).json({
         error: 'missing query'
@@ -39,7 +39,7 @@ app.get('/Complete', async (req, res) => {
 });
 
 app.get('/Go', async (req, res) => {
-    if(!req.query.q) return res.error('검색어가 없습니다.');
+    if(!req.query.q) return res.error('missing_query');
 
     const document = utils.parseDocumentName(req.query.q);
     const upperTitle = document.title.toUpperCase();
@@ -62,13 +62,13 @@ app.get('/Go', async (req, res) => {
 });
 
 const getSearch = async (req, res) => {
-    if(!global.documentIndex) return res.error('검색 엔진이 비활성화되어 있습니다.');
+    if(!global.documentIndex) return res.error(req.t('routes.search.errors.search_engine_disabled'));
 
-    if(!req.query.q) return res.error('검색어가 없습니다.');
+    if(!req.query.q) return res.error('missing_query');
 
     // const readableNamespaces = await utils.getReadableNamespaces(req.aclData);
     const readableNamespaces = config.namespaces.filter(a => req.permissions.includes('developer') || !(config.hidden_namespaces ?? []).includes(a));
-    if(!readableNamespaces.length) return res.error('읽을 수 있는 이름공간이 없습니다.');
+    if(!readableNamespaces.length) return res.error(req.t('routes.search.errors.no_readable_namespace'));
 
     const filter = [];
     const attributesToRetrieve = ['namespace', 'title'];
@@ -142,7 +142,7 @@ const getSearch = async (req, res) => {
         return a;
     });
 
-    res.renderSkin('검색', {
+    res.renderSkin('search', {
         contentName: 'search',
         serverData: {
             query: req.query.q,
