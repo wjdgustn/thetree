@@ -151,7 +151,13 @@ app.get('/aclgroup/groups', middleware.internal, async (req, res) => {
     })));
 });
 
-app.post('/aclgroup/group_add', middleware.permission('aclgroup'), async (req, res) => {
+app.post('/aclgroup/group_add',
+    middleware.permission('aclgroup'),
+    body('name')
+        .isLength({ max: 64 })
+        .withMessage('routes.aclgroup.errors.long_group_name'),
+    middleware.fieldErrors,
+    async (req, res) => {
     const name = req.body.name;
 
     if(!name) return res.status(400).send(req.t('routes.aclgroup.errors.missing_group_name'));

@@ -75,6 +75,7 @@
     "aclgroup": {
       "errors": {
         "missing_group_name": "그룹 이름을 입력해주세요.",
+        "long_group_name": "name의 값은 64글자 이하여야 합니다.",
         "dup_group_name": "이미 존재하는 그룹 이름입니다.",
         "group_not_found": "존재하지 않는 그룹입니다.",
         "aclgroup_config": "{{key}}는 {{value}}입니다.",
