@@ -217,11 +217,14 @@ app.post('/member/signup',
             $gte: ipArr
         }
     }).lean();
-    let blockItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGroup)?.signupPolicy === SignupPolicy.Block);
-    const verifyItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGroup)?.signupPolicy === SignupPolicy.RequireVerification);
 
-    if(!blockItem && verifyItem && (!config.verify_enabled || !global.plugins.mobileVerify.length))
-        blockItem = verifyItem;
+    const verifyEnabled = config.verify_enabled && global.plugins.mobileVerify.length;
+
+    let blockItem = aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGroup)?.signupPolicy === SignupPolicy.Block);
+    const verifyItem = verifyEnabled && aclGroupItems.find(item => aclGroups.find(group => group.uuid === item.aclGroup)?.signupPolicy === SignupPolicy.RequireVerification);
+
+    // if(!blockItem && verifyItem && !verifyEnabled)
+    //     blockItem = verifyItem;
 
     if(blockItem) {
         const aclGroup = aclGroups.find(group => group.uuid === blockItem.aclGroup);
