@@ -201,11 +201,14 @@ global.updateSkinInfo = () => {
     const skinDir = fs.readdirSync('./skins').filter(a => !a.startsWith('.'));
     global.skinInfos = {};
     for(let skin of skinDir) {
+        const isDir = fs.statSync(path.join('./skins', skin)).isDirectory();
+        if(!isDir) continue;
+
         const metadataPath = path.join('./skins', skin, 'metadata.json');
-        const isSPA = fs.existsSync(metadataPath);
+        const templatePath = path.join('./skins', skin, 'client/index.html');
+        const isSPA = fs.existsSync(metadataPath) && fs.existsSync(templatePath);
         if(!isSPA) continue;
 
-        const templatePath = path.join('./skins', skin, 'client/index.html');
         global.skinInfos[skin] = {
             ...JSON.parse(fs.readFileSync(metadataPath).toString()),
             template: fs.readFileSync(templatePath).toString()
