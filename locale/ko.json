@@ -380,5 +380,51 @@
       "pin_comment": "{{-value}} 댓글을 고정",
       "unpin_comment": "댓글 고정 해제"
     }
+  },
+
+  "views": {
+    "wiki": {
+      "warn": "주의!",
+      "old_revision": "문서의 이전 버전({date}에 수정)을 보고 있습니다.",
+      "go_to_latest": "최신 버전으로 이동",
+      "no_category": "이 문서는 분류가 되어 있지 않습니다. {link}에서 적절한 분류를 찾아 문서를 분류해주세요!"
+    },
+    "thread": {
+      "warn": "경고!",
+      "front_page_warn": "이 토론은 {{document}} 문서의 토론입니다. {{document}} 문서와 관련 없는 토론은 각 문서의 토론에서 진행해 주시기 바랍니다. {{document}} 문서와 관련 없는 토론은 삭제될 수 있습니다.",
+      "status": {
+        "0": "열림",
+        "1": "중지됨",
+        "2": "닫힘"
+      },
+      "hide_hidden": "숨겨진 댓글 보이지 않기",
+      "delete_thread": "[ADMIN] 스레드 삭제",
+      "pinned_comment": "고정된 댓글",
+      "write_comment": "댓글 달기",
+      "update_thread_status": "[ADMIN] 스레드 상태 변경",
+      "update_thread_document": "[ADMIN] 스레드 이동",
+      "update_thread_topic": "[ADMIN] 스레드 주제 변경",
+      "change": "변경",
+      "submit": "전송"
+    },
+    "search": {
+      "namespace_all": "전체",
+      "target": {
+        "title_content": "제목/내용",
+        "title": "제목",
+        "content": "내용",
+        "raw": "원문"
+      },
+      "search": "검색",
+      "direct_document": "찾는 문서가 없나요? 문서로 바로 갈 수 있습니다.",
+      "direct_document_btn": "'{{query}}' 문서로 가기",
+      "result": "전체 {{count}} 건 / 처리 시간 {{sec}}초"
+    },
+    "notfound": {
+      "text": "해당 문서를 찾을 수 없습니다.",
+      "new_document": "새 문서 만들기",
+      "history": "이 문서의 역사",
+      "history_more": "더보기"
+    }
   }
 }
