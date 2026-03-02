@@ -189,7 +189,7 @@
       "email": {
         "titles": {
           "signup": "계정 생성 이메일 주소 인증",
-          "pin": "확인되지 앟은 기기에서 로그인",
+          "pin": "확인되지 않은 기기에서 로그인",
           "change_email": "{{value}}님의 이메일 변경 인증 메일 입니다.",
           "recover_password": "{{value}}님의 비밀번호 찾기 메일 입니다."
         },
