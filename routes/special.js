@@ -323,9 +323,11 @@ app.get('/Upload', async (req, res) => {
     }
 
     let defaultLicense = config.file_default_license;
-    const parsedDefaultLicense = utils.parseDocumentName(defaultLicense);
-    if(parsedDefaultLicense.namespace === '틀')
-        defaultLicense = defaultLicense.slice(defaultLicense.indexOf('/') + 1);
+    if(defaultLicense) {
+        const parsedDefaultLicense = utils.parseDocumentName(defaultLicense);
+        if(parsedDefaultLicense.namespace === '틀')
+            defaultLicense = defaultLicense.slice(defaultLicense.indexOf('/') + 1);
+    }
 
     res.renderSkin('upload', {
         contentName: 'special/upload',
