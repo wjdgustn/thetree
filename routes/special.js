@@ -607,7 +607,7 @@ app.post('/Upload', (req, res, next) => {
             fileHeight,
             videoFileKey,
             videoFileSize,
-            log: req.body.log || req.t('routes.special.file_upload_log', { filename: originalName })
+            log: req.body.log || req.t('routes.special.file_upload_log', { value: originalName })
         });
     }
 
