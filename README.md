@@ -1,4 +1,6 @@
 # the tree
+[![Crowdin](https://badges.crowdin.net/thetree/localized.svg)](https://crowdin.com/project/thetree)
+
 ![screenshot](https://github.com/wjdgustn/thetree/blob/master/.github/assets/screenshot.png?raw=true)
 
 [the seed](https://theseed.io) 엔진의 시스템을 모방한 위키 엔진입니다.
