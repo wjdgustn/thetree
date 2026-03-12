@@ -1,7 +1,6 @@
 {
   "lang_name": "English",
   "sans": "wa sans",
-
   "namespaces": {
     "문서": "Document",
     "틀": "Template",
@@ -9,5 +8,1212 @@
     "파일": "File",
     "사용자": "User",
     "삭제된사용자": "DeletedUser"
+  },
+  "special_document_name": {
+    "file_license": "",
+    "file_category": ""
+  },
+  "namumark": {
+    "errors": {
+      "maximum_length_html": "",
+      "render_failed": "",
+      "render_timeout": ""
+    },
+    "heading_edit": "",
+    "vote": {
+      "votes": "",
+      "vote": ""
+    }
+  },
+  "titles": {
+    "error": "",
+    "aclgroup": "",
+    "aclgroup_manage": "",
+    "developer": "",
+    "grant": "",
+    "batch_revert": "",
+    "login_history": "",
+    "login_history_result": "",
+    "audit_log": "",
+    "initial_setup": "",
+    "manage_account": "",
+    "uncategorized_pages": "",
+    "old_pages": "",
+    "short_title_pages": "",
+    "long_title_pages": "",
+    "needed_pages": "",
+    "orphaned_pages": "",
+    "orphaned_categories": "",
+    "signup": "",
+    "login": "",
+    "mypage": "",
+    "change_password": "",
+    "user_contribution": "",
+    "withdraw": "",
+    "change_name": "",
+    "change_email": "",
+    "email_verified": "",
+    "activate_otp": "",
+    "deactivate_otp": "",
+    "recover_password": "",
+    "starred_documents": "",
+    "notifications": "",
+    "signup_verify": "",
+    "search": "",
+    "recent_changes": "",
+    "recent_discuss": "",
+    "license": "",
+    "upload": "",
+    "block_history": ""
+  },
+  "title_description": {
+    "edit_request": "",
+    "edit": "",
+    "history": "",
+    "backlinks": "",
+    "move": "",
+    "delete": "",
+    "acl": "",
+    "thread": "",
+    "thread_list": "",
+    "thread_list_close": "",
+    "edit_request_close": "",
+    "diff": "",
+    "revert": "",
+    "raw": "",
+    "blame": ""
+  },
+  "duration": {
+    "weeks": "",
+    "days": "",
+    "hours": "",
+    "minutes": "",
+    "seconds": ""
+  },
+  "routes": {
+    "aclgroup": {
+      "errors": {
+        "missing_group_name": "",
+        "long_group_name": "",
+        "dup_group_name": "",
+        "group_not_found": "",
+        "aclgroup_config": "",
+        "invalid_username": "",
+        "min_duration": "",
+        "dup_aclgroup_item": "",
+        "aclgroup_item_not_found": "",
+        "invalid_permission": "",
+        "missing_self_permission": "",
+        "modify_value_missing_permission": "",
+        "missing_permission_edit_permission": "",
+        "group_name_required": "",
+        "not_self_removable": ""
+      }
+    },
+    "admin": {
+      "errors": {
+        "missing_opennamu_data_dir": "",
+        "missing_sqlite3": "",
+        "update_in_progress": "",
+        "dup_email_user": "",
+        "least_one_developer_permission": "",
+        "revision_not_found": "",
+        "file_delete_error": "",
+        "migrate_old_user_not_found": "",
+        "migrate_old_user_type_mismatch": "",
+        "migrate_new_user_not_found": "",
+        "migrate_new_user_type_mismatch": "",
+        "method_type_condition_required": "",
+        "whitelisted_js_only": "",
+        "invalid_uuid": "",
+        "required_duration": "",
+        "invalid_duration": "",
+        "maximum_duration": "",
+        "no_action_selected": "",
+        "log_not_found": "",
+        "missing_diff_content": "",
+        "email_used_by_another_user": "",
+        "invalid_email": ""
+      },
+      "batch_revert": {
+        "closed_edit_request_count": "",
+        "hidden_comment_count": "",
+        "closed_thread_count": "",
+        "marked_troll_revision_count": "",
+        "reverted_document_count": "",
+        "reopen_edit_request_count": "",
+        "processing_time": "",
+        "has_normal_contribution_later": "",
+        "same_revert_target_rev": "",
+        "no_rev_to_revert": ""
+      }
+    },
+    "member": {
+      "errors": {
+        "email_verification_disabled": "",
+        "withdraw_disabled": "",
+        "email_required": "",
+        "invalid_email": "",
+        "password_required": "",
+        "password_confirm_required": "",
+        "dup_username": "",
+        "signup_disabled": "",
+        "signup_blacklist": "",
+        "already_registered_email": "",
+        "email_signup_already_sent": "",
+        "ip_signup_already_in_progress": "",
+        "agree_required": "",
+        "email_not_whitelisted": "",
+        "invalid_email_token": "",
+        "username_required": "",
+        "username_length_range": "",
+        "username_valid_chars": "",
+        "username_startswith_en": "",
+        "username_invalid_keyword": "",
+        "invalid_password": "",
+        "invalid_password_confirm": "",
+        "email_already_exists": "",
+        "wrong_credentials": "",
+        "passkey_not_found": "",
+        "passkey_auth_failed": "",
+        "passwordless_login_disabled": "",
+        "pin_length": "",
+        "invalid_pin": "",
+        "dup_oauth2_map": "",
+        "invalid_oauth2_token_data": "",
+        "missing_oauth2_scope": "",
+        "oauth2_userinfo_failed": "",
+        "oauth2_connected_to_other_internal_account": "",
+        "oauth2_dup_provider": "",
+        "oauth2_not_connected_and_email_dup": "",
+        "oauth2_internal_account_not_found": "",
+        "oauth2_not_connected_account": "",
+        "set_password_for_clear_oauth2": "",
+        "oauth2_map_not_found": "",
+        "withdraw_last_activity": "",
+        "pledge_different": "",
+        "recent_change_name": "",
+        "doing_change_email": "",
+        "passkey_name_required": "",
+        "passkey_name_max_length": "",
+        "passkey_name_dup": "",
+        "mobile_verify_disabled": "",
+        "phone_number_and_ip_country_mismatch": "",
+        "invalid_phone_number": "",
+        "phone_number_verify_in_progress": "",
+        "mobile_verify_internal_error": "",
+        "phone_number_already_used": ""
+      },
+      "default_agree_text": "",
+      "email": {
+        "titles": {
+          "signup": "",
+          "pin": "",
+          "change_email": "",
+          "recover_password": ""
+        },
+        "contents": {
+          "hello": "",
+          "signup_content": "",
+          "signup_email_dup": "",
+          "signup_email_link": "",
+          "pin_content": "",
+          "change_email_content": "",
+          "change_email_dup": "",
+          "change_email_link": "",
+          "recover_password_content": "",
+          "request_ip": ""
+        }
+      },
+      "signup_welcome": "",
+      "deleted_user": "",
+      "email_verified": ""
+    },
+    "document": {
+      "errors": {
+        "invalid_rev": "",
+        "secret_rev": "",
+        "marked_troll_rev": "",
+        "namespace_nsacl_permission_required": "",
+        "acl_nsacl_permission_required": "",
+        "missing_permission_value": "",
+        "missing_acl_username": "",
+        "invalid_ip": "",
+        "invalid_geoip": "",
+        "invalid_aclgroup_name": "",
+        "missing_other_ns": "",
+        "invalid_namespace": "",
+        "same_gotons_target": "",
+        "missing_document": "",
+        "invalid_section": "",
+        "missing_edit_request": "",
+        "edit_self_edit_request_only": "",
+        "invalid_edit_request_status": "",
+        "cant_reopen_locked_edit_request": "",
+        "missing_edit_agree": "",
+        "max_log_length": "",
+        "edit_request_same_document": "",
+        "edit_conflict": "",
+        "cant_create_user_document": "",
+        "deleted_document": "",
+        "edit_request_conflict": "",
+        "invalid_revert_rev_type": "",
+        "troll_revert_rev": "",
+        "missing_delete_agree": "",
+        "min_log_length": "",
+        "file_ext_mismatch": "",
+        "cant_move_document_to_target_namespace": "",
+        "dup_document": ""
+      },
+      "auto_merged": ""
+    },
+    "discuss": {
+      "errors": {
+        "text_required": "",
+        "max_topic_length": "",
+        "max_text_length": "",
+        "missing_thread": "",
+        "same_topic": "",
+        "same_document": ""
+      }
+    },
+    "search": {
+      "errors": {
+        "search_engine_disabled": "",
+        "no_readable_namespace": ""
+      }
+    },
+    "special": {
+      "errors": {
+        "document_required": "",
+        "document_max_length": "",
+        "document_file_namespace_only": "",
+        "license_required": "",
+        "category_required": "",
+        "log_max_length": "",
+        "file_required": "",
+        "invalid_file_type": "",
+        "dup_file": "",
+        "file_upload_error": "",
+        "no_document": ""
+      },
+      "file_upload_log": "",
+      "multiple_file_uploaded": ""
+    }
+  },
+  "errors": {
+    "read_only": "",
+    "disabled_feature": "",
+    "server_error": "",
+    "request_id": "",
+    "missing_permission": "",
+    "invalid_request": "",
+    "missing_document_name": "",
+    "invalid_document_name": "",
+    "required_field": "",
+    "invalid_field": "",
+    "account_not_found": "",
+    "same_document_content": "",
+    "document_not_found": "",
+    "api_request_failed": ""
+  },
+  "default_aclgroups": {
+    "blocked_user": "",
+    "block_edit_request": "",
+    "login_allowed_block": "",
+    "isp_keyword": "",
+    "warn_keyword": "",
+    "warn_message": "",
+    "checked_message": ""
+  },
+  "permissions": {
+    "any": "",
+    "ip": "",
+    "member": "",
+    "admin": "",
+    "member_signup_15days_ago": "",
+    "document_contributor": "",
+    "contributor": "",
+    "match_username_and_document_title": "",
+    "mobile_verified_member": "",
+    "auto_verified_member": ""
+  },
+  "acl": {
+    "acl_tab_message": "",
+    "acl_target_document": "",
+    "acl_target_thread": "",
+    "types": {
+      "-1": "",
+      "0": "",
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": "",
+      "5": "",
+      "6": "",
+      "7": "",
+      "create_account": ""
+    },
+    "actions": {
+      "0": "",
+      "1": "",
+      "2": "",
+      "3": "",
+      "other_namespace": ""
+    },
+    "required_string": {
+      "user": "",
+      "ip": "",
+      "aclgroup": ""
+    },
+    "deny_string": {
+      "using_ip": "",
+      "in_group": "",
+      "not_in_group": "",
+      "condition": "",
+      "message": "",
+      "expiry": "",
+      "reason": "",
+      "forever": ""
+    },
+    "allowed_listing_deny": "",
+    "allowed_listing_deny_many": "",
+    "deep_other_ns": "",
+    "no_rules_deny": ""
+  },
+  "notification": {
+    "site_name_placeholder": "",
+    "user_discuss": "",
+    "mention": "",
+    "default": ""
+  },
+  "thread": {
+    "comment": {
+      "update_status": "",
+      "update_topic": "",
+      "update_document": "",
+      "pin_comment": "",
+      "unpin_comment": ""
+    }
+  },
+  "document": {
+    "w": "",
+    "history": "",
+    "discuss": "",
+    "edit_request": "",
+    "raw": "",
+    "blame": "",
+    "revert": "",
+    "diff": "",
+    "transfer_contribution": "",
+    "unmark_troll": "",
+    "mark_troll": "",
+    "unhide_log": "",
+    "hide_log": "",
+    "unhide": "",
+    "hide": "",
+    "delete_file": ""
+  },
+  "views": {
+    "wiki": {
+      "warn": "",
+      "old_revision": "",
+      "go_to_latest": "",
+      "no_category": ""
+    },
+    "thread": {
+      "warn": "",
+      "front_page_warn": "",
+      "status": {
+        "0": "",
+        "1": "",
+        "2": ""
+      },
+      "hide_hidden": "",
+      "delete_thread": "",
+      "pinned_comment": "",
+      "write_comment": "",
+      "update_thread_status": "",
+      "update_thread_document": "",
+      "update_thread_topic": "",
+      "change": "",
+      "submit": ""
+    },
+    "search": {
+      "namespace_all": "",
+      "target": {
+        "title_content": "",
+        "title": "",
+        "content": "",
+        "raw": ""
+      },
+      "search": "",
+      "direct_document": "",
+      "direct_document_btn": "",
+      "result": ""
+    },
+    "notfound": {
+      "text": "",
+      "new_document": "",
+      "history": "",
+      "history_more": ""
+    },
+    "user_contribution": {
+      "total": "",
+      "document": "",
+      "tools": "",
+      "edit_date": "",
+      "topic": "",
+      "date": "",
+      "edit_request": "",
+      "status": "",
+      "edit_request_link": "",
+      "edit_request_author": "",
+      "no_contribution": ""
+    },
+    "upload": {
+      "select_file": "",
+      "select_button": "",
+      "license": "",
+      "category": "",
+      "upload": "",
+      "document_label": "",
+      "log_label": "",
+      "max_file_amount": ""
+    },
+    "recent_changes": {
+      "see_all_changes": "",
+      "author": ""
+    },
+    "recent_discuss": {
+      "normal_thread": "",
+      "old_thread": "",
+      "pause_thread": "",
+      "closed_thread": "",
+      "open_editrequest": "",
+      "accepted_editrequest": "",
+      "closed_editrequest": "",
+      "old_editrequest": ""
+    },
+    "license": {
+      "engine_update": ""
+    },
+    "block_history": {
+      "target": {
+        "text": "",
+        "author": ""
+      },
+      "type_all": "",
+      "search": "",
+      "reset": "",
+      "show_hidden": "",
+      "hidden_prefix": "",
+      "messages": {
+        "acl_group_add_duration": "",
+        "acl_group_add_forever": "",
+        "user": "",
+        "ip": "",
+        "block_name_text": "",
+        "acl_group_remove": "",
+        "grant": "",
+        "batch_revert": "",
+        "login_history": ""
+      },
+      "types": {
+        "acl_group_add": "",
+        "acl_group_remove": "",
+        "grant": "",
+        "batch_revert": "",
+        "login_history": ""
+      }
+    },
+    "activate_otp": {
+      "step": "",
+      "install_app": "",
+      "other_app": "",
+      "warn": "",
+      "understand": "",
+      "prev": "",
+      "next": "",
+      "run_app": "",
+      "add_code": "",
+      "follow_step": "",
+      "mobile_guide": "",
+      "secret_key_guide": "",
+      "secret_key": "",
+      "put_code_for_enable": "",
+      "otp_label": "",
+      "submit": "",
+      "copied_secret_key": ""
+    },
+    "deactivate_otp": {
+      "submit": ""
+    },
+    "change_email": {
+      "password": "",
+      "email": "",
+      "new_email": "",
+      "submit": ""
+    },
+    "change_name": {
+      "name": "",
+      "new_name": "",
+      "cooldown": "",
+      "submit": ""
+    },
+    "change_password": {
+      "current_password": "",
+      "new_password": "",
+      "confirm_password": "",
+      "submit": ""
+    },
+    "login": {
+      "forgot_password": "",
+      "auto_login": "",
+      "signup": "",
+      "submit": "",
+      "external_login": ""
+    },
+    "mypage": {
+      "gravatar": "",
+      "username": "",
+      "change": "",
+      "email": "",
+      "password": "",
+      "permission": "",
+      "mobile_verify": "",
+      "mobile_verified": "",
+      "mobile_verify_button": "",
+      "skin": "",
+      "default_skin": "",
+      "otp": "",
+      "deactivate": "",
+      "activate": "",
+      "connect_external_account": "",
+      "external_provider": "",
+      "external_name": "",
+      "external_email": "",
+      "external_remove": "",
+      "external_add": "",
+      "passkey": "",
+      "passkey_name": "",
+      "passkey_created": "",
+      "passkey_last_used": "",
+      "passkey_not_used": "",
+      "passkey_remove": "",
+      "no_passkey": "",
+      "new_passkey_name": "",
+      "passkey_add": "",
+      "use_passwordless_login": "",
+      "api_token": "",
+      "api_token_button": "",
+      "account": "",
+      "withdraw": "",
+      "submit": ""
+    },
+    "notifications": {
+      "status": {
+        "unread": "",
+        "read": "",
+        "all": ""
+      },
+      "turn_on_push": "",
+      "read_all": "",
+      "messages": {
+        "user_discuss": "",
+        "mention": ""
+      },
+      "mark_unread": "",
+      "mark_read": "",
+      "checked_all": "",
+      "permission_denied": ""
+    },
+    "pin_verification": {
+      "new_device": "",
+      "passkey_verify": "",
+      "otp_verify": "",
+      "email_verify": "",
+      "passkey_login_button": "",
+      "trust": "",
+      "login_button": "",
+      "other_method": "",
+      "otp_method": "",
+      "otp_method_description": "",
+      "passkey_method": "",
+      "passkey_method_description": ""
+    },
+    "recover_password": {
+      "submit": ""
+    },
+    "recover_password_email_sent": {
+      "message": "",
+      "list_1": "",
+      "list_2": "",
+      "list_3": ""
+    },
+    "recover_password_final": {
+      "message": "",
+      "submit": ""
+    },
+    "signup": {
+      "email": "",
+      "submit": ""
+    },
+    "signup_email_sent": {
+      "message": ""
+    },
+    "signup_final": {
+      "email": "",
+      "username": "",
+      "password": "",
+      "password_confirm": "",
+      "submit": ""
+    },
+    "signup_verify": {
+      "message": "",
+      "phone": "",
+      "submit": ""
+    },
+    "signup_verify_code": {
+      "message": "",
+      "cancel": "",
+      "submit": ""
+    },
+    "starred_documents": {
+      "document": "",
+      "edit_date": "",
+      "add": "",
+      "remove": ""
+    },
+    "withdraw": {
+      "password": "",
+      "last_activity": "",
+      "no_recover": "",
+      "no_signup_duration": "",
+      "no_signup_forever": "",
+      "hash_save_duration": "",
+      "hash_save_forever": "",
+      "submit": ""
+    },
+    "acl": {
+      "tabs": {
+        "thread": "",
+        "document": "",
+        "namespace": ""
+      },
+      "forever": "",
+      "delete": "",
+      "no_rule": "",
+      "namespace_no_rule": "",
+      "conditions": {
+        "perm": "",
+        "ip": "",
+        "geoip": "",
+        "aclgroup": ""
+      },
+      "custom": "",
+      "aclgroup_name": "",
+      "actions": {
+        "allow": "",
+        "deny": "",
+        "gotons": "",
+        "gotootherns": ""
+      },
+      "add": ""
+    },
+    "backlink": {
+      "no_backlink": ""
+    },
+    "delete": {
+      "agree": "",
+      "notify": "",
+      "notify_content": "",
+      "move_link_text": "",
+      "submit": "",
+      "log_label": "",
+      "check_agree": ""
+    },
+    "discuss": {
+      "edit_request": "",
+      "see_closed_edit_request": "",
+      "discuss": "",
+      "see_closed_discuss": "",
+      "new_topic": "",
+      "topic_label": "",
+      "submit": ""
+    },
+    "edit": {
+      "notify": "",
+      "edit_request_redirected": "",
+      "error": "",
+      "conflict_diff_title": "",
+      "conflict_error": "",
+      "submit": "",
+      "log_label": "",
+      "not_saved": ""
+    },
+    "edit_request": {
+      "name_and_date": "",
+      "base_rev": "",
+      "log": "",
+      "reason": "",
+      "close_modal": {
+        "title": "",
+        "lock": "",
+        "close": "",
+        "cancel": ""
+      },
+      "this_edit_request": "",
+      "edit_date": "",
+      "accepted_title": "",
+      "accepted_description": "",
+      "closed_title": "",
+      "closed_description": "",
+      "locked_description": "",
+      "compare": "",
+      "preview": "",
+      "accept_tooltip_conflict": "",
+      "accept_tooltip_missing_perm": "",
+      "accept_tooltip": "",
+      "close_tooltip_missing_perm": "",
+      "close_tooltip": "",
+      "edit_tooltip_not_self": "",
+      "edit_tooltip": "",
+      "reopen_tooltip_locked": "",
+      "reopen_tooltip_missing_perm": "",
+      "reopen_tooltip": ""
+    },
+    "history": {
+      "diff_selected_rev": "",
+      "edit_request_mark": "",
+      "marked_troll": "",
+      "hidden_log": "",
+      "force_show_log": "",
+      "force_show_log_prefix": "",
+      "copied_uuid": ""
+    },
+    "move": {
+      "title": "",
+      "swap": "",
+      "submit": "",
+      "log_label": ""
+    },
+    "revert": {
+      "log_label": "",
+      "submit": ""
+    },
+    "content_length": {
+      "document_without_redirect": "",
+      "char_count": ""
+    },
+    "needed_pages": {
+      "backlink_but_no_document": "",
+      "updated_per_day": "",
+      "update": "",
+      "backlink": ""
+    },
+    "old_pages": {
+      "description": "",
+      "edit_date": ""
+    },
+    "orphaned_categories": {
+      "description": ""
+    },
+    "orphaned_pages": {
+      "description": ""
+    },
+    "aclgroup": {
+      "mode": {
+        "ip": "",
+        "username": ""
+      },
+      "cidr": "",
+      "note": "",
+      "duration": "",
+      "add": "",
+      "table": {
+        "id": "",
+        "target": "",
+        "note": "",
+        "date": "",
+        "expiry": "",
+        "action": ""
+      },
+      "forever": "",
+      "delete": "",
+      "group_add_modal": {
+        "title": "",
+        "group_name": "",
+        "submit": "",
+        "cancel": ""
+      },
+      "remove_modal": {
+        "title": "",
+        "note": "",
+        "delete": "",
+        "cancel": ""
+      }
+    },
+    "aclgroup_manage": {
+      "delete": "",
+      "submit": "",
+      "delete_confirm": ""
+    },
+    "audit_log": {
+      "messages": {
+        "namespace_acl": "",
+        "delete_thread": "",
+        "dev_support": "",
+        "acl_group_create": "",
+        "acl_group_delete": "",
+        "manage_account": "",
+        "modify_config": "",
+        "thread_acl": ""
+      },
+      "diff": "",
+      "types": {
+        "0": "",
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "6": "",
+        "7": ""
+      }
+    },
+    "batch_revert": {
+      "close_edit_requests": "",
+      "hide_thread_comments": "",
+      "revert_contributions": "",
+      "revert_edit_requests": "",
+      "submit": "",
+      "result": "",
+      "failed_list": "",
+      "ok": ""
+    },
+    "config": {
+      "config": "",
+      "apply": "",
+      "text": "",
+      "add": "",
+      "add_string_field": "",
+      "delete": "",
+      "disable_feature": "",
+      "move_opennamu_contributions": "",
+      "move_opennamu_from": "",
+      "move_opennamu_to": "",
+      "move_opennamu_submit": ""
+    },
+    "developer": {
+      "update": "",
+      "branch": "",
+      "current_version": "",
+      "new_version": "",
+      "last_update_check": "",
+      "no_update_check": "",
+      "backend_update_log": "",
+      "frontend_update_log": "",
+      "check_update": "",
+      "do_update": "",
+      "skin": "",
+      "add": "",
+      "build_all": "",
+      "build_info": "",
+      "need_update": "",
+      "no_build": "",
+      "build": "",
+      "installed_skin": "",
+      "delete": "",
+      "tools": {
+        "title": "",
+        "migrateopennamu": "",
+        "mailtest": "",
+        "generateblame": "",
+        "generatebacklink": "",
+        "generatebacklink_backlinkonly": "",
+        "generatebacklink_searchonly": "",
+        "resetsearchindex": ""
+      },
+      "execute": "",
+      "signup": "",
+      "email": "",
+      "username": "",
+      "generate_url": "",
+      "static_file": "",
+      "path": "",
+      "filename": "",
+      "upload": ""
+    },
+    "grant": {
+      "submit": ""
+    },
+    "initial_setup": {
+      "install_skin": "",
+      "skin_git_repo_url": "",
+      "skin_name": "",
+      "install": "",
+      "set_base_url": "",
+      "different_base_url": "",
+      "change": "",
+      "set_base_url_to_origin": "",
+      "generate_default_aclgroup": "",
+      "generate_group_list": "",
+      "setup_nsacl": "",
+      "add_namespace_before_nsacl": "",
+      "config_link_text": "",
+      "default_aclgroup_guide": {
+        "title": "",
+        "list_1": "",
+        "list_2": "",
+        "list_3": "",
+        "list_4": "",
+        "list_5": "",
+        "list_6": ""
+      },
+      "generate_default_nsacl": "",
+      "remove_all_nsacl": "",
+      "trash_keyword": "",
+      "mod_keyword": "",
+      "branding": "",
+      "branding_guide": "",
+      "change_wiki_name": "",
+      "change_frontpage": "",
+      "guide": "",
+      "guide_description": "",
+      "use_email_verification": "",
+      "use_captcha": "",
+      "use_search_engine": "",
+      "use_redis": "",
+      "use_s3": ""
+    },
+    "login_history": {
+      "submit": ""
+    },
+    "login_history_result": {
+      "last_ua": "",
+      "email": ""
+    },
+    "manage_account": {
+      "search": "",
+      "total": "",
+      "phone": "",
+      "show": "",
+      "no_phone": "",
+      "apply": "",
+      "tools": {
+        "title": "",
+        "reset_last_name_change": "",
+        "reset_last_activity": "",
+        "reset_password_link": "",
+        "remove_phone_number": "",
+        "delete_account": ""
+      },
+      "external_account_list": ""
+    }
+  },
+  "components": {
+    "setting_item_input": {
+      "placeholder": ""
+    },
+    "setting_item_checkbox": {
+      "label": ""
+    },
+    "setting": {
+      "title": "",
+      "tabs": {
+        "wiki": "",
+        "discuss": "",
+        "skin": ""
+      }
+    },
+    "searchable_select": {
+      "placeholder": ""
+    },
+    "quick_acl_group_modal": {
+      "title": "",
+      "group": "",
+      "mode": "",
+      "note": "",
+      "duration": "",
+      "add": "",
+      "cancel": ""
+    },
+    "prev_next_btn": {
+      "prev": "",
+      "next": ""
+    },
+    "namespace_selector": {
+      "namespace": "",
+      "submit": ""
+    },
+    "local_date": {
+      "recent": ""
+    },
+    "ip_warn": {
+      "discuss": "",
+      "document": ""
+    },
+    "history_type_tab": {
+      "all": "",
+      "create": "",
+      "delete": "",
+      "move": "",
+      "revert": ""
+    },
+    "email_whitelist": {
+      "text_1": "",
+      "text_2": ""
+    },
+    "duration_selector": {
+      "unblock": "",
+      "raw": "",
+      "template": {
+        "0": "",
+        "86400": "",
+        "259200": "",
+        "432000": "",
+        "604800": "",
+        "1209600": "",
+        "1814400": "",
+        "2419200": "",
+        "4838400": "",
+        "7257600": "",
+        "14515200": "",
+        "29030400": ""
+      }
+    },
+    "contribution_tab": {
+      "document": "",
+      "discuss": "",
+      "edit_request": "",
+      "accepted_edit_request": ""
+    },
+    "comment_preview_tab": {
+      "raw": "",
+      "preview": "",
+      "pause": "",
+      "close": ""
+    },
+    "comment": {
+      "wiki": "",
+      "raw": "",
+      "hide": "",
+      "unhide": "",
+      "pin": "",
+      "unpin": "",
+      "hidden_comment": "",
+      "force_show": ""
+    },
+    "backlink_namespace_selector": {
+      "namespace": "",
+      "all": "",
+      "submit": ""
+    },
+    "author_span": {
+      "deleted": "",
+      "user_doc": "",
+      "document_contribution": "",
+      "discuss_contribution": "",
+      "copy_uuid": "",
+      "block_history": "",
+      "block": "",
+      "deleted_user": "",
+      "ip": "",
+      "user": "",
+      "migrated": "",
+      "mobile_auto_verified": "",
+      "auto_verified": "",
+      "mobile_verified": "",
+      "admin": "",
+      "prev_admin": "",
+      "quick_block_note": "",
+      "copied_uuid": ""
+    },
+    "api_token_modal": {
+      "title": "",
+      "cant_see_again": "",
+      "token_like_pw": "",
+      "copy": "",
+      "close": "",
+      "password": "",
+      "input_password": "",
+      "cancel": "",
+      "submit": "",
+      "copied_token": ""
+    },
+    "wiki_category": {
+      "category": "",
+      "more": ""
+    },
+    "wiki_category_docs": {
+      "sub_category": "",
+      "total": ""
+    },
+    "wiki_content": {
+      "admin": "",
+      "blocked": "",
+      "blocked_duration": "",
+      "blocked_forever": "",
+      "reason": "",
+      "close_modal": "",
+      "image": "",
+      "video": ""
+    },
+    "wiki_setting": {
+      "language": "",
+      "theme": {
+        "name": "",
+        "auto": "",
+        "light": "",
+        "dark": ""
+      },
+      "unfold_wiki_link": "",
+      "nowrap_wiki_table": "",
+      "hide_heading_content": "",
+      "show_folding": "",
+      "strike": {
+        "name": "",
+        "show": "",
+        "remove": "",
+        "hide": ""
+      },
+      "footnote_type": {
+        "name": "",
+        "default": "",
+        "popover": "",
+        "popup": "",
+        "unfold": ""
+      },
+      "image_hide": {
+        "name": "",
+        "show": "",
+        "hide": "",
+        "hide_1mb": ""
+      },
+      "disable_image_lazy": "",
+      "category_position": {
+        "name": "",
+        "top": "",
+        "bottom": "",
+        "both": ""
+      },
+      "no_relative_date": ""
+    },
+    "discuss_setting": {
+      "strike": {
+        "remove": ""
+      },
+      "bold": ""
+    },
+    "nuxt": {
+      "unchecked_notification": "",
+      "unchecked_notification_many": "",
+      "unchecked_notification_link_text": "",
+      "go_back_to_document": ""
+    },
+    "form_error_alert": {
+      "error": ""
+    }
   }
 }
