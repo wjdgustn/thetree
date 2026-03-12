@@ -1,3 +1,12 @@
 {
-  "lang_name": "English"
+  "lang_name": "English",
+
+  "namespaces": {
+    "문서": "Document",
+    "틀": "Template",
+    "분류": "Category",
+    "파일": "File",
+    "사용자": "User",
+    "삭제된사용자": "DeletedUser"
+  }
 }
