@@ -60,7 +60,7 @@ app.get('/member/signup', middleware.isLogout, middleware.checkCaptcha(true), (r
         contentName: 'member/signup',
         serverData: {
             terms: config.terms,
-            agreeText: config.terms_agree_text || req.t('routes.member.signup.default_agree_text'),
+            agreeText: config.terms_agree_text || req.t('routes.member.default_agree_text'),
             emailWhitelist: config.email_whitelist
         }
     });
