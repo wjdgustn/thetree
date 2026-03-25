@@ -14,7 +14,7 @@
   },
   "namumark": {
     "errors": {
-      "maximum_length_html": "문서 길이가 너무 깁니다.",
+      "maximum_length_html": "The document length is too long.",
       "render_failed": "문서 렌더링이 실패했습니다.",
       "render_timeout": "문서 렌더링이 너무 오래 걸립니다."
     },
@@ -101,7 +101,7 @@
         "min_duration": "duration의 값은 0 이상이여야 합니다.",
         "dup_aclgroup_item": "이미 해당 요소가 존재합니다.",
         "aclgroup_item_not_found": "ACL 요소가 존재하지 않습니다.",
-        "invalid_permission": "{{value}} 권한은 유효하지 않습니다.",
+        "invalid_permission": "The {{value}} permission is invalid.",
         "missing_self_permission": "본인이 가진 권한이 포함되지 않았습니다.",
         "modify_value_missing_permission": "이 값을 수정하려면 {{value}} 권한이 필요합니다.",
         "missing_permission_edit_permission": "{{value}} 권한을 수정할 권한이 없습니다.",
