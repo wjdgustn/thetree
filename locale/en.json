@@ -18,7 +18,7 @@
       "render_failed": "Document rendering failed.",
       "render_timeout": "Document rendering takes too long."
     },
-    "toc_title": "목차",
+    "toc_title": "Contents",
     "heading_edit": "Edit",
     "vote": {
       "votes": "table",
@@ -83,7 +83,7 @@
     "revert": "Revert to r{{rev}}",
     "raw": "r{{rev}} RAW",
     "blame": "r{{rev}} Blame",
-    "w": "r{{rev}} 판"
+    "w": "r{{rev}}"
   },
   "duration": {
     "weeks": "week(s)",
@@ -93,39 +93,39 @@
     "seconds": "second(s)"
   },
   "permission_menus": {
-    "grant": "권한",
-    "manage_account": "계정 관리",
-    "login_history": "로그인 기록 조회",
+    "grant": "Grant",
+    "manage_account": "Manage account",
+    "login_history": "View login history",
     "aclgroup": "ACL Group",
-    "batch_revert": "일괄 되돌리기",
-    "audit_log": "감사 로그",
-    "config": "설정",
-    "developer": "개발자 설정"
+    "batch_revert": "Batch revert",
+    "audit_log": "Audit log",
+    "config": "Settings",
+    "developer": "Developer settings"
   },
   "skin": {
-    "contribution_link": "기여 목록",
-    "block_user": "사용자 차단",
-    "block_history": "차단 내역",
-    "deleted_user_document": "삭제된 사용자 문서",
-    "previous_page": "이전 화면",
-    "recent_changes": "최근 변경",
-    "recent_discuss": "최근 토론",
-    "special_tab": "특수 기능",
-    "my_user_doc": "내 사용자 문서",
-    "my_stars": "내 문서함",
-    "my_contribution_document": "내 문서 기여 목록",
-    "my_contribution_discuss": "내 토론 기여 목록",
-    "my_contribution_edit_request": "내 편집 요청 목록",
-    "logout": "로그아웃",
-    "login": "로그인",
+    "contribution_link": "Contribution list",
+    "block_user": "Block user",
+    "block_history": "Block history",
+    "deleted_user_document": "Deleted user document",
+    "previous_page": "Previous",
+    "recent_changes": "Recent changes",
+    "recent_discuss": "Recent Discuss",
+    "special_tab": "Special",
+    "my_user_doc": "My user document",
+    "my_stars": "Starred documents",
+    "my_contribution_document": "My document contributions",
+    "my_contribution_discuss": "My discuss contributions",
+    "my_contribution_edit_request": "My edit request contributions",
+    "logout": "Logout",
+    "login": "Login",
     "edit_request_instead": "대신 {edit_request}을 생성할 수 있습니다.",
-    "edit_request_instead_link": "편집 요청",
+    "edit_request_instead_link": "Edit request",
     "user_discuss_alert": "현재 진행 중인 {user_discuss}이 있습니다.",
-    "user_discuss_alert_link": "사용자 토론",
+    "user_discuss_alert_link": "User discuss",
     "not_found_search": "'{{title}}'을(를) 검색하시겠습니까?",
-    "edit_revision": "r{{rev}} 편집",
+    "edit_revision": "Edit r{{rev}}",
     "edit_section_revision": "r{{rev}} 문단 편집",
-    "edit_new_document": "새 문서 생성"
+    "edit_new_document": "Create new document"
   },
   "routes": {
     "aclgroup": {
@@ -744,7 +744,7 @@
       "namespace_no_rule": "규칙이 존재하지 않습니다. 모두 거부됩니다.",
       "conditions": {
         "perm": "Permission",
-        "user": "사용자",
+        "user": "User",
         "ip": "IP",
         "geoip": "GeoIP",
         "aclgroup": "ACLGroup"
