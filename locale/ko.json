@@ -7,7 +7,8 @@
     "분류": "분류",
     "파일": "파일",
     "사용자": "사용자",
-    "삭제된사용자": "삭제된사용자"
+    "삭제된사용자": "삭제된사용자",
+    "아이피사용자": "아이피사용자"
   },
 
   "special_document_name": {
@@ -126,9 +127,9 @@
     "my_contribution_edit_request": "내 편집 요청 목록",
     "logout": "로그아웃",
     "login": "로그인",
-    "edit_request_instead": "대신 {edit_request}을 생성할 수 있습니다.",
+    "edit_request_instead": "대신 {editRequest}을 생성할 수 있습니다.",
     "edit_request_instead_link": "편집 요청",
-    "user_discuss_alert": "현재 진행 중인 {user_discuss}이 있습니다.",
+    "user_discuss_alert": "현재 진행 중인 {userDiscuss}이 있습니다.",
     "user_discuss_alert_link": "사용자 토론",
     "not_found_search": "'{{title}}'을(를) 검색하시겠습니까?",
     "edit_revision": "r{{rev}} 편집",
