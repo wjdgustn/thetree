@@ -9,5 +9,1251 @@
     "사용자": "User",
     "삭제된사용자": "DeletedUser",
     "아이피사용자": "IPUser"
+  },
+  "special_document_name": {
+    "file_license": "File license",
+    "file_category": "File"
+  },
+  "namumark": {
+    "errors": {
+      "maximum_length_html": "The document length is too long.",
+      "render_failed": "Document rendering failed.",
+      "render_timeout": "Document rendering takes too long."
+    },
+    "toc_title": "Index",
+    "heading_edit": "Edit",
+    "vote": {
+      "votes": "table",
+      "vote": "vote"
+    }
+  },
+  "titles": {
+    "error": "Error",
+    "aclgroup": "ACLGroup",
+    "aclgroup_manage": "ACLGroup settings",
+    "developer": "Developer settings",
+    "grant": "Granting Permission",
+    "batch_revert": "Batch revert",
+    "login_history": "Login history",
+    "login_history_result": "{{value}}'s login history",
+    "audit_log": "Audit log",
+    "initial_setup": "Initial setup",
+    "manage_account": "Manage account",
+    "uncategorized_pages": "Uncategorized documents",
+    "old_pages": "Old documents",
+    "short_title_pages": "Short documents",
+    "long_title_pages": "Long documents",
+    "needed_pages": "Needed documents",
+    "orphaned_pages": "Orphaned documents",
+    "orphaned_categories": "Orphaned categories",
+    "signup": "Sign up",
+    "login": "Login",
+    "mypage": "My page",
+    "change_password": "Change password",
+    "user_contribution": "{{-value}}'s contribution",
+    "withdraw": "Withdraw",
+    "change_name": "Change name",
+    "change_email": "Change email",
+    "email_verified": "Email verified",
+    "activate_otp": "Activate OTP",
+    "deactivate_otp": "Deactivate OTP",
+    "recover_password": "Recover password",
+    "starred_documents": "Starred documents",
+    "notifications": "Notifications",
+    "signup_verify": "Mobile verify",
+    "search": "Search",
+    "recent_changes": "Recent changes",
+    "recent_discuss": "Recent discuss",
+    "random_page": "RandomPage",
+    "license": "License",
+    "upload": "File upload",
+    "block_history": "Block history"
+  },
+  "title_description": {
+    "edit_request": "Edit request",
+    "edit": "Edit",
+    "history": "History",
+    "backlinks": "Backlink",
+    "move": "Move",
+    "delete": "Delete",
+    "acl": "ACL",
+    "thread": "Discuss",
+    "thread_list": "Discuss list",
+    "thread_list_close": "Closed discuss list",
+    "edit_request_close": "Closed edit request list",
+    "diff": "Compare",
+    "revert": "Revert to r{{rev}}",
+    "raw": "r{{rev}} RAW",
+    "blame": "r{{rev}} Blame",
+    "w": "r{{rev}}"
+  },
+  "duration": {
+    "weeks": "week(s)",
+    "days": "day(s)",
+    "hours": "hour(s)",
+    "minutes": "minute(s)",
+    "seconds": "second(s)"
+  },
+  "permission_menus": {
+    "grant": "Grant",
+    "manage_account": "Manage account",
+    "login_history": "View login history",
+    "aclgroup": "ACL Group",
+    "batch_revert": "Batch revert",
+    "audit_log": "Audit log",
+    "config": "Settings",
+    "developer": "Developer settings"
+  },
+  "skin": {
+    "contribution_link": "Contribution list",
+    "block_user": "Block user",
+    "block_history": "Block history",
+    "deleted_user_document": "Deleted user document",
+    "previous_page": "Previous",
+    "recent_changes": "Recent changes",
+    "recent_discuss": "Recent Discuss",
+    "special_tab": "Special",
+    "my_user_doc": "My user document",
+    "my_stars": "Starred documents",
+    "my_contribution_document": "My document contributions",
+    "my_contribution_discuss": "My discuss contributions",
+    "my_contribution_edit_request": "My edit request contributions",
+    "logout": "Logout",
+    "login": "Login",
+    "edit_request_instead": "대신 {editRequest}을 생성할 수 있습니다.",
+    "edit_request_instead_link": "Edit request",
+    "user_discuss_alert": "현재 진행 중인 {userDiscuss}이 있습니다.",
+    "user_discuss_alert_link": "User discuss",
+    "not_found_search": "Would you like to search for '{{title}}'?",
+    "edit_revision": "Edit r{{rev}}",
+    "edit_section_revision": "Edit r{{rev}}",
+    "edit_new_document": "Create new document"
+  },
+  "routes": {
+    "aclgroup": {
+      "errors": {
+        "missing_group_name": "Please enter the group name.",
+        "long_group_name": "The value of name must be 64 characters or less.",
+        "dup_group_name": "This is a group name that already exists.",
+        "group_not_found": "It is a non-existent group.",
+        "aclgroup_config": "{{key}} is {{value}}.",
+        "invalid_username": "The username is incorrect.",
+        "min_duration": "The value of duration must be 0 or greater.",
+        "dup_aclgroup_item": "The element already exists.",
+        "aclgroup_item_not_found": "The ACL element does not exist.",
+        "invalid_permission": "The {{value}} permission is invalid.",
+        "missing_self_permission": "본인이 가진 권한이 포함되지 않았습니다.",
+        "modify_value_missing_permission": "{{value}} permission is required to edit this value.",
+        "missing_permission_edit_permission": "You do not have permission to edit {{value}} permissions.",
+        "group_name_required": "Group name is required.",
+        "not_self_removable": "해제할 수 없는 요소입니다."
+      }
+    },
+    "admin": {
+      "errors": {
+        "missing_opennamu_data_dir": "Try again after creating an 'opennamu_data' folder in the server folder and adding the 'data' folder files of 'opennamu'.",
+        "missing_sqlite3": "An error occurred during sqlite import. Try again after installing the sqlite3 library.",
+        "update_in_progress": "An update is already in progress.",
+        "dup_email_user": "There already exists an account with thie email address.",
+        "least_one_developer_permission": "At least one person must have developer permissions.",
+        "revision_not_found": "The revision could not be found.",
+        "file_delete_error": "An error occurred while deleting the file.",
+        "migrate_old_user_not_found": "The previous user account could not be found.",
+        "migrate_old_user_type_mismatch": "The previous user account is not an openNAMU account.",
+        "migrate_new_user_not_found": "The target account could not be found.",
+        "migrate_new_user_type_mismatch": "The target account is not a registered account.",
+        "method_type_condition_required": "'method', 'type' and 'condition' are required.",
+        "whitelisted_js_only": "템플릿에 등록된 js 코드만 사용할 수 있습니다.",
+        "invalid_uuid": "uuid의 값을 형식에 맞게 입력해주세요.",
+        "required_duration": "Duration is required.",
+        "invalid_duration": "The duration format is invalid.",
+        "maximum_duration": "The maximum duration is 24 hours.",
+        "no_action_selected": "No action was selected.",
+        "log_not_found": "로그를 찾을 수 없습니다.",
+        "missing_diff_content": "There is no content to compare.",
+        "email_used_by_another_user": "This email is already in use by user {{value}}.",
+        "invalid_email": "The email format is invalid."
+      },
+      "batch_revert": {
+        "closed_edit_request_count": "Closed edit request count",
+        "hidden_comment_count": "Hidden discussion comment count",
+        "closed_thread_count": "Closed thread count",
+        "marked_troll_revision_count": "Number of revisions marked as vandalism",
+        "reverted_document_count": "Reverted page count",
+        "reopen_edit_request_count": "Reopened edit request count",
+        "processing_time": "작업 시간",
+        "has_normal_contribution_later": "이후 정상 기여 존재",
+        "same_revert_target_rev": "되돌릴 기여 동일",
+        "no_rev_to_revert": "되돌릴 기여 없음"
+      }
+    },
+    "member": {
+      "errors": {
+        "email_verification_disabled": "Email verification is disabled.",
+        "withdraw_disabled": "Account deletion is disabled.",
+        "email_required": "Email is required.",
+        "invalid_email": "Please enter a valid email address.",
+        "password_required": "Password is required.",
+        "password_confirm_required": "Comfirm password is required.",
+        "dup_username": "This username already exists.",
+        "signup_disabled": "Registration is disabled.",
+        "signup_blacklist": "재가입 대기 기간 입니다.",
+        "already_registered_email": "This email address is already registered.",
+        "email_signup_already_sent": "An account verification email was already sent to this address.",
+        "ip_signup_already_in_progress": "An account is already being registered on this IP address.",
+        "agree_required": "동의의 값은 필수입니다.",
+        "email_not_whitelisted": "This email address is not whitelisted.",
+        "invalid_email_token": "Expired or invalid verification request.",
+        "username_required": "Username is required.",
+        "username_length_range": "Username must be between 3 and 32 characters.",
+        "username_valid_chars": "Username can only consist of alphanumericals and underscores(_).",
+        "username_startswith_en": "Username must start with a letter.",
+        "username_invalid_keyword": "Username contains a banned word.",
+        "invalid_password": "Wrong password.",
+        "invalid_password_confirm": "Wrong password confirm.",
+        "email_already_exists": "This email address already exists.",
+        "wrong_credentials": "Wrong email or password.",
+        "passkey_not_found": "Passkey not found.",
+        "passkey_auth_failed": "Passkey authorization failed.",
+        "passwordless_login_disabled": "Password-less log in is disabled.",
+        "pin_length": "PINs must consist of 6 characters.",
+        "invalid_pin": "Invalid PIN.",
+        "dup_oauth2_map": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
+        "invalid_oauth2_token_data": "Invalid token data. Please contact administrator.",
+        "missing_oauth2_scope": "{{value}} scope가 누락되었습니다.",
+        "oauth2_userinfo_failed": "사용자 정보를 불러오지 못했습니다.",
+        "oauth2_connected_to_other_internal_account": "이미 다른 내부 계정에 연결된 외부 계정입니다.",
+        "oauth2_dup_provider": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
+        "oauth2_not_connected_and_email_dup": "연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.",
+        "oauth2_internal_account_not_found": "외부 계정과 연결된 계정을 찾을 수 없습니다.",
+        "oauth2_not_connected_account": "연결되지 않은 외부 계정입니다. 내부 계정과 연결 후 사용해 주세요.",
+        "set_password_for_clear_oauth2": "외부 계정을 모두 연결 해제하려면 비밀번호를 설정해야 합니다.",
+        "oauth2_map_not_found": "해당 provider에 등록된 계정이 없습니다.",
+        "withdraw_last_activity": "마지막 활동으로부터 시간이 경과해야 계정 삭제가 가능합니다.",
+        "pledge_different": "동일하게 입력해주세요.",
+        "recent_change_name": "최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.",
+        "doing_change_email": "Email verification is already in progress.",
+        "passkey_name_required": "Name is required.",
+        "passkey_name_max_length": "The name must be 80 characters or less.",
+        "passkey_name_dup": "This name already exists.",
+        "mobile_verify_disabled": "This feature is disabled.",
+        "phone_number_and_ip_country_mismatch": "The nation of the phone number and that of the current IP must match.",
+        "invalid_phone_number": "Invalid phone number.",
+        "phone_number_verify_in_progress": "Verification for this phone number is already in progress.",
+        "mobile_verify_internal_error": "An internal error has occurred.",
+        "phone_number_already_used": "이 번호로는 더 이상 인증할 수 없습니다."
+      },
+      "default_agree_text": "Agree.",
+      "email": {
+        "titles": {
+          "signup": "계정 생성 이메일 주소 인증",
+          "pin": "확인되지 않은 기기에서 로그인",
+          "change_email": "{{value}}님의 이메일 변경 인증 메일 입니다.",
+          "recover_password": "{{value}}님의 비밀번호 찾기 메일 입니다."
+        },
+        "contents": {
+          "hello": "Hello. I'm {{siteName}}",
+          "signup_content": "{{siteName}} 계정 생성 이메일 인증 메일입니다.",
+          "signup_email_dup": "누군가 이 이메일로 계정 생성을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
+          "signup_email_link": "직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.\n{{-linkOpen}}[인증]]{{-linkClose}}\n이 메일은 24시간동안 유효합니다.",
+          "pin_content": "확인되지 않은 기기에서 로그인을 시도하셨습니다.\n본인이 맞다면 아래 PIN 번호를 입력해주세요.\nPIN: {{-pin}}\n\n이 메일은 10분동안 유효합니다.",
+          "change_email_content": "{{value}}님의 이메일 변경 인증 메일입니다.",
+          "change_email_dup": "이 이메일로 이메일 변경을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
+          "change_email_link": "해당 아이디로 변경한게 맞으시면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
+          "recover_password_content": "{{user}}님의 비밀번호 찾기 메일입니다.\n해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
+          "request_ip": "Request IP"
+        }
+      },
+      "signup_welcome": "환영합니다! {{-value}}님 계정 생성이 완료되었습니다.",
+      "deleted_user": "Deleted account",
+      "email_verified": "{{-name}}님 이메일 인증이 완료되었습니다.\n{{-linkOpen}}[로그인]{{-linkClose}} 해주세요."
+    },
+    "document": {
+      "errors": {
+        "invalid_rev": "해당 리비전이 존재하지 않습니다.",
+        "secret_rev": "숨겨진 리비전입니다.",
+        "marked_troll_rev": "이 리비전은 반달로 표시 되었습니다.",
+        "namespace_nsacl_permission_required": "이름공간 ACL 수정은 nsacl 권한이 필요합니다!",
+        "acl_nsacl_permission_required": "ACL 카테고리 수정은 nsacl 권한이 필요합니다!",
+        "missing_permission_value": "권한 값을 입력해주세요!",
+        "missing_acl_username": "해당 이름의 사용자를 찾을 수 없습니다!",
+        "invalid_ip": "유효하지 않은 IP",
+        "invalid_geoip": "유효하지 않은 GeoIP",
+        "invalid_aclgroup_name": "해당 이름의 ACL 그룹을 찾을 수 없습니다!",
+        "missing_other_ns": "이동할 이름공간을 입력하세요!",
+        "invalid_namespace": "Namespace {{value}} does not exist!",
+        "same_gotons_target": "Can not move to the same namespace.",
+        "missing_document": "문서가 존재하지 않습니다.",
+        "invalid_section": "Invalid section.",
+        "missing_edit_request": "편집 요청을 찾을 수 없습니다.",
+        "edit_self_edit_request_only": "자신의 편집 요청만 수정할 수 있습니다.",
+        "invalid_edit_request_status": "편집 요청 상태가 올바르지 않습니다.",
+        "cant_reopen_locked_edit_request": "이 편집 요청은 잠겨있어서 다시 열 수 없습니다.",
+        "missing_edit_agree": "수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.",
+        "max_log_length": "요약의 값은 {{value}}글자 이하여야 합니다.",
+        "edit_request_same_document": "이미 해당 문서에 편집요청이 존재합니다. 해당 편집요청을 수정하시기 바랍니다.",
+        "edit_conflict": "편집 도중에 다른 사용자가 먼저 편집을 했습니다.",
+        "cant_create_user_document": "사용자 문서는 생성할 수 없습니다.",
+        "deleted_document": "삭제된 문서입니다.",
+        "edit_request_conflict": "이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.",
+        "invalid_revert_rev_type": "이 리비전으로 되돌릴 수 없습니다.",
+        "troll_revert_rev": "이 리비전은 반달로 표시되었기 때문에 되돌릴 수 없습니다.",
+        "missing_delete_agree": "문서 삭제에 대한 안내를 확인해 주세요.",
+        "min_log_length": "{{value}}자 이상의 요약을 입력해 주세요.",
+        "file_ext_mismatch": "문서 이름과 확장자가 맞지 않습니다. (파일 확장자: {{value}})",
+        "cant_move_document_to_target_namespace": "이 문서를 해당 이름공간으로 이동할 수 없습니다.",
+        "dup_document": "문서가 이미 존재합니다."
+      },
+      "auto_merged": "Auto merged"
+    },
+    "discuss": {
+      "errors": {
+        "text_required": "본문의 값은 필수입니다.",
+        "max_topic_length": "topic의 값은 255글자 이하여야 합니다.",
+        "max_text_length": "본문의 값은 65536글자 이하여야 합니다.",
+        "missing_thread": "토론이 존재하지 않습니다.",
+        "same_topic": "현재 주제와 동일합니다.",
+        "same_document": "현재 문서와 동일합니다."
+      }
+    },
+    "search": {
+      "errors": {
+        "search_engine_disabled": "검색 엔진이 비활성화되어 있습니다.",
+        "no_readable_namespace": "읽을 수 있는 이름공간이 없습니다."
+      }
+    },
+    "special": {
+      "errors": {
+        "document_required": "문서 제목을 입력해주세요.",
+        "document_max_length": "document의 값은 200글자 이하여야 합니다.",
+        "document_file_namespace_only": "업로드는 파일 이름공간에서만 가능합니다.",
+        "license_required": "라이선스를 선택해주세요.",
+        "category_required": "카테고리를 선택해주세요.",
+        "log_max_length": "요약의 값은 255글자 이하여야 합니다.",
+        "file_required": "파일이 업로드되지 않았습니다.",
+        "invalid_file_type": "올바르지 않은 파일입니다.",
+        "dup_file": "이미 업로드된 파일입니다.\n중복 파일: {{-link}}",
+        "file_upload_error": "파일 업로드 중 오류가 발생했습니다.",
+        "no_document": "문서가 없습니다."
+      },
+      "file_upload_log": "파일 {{-value}}을 올림",
+      "multiple_file_uploaded": "{{count}}개의 파일을 업로드했습니다."
+    }
+  },
+  "errors": {
+    "read_only": "Wiki is read only mode.",
+    "disabled_feature": "비활성화된 기능입니다.",
+    "server_error": "Server error",
+    "request_id": "Request ID",
+    "missing_permission": "권한이 부족합니다.",
+    "invalid_request": "잘못된 요청입니다.",
+    "missing_document_name": "문서 이름이 없습니다.",
+    "invalid_document_name": "문서 이름이 올바르지 않습니다.",
+    "required_field": "{{key}}의 값은 필수입니다.",
+    "invalid_field": "{{key}}의 값이 올바르지 않습니다.",
+    "account_not_found": "계정을 찾을 수 없습니다.",
+    "same_document_content": "문서 내용이 같습니다.",
+    "document_not_found": "문서를 찾을 수 없습니다.",
+    "api_request_failed": "Failed API request"
+  },
+  "default_aclgroups": {
+    "blocked_user": "Blocked user",
+    "block_edit_request": "Edit request block",
+    "login_allowed_block": "Allow login block",
+    "isp_keyword": "ISP",
+    "warn_keyword": "Warning",
+    "warn_message": "경고를 받았습니다.",
+    "checked_message": "Checked."
+  },
+  "permissions": {
+    "any": "Any",
+    "ip": "IP user",
+    "member": "Login user",
+    "admin": "Admin",
+    "member_signup_15days_ago": "가입한지 15일 지난 사용자",
+    "document_contributor": "해당 문서 기여자",
+    "contributor": "Wiki contributor",
+    "match_username_and_document_title": "문서 제목과 사용자 이름이 일치",
+    "mobile_verified_member": "Mobile verified user",
+    "auto_verified_member": "Auto verified user"
+  },
+  "acl": {
+    "acl_tab_message": "해당 {{target}}의 {{-linkOpen}}ACL 탭{{-linkClose}}을 확인하시기 바랍니다.",
+    "acl_target_document": "Document",
+    "acl_target_thread": "Discuss",
+    "types": {
+      "-1": "Task",
+      "0": "Read",
+      "1": "Edit",
+      "2": "Move",
+      "3": "Delete",
+      "4": "Create discuss",
+      "5": "Discuss comment",
+      "6": "Edit request",
+      "7": "ACL edit",
+      "create_account": "Create account"
+    },
+    "actions": {
+      "0": "deny",
+      "1": "allow",
+      "2": "Go to namespace ACL",
+      "3": "Go to {{-namespace}} ACL",
+      "other_namespace": "Other namespcae"
+    },
+    "required_string": {
+      "user": "Specific user",
+      "ip": "Specific IP",
+      "aclgroup": "ACL그룹 {{group}}에 속해 있는 사용자"
+    },
+    "deny_string": {
+      "using_ip": "현재 사용중인 아이피가 ",
+      "in_group": "{{usingIpStr}}ACL그룹 {{group}} #{{groupId}}에 있기",
+      "not_in_group": "{{usingIpStr}}ACL그룹 {{group}}에 없기",
+      "condition": "{{condition}}이기",
+      "message": "{{rule}} 때문에 {{type}} 권한이 부족합니다.",
+      "expiry": "Expiry",
+      "reason": "Reason",
+      "forever": "Forever"
+    },
+    "allowed_listing_deny": "{{type}} 권한이 부족합니다. {{rules}}(이)여야 합니다.",
+    "allowed_listing_deny_many": "{{type}} 권한이 부족합니다. {{rules}} 그 외 {{count}}개의 규칙(이)여야 합니다.",
+    "deep_other_ns": "다른 이름공간 ACL 실행이 이중으로 사용되었습니다.",
+    "no_rules_deny": "ACL에 허용 규칙이 없기 때문에 {{type}} 권한이 부족합니다."
+  },
+  "notification": {
+    "site_name_placeholder": "wiki",
+    "user_discuss": "{user} 사용자가 {topic} #{id} 사용자 토론 댓글 작성",
+    "mention": "{user} 사용자가 {topic} #{id} 댓글에서 호출",
+    "default": "Notification"
+  },
+  "thread": {
+    "comment": {
+      "update_status": "Change thread state to {{-value}}",
+      "update_topic": "Change thread topic from {{-oldValue}} to {{-newValue}}",
+      "update_document": "Move thread from {{-oldValue}} to {{-newValue}}",
+      "pin_comment": "{{-value}} pin comments",
+      "unpin_comment": "Unpin comment"
+    }
+  },
+  "document": {
+    "w": "View",
+    "history": "History",
+    "discuss": "Discuss",
+    "edit_request": "Edit request",
+    "raw": "RAW",
+    "blame": "Blame",
+    "revert": "Revert to this revision",
+    "diff": "Diff",
+    "transfer_contribution": "Transfer this contribution to the logged-in user",
+    "unmark_troll": "[A] Unmark troll",
+    "mark_troll": "[A] Mark troll",
+    "unhide_log": "[A] Unhide log",
+    "hide_log": "[A] Hide log",
+    "unhide": "[A] Unhide revision",
+    "hide": "[A] Hide revision",
+    "delete_file": "[A] Delete file"
+  },
+  "views": {
+    "wiki": {
+      "warn": "Warning!",
+      "old_revision": "문서의 이전 버전({date}에 수정)을 보고 있습니다.",
+      "go_to_latest": "최신 버전으로 이동",
+      "no_category": "이 문서는 분류가 되어 있지 않습니다. {link}에서 적절한 분류를 찾아 문서를 분류해주세요!"
+    },
+    "thread": {
+      "warn": "Warning!",
+      "front_page_warn": "이 토론은 {{document}} 문서의 토론입니다. {{document}} 문서와 관련 없는 토론은 각 문서의 토론에서 진행해 주시기 바랍니다. {{document}} 문서와 관련 없는 토론은 삭제될 수 있습니다.",
+      "status": {
+        "0": "Open",
+        "1": "Pause",
+        "2": "Close"
+      },
+      "hide_hidden": "Don't show hidden comments",
+      "delete_thread": "[ADMIN] Delete thread",
+      "pinned_comment": "Pinned comment",
+      "write_comment": "Write comment",
+      "update_thread_status": "[ADMIN] Change status",
+      "update_thread_document": "[ADMIN] Move thread",
+      "update_thread_topic": "[ADMIN] Change topic",
+      "change": "Change",
+      "submit": "Submit"
+    },
+    "search": {
+      "namespace_all": "All",
+      "target": {
+        "title_content": "Title/Content",
+        "title": "Title",
+        "content": "Content",
+        "raw": "Raw"
+      },
+      "search": "Search",
+      "direct_document": "찾는 문서가 없나요? 문서로 바로 갈 수 있습니다.",
+      "direct_document_btn": "Go to '{{-query}}'",
+      "result": "All {{count}} count(s) / processing time {{sec}}s"
+    },
+    "notfound": {
+      "text": "해당 문서를 찾을 수 없습니다.",
+      "new_document": "Create new document",
+      "history": "이 문서의 역사",
+      "history_more": "More"
+    },
+    "user_contribution": {
+      "total": "Total {{count}}",
+      "document": "Document",
+      "tools": "Tools",
+      "edit_date": "Edit time",
+      "topic": "Title",
+      "date": "Date",
+      "edit_request": "Edit request",
+      "status": "Status",
+      "edit_request_link": "Edit request {{slug}}",
+      "edit_request_author": "User {user}'s edit request",
+      "no_contribution": "기여 내역이 없습니다."
+    },
+    "upload": {
+      "select_file": "Select file",
+      "select_button": "Select",
+      "license": "License",
+      "category": "Category",
+      "upload": "Upload",
+      "document_label": "File name",
+      "log_label": "summation",
+      "max_file_amount": "파일은 {{count}}개까지만 선택할 수 있습니다."
+    },
+    "recent_changes": {
+      "see_all_changes": "View all changes",
+      "author": "Author"
+    },
+    "recent_discuss": {
+      "normal_thread": "Open discuss",
+      "old_thread": "Old discuss",
+      "pause_thread": "Pause discuss",
+      "closed_thread": "Closed discuss",
+      "open_editrequest": "Open edit request",
+      "accepted_editrequest": "Accepted edit request",
+      "closed_editrequest": "Closed edit request",
+      "old_editrequest": "Old edit request"
+    },
+    "license": {
+      "engine_update": "Engine update"
+    },
+    "block_history": {
+      "target": {
+        "text": "Detail",
+        "author": "Author"
+      },
+      "type_all": "All",
+      "search": "Search",
+      "reset": "Reset",
+      "show_hidden": "Show hidden blocked",
+      "hidden_prefix": "Hidden",
+      "messages": {
+        "acl_group_add_duration": "{createdUser} 사용자가 {targetUser} {{userOrIp}}를 {{blockNameText}} {aclGroup} ACL 그룹에 {{duration}} 동안 등록함",
+        "acl_group_add_forever": "{createdUser} 사용자가 {targetUser} {{userOrIp}}를 {{blockNameText}} {aclGroup} ACL 그룹에 영구적으로 등록함",
+        "user": "User",
+        "ip": "IP",
+        "block_name_text": "(차단 당시 이름: {{targetUsername}})",
+        "acl_group_remove": "{createdUser} 사용자가 {targetUser} {{userOrIp}}를 {{blockNameText}} ACL 그룹에서 제거함",
+        "grant": "{createdUser} 사용자가 {targetUser} 사용자의 권한 설정",
+        "batch_revert": "{createdUser} 사용자가 {targetUser} {{userOrIp}}의 기여를 일괄 되돌림",
+        "login_history": "{createdUser} 사용자가 {targetUser} 사용자의 로그인 기록 조회"
+      },
+      "types": {
+        "acl_group_add": "Add ACLGroup",
+        "acl_group_remove": "Remove ACLGroup",
+        "grant": "permission settings",
+        "batch_revert": "batch revert",
+        "login_history": "view login history"
+      }
+    },
+    "activate_otp": {
+      "step": "Step {{count}}",
+      "install_app": "모바일 장치에 일회용 비밀번호 (OTP) 등록을 위한 인증기 애플리케이션을 설치합니다.",
+      "other_app": "위의 예시 외에도 본인이 선호하는 인증기 애플리케이션을 사용할 수 있습니다.",
+      "warn": "Warning",
+      "understand": "일회용 비밀번호를 설정하면 계정에 어떤 영향을 주는지 이해하는 경우에만 설정하세요.",
+      "prev": "Previous",
+      "next": "Next",
+      "run_app": "인증기 애플리케이션을 실행합니다.",
+      "add_code": "코드 추가를 클릭합니다.",
+      "follow_step": "화면에 표시되는 단계를 따릅니다.",
+      "mobile_guide": "모바일 장치에서 등록을 시도하는 경우, QR 코드를 클릭해서 바로 인증기 애플리케이션에 등록할 수 있습니다.",
+      "secret_key_guide": "만약 QR 코드를 사용할 수 없는 경우, 아래의 비밀키를 사용하세요.",
+      "secret_key": "Secret key",
+      "put_code_for_enable": "아래에 일회용 비밀번호를 입력해서 2단계 인증을 활성화 할 수 있습니다.",
+      "otp_label": "OTP",
+      "submit": "Submit",
+      "copied_secret_key": "Copied Secret key"
+    },
+    "deactivate_otp": {
+      "submit": "Deactivate"
+    },
+    "change_email": {
+      "password": "Password",
+      "email": "Email",
+      "new_email": "New email",
+      "submit": "Change email"
+    },
+    "change_name": {
+      "name": "Name",
+      "new_name": "New name",
+      "cooldown": "30일마다 변경할 수 있습니다.",
+      "submit": "Change name"
+    },
+    "change_password": {
+      "current_password": "Current password",
+      "new_password": "Password",
+      "confirm_password": "Confirm password",
+      "submit": "Submit"
+    },
+    "login": {
+      "forgot_password": "Forgot password?",
+      "auto_login": "Auto login",
+      "signup": "Sign up",
+      "submit": "Login",
+      "external_login": "External login"
+    },
+    "mypage": {
+      "gravatar": "사용자 아바타는 {gravatar}에서 제공됩니다.",
+      "username": "Username",
+      "change": "Change",
+      "email": "Email",
+      "password": "Password",
+      "permission": "Permission",
+      "mobile_verify": "Mobile verify",
+      "mobile_verified": "Verified",
+      "mobile_verify_button": "Verify",
+      "skin": "Skin",
+      "default_skin": "Default skin",
+      "otp": "OTP",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "connect_external_account": "Connect external account",
+      "external_provider": "Provider",
+      "external_name": "Name",
+      "external_email": "Email",
+      "external_remove": "Remove",
+      "external_add": "Add",
+      "passkey": "Passkey",
+      "passkey_name": "Name",
+      "passkey_created": "Created date",
+      "passkey_last_used": "Last used date",
+      "passkey_not_used": "Not used",
+      "passkey_remove": "Remove",
+      "no_passkey": "등록된 Passkey가 없습니다.",
+      "new_passkey_name": "New Passkey name",
+      "passkey_add": "Add",
+      "use_passwordless_login": "비밀번호 없이 패스키만 이용해 로그인",
+      "api_token": "API Token",
+      "api_token_button": "발급",
+      "account": "Account",
+      "withdraw": "Delete Account",
+      "submit": "Save"
+    },
+    "notifications": {
+      "status": {
+        "unread": "Unread",
+        "read": "Read",
+        "all": "All"
+      },
+      "turn_on_push": "Turn on push",
+      "read_all": "Read all",
+      "messages": {
+        "user_discuss": "{user} 사용자가 {link} 사용자 토론 댓글 작성",
+        "mention": "{user} 사용자가 {link} 댓글에서 호출"
+      },
+      "mark_unread": "Unread",
+      "mark_read": "Read",
+      "checked_all": "모든 알림을 확인했습니다.",
+      "permission_denied": "알림 권한이 거부되었습니다. 브라우저 설정에서 알림 권한을 허용해 주세요."
+    },
+    "pin_verification": {
+      "new_device": "확인되지 않은 기기에서 로그인하셨습니다.",
+      "passkey_verify": "Passkey를 사용하여 2단계 인증을 진행합니다.",
+      "otp_verify": "Google Authenticator 코드를 입력해주세요.",
+      "email_verify": "이메일({email})로 전송된 PIN을 입력해주세요.",
+      "passkey_login_button": "Passkey login",
+      "trust": "이 기기를 신뢰",
+      "login_button": "Login",
+      "other_method": "Other method",
+      "otp_method": "OTP",
+      "otp_method_description": "이메일이나 OTP 앱에서 받은 일회용 인증 코드를 입력하여 인증합니다.",
+      "passkey_method": "Passkey",
+      "passkey_method_description": "지문, 얼굴 인식 또는 보안 키를 사용하여 인증합니다."
+    },
+    "recover_password": {
+      "submit": "Find"
+    },
+    "recover_password_email_sent": {
+      "message": "메일({email})로 계정 찾기 인증 메일을 전송했습니다. 메일함에 도착한 메일을 통해 인증을 완료해 주시기 바랍니다.",
+      "list_1": "입력하신 정보가 올바르지 않으면 메일이 발송되지 않습니다.",
+      "list_2": "간혹 메일이 도착하지 않는 경우가 있습니다. 이 경우, 스팸함을 확인해주시기 바랍니다.",
+      "list_3": "인증 메일은 24시간동안 유효합니다."
+    },
+    "recover_password_final": {
+      "message": "Enter new password",
+      "submit": "Change password"
+    },
+    "signup": {
+      "email": "Email",
+      "submit": "Sign up"
+    },
+    "signup_email_sent": {
+      "message": "이메일({email})로 계정 생성 이메일 인증 메일을 전송했습니다. 메일함에 도착한 메일을 통해 계정 생성을 계속 진행해 주시기 바랍니다."
+    },
+    "signup_final": {
+      "email": "Email",
+      "username": "Username",
+      "password": "Password",
+      "password_confirm": "Password confirm",
+      "submit": "Sign up"
+    },
+    "signup_verify": {
+      "message": "이용중인 IP는 문서 훼손행위가 자주 발생하는 IP(사유:{{note}})이므로 계정 생성을 하기 위해서는 추가 인증이 필요합니다.",
+      "phone": "Phone number",
+      "submit": "Verify"
+    },
+    "signup_verify_code": {
+      "message": "입력하신 전화번호로 전송된 PIN을 입력해주세요.",
+      "cancel": "Cancel",
+      "submit": "Verify"
+    },
+    "starred_documents": {
+      "document": "Document name",
+      "edit_date": "Document edit date",
+      "add": "Add",
+      "remove": "Remove"
+    },
+    "withdraw": {
+      "password": "Password",
+      "last_activity": "마지막 활동 후 {{duration}}이 지나야 삭제할 수 있습니다.",
+      "no_recover": "계정 삭제 버튼을 누르면 모든 데이터가 즉시 삭제되며 복구가 불가능합니다.",
+      "no_signup_duration": "단, {{blacklistDays}}일동안 재가입이 불가능하며,",
+      "no_signup_forever": "단, 영구적으로 재가입이 불가능하며,",
+      "hash_save_duration": "이를 위해서 이메일, 기타 개인식별정보를 계정 삭제 후 {{blacklistDays}}일(영구 차단자는 영구적으로 보관될 수 있음)동안 원문을 알 수 없는 단방향 해시함수 결과값을 저장합니다.",
+      "hash_save_forever": "이를 위해서 이메일, 기타 개인식별정보를 계정 삭제 후 영구적으로 원문을 알 수 없는 단방향 해시함수 결과값을 저장합니다.",
+      "submit": "Delete account"
+    },
+    "acl": {
+      "tabs": {
+        "thread": "Discuss ACL",
+        "document": "Document ACL",
+        "namespace": "Namespace ACL"
+      },
+      "forever": "Forever",
+      "delete": "Delete",
+      "no_rule": "규칙이 존재하지 않습니다. {tabLink}이 적용됩니다.",
+      "namespace_no_rule": "규칙이 존재하지 않습니다. 모두 거부됩니다.",
+      "conditions": {
+        "perm": "Permission",
+        "user": "User",
+        "ip": "IP",
+        "geoip": "GeoIP",
+        "aclgroup": "ACLGroup"
+      },
+      "custom": "Custom",
+      "aclgroup_name": "ACLGroup name",
+      "actions": {
+        "allow": "allow",
+        "deny": "deny",
+        "gotons": "Go to namespace ACL",
+        "gotootherns": "Go to other namespace ACL"
+      },
+      "add": "Add"
+    },
+    "backlink": {
+      "no_backlink": "해당 문서의 역링크가 존재하지 않습니다."
+    },
+    "delete": {
+      "agree": "문서 이동 및 일부 내용 제거가 아닌 문서 전체를 삭제하기 위한 기능임을 확인합니다.",
+      "notify": "알림!{nbsp}:",
+      "notify_content": "문서의 제목을 변경하려는 경우 {moveLink} 기능을 사용해 주세요. 문서 이동 기능을 사용할 수 없는 경우 토론 기능이나 게시판을 통해 대행 요청을 해주세요.",
+      "move_link_text": "Document move",
+      "submit": "Delete",
+      "log_label": "Edit summary",
+      "check_agree": "문서 삭제에 대한 안내를 확인해 주세요."
+    },
+    "discuss": {
+      "edit_request": "Edit request",
+      "see_closed_edit_request": "View closed edit request",
+      "discuss": "Discuss",
+      "see_closed_discuss": "View closed disscuss",
+      "new_topic": "Create new topic",
+      "topic_label": "Topic :",
+      "submit": "Submit"
+    },
+    "edit": {
+      "notify": "알림",
+      "edit_request_redirected": "문서를 편집할 권한이 없기 때문에 편집 요청으로 이동되었습니다.",
+      "error": "Error!",
+      "conflict_diff_title": "r{{editedRev}} vs 사용자 입력",
+      "conflict_error": "자동 병합에 실패했습니다! 수동으로 수정된 내역을 아래 텍스트 박스에 다시 입력해주세요.",
+      "submit": "Save",
+      "log_label": "Edit summary",
+      "not_saved": "변경된 사항이 저장되지 않았습니다."
+    },
+    "edit_request": {
+      "name_and_date": "{createdUser}가 {createdAt}에 요청",
+      "base_rev": "Base revision",
+      "log": "Edit summary",
+      "reason": "Reason",
+      "close_modal": {
+        "title": "Close edit request",
+        "lock": "이 편집 요청을 다시 열수 없게 잠금",
+        "close": "Close",
+        "cancel": "Cancel"
+      },
+      "this_edit_request": "이 편집 요청을...",
+      "edit_date": "{lastUpdatedAt}에 마지막으로 수정됨",
+      "accepted_title": "Allowed edit request",
+      "accepted_description": "{lastUpdatedAt}에 {lastUpdateUser}가 r{{rev}} {action} 으로 승인함.",
+      "closed_title": "Closed edit request",
+      "closed_description": "{lastUpdatedAt}에 {lastUpdateUser}가 편집 요청을 닫았습니다.",
+      "locked_description": "{lastUpdatedAt}에 {lastUpdateUser}가 편집 요청을 닫고 잠갔습니다.",
+      "compare": "Compare",
+      "preview": "Preview",
+      "accept_tooltip_conflict": "이 편집 요청은 충돌된 상태입니다. 요청자가 수정해야 합니다.",
+      "accept_tooltip_missing_perm": "이 문서를 편집할 수 있는 권한이 없습니다.",
+      "accept_tooltip": "이 편집 요청을 문서에 적용합니다.",
+      "close_tooltip_missing_perm": "편집 요청을 닫기 위해서는 요청자 본인이거나 문서를 편집할 수 있는 권한이 있어야 합니다.",
+      "close_tooltip": "이 편집 요청을 닫습니다.",
+      "edit_tooltip_not_self": "요청자 본인만 수정할 수 있습니다.",
+      "edit_tooltip": "편집 요청을 수정합니다.",
+      "reopen_tooltip_locked": "이 편집 요청은 잠겨있어서 다시 열 수 없습니다.",
+      "reopen_tooltip_missing_perm": "편집 요청을 다시 열기 위해서는 요청자 본인이거나 권한이 있어야 합니다.",
+      "reopen_tooltip": "이 편집 요청을 다시 엽니다."
+    },
+    "history": {
+      "diff_selected_rev": "선택 리비전 비교",
+      "edit_request_mark": "Edit request",
+      "marked_troll": "{trollBy} 사용자에 의해 반달로 표시됨",
+      "hidden_log": "{hideLogBy} 사용자에 의해 편집 요약 숨겨짐",
+      "force_show_log": "Show summation",
+      "force_show_log_prefix": "Summation",
+      "copied_uuid": "Copied r{{rev}}'s UUID."
+    },
+    "move": {
+      "title": "변경할 문서 제목",
+      "swap": "문서를 서로 맞바꾸기",
+      "submit": "Move",
+      "log_label": "Summary"
+    },
+    "revert": {
+      "log_label": "Summary",
+      "submit": "Revert"
+    },
+    "content_length": {
+      "document_without_redirect": "문서 이름공간, 리다이렉트 제외",
+      "char_count": "{{count}} word(s)"
+    },
+    "needed_pages": {
+      "backlink_but_no_document": "역 링크는 존재하나 아직 작성이 되지 않은 문서 목록입니다.",
+      "updated_per_day": "이 페이지는 하루에 한번 업데이트 됩니다.",
+      "update": "Update",
+      "backlink": "Backlink"
+    },
+    "old_pages": {
+      "description": "편집된 지 오래된 문서의 목록입니다. (리다이렉트 젲외)",
+      "edit_date": "Edit date : {date}"
+    },
+    "orphaned_categories": {
+      "description": "다음은 [[{link}]]에서 분류로 도달할 수 없는 분류로, 역링크가 없거나 자기네들끼리만 분류 되어 있는 경우입니다."
+    },
+    "orphaned_pages": {
+      "description": "다음은 [[{link}]]에서 링크로 도달할 수 없는 문서로, 역링크가 없거나 자기네들끼리만 링크가 되어 있는 경우입니다."
+    },
+    "aclgroup": {
+      "mode": {
+        "ip": "IP",
+        "username": "Username"
+      },
+      "cidr": "CIDR",
+      "note": "Note :",
+      "duration": "Duration :",
+      "add": "Add",
+      "table": {
+        "id": "ID",
+        "target": "Target",
+        "note": "Note",
+        "date": "Create date",
+        "expiry": "Expiry date",
+        "action": "Action"
+      },
+      "forever": "Forever",
+      "delete": "Delete",
+      "group_add_modal": {
+        "title": "Create ACLGroup",
+        "group_name": "Group name :",
+        "submit": "Create",
+        "cancel": "Cancel"
+      },
+      "remove_modal": {
+        "title": "Remove ACL element",
+        "note": "Note : ",
+        "delete": "Delete",
+        "cancel": "Cancel"
+      }
+    },
+    "aclgroup_manage": {
+      "delete": "Delete",
+      "submit": "Edit",
+      "delete_confirm": "{{name}} 그룹을 삭제하시겠습니까?"
+    },
+    "audit_log": {
+      "messages": {
+        "namespace_acl": "{user} 사용자가 {target} 이름공간 ACL을 편집함",
+        "delete_thread": "{user} 사용자가 {link} 스레드를 삭제함",
+        "dev_support": "{user} 사용자가 엔진 개발자 권한을 사용함",
+        "acl_group_create": "{user} 사용자가 {target} ACL 그룹을 생성함",
+        "acl_group_delete": "{user} 사용자가 {target} ACL 그룹을 삭제함",
+        "manage_account": "{user} 사용자가 {targetUser} 계정을 관리함",
+        "modify_config": "{user} 사용자가 {target} 설정을 수정함",
+        "thread_acl": "{user} 사용자가 {link} 토론 ACL을 편집함"
+      },
+      "diff": "Compare",
+      "types": {
+        "0": "Edit namespace ACL",
+        "1": "Delete thread",
+        "2": "Support developer",
+        "3": "Create ACLGroup",
+        "4": "Remove ACLGroup",
+        "5": "Manage account",
+        "6": "Edit config",
+        "7": "Edit discuss ACL"
+      }
+    },
+    "batch_revert": {
+      "close_edit_requests": "Close edit request",
+      "hide_thread_comments": "Hide comment",
+      "revert_contributions": "Revert edit",
+      "revert_edit_requests": "Revert edit request",
+      "submit": "Revert",
+      "result": "Result",
+      "failed_list": "Failed result",
+      "ok": "OK"
+    },
+    "config": {
+      "config": "Config",
+      "apply": "Apply",
+      "text": "Text",
+      "add": "Add",
+      "add_string_field": "Add stringConfig.example.json field",
+      "delete": "Delete",
+      "disable_feature": "Disable feature",
+      "move_opennamu_contributions": "Move openNAMU contributions",
+      "move_opennamu_from": "openNAMU contributor's name (Include O:)",
+      "move_opennamu_to": "New contributor's name",
+      "move_opennamu_submit": "Move"
+    },
+    "developer": {
+      "update": "Update",
+      "branch": "Branch",
+      "current_version": "Current version",
+      "new_version": "New version",
+      "last_update_check": "Last update check",
+      "no_update_check": "None",
+      "backend_update_log": "Backend update log",
+      "frontend_update_log": "Frontend update log",
+      "check_update": "Check update",
+      "do_update": "Update",
+      "skin": "Skin",
+      "add": "Add",
+      "build_all": "Build all",
+      "build_info": "Build info",
+      "need_update": "Need update",
+      "no_build": "No build",
+      "build": "Build",
+      "installed_skin": "Installed skin",
+      "delete": "Delete",
+      "tools": {
+        "title": "Tool",
+        "migrateopennamu": "openNAMU data migration",
+        "mailtest": "Mail test",
+        "generateblame": "blame 없는 기록 blame 생성",
+        "generatebacklink": "역링크/검색 문서 재생성",
+        "generatebacklink_backlinkonly": "역링크만 재생성",
+        "generatebacklink_searchonly": "검색 문서만 재생성",
+        "resetsearchindex": "MeiliSearch 인덱스 재생성"
+      },
+      "execute": "실행",
+      "signup": "Create account",
+      "email": "Email",
+      "username": "Name",
+      "generate_url": "Create URL",
+      "static_file": "Static file",
+      "path": "Path",
+      "filename": "File name",
+      "upload": "Upload"
+    },
+    "grant": {
+      "submit": "Submit"
+    },
+    "initial_setup": {
+      "install_skin": "Install skin",
+      "skin_git_repo_url": "설치할 스킨의 Git 레포지토리 URL을 입력하세요.",
+      "skin_name": "설치할 스킨의 이름을 입력하세요.",
+      "install": "Install",
+      "set_base_url": "Set base_url",
+      "different_base_url": "base_url이 현재 접속한 주소와 다릅니다.",
+      "change": "Change",
+      "set_base_url_to_origin": "현재 접속 URL 입력",
+      "generate_default_aclgroup": "Generate default ACLGroup",
+      "generate_group_list": "Generate group list",
+      "setup_nsacl": "Set namespace ACL",
+      "add_namespace_before_nsacl": "추가할 이름공간이 있다면 nsacl 설정 전 {link}의 serverConfig.json에서 namespaces에 이름공간을 추가해주세요.",
+      "config_link_text": "Config page",
+      "default_aclgroup_guide": {
+        "title": "권장 이름공간 ACL 설명",
+        "list_1": "아무나 읽기, 삭제, 토론, 편집 요청 허용",
+        "list_2": "차단된 사용자, 경고 보유 시 편집 차단",
+        "list_3": "로그인 허용 차단 지원",
+        "list_4": "admin에게 ACL 조정 허용",
+        "list_5": "사용자 문서는 본인과 관리자만 편집 허용",
+        "list_6": "휴지통, 운영 문서는 관리자만 열람 허용"
+      },
+      "generate_default_nsacl": "Create default namespace ACL",
+      "remove_all_nsacl": "Remove all namespace ACL",
+      "trash_keyword": "Trash",
+      "mod_keyword": "Mod",
+      "branding": "Set branding",
+      "branding_guide": "{link}의 publicConfig.json에서 위키 이름, 색상 등을 설정해 주세요.",
+      "change_wiki_name": "Change wiki name",
+      "change_frontpage": "Change frontpage",
+      "guide": "Guide",
+      "guide_description": "원활한 위키 운영을 위한 설정 권장사항입니다.",
+      "use_email_verification": "Use email verification (devConfig.json)",
+      "use_captcha": "Use captcha (devConfig.json)",
+      "use_search_engine": "Set search engine (.env)",
+      "use_redis": "Set Redis (.env)",
+      "use_s3": "Set file server (.env)"
+    },
+    "login_history": {
+      "submit": "Submit"
+    },
+    "login_history_result": {
+      "last_ua": "Last login UA : {{userAgent}}",
+      "email": "Email : {{email}}"
+    },
+    "manage_account": {
+      "search": "Search",
+      "total": "All {{count}} count(s)",
+      "phone": "Phone number:",
+      "show": "Show",
+      "no_phone": "None",
+      "apply": "Apply",
+      "tools": {
+        "title": "Tools",
+        "reset_last_name_change": "Removal of name change time limit",
+        "reset_last_activity": "탈퇴 미활동 제한 해제",
+        "reset_password_link": "Create password reset link",
+        "remove_phone_number": "Remove mobile verified",
+        "delete_account": "Delete account"
+      },
+      "external_account_list": "External account list"
+    }
+  },
+  "components": {
+    "setting_item_input": {
+      "placeholder": "Input"
+    },
+    "setting_item_checkbox": {
+      "label": "Use"
+    },
+    "setting": {
+      "title": "Setting",
+      "tabs": {
+        "wiki": "Wiki",
+        "discuss": "Discuss",
+        "skin": "Skin"
+      }
+    },
+    "searchable_select": {
+      "placeholder": "Select"
+    },
+    "quick_acl_group_modal": {
+      "title": "Fast ACLGroup",
+      "group": "Group:",
+      "mode": "Target:",
+      "note": "Note:",
+      "duration": "Duration:",
+      "add": "Add",
+      "cancel": "Cancel"
+    },
+    "prev_next_btn": {
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "namespace_selector": {
+      "namespace": "Namespace",
+      "submit": "Submit"
+    },
+    "local_date": {
+      "recent": "just now"
+    },
+    "ip_warn": {
+      "discuss": "비로그인 상태로 토론에 참여합니다. 토론 내역에 IP({{ip}}) 주소 전체가 영구히 기록됩니다.",
+      "document": "비로그인 상태로 편집합니다. 로그인하지 않은 상태로 문서 편집을 저장하면, 편집 역사에 본인이 사용하는 IP({{ip}}) 주소 전체가 영구히 기록됩니다."
+    },
+    "history_type_tab": {
+      "all": "All",
+      "create": "New",
+      "delete": "Delete",
+      "move": "Move",
+      "revert": "Revert"
+    },
+    "email_whitelist": {
+      "text_1": "이메일 허용 목록이 활성화 되어 있습니다.",
+      "text_2": "이메일 허용 목록에 존재하는 메일만 사용할 수 있습니다."
+    },
+    "duration_selector": {
+      "unblock": "Unblock",
+      "raw": "Custom",
+      "template": {
+        "0": "Forever",
+        "86400": "1 day",
+        "259200": "3 days",
+        "432000": "5 days",
+        "604800": "7 days",
+        "1209600": "2 weeks",
+        "1814400": "3 weeks",
+        "2419200": "4 weeks",
+        "4838400": "2 months",
+        "7257600": "3 months",
+        "14515200": "6 months",
+        "29030400": "1 year"
+      }
+    },
+    "contribution_tab": {
+      "document": "Document",
+      "discuss": "Discuss",
+      "edit_request": "Edit request",
+      "accepted_edit_request": "Allowed edit request"
+    },
+    "comment_preview_tab": {
+      "raw": "RAW edit",
+      "preview": "Preview",
+      "pause": "paused.",
+      "close": "Closed."
+    },
+    "comment": {
+      "wiki": "View wiki",
+      "raw": "View RAW",
+      "hide": "[ADMIN] Hide",
+      "unhide": "[ADMIN] Unhide",
+      "pin": "[ADMIN] Pin comment",
+      "unpin": "[ADMIN] Unpin comment",
+      "hidden_comment": "Hidden by {hideUser}.",
+      "force_show": "[ADMIN] SHOW"
+    },
+    "backlink_namespace_selector": {
+      "namespace": "Namespace:",
+      "all": "All",
+      "submit": "Submit"
+    },
+    "author_span": {
+      "deleted": "None",
+      "user_doc": "User document",
+      "document_contribution": "Document contribution",
+      "discuss_contribution": "Discuss contribution",
+      "copy_uuid": "Copy UUID",
+      "block_history": "View block history",
+      "block": "Block",
+      "deleted_user": "Deleted user",
+      "ip": "IP",
+      "user": "User",
+      "migrated": "Migrated {{type}}",
+      "mobile_auto_verified": "Mobile and auto verified {{type}}",
+      "auto_verified": "Auto verified {{type}}",
+      "mobile_verified": "Mobile verified {{type}}",
+      "admin": "Admin",
+      "prev_admin": "Previous admin",
+      "quick_block_note": "{{pos}} emergency block",
+      "copied_uuid": "Copied user '{{accountName}}''s UUID."
+    },
+    "api_token_modal": {
+      "title": "API Token 발급",
+      "cant_see_again": "발급된 토큰은 이 창을 닫으면 다시 확인할 수 없습니다.",
+      "token_like_pw": "토큰은 비밀번호와 같이 취급해주세요.",
+      "copy": "Copy token",
+      "close": "Close",
+      "password": "Password",
+      "input_password": "사용자 계정의 비밀번호를 입력하세요.",
+      "cancel": "Cancel",
+      "submit": "발급",
+      "copied_token": "Copied API token."
+    },
+    "wiki_category": {
+      "category": "Category",
+      "more": "More"
+    },
+    "wiki_category_docs": {
+      "sub_category": "Sub category",
+      "total": "All {{count}} count(s) document"
+    },
+    "wiki_content": {
+      "admin": "This user has special permission.",
+      "blocked": "This user has {{group}} group. (#{{id}})",
+      "blocked_duration": "이 사용자는 {createdAt}에 {expiresAt} 까지 {{group}} 그룹에 추가되었습니다.",
+      "blocked_forever": "이 사용자는 {createdAt}에 영구적으로 {{group}} 그룹에 추가되었습니다.",
+      "reason": "Reason:",
+      "close_modal": "Close",
+      "image": "Image",
+      "video": "Movie"
+    },
+    "wiki_setting": {
+      "language": "Language",
+      "theme": {
+        "name": "Theme",
+        "auto": "Auto (System setting)",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "unfold_wiki_link": "내용과 링크가 다른 링크 펼치기",
+      "nowrap_wiki_table": "표 워드랩 사용 안 함",
+      "hide_heading_content": "문단을 기본으로 접기",
+      "show_folding": "접기 문법을 기본으로 펼치기",
+      "strike": {
+        "name": "Strike line",
+        "show": "Show",
+        "remove": "Remove strike line",
+        "hide": "Hide"
+      },
+      "footnote_type": {
+        "name": "각주 표시 형식",
+        "default": "Browser default",
+        "popover": "Popover",
+        "popup": "Popup",
+        "unfold": "Unfold"
+      },
+      "image_hide": {
+        "name": "File",
+        "show": "Show",
+        "hide": "Hide",
+        "hide_1mb": "Hide files larger than 1MB"
+      },
+      "disable_image_lazy": "Disable file lazy load",
+      "category_position": {
+        "name": "Category position",
+        "top": "Top",
+        "bottom": "Bottom",
+        "both": "All"
+      },
+      "no_relative_date": "상대 시간 표기를 사용하지 않음"
+    },
+    "discuss_setting": {
+      "strike": {
+        "remove": "속성 제거"
+      },
+      "bold": "Bold"
+    },
+    "nuxt": {
+      "unchecked_notification": "확인하지 않은 알림이 {{count}}개 있습니다. {link} 확인하세요.",
+      "unchecked_notification_many": "확인하지 않은 알림이 {{count}}개 이상 있습니다. {link} 확인하세요.",
+      "unchecked_notification_link_text": "여기를 눌러",
+      "go_back_to_document": "Back to Document"
+    },
+    "form_error_alert": {
+      "error": "Error!"
+    }
   }
 }
