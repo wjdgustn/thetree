@@ -439,7 +439,7 @@ const topToHtml = module.exports = async parameter => {
                 result += utils.sanitizeHtml(await utils.parseIncludeParams(obj.text, Store.isolateContext));
                 break;
             case 'folding':
-                result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(obj.content)}</dd></dl>`;
+                result += `<details class="wiki-folding"><summary>${utils.escapeHtml(obj.text)}</summary><div>${await toHtml(obj.content)}</div></details>`;
                 break;
             case 'ifSyntax':
                 const evalResult = await utils.runJavascript(Store.isolateContext, obj.expression);

@@ -463,7 +463,7 @@ const CommentMention = createToken({
 });
 const Folding = createToken({
     name: 'Folding',
-    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, {
+    ...nestedRegex(/{{{#!folding+?/, /}}}/, {
         allowNewline: true,
         openCheckRegex: /{{{/
     }),
@@ -1282,7 +1282,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const fullText = tok.image.slice(12, -3);
 
             const lines = fullText.split('\n');
-            const text = lines[0].slice(1);
+            const text = lines[0];
             let content = lines.slice(1).join('\n');
 
             $.ACTION(() => {
