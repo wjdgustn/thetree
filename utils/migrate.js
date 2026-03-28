@@ -5,13 +5,17 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const utils = require('./');
 const {
-    UserTypes
+    UserTypes,
+    ACLTypes,
+    ACLConditionTypes,
+    ACLActionTypes
 } = require('./types');
 
 const Document = require('../schemas/document');
 const History = require('../schemas/history');
 const User = require('../schemas/user');
 const EditRequest = require('../schemas/editRequest');
+const ACLModel = require('../schemas/acl');
 
 module.exports = [
     {
@@ -198,6 +202,21 @@ module.exports = [
         timestamp: 1767604258539,
         code: async () => {
             await EditRequest.syncIndexes();
+        }
+    },
+    {
+        timestamp: 1774700002009,
+        code: async () => {
+            for(let aclType of [ACLTypes.Read, ACLTypes.CreateThread, ACLTypes.WriteThreadComment]) {
+                await ACLModel.create({
+                    namespace: '아이피사용자',
+                    type: aclType,
+                    conditionType: ACLConditionTypes.Perm,
+                    conditionContent: 'any',
+                    actionType: ACLActionTypes.GotoOtherNS,
+                    actionContent: '문서'
+                });
+            }
         }
     }
 ]

@@ -44,7 +44,8 @@ const {
     AllPermissions,
     NoGrantPermissions,
     LoginHistoryTypes,
-    NotificationTypes
+    NotificationTypes,
+    ThreadStatusTypes
 } = types;
 
 const User = require('./schemas/user');
@@ -52,6 +53,8 @@ const AutoLoginToken = require('./schemas/autoLoginToken');
 const RequestLog = require('./schemas/requestLog');
 const LoginHistory = require('./schemas/loginHistory');
 const Notification = require('./schemas/notification');
+const Document = require('./schemas/document');
+const Thread = require('./schemas/thread');
 
 const ACL = require('./class/acl');
 
@@ -112,6 +115,7 @@ Object.defineProperty(global, 'config', {
                 '파일',
                 '사용자',
                 '삭제된사용자',
+                '아이피사용자',
                 // publicConfig.site_name,
                 // '휴지통',
                 ...(global.serverConfig.namespaces ?? [])
@@ -952,6 +956,24 @@ app.use(async (req, res, next) => {
             notifications = await utils.notificationMapper(req, notifications, true);
         }
 
+        const user_document_discuss = (await (async () => {
+            const userDoc = await Document.findOne({
+                namespace: '아이피사용자',
+                title: req.ip
+            });
+            if(!userDoc) return;
+
+            const lastThread = await Thread.findOne({
+                document: userDoc.uuid,
+                status: ThreadStatusTypes.Normal
+            }).sort({
+                lastUpdatedAt: -1
+            });
+            if(!lastThread) return;
+
+            return lastThread.lastUpdatedAt;
+        })()) || null;
+
         const makeConfigAndSession = () => {
             const sessionMenus = [];
             for(let permMenus of [...plugins.page.map(a => a.menus).filter(a => a), permissionMenus])
@@ -972,7 +994,7 @@ app.use(async (req, res, next) => {
                     type: req.user?.type ?? UserTypes.IP
                 },
                 gravatar_url: req.user?.avatar,
-                user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
+                user_document_discuss,
                 quick_block: req.permissions.includes('admin'),
                 notifications
             }
@@ -1318,7 +1340,7 @@ app.use(async (req, res, next) => {
                 lastActivity: new Date()
             }).then();
     } finally {
-        requestLogData.save().then();
+        requestLogData?.save().then();
     }
 });
 

@@ -7,6 +7,7 @@
     "분류": "Category",
     "파일": "File",
     "사용자": "User",
-    "삭제된사용자": "DeletedUser"
+    "삭제된사용자": "DeletedUser",
+    "아이피사용자": "IPUser"
   }
 }
