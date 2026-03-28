@@ -420,6 +420,7 @@ global.updateSkins = async (names = []) => {
 
         global.updateSkinInfo();
     }));
+    await i18next.reloadResources(null, names.map(a => `skin_${a}`));
 
     return { failed };
 }
