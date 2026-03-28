@@ -744,6 +744,7 @@
       "namespace_no_rule": "규칙이 존재하지 않습니다. 모두 거부됩니다.",
       "conditions": {
         "perm": "Permission",
+        "user": "사용자",
         "ip": "IP",
         "geoip": "GeoIP",
         "aclgroup": "ACLGroup"
