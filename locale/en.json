@@ -203,7 +203,7 @@
         "mobile_verify_internal_error": "내부 오류가 발생했습니다.",
         "phone_number_already_used": "이 번호로는 더 이상 인증할 수 없습니다."
       },
-      "default_agree_text": "동의합니다.",
+      "default_agree_text": "Agree.",
       "email": {
         "titles": {
           "signup": "계정 생성 이메일 주소 인증",
@@ -212,7 +212,7 @@
           "recover_password": "{{value}}님의 비밀번호 찾기 메일 입니다."
         },
         "contents": {
-          "hello": "안녕하세요. {{siteName}} 입니다.",
+          "hello": "Hello. I'm {{siteName}}",
           "signup_content": "{{siteName}} 계정 생성 이메일 인증 메일입니다.",
           "signup_email_dup": "누군가 이 이메일로 계정 생성을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
           "signup_email_link": "직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.\n{{-linkOpen}}[인증]]{{-linkClose}}\n이 메일은 24시간동안 유효합니다.",
@@ -221,11 +221,11 @@
           "change_email_dup": "이 이메일로 이메일 변경을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
           "change_email_link": "해당 아이디로 변경한게 맞으시면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
           "recover_password_content": "{{user}}님의 비밀번호 찾기 메일입니다.\n해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
-          "request_ip": "요청 아이피"
+          "request_ip": "Request IP"
         }
       },
       "signup_welcome": "환영합니다! {{-value}}님 계정 생성이 완료되었습니다.",
-      "deleted_user": "삭제된 사용자",
+      "deleted_user": "Deleted account",
       "email_verified": "{{-name}}님 이메일 인증이 완료되었습니다.\n{{-linkOpen}}[로그인]{{-linkClose}} 해주세요."
     },
     "document": {
@@ -264,7 +264,7 @@
         "cant_move_document_to_target_namespace": "이 문서를 해당 이름공간으로 이동할 수 없습니다.",
         "dup_document": "문서가 이미 존재합니다."
       },
-      "auto_merged": "자동 병합됨"
+      "auto_merged": "Auto merged"
     },
     "discuss": {
       "errors": {
@@ -301,10 +301,10 @@
     }
   },
   "errors": {
-    "read_only": "위키가 읽기 전용 모드입니다.",
+    "read_only": "Wiki is read only mode.",
     "disabled_feature": "비활성화된 기능입니다.",
-    "server_error": "서버 오류",
-    "request_id": "요청 ID",
+    "server_error": "Server error",
+    "request_id": "Request ID",
     "missing_permission": "권한이 부족합니다.",
     "invalid_request": "잘못된 요청입니다.",
     "missing_document_name": "문서 이름이 없습니다.",
@@ -314,28 +314,28 @@
     "account_not_found": "계정을 찾을 수 없습니다.",
     "same_document_content": "문서 내용이 같습니다.",
     "document_not_found": "문서를 찾을 수 없습니다.",
-    "api_request_failed": "API 요청 실패"
+    "api_request_failed": "Failed API request"
   },
   "default_aclgroups": {
-    "blocked_user": "차단된 사용자",
-    "block_edit_request": "편집요청 차단",
-    "login_allowed_block": "로그인 허용 차단",
-    "isp_keyword": "통신사",
-    "warn_keyword": "경고",
+    "blocked_user": "Blocked user",
+    "block_edit_request": "Edit request block",
+    "login_allowed_block": "Allow login block",
+    "isp_keyword": "ISP",
+    "warn_keyword": "Warning",
     "warn_message": "경고를 받았습니다.",
-    "checked_message": "확인했습니다."
+    "checked_message": "Checked."
   },
   "permissions": {
-    "any": "아무나",
-    "ip": "아이피 사용자",
-    "member": "로그인된 사용자",
-    "admin": "관리자",
+    "any": "Any",
+    "ip": "IP user",
+    "member": "Login user",
+    "admin": "Admin",
     "member_signup_15days_ago": "가입한지 15일 지난 사용자",
     "document_contributor": "해당 문서 기여자",
-    "contributor": "위키 기여자",
+    "contributor": "Wiki contributor",
     "match_username_and_document_title": "문서 제목과 사용자 이름이 일치",
-    "mobile_verified_member": "모바일 인증된 사용자",
-    "auto_verified_member": "자동 인증된 사용자"
+    "mobile_verified_member": "Mobile verified user",
+    "auto_verified_member": "Auto verified user"
   },
   "acl": {
     "acl_tab_message": "해당 {{target}}의 {{-linkOpen}}ACL 탭{{-linkClose}}을 확인하시기 바랍니다.",
@@ -361,8 +361,8 @@
       "other_namespace": "Other namespcae"
     },
     "required_string": {
-      "user": "특정 사용자",
-      "ip": "특정 IP",
+      "user": "Specific user",
+      "ip": "Specific IP",
       "aclgroup": "ACL그룹 {{group}}에 속해 있는 사용자"
     },
     "deny_string": {
@@ -373,7 +373,7 @@
       "message": "{{rule}} 때문에 {{type}} 권한이 부족합니다.",
       "expiry": "Expiry",
       "reason": "Reason",
-      "forever": "무기한"
+      "forever": "Forever"
     },
     "allowed_listing_deny": "{{type}} 권한이 부족합니다. {{rules}}(이)여야 합니다.",
     "allowed_listing_deny_many": "{{type}} 권한이 부족합니다. {{rules}} 그 외 {{count}}개의 규칙(이)여야 합니다.",
@@ -388,11 +388,11 @@
   },
   "thread": {
     "comment": {
-      "update_status": "스레드 상태를 {{-value}}로 변경",
-      "update_topic": "스레드 주제를 {{-oldValue}}에서 {{-newValue}}로 변경",
-      "update_document": "스레드를 {{-oldValue}}에서 {{-newValue}}로 이동",
-      "pin_comment": "{{-value}} 댓글을 고정",
-      "unpin_comment": "댓글 고정 해제"
+      "update_status": "Change thread state to {{-value}}",
+      "update_topic": "Change thread topic from {{-oldValue}} to {{-newValue}}",
+      "update_document": "Move thread from {{-oldValue}} to {{-newValue}}",
+      "pin_comment": "{{-value}} pin comments",
+      "unpin_comment": "Unpin comment"
     }
   },
   "document": {
@@ -404,7 +404,7 @@
     "blame": "Blame",
     "revert": "Revert to this revision",
     "diff": "Diff",
-    "transfer_contribution": "이 기여를 로그인 사용자로 이전하기",
+    "transfer_contribution": "Transfer this contribution to the logged-in user",
     "unmark_troll": "[A] Unmark troll",
     "mark_troll": "[A] Mark troll",
     "unhide_log": "[A] Unhide log",
@@ -428,7 +428,7 @@
         "1": "Pause",
         "2": "Close"
       },
-      "hide_hidden": "숨겨진 댓글 보이지 않기",
+      "hide_hidden": "Don't show hidden comments",
       "delete_thread": "[ADMIN] Delete thread",
       "pinned_comment": "Pinned comment",
       "write_comment": "Write comment",
@@ -449,7 +449,7 @@
       "search": "Search",
       "direct_document": "찾는 문서가 없나요? 문서로 바로 갈 수 있습니다.",
       "direct_document_btn": "Go to '{{-query}}'",
-      "result": "전체 {{count}} 건 / 처리 시간 {{sec}}초"
+      "result": "All {{count}} count(s) / processing time {{sec}}s"
     },
     "notfound": {
       "text": "해당 문서를 찾을 수 없습니다.",
@@ -477,11 +477,11 @@
       "category": "Category",
       "upload": "Upload",
       "document_label": "File name",
-      "log_label": "요약",
+      "log_label": "summation",
       "max_file_amount": "파일은 {{count}}개까지만 선택할 수 있습니다."
     },
     "recent_changes": {
-      "see_all_changes": "모든 변경 보기",
+      "see_all_changes": "View all changes",
       "author": "Author"
     },
     "recent_discuss": {
@@ -521,13 +521,13 @@
       "types": {
         "acl_group_add": "Add ACLGroup",
         "acl_group_remove": "Remove ACLGroup",
-        "grant": "권한 설정",
-        "batch_revert": "일괄 되돌리기",
-        "login_history": "로그인 기록 조회"
+        "grant": "permission settings",
+        "batch_revert": "batch revert",
+        "login_history": "view login history"
       }
     },
     "activate_otp": {
-      "step": "{{count}}단계",
+      "step": "Step {{count}}",
       "install_app": "모바일 장치에 일회용 비밀번호 (OTP) 등록을 위한 인증기 애플리케이션을 설치합니다.",
       "other_app": "위의 예시 외에도 본인이 선호하는 인증기 애플리케이션을 사용할 수 있습니다.",
       "warn": "Warning",
@@ -787,9 +787,9 @@
       "edit_request_mark": "Edit request",
       "marked_troll": "{trollBy} 사용자에 의해 반달로 표시됨",
       "hidden_log": "{hideLogBy} 사용자에 의해 편집 요약 숨겨짐",
-      "force_show_log": "내용 보기",
-      "force_show_log_prefix": "내용:",
-      "copied_uuid": "r{{rev}}의 UUID가 복사되었습니다."
+      "force_show_log": "Show summation",
+      "force_show_log_prefix": "Summation",
+      "copied_uuid": "Copied r{{rev}}'s UUID."
     },
     "move": {
       "title": "변경할 문서 제목",
@@ -803,7 +803,7 @@
     },
     "content_length": {
       "document_without_redirect": "문서 이름공간, 리다이렉트 제외",
-      "char_count": "{{count}}글자"
+      "char_count": "{{count}} word(s)"
     },
     "needed_pages": {
       "backlink_but_no_document": "역 링크는 존재하나 아직 작성이 되지 않은 문서 목록입니다.",
@@ -1002,13 +1002,13 @@
       "apply": "Apply",
       "tools": {
         "title": "Tools",
-        "reset_last_name_change": "이름 변경 기간 제한 해제",
+        "reset_last_name_change": "Removal of name change time limit",
         "reset_last_activity": "탈퇴 미활동 제한 해제",
-        "reset_password_link": "비밀번호 재설정 링크 생성",
-        "remove_phone_number": "모바일 인증 해제",
-        "delete_account": "계정 삭제"
+        "reset_password_link": "Create password reset link",
+        "remove_phone_number": "Remove mobile verified",
+        "delete_account": "Delete account"
       },
-      "external_account_list": "외부 계정 목록"
+      "external_account_list": "External account list"
     }
   },
   "components": {
