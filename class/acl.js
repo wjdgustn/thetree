@@ -102,7 +102,7 @@ module.exports = class ACL {
         this.noOtherNS = noOtherNS;
     }
 
-    static aclTabMessage(lang = 'ko') {
+    aclTabMessage(lang = 'ko') {
         return ' ' + i18next.t('acl.acl_tab_message', {
             lng: lang,
             target: i18next.t(`acl.acl_target_${this.thread ? 'thread' : 'document'}`, {
@@ -284,7 +284,7 @@ module.exports = class ACL {
                     }
                 }
 
-                if(this.document && !aclGroupItem) aclMessage += ACL.aclTabMessage(data.lang);
+                if(this.document && !aclGroupItem) aclMessage += this.aclTabMessage(data.lang);
 
                 return {
                     result: false,
@@ -308,7 +308,7 @@ module.exports = class ACL {
                     .join(' OR '),
                 count: allowedRules.length - 5
             });
-            if(this.document) aclMessage += ACL.aclTabMessage(data.lang);
+            if(this.document) aclMessage += this.aclTabMessage(data.lang);
 
             return {
                 result: false,
@@ -320,7 +320,7 @@ module.exports = class ACL {
                 lng: data.lang,
                 type: ACL.aclTypeToString(aclType, data.lang)
             });
-            if(this.document) aclMessage += ACL.aclTabMessage(data.lang);
+            if(this.document) aclMessage += this.aclTabMessage(data.lang);
 
             return {
                 result: false,

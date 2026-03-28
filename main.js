@@ -44,7 +44,8 @@ const {
     AllPermissions,
     NoGrantPermissions,
     LoginHistoryTypes,
-    NotificationTypes
+    NotificationTypes,
+    ThreadStatusTypes
 } = types;
 
 const User = require('./schemas/user');
@@ -52,6 +53,8 @@ const AutoLoginToken = require('./schemas/autoLoginToken');
 const RequestLog = require('./schemas/requestLog');
 const LoginHistory = require('./schemas/loginHistory');
 const Notification = require('./schemas/notification');
+const Document = require('./schemas/document');
+const Thread = require('./schemas/thread');
 
 const ACL = require('./class/acl');
 
@@ -64,6 +67,7 @@ langDetector.addDetector({
     }
 })
 
+const supportedLocales = fs.readdirSync('./locale').filter(a => a.endsWith('.json')).map(a => a.replace('.json', ''));
 i18next
     .use(i18nBackend)
     .use(langDetector)
@@ -73,10 +77,16 @@ i18next
             lookupCookie: 'thetree.lang',
             cookieExpirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)
         },
-        preload: fs.readdirSync('./locale').filter(a => a.endsWith('.json')).map(a => a.replace('.json', '')),
+        preload: supportedLocales,
         fallbackLng: 'ko',
+        ns: ['engine'],
+        defaultNS: 'engine',
         backend: {
-            loadPath: './locale/{{lng}}.json'
+            loadPath: (lng, namespace) => {
+                return namespace.startsWith('skin_')
+                    ? `./skins/${namespace.slice('skin_'.length)}/locale/${lng}.json`
+                    : `./locale/${lng}.json`
+            }
         },
         initAsync: false,
         showSupportNotice: false
@@ -105,6 +115,7 @@ Object.defineProperty(global, 'config', {
                 '파일',
                 '사용자',
                 '삭제된사용자',
+                '아이피사용자',
                 // publicConfig.site_name,
                 // '휴지통',
                 ...(global.serverConfig.namespaces ?? [])
@@ -213,6 +224,10 @@ global.updateSkinInfo = () => {
             ...JSON.parse(fs.readFileSync(metadataPath).toString()),
             template: fs.readFileSync(templatePath).toString()
         }
+
+        const skinNS = `skin_${skin}`;
+        if(!i18next.hasLoadedNamespace(skinNS))
+            i18next.loadNamespaces(skinNS).then();
     }
 }
 updateConfig();
@@ -405,6 +420,7 @@ global.updateSkins = async (names = []) => {
 
         global.updateSkinInfo();
     }));
+    await i18next.reloadResources(null, names.map(a => `skin_${a}`));
 
     return { failed };
 }
@@ -644,7 +660,15 @@ if(!debug) {
     app.use(compression());
 }
 
-app.use('/locale', express.static('./locale'));
+app.use('/locale/:namespace/:lang', (req, res, next) => {
+    const lang = req.params.lang.toString();
+    const namespace = req.params.namespace.toString();
+    if(!supportedLocales.includes(lang)) return next();
+
+    const resource = i18next.getResource(lang, namespace);
+    if(!resource) return next();
+    return res.json(resource);
+});
 app.use(express.static(`./customStatic`));
 app.use(express.static(`./public`));
 
@@ -933,12 +957,33 @@ app.use(async (req, res, next) => {
             notifications = await utils.notificationMapper(req, notifications, true);
         }
 
+        const user_document_discuss = (await (async () => {
+            const userDoc = await Document.findOne({
+                namespace: '아이피사용자',
+                title: req.ip
+            });
+            if(!userDoc) return;
+
+            const lastThread = await Thread.findOne({
+                document: userDoc.uuid,
+                status: ThreadStatusTypes.Normal
+            }).sort({
+                lastUpdatedAt: -1
+            });
+            if(!lastThread) return;
+
+            return lastThread.lastUpdatedAt;
+        })()) || null;
+
         const makeConfigAndSession = () => {
             const sessionMenus = [];
             for(let permMenus of [...plugins.page.map(a => a.menus).filter(a => a), permissionMenus])
                 for(let [key, value] of Object.entries(permMenus)) {
                     if(req.permissions.includes(key)) {
-                        sessionMenus.push(...value);
+                        sessionMenus.push(...value.map(a => ({
+                            ...a,
+                            t: req.t(`permission_menus.${a.l.split('/').at(-1)}`, { defaultValue: a.t })
+                        })));
                     }
                 }
 
@@ -950,7 +995,7 @@ app.use(async (req, res, next) => {
                     type: req.user?.type ?? UserTypes.IP
                 },
                 gravatar_url: req.user?.avatar,
-                user_document_discuss: req.user?.lastUserDocumentDiscuss?.getTime() ?? null,
+                user_document_discuss,
                 quick_block: req.permissions.includes('admin'),
                 notifications
             }
@@ -1296,7 +1341,7 @@ app.use(async (req, res, next) => {
                 lastActivity: new Date()
             }).then();
     } finally {
-        requestLogData.save().then();
+        requestLogData?.save().then();
     }
 });
 
