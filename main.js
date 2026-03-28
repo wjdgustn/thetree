@@ -666,8 +666,7 @@ app.use('/locale/:namespace/:lang', (req, res, next) => {
     if(!supportedLocales.includes(lang)) return next();
 
     const resource = i18next.getResource(lang, namespace);
-    if(!resource) return next();
-    return res.json(resource);
+    return res.json(resource ?? {});
 });
 app.use(express.static(`./customStatic`));
 app.use(express.static(`./public`));
