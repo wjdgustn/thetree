@@ -261,10 +261,6 @@ const BlockQuote = createToken({
 //     ...fullLineRegex(/\|\|$/m, { isTable: true }),
 //     pop_mode: true
 // });
-const TableSplit = createToken({
-    name: 'TableSplit',
-    pattern: /\|\|/
-});
 // {{{}}} 안 * 뒤에 ? 있었음, 넓게 잡으려고 빼 둠
 const CaptionRegex = /^\|(?:\[\[[\s\S]*?]]|[\s\S])*?(?<!\\)(?:\\\\)*\|/;
 const TableRow = createToken({
@@ -715,10 +711,20 @@ const modeGenerator = tokens => ({
 const blockLexer = new Lexer(modeGenerator(allTokens.filter(a => !['Heading'].includes(a.name))));
 const lexer = new Lexer(modeGenerator(allTokens));
 
+const TableSplit = createToken({
+    name: 'TableSplit',
+    pattern: /\|\|/
+});
+const RowIf = createToken({
+    name: 'RowIf',
+    pattern: /<rowif=(.+?)>/
+});
+
 const tableRowLexer = new Lexer([
     ...importantTokens,
     Newline,
     TableSplit,
+    RowIf,
     ...inlineTokens
 ]);
 
