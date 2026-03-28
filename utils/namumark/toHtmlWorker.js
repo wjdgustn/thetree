@@ -307,7 +307,8 @@ const topToHtml = module.exports = async parameter => {
     }
 
     if(isTop) {
-        const openHtml = (hide = false) => `<div class="wiki-macro-toc"><details${hide ? '' : ' open'}><summary></summary>`;
+        const tocTitle = await parentAction('t', { key: 'namumark.toc_title' });
+        const openHtml = (hide = false) => `<div class="wiki-macro-toc"><details${hide ? '' : ' open'}><summary>${tocTitle}</summary>`;
         let html = '';
         let indentLevel = 0;
         for(let heading of parsed.data.headings) {
