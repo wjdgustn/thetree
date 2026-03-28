@@ -64,6 +64,7 @@ langDetector.addDetector({
     }
 })
 
+const supportedLocales = fs.readdirSync('./locale').filter(a => a.endsWith('.json')).map(a => a.replace('.json', ''));
 i18next
     .use(i18nBackend)
     .use(langDetector)
@@ -73,10 +74,16 @@ i18next
             lookupCookie: 'thetree.lang',
             cookieExpirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)
         },
-        preload: fs.readdirSync('./locale').filter(a => a.endsWith('.json')).map(a => a.replace('.json', '')),
+        preload: supportedLocales,
         fallbackLng: 'ko',
+        ns: ['engine'],
+        defaultNS: 'engine',
         backend: {
-            loadPath: './locale/{{lng}}.json'
+            loadPath: (lng, namespace) => {
+                return namespace.startsWith('skin_')
+                    ? `./skins/${namespace.slice('skin_'.length)}/locale/${lng}.json`
+                    : `./locale/${lng}.json`
+            }
         },
         initAsync: false,
         showSupportNotice: false
@@ -213,6 +220,10 @@ global.updateSkinInfo = () => {
             ...JSON.parse(fs.readFileSync(metadataPath).toString()),
             template: fs.readFileSync(templatePath).toString()
         }
+
+        const skinNS = `skin_${skin}`;
+        if(!i18next.hasLoadedNamespace(skinNS))
+            i18next.loadNamespaces(skinNS).then();
     }
 }
 updateConfig();
@@ -644,7 +655,15 @@ if(!debug) {
     app.use(compression());
 }
 
-app.use('/locale', express.static('./locale'));
+app.use('/locale/:namespace/:lang', (req, res, next) => {
+    const lang = req.params.lang.toString();
+    const namespace = req.params.namespace.toString();
+    if(!supportedLocales.includes(lang)) return next();
+
+    const resource = i18next.getResource(lang, namespace);
+    if(!resource) return next();
+    return res.json(resource);
+});
 app.use(express.static(`./customStatic`));
 app.use(express.static(`./public`));
 
@@ -938,7 +957,10 @@ app.use(async (req, res, next) => {
             for(let permMenus of [...plugins.page.map(a => a.menus).filter(a => a), permissionMenus])
                 for(let [key, value] of Object.entries(permMenus)) {
                     if(req.permissions.includes(key)) {
-                        sessionMenus.push(...value);
+                        sessionMenus.push(...value.map(a => ({
+                            ...a,
+                            t: req.t(`permission_menus.${a.l.split('/').at(-1)}`, { defaultValue: a.t })
+                        })));
                     }
                 }
 

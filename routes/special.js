@@ -754,7 +754,7 @@ app.get('/RandomPage', async (req, res) => {
     const { result: readable } = await acl.check(ACLTypes.Read, req.aclData);
     if(!readable) docs.length = 0;
 
-    res.renderSkin('RandomPage', {
+    res.renderSkin('random_page', {
         contentName: 'special/randomPage',
         serverData: {
             docs,

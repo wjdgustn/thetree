@@ -21,6 +21,7 @@
       "render_failed": "문서 렌더링이 실패했습니다.",
       "render_timeout": "문서 렌더링이 너무 오래 걸립니다."
     },
+    "toc_title": "목차",
     "heading_edit": "편집",
     "vote": {
       "votes": "표",
@@ -65,6 +66,7 @@
     "search": "검색",
     "recent_changes": "최근 변경내역",
     "recent_discuss": "최근 토론",
+    "random_page": "RandomPage",
     "license": "라이선스",
     "upload": "파일 올리기",
     "block_history": "차단 내역"
@@ -85,7 +87,8 @@
     "diff": "비교",
     "revert": "r{{rev}}로 되돌리기",
     "raw": "r{{rev}} RAW",
-    "blame": "r{{rev}} Blame"
+    "blame": "r{{rev}} Blame",
+    "w": "r{{rev}} 판"
   },
 
   "duration": {
@@ -94,6 +97,43 @@
     "hours": "시간",
     "minutes": "분",
     "seconds": "초"
+  },
+
+  "permission_menus": {
+    "grant": "권한",
+    "manage_account": "계정 관리",
+    "login_history": "로그인 기록 조회",
+    "aclgroup": "ACL Group",
+    "batch_revert": "일괄 되돌리기",
+    "audit_log": "감사 로그",
+    "config": "설정",
+    "developer": "개발자 설정"
+  },
+
+  "skin": {
+    "contribution_link": "기여 목록",
+    "block_user": "사용자 차단",
+    "block_history": "차단 내역",
+    "deleted_user_document": "삭제된 사용자 문서",
+    "previous_page": "이전 화면",
+    "recent_changes": "최근 변경",
+    "recent_discuss": "최근 토론",
+    "special_tab": "특수 기능",
+    "my_user_doc": "내 사용자 문서",
+    "my_stars": "내 문서함",
+    "my_contribution_document": "내 문서 기여 목록",
+    "my_contribution_discuss": "내 토론 기여 목록",
+    "my_contribution_edit_request": "내 편집 요청 목록",
+    "logout": "로그아웃",
+    "login": "로그인",
+    "edit_request_instead": "대신 {edit_request}을 생성할 수 있습니다.",
+    "edit_request_instead_link": "편집 요청",
+    "user_discuss_alert": "현재 진행 중인 {user_discuss}이 있습니다.",
+    "user_discuss_alert_link": "사용자 토론",
+    "not_found_search": "'{{title}}'을(를) 검색하시겠습니까?",
+    "edit_revision": "r{{rev}} 편집",
+    "edit_section_revision": "r{{rev}} 문단 편집",
+    "edit_new_document": "새 문서 생성"
   },
 
   "routes": {
