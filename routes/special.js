@@ -804,4 +804,13 @@ app.get('/ip', (req, res) => {
     res.send(req.ip);
 });
 
+app.get('/Terms', (req, res) => {
+    res.renderSkin('terms', {
+        contentName: 'special/terms',
+        serverData: {
+            terms: config.terms
+        }
+    });
+});
+
 module.exports = app;
