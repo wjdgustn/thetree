@@ -1243,7 +1243,8 @@ const postEditAndEditRequest = async (req, res) => {
     }
 
     if(namespace === '파일' && isCreate) return res.status(400).send('invalid_namespace');
-    if(((namespace === '사용자' && !title.includes('/')) || namespace === '삭제된사용자') && isCreate) return res.status(400).send(req.t('routes.document.errors.cant_create_user_document'));
+    if(isCreate && (namespace === '사용자' || namespace === '삭제된사용자' || namespace === '아이피사용자') && !title.includes('/'))
+        return res.status(400).send(req.t('routes.document.errors.cant_create_user_document'));
 
     if(isEditRequest) {
         const editRequest = await EditRequest.findOneAndUpdate({
