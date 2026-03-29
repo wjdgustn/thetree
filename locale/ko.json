@@ -1204,7 +1204,7 @@
     },
     "wiki_category_docs": {
       "sub_category": "하위 분류",
-      "namespace": "\"{{namespace}}\" 분류에 속하는 문서",
+      "namespace": "\"{{category}}\" 분류에 속하는 {{namespace}}",
       "total": "전체 {{count}}개 문서"
     },
     "wiki_content": {
