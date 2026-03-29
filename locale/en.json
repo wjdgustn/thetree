@@ -1187,6 +1187,7 @@
     },
     "wiki_category_docs": {
       "sub_category": "Sub category",
+      "namespace": "\"{{category}}\" 분류에 속하는 {{namespace}}",
       "total": "All {{count}} count(s) document"
     },
     "wiki_content": {
