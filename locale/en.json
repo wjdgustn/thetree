@@ -1,6 +1,5 @@
 {
   "lang_name": "English",
-
   "namespaces": {
     "문서": "Document",
     "틀": "Template",
@@ -67,7 +66,8 @@
     "random_page": "RandomPage",
     "license": "License",
     "upload": "File upload",
-    "block_history": "Block history"
+    "block_history": "Block history",
+    "terms": "약관"
   },
   "title_description": {
     "edit_request": "Edit request",
@@ -1188,6 +1188,7 @@
     },
     "wiki_category_docs": {
       "sub_category": "Sub category",
+      "namespace": "\"{{-category}}\" 분류에 속하는 {{-namespace}}",
       "total": "All {{count}} count(s) document"
     },
     "wiki_content": {
@@ -1212,6 +1213,7 @@
       "nowrap_wiki_table": "표 워드랩 사용 안 함",
       "hide_heading_content": "문단을 기본으로 접기",
       "show_folding": "접기 문법을 기본으로 펼치기",
+      "disable_folding_animation": "접기 문법의 애니메이션 비활성",
       "strike": {
         "name": "Strike line",
         "show": "Show",
