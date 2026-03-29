@@ -1690,7 +1690,7 @@ app.post('/revert{/*document}', middleware.parseDocumentName, middleware.captcha
         document: dbDocument.uuid
     }).sort({ rev: -1 });
 
-    if(currentRev.content == null && (namespace === '사용자' || namespace === '삭제된사용자' || namespace === '아이피사용자') && (!title.includes('/') || title.startsWith('*')))
+    if(currentRev?.content == null && (namespace === '사용자' || namespace === '삭제된사용자' || namespace === '아이피사용자') && !title.includes('/'))
         return res.status(400).send(req.t('routes.document.errors.cant_create_user_document'));
 
     if(rev.content === currentRev.content) return res.error(req.t('errors.same_document_content'));
