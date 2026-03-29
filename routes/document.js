@@ -2095,8 +2095,8 @@ app.post('/move{/*document}', middleware.parseDocumentName, middleware.captcha(t
     const { result: otherResult, aclMessage: otherAclMessage } = await otherAcl.check(ACLTypes.Move, req.aclData);
     if(!otherResult) return res.error(otherAclMessage, 403);
 
-    const isUserDoc = ['사용자', '삭제된사용자'].includes(document.namespace) && !document.title.includes('/');
-    const otherIsUserDoc = ['사용자', '삭제된사용자'].includes(otherDocument.namespace) && !otherDocument.title.includes('/');
+    const isUserDoc = ['사용자', '삭제된사용자', '아이피사용자'].includes(document.namespace) && !document.title.includes('/');
+    const otherIsUserDoc = ['사용자', '삭제된사용자', '아이피사용자'].includes(otherDocument.namespace) && !otherDocument.title.includes('/');
     if(isUserDoc || otherIsUserDoc || (document.namespace.includes('파일') !== otherDocument.namespace.includes('파일')))
         return res.error(req.t('routes.document.errors.cant_move_document_to_target_namespace'), 403);
 
