@@ -553,7 +553,9 @@ app.post('/member/login',
 
     let trusted = req.session.trustedAccounts?.includes(user.uuid);
 
-    if((!user.totpToken && !config.use_email_verification) || user.permissions.includes('disable_two_factor_login')) {
+    const groupPerms = await utils.getACLGroupPermissions(user);
+    const permissions = [...new Set([...user.permissions, ...groupPerms])]
+    if((!user.totpToken && !config.use_email_verification) || permissions.includes('disable_two_factor_login')) {
         trusted = true;
     }
 
