@@ -1414,8 +1414,12 @@ app.post('/admin/login_history',
         }
     });
     if(!targetUser) return res.status(404).send(req.t('routes.aclgroup.errors.invalid_username'));
+
+    const targetGroupPerms = await utils.getACLGroupPermissions(targetUser);
+    const targetPermissions = [...new Set([...targetUser.permissions, ...targetGroupPerms])];
+
     if(!req.permissions.includes('hideip')
-        && (targetUser.permissions.includes('developer') || targetUser.permissions.includes('hideip')))
+        && (targetUser.permissions.includes('developer') || targetPermissions.includes('hideip')))
         return res.status(403).send('invalid_permission');
 
     if(config.testwiki && !req.permissions.includes('config') && targetUser.uuid !== req.user.uuid)
