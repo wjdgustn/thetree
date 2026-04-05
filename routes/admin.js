@@ -1128,7 +1128,7 @@ const batchRevert = async (
             closedReason: reason,
             lastUpdatedAt: date
         });
-        resultText.push(`${req.t('routes.admin.batch_revert.closed_edit_request_count')} : ${result.modifiedCount}`);
+        resultText.push(`${$t('routes.admin.batch_revert.closed_edit_request_count')} : ${result.modifiedCount}`);
     }
 
     if(hideThreadComments) {
@@ -1153,7 +1153,7 @@ const batchRevert = async (
             hiddenBy: createdUser.uuid,
             hidden: true
         });
-        resultText.push(`${req.t('routes.admin.batch_revert.hidden_comment_count')} : ${result.modifiedCount}`);
+        resultText.push(`${$t('routes.admin.batch_revert.hidden_comment_count')} : ${result.modifiedCount}`);
 
         let targetThreads = await Thread.find({
             status: {
@@ -1181,7 +1181,7 @@ const batchRevert = async (
                 createdAt: date
             })));
 
-            resultText.push(`${req.t('routes.admin.batch_revert.closed_thread_count')} : ${closeResult.modifiedCount}`);
+            resultText.push(`${$t('routes.admin.batch_revert.closed_thread_count')} : ${closeResult.modifiedCount}`);
         }
     }
 
@@ -1206,7 +1206,7 @@ const batchRevert = async (
             troll: true,
             trollBy: createdUser.uuid
         });
-        resultText.push(`${req.t('routes.admin.batch_revert.marked_troll_revision_count')} : ${trollResult.modifiedCount}`);
+        resultText.push(`${$t('routes.admin.batch_revert.marked_troll_revision_count')} : ${trollResult.modifiedCount}`);
 
         let revertedCount = 0;
         const documents = [...new Set(revs.map(rev => rev.document))];
@@ -1223,7 +1223,7 @@ const batchRevert = async (
             const firstTrollRev = revs.find(rev => rev.document === docUuid);
 
             if(!lastTrollRev.latest) {
-                failResultText.push(`${fullTitleLink}: ${req.t('routes.admin.batch_revert.has_normal_contribution_later')}`);
+                failResultText.push(`${fullTitleLink}: ${$t('routes.admin.batch_revert.has_normal_contribution_later')}`);
                 return resolve();
             }
 
@@ -1244,7 +1244,7 @@ const batchRevert = async (
 
             if(lastNormalRev) {
                 if(lastTrollRev.type === HistoryTypes.Revert && lastTrollRev.revertRev === lastNormalRev.rev) {
-                    failResultText.push(`${fullTitleLink}: ${req.t('routes.admin.batch_revert.same_revert_target_rev')}`);
+                    failResultText.push(`${fullTitleLink}: ${$t('routes.admin.batch_revert.same_revert_target_rev')}`);
                     return resolve();
                 }
 
@@ -1276,7 +1276,7 @@ const batchRevert = async (
                 }
 
                 if(lastTrollRev.type === HistoryTypes.Delete) {
-                    failResultText.push(`${fullTitleLink}: ${req.t('routes.admin.batch_revert.no_rev_to_revert')}`);
+                    failResultText.push(`${fullTitleLink}: ${$t('routes.admin.batch_revert.no_rev_to_revert')}`);
                     return resolve();
                 }
 
@@ -1299,7 +1299,7 @@ const batchRevert = async (
             revertedCount++;
             resolve();
         })));
-        resultText.push(`${req.t('routes.admin.batch_revert.reverted_document_count')} : ${revertedCount}`);
+        resultText.push(`${$t('routes.admin.batch_revert.reverted_document_count')} : ${revertedCount}`);
     }
 
     if(revertEditRequests) {
@@ -1312,7 +1312,7 @@ const batchRevert = async (
         }, {
             status: EditRequestStatusTypes.Open
         });
-        resultText.push(`${req.t('routes.admin.batch_revert.reopen_edit_request_count')} : ${result.modifiedCount}`);
+        resultText.push(`${$t('routes.admin.batch_revert.reopen_edit_request_count')} : ${result.modifiedCount}`);
     }
 
     await BlockHistory.create({
@@ -1325,7 +1325,7 @@ const batchRevert = async (
         createdAt: date
     });
 
-    resultText.unshift(`${req.t('routes.admin.batch_revert.processing_time')} : ${Date.now() - date}ms`);
+    resultText.unshift(`${$t('routes.admin.batch_revert.processing_time')} : ${Date.now() - date}ms`);
 
     return {
         resultText,
