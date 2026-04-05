@@ -1,6 +1,5 @@
 {
   "lang_name": "English",
-
   "namespaces": {
     "문서": "Document",
     "틀": "Template",
@@ -67,7 +66,8 @@
     "random_page": "RandomPage",
     "license": "License",
     "upload": "File upload",
-    "block_history": "Block history"
+    "block_history": "Block history",
+    "terms": "Terms and Conditions"
   },
   "title_description": {
     "edit_request": "Edit request",
@@ -120,9 +120,9 @@
     "my_contribution_edit_request": "My edit request contributions",
     "logout": "Logout",
     "login": "Login",
-    "edit_request_instead": "대신 {editRequest}을 생성할 수 있습니다.",
+    "edit_request_instead": "You can make an {editRequest} instead.",
     "edit_request_instead_link": "Edit request",
-    "user_discuss_alert": "현재 진행 중인 {userDiscuss}이 있습니다.",
+    "user_discuss_alert": "There is a currently ongoing {userDiscuss}.",
     "user_discuss_alert_link": "User discuss",
     "not_found_search": "Would you like to search for '{{title}}'?",
     "edit_revision": "Edit r{{rev}}",
@@ -169,7 +169,7 @@
         "invalid_duration": "The duration format is invalid.",
         "maximum_duration": "The maximum duration is 24 hours.",
         "no_action_selected": "No action was selected.",
-        "log_not_found": "로그를 찾을 수 없습니다.",
+        "log_not_found": "No Logs found.",
         "missing_diff_content": "There is no content to compare.",
         "email_used_by_another_user": "This email is already in use by user {{value}}.",
         "invalid_email": "The email format is invalid."
@@ -221,8 +221,8 @@
         "dup_oauth2_map": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
         "invalid_oauth2_token_data": "Invalid token data. Please contact administrator.",
         "missing_oauth2_scope": "{{value}} scope가 누락되었습니다.",
-        "oauth2_userinfo_failed": "사용자 정보를 불러오지 못했습니다.",
-        "oauth2_connected_to_other_internal_account": "이미 다른 내부 계정에 연결된 외부 계정입니다.",
+        "oauth2_userinfo_failed": "Failed to retrieve user information.",
+        "oauth2_connected_to_other_internal_account": "There is already an internal account connected to this external account.",
         "oauth2_dup_provider": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
         "oauth2_not_connected_and_email_dup": "연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.",
         "oauth2_internal_account_not_found": "외부 계정과 연결된 계정을 찾을 수 없습니다.",
@@ -254,7 +254,7 @@
         "contents": {
           "hello": "Hello. I'm {{siteName}}",
           "signup_content": "{{siteName}} 계정 생성 이메일 인증 메일입니다.",
-          "signup_email_dup": "누군가 이 이메일로 계정 생성을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
+          "signup_email_dup": "Someone attempted to create an account using this email address, but could not be created because an account has already been made using it.",
           "signup_email_link": "직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.\n{{-linkOpen}}[인증]]{{-linkClose}}\n이 메일은 24시간동안 유효합니다.",
           "pin_content": "확인되지 않은 기기에서 로그인을 시도하셨습니다.\n본인이 맞다면 아래 PIN 번호를 입력해주세요.\nPIN: {{-pin}}\n\n이 메일은 10분동안 유효합니다.",
           "change_email_content": "{{value}}님의 이메일 변경 인증 메일입니다.",
@@ -270,14 +270,14 @@
     },
     "document": {
       "errors": {
-        "invalid_rev": "해당 리비전이 존재하지 않습니다.",
-        "secret_rev": "숨겨진 리비전입니다.",
-        "marked_troll_rev": "이 리비전은 반달로 표시 되었습니다.",
+        "invalid_rev": "The revision does not exist.",
+        "secret_rev": "This revision is hidden.",
+        "marked_troll_rev": "This revision is marked as vandalism.",
         "namespace_nsacl_permission_required": "이름공간 ACL 수정은 nsacl 권한이 필요합니다!",
         "acl_nsacl_permission_required": "ACL 카테고리 수정은 nsacl 권한이 필요합니다!",
-        "missing_permission_value": "권한 값을 입력해주세요!",
+        "missing_permission_value": "Enter a permission value!",
         "missing_acl_username": "해당 이름의 사용자를 찾을 수 없습니다!",
-        "invalid_ip": "유효하지 않은 IP",
+        "invalid_ip": "Invalid IP",
         "invalid_geoip": "유효하지 않은 GeoIP",
         "invalid_aclgroup_name": "해당 이름의 ACL 그룹을 찾을 수 없습니다!",
         "missing_other_ns": "이동할 이름공간을 입력하세요!",
@@ -285,10 +285,10 @@
         "same_gotons_target": "Can not move to the same namespace.",
         "missing_document": "문서가 존재하지 않습니다.",
         "invalid_section": "Invalid section.",
-        "missing_edit_request": "편집 요청을 찾을 수 없습니다.",
-        "edit_self_edit_request_only": "자신의 편집 요청만 수정할 수 있습니다.",
-        "invalid_edit_request_status": "편집 요청 상태가 올바르지 않습니다.",
-        "cant_reopen_locked_edit_request": "이 편집 요청은 잠겨있어서 다시 열 수 없습니다.",
+        "missing_edit_request": "The edit request could not be found.",
+        "edit_self_edit_request_only": "You can only edit your own edit requests.",
+        "invalid_edit_request_status": "The status of the edit request is invalid.",
+        "cant_reopen_locked_edit_request": "This edit request is locked and cannot be reopened.",
         "missing_edit_agree": "수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.",
         "max_log_length": "요약의 값은 {{value}}글자 이하여야 합니다.",
         "edit_request_same_document": "이미 해당 문서에 편집요청이 존재합니다. 해당 편집요청을 수정하시기 바랍니다.",
@@ -302,15 +302,15 @@
         "min_log_length": "{{value}}자 이상의 요약을 입력해 주세요.",
         "file_ext_mismatch": "문서 이름과 확장자가 맞지 않습니다. (파일 확장자: {{value}})",
         "cant_move_document_to_target_namespace": "이 문서를 해당 이름공간으로 이동할 수 없습니다.",
-        "dup_document": "문서가 이미 존재합니다."
+        "dup_document": "This page already exists."
       },
       "auto_merged": "Auto merged"
     },
     "discuss": {
       "errors": {
-        "text_required": "본문의 값은 필수입니다.",
-        "max_topic_length": "topic의 값은 255글자 이하여야 합니다.",
-        "max_text_length": "본문의 값은 65536글자 이하여야 합니다.",
+        "text_required": "The body text is required.",
+        "max_topic_length": "The topic must contain 255 or fewer characters.",
+        "max_text_length": "The body must contain 65536 or fewer characters.",
         "missing_thread": "토론이 존재하지 않습니다.",
         "same_topic": "현재 주제와 동일합니다.",
         "same_document": "현재 문서와 동일합니다."
@@ -457,12 +457,12 @@
     "wiki": {
       "warn": "Warning!",
       "old_revision": "문서의 이전 버전({date}에 수정)을 보고 있습니다.",
-      "go_to_latest": "최신 버전으로 이동",
-      "no_category": "이 문서는 분류가 되어 있지 않습니다. {link}에서 적절한 분류를 찾아 문서를 분류해주세요!"
+      "go_to_latest": "Go to the latest version",
+      "no_category": "This page is not categorized. Categorize this page by finding an appropriate category at {link}!"
     },
     "thread": {
       "warn": "Warning!",
-      "front_page_warn": "이 토론은 {{document}} 문서의 토론입니다. {{document}} 문서와 관련 없는 토론은 각 문서의 토론에서 진행해 주시기 바랍니다. {{document}} 문서와 관련 없는 토론은 삭제될 수 있습니다.",
+      "front_page_warn": "This discussion is for the {{document}} page. Please discuss topics unrelated to {{document}} in the discussion pages of their respective pages. Discussions unrelated to {{document}} may be removed.",
       "status": {
         "0": "Open",
         "1": "Pause",
@@ -1188,6 +1188,7 @@
     },
     "wiki_category_docs": {
       "sub_category": "Sub category",
+      "namespace": "\"{{-category}}\" 분류에 속하는 {{-namespace}}",
       "total": "All {{count}} count(s) document"
     },
     "wiki_content": {
@@ -1212,6 +1213,7 @@
       "nowrap_wiki_table": "표 워드랩 사용 안 함",
       "hide_heading_content": "문단을 기본으로 접기",
       "show_folding": "접기 문법을 기본으로 펼치기",
+      "disable_folding_animation": "접기 문법의 애니메이션 비활성",
       "strike": {
         "name": "Strike line",
         "show": "Show",
