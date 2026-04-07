@@ -643,7 +643,7 @@
       "no_passkey": "등록된 Passkey가 없습니다.",
       "new_passkey_name": "New Passkey name",
       "passkey_add": "Add",
-      "use_passwordless_login": "비밀번호 없이 패스키만 이용해 로그인",
+      "use_passwordless_login": "Login with a passkey instead of a password",
       "api_token": "API Token",
       "api_token_button": "발급",
       "account": "Account",
