@@ -1816,6 +1816,9 @@ app.post('/admin/manage_account/action',
         uuid: req.body.uuid
     });
     if(!targetUser) return res.status(404).send('account_not_found');
+    if(targetUser.permissions.includes('developer')
+        && !req.permissions.includes('developer'))
+        throw new Error('invalid_permission');
 
     let isInvalid = false;
     try {
