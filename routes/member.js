@@ -817,7 +817,23 @@ app.get('/member/login/oauth2/:provider/callback',
     if(!tokenData.scope || !tokenData.access_token)
         return res.error(req.t('routes.member.errors.invalid_oauth2_token_data'));
 
-    const scopes = tokenData.scope.split(' ');
+    let introspectData;
+    if(provider.introspect_endpoint) try {
+        const { data } = await axios.post(provider.introspect_endpoint, new URLSearchParams({
+            token: tokenData.access_token,
+            token_type_hint: 'access_token'
+        }), {
+            headers: {
+                Accept: 'application/json'
+            }
+        });
+        introspectData = data;
+    } catch (e) {
+        console.error(e);
+        return res.error('invalid_introspect_response');
+    }
+
+    const scopes = (introspectData.scope || tokenData.scope).split(' ');
     const missingScope = provider.scopes.find(a => !scopes.includes(a));
     if(missingScope)
         return res.error(req.t('routes.member.errors.missing_oauth2_scope', { value: missingScope }));
