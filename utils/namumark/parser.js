@@ -426,7 +426,7 @@ const SyntaxSyntax = createToken({
     }),
     start_chars_hint: ['{']
 });
-const HtmlRegex = /{{{#!html([\s\S]*?)}}}/y;
+const HtmlRegex = /{{{#!html(?:(?!{{{#!html)[\s\S])*?}}}/y;
 const HtmlSyntax = createToken({
     name: 'HtmlSyntax',
     pattern: (text, startOffset) => {
