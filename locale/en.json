@@ -370,10 +370,10 @@
     "ip": "IP user",
     "member": "Login user",
     "admin": "Admin",
-    "member_signup_15days_ago": "가입한지 15일 지난 사용자",
-    "document_contributor": "해당 문서 기여자",
+    "member_signup_15days_ago": "Users who registered 15+ days ago",
+    "document_contributor": "Document contributors",
     "contributor": "Wiki contributor",
-    "match_username_and_document_title": "문서 제목과 사용자 이름이 일치",
+    "match_username_and_document_title": "Document title and username matches",
     "mobile_verified_member": "Mobile verified user",
     "auto_verified_member": "Auto verified user"
   },
