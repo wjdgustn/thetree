@@ -137,16 +137,16 @@
         "dup_group_name": "This is a group name that already exists.",
         "group_not_found": "It is a non-existent group.",
         "aclgroup_config": "{{key}} is {{value}}.",
-        "invalid_username": "The username is incorrect.",
-        "min_duration": "The value of duration must be 0 or greater.",
-        "dup_aclgroup_item": "The element already exists.",
+        "invalid_username": "Incorrect username.",
+        "min_duration": "Duration must be 0 or greater.",
+        "dup_aclgroup_item": "Such element already exists.",
         "aclgroup_item_not_found": "The ACL element does not exist.",
-        "invalid_permission": "The {{value}} permission is invalid.",
-        "missing_self_permission": "본인이 가진 권한이 포함되지 않았습니다.",
+        "invalid_permission": "Invalid permission: {{value}}.",
+        "missing_self_permission": "This configuration does not include your own permission.",
         "modify_value_missing_permission": "{{value}} permission is required to edit this value.",
         "missing_permission_edit_permission": "You do not have permission to edit {{value}} permissions.",
         "group_name_required": "Group name is required.",
-        "not_self_removable": "해제할 수 없는 요소입니다."
+        "not_self_removable": "This element cannot be removed."
       }
     },
     "admin": {
@@ -163,8 +163,8 @@
         "migrate_new_user_not_found": "The target account could not be found.",
         "migrate_new_user_type_mismatch": "The target account is not a registered account.",
         "method_type_condition_required": "'method', 'type' and 'condition' are required.",
-        "whitelisted_js_only": "템플릿에 등록된 js 코드만 사용할 수 있습니다.",
-        "invalid_uuid": "uuid의 값을 형식에 맞게 입력해주세요.",
+        "whitelisted_js_only": "Only JS code in the template is available.",
+        "invalid_uuid": "Please enter a valid UUID.",
         "required_duration": "Duration is required.",
         "invalid_duration": "The duration format is invalid.",
         "maximum_duration": "The maximum duration is 24 hours.",
@@ -182,9 +182,9 @@
         "reverted_document_count": "Reverted page count",
         "reopen_edit_request_count": "Reopened edit request count",
         "processing_time": "Operation Time",
-        "has_normal_contribution_later": "이후 정상 기여 존재",
-        "same_revert_target_rev": "되돌릴 기여 동일",
-        "no_rev_to_revert": "되돌릴 기여 없음"
+        "has_normal_contribution_later": "Normal contributions exist later on",
+        "same_revert_target_rev": "Same contribution to revert",
+        "no_rev_to_revert": "No contribution to revert"
       }
     },
     "member": {
@@ -197,11 +197,11 @@
         "password_confirm_required": "Comfirm password is required.",
         "dup_username": "This username already exists.",
         "signup_disabled": "Registration is disabled.",
-        "signup_blacklist": "재가입 대기 기간 입니다.",
+        "signup_blacklist": "Pending re-sign up period.",
         "already_registered_email": "This email address is already registered.",
         "email_signup_already_sent": "An account verification email was already sent to this address.",
         "ip_signup_already_in_progress": "An account is already being registered on this IP address.",
-        "agree_required": "동의의 값은 필수입니다.",
+        "agree_required": "Agreement value is required.",
         "email_not_whitelisted": "This email address is not whitelisted.",
         "invalid_email_token": "Expired or invalid verification request.",
         "username_required": "Username is required.",
@@ -218,20 +218,20 @@
         "passwordless_login_disabled": "Password-less log in is disabled.",
         "pin_length": "PINs must consist of 6 characters.",
         "invalid_pin": "Invalid PIN.",
-        "dup_oauth2_map": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
+        "dup_oauth2_map": "An external account with such provider already exists.",
         "invalid_oauth2_token_data": "Invalid token data. Please contact administrator.",
-        "missing_oauth2_scope": "{{value}} scope가 누락되었습니다.",
+        "missing_oauth2_scope": "{{value}} scope is missing.",
         "oauth2_userinfo_failed": "Failed to retrieve user information.",
         "oauth2_connected_to_other_internal_account": "There is already an internal account connected to this external account.",
-        "oauth2_dup_provider": "이미 해당 제공자의 다른 외부 계정이 등록되어 있습니다.",
-        "oauth2_not_connected_and_email_dup": "연결되지 않은 외부 계정이며, 제공된 이메일로 가입된 계정이 이미 있습니다.",
-        "oauth2_internal_account_not_found": "외부 계정과 연결된 계정을 찾을 수 없습니다.",
-        "oauth2_not_connected_account": "연결되지 않은 외부 계정입니다. 내부 계정과 연결 후 사용해 주세요.",
-        "set_password_for_clear_oauth2": "외부 계정을 모두 연결 해제하려면 비밀번호를 설정해야 합니다.",
-        "oauth2_map_not_found": "해당 provider에 등록된 계정이 없습니다.",
-        "withdraw_last_activity": "마지막 활동으로부터 시간이 경과해야 계정 삭제가 가능합니다.",
-        "pledge_different": "동일하게 입력해주세요.",
-        "recent_change_name": "최근에 계정을 생성했거나 최근에 이름 변경을 이미 했습니다.",
+        "oauth2_dup_provider": "An external account with such provider already exists.",
+        "oauth2_not_connected_and_email_dup": "An account with this email address already exists but is not linked to this external account.",
+        "oauth2_internal_account_not_found": "An account linked to this external account does not exist.",
+        "oauth2_not_connected_account": "Unconnected external account. Use this account after connecting it to your internal account.",
+        "set_password_for_clear_oauth2": "Setting a password is required in order to disconnect all external accounts.",
+        "oauth2_map_not_found": "No registered account with such provider.",
+        "withdraw_last_activity": "Account deletion requires a waiting period since the last activity.",
+        "pledge_different": "Does not match.",
+        "recent_change_name": "You recently created your account or have already changed your name.",
         "doing_change_email": "Email verification is already in progress.",
         "passkey_name_required": "Name is required.",
         "passkey_name_max_length": "The name must be 80 characters or less.",
@@ -241,9 +241,9 @@
         "invalid_phone_number": "Invalid phone number.",
         "phone_number_verify_in_progress": "Verification for this phone number is already in progress.",
         "mobile_verify_internal_error": "An internal error has occurred.",
-        "phone_number_already_used": "이 번호로는 더 이상 인증할 수 없습니다."
+        "phone_number_already_used": "This phone number can no longer be used for verification."
       },
-      "default_agree_text": "Agree.",
+      "default_agree_text": "I agree.",
       "email": {
         "titles": {
           "signup": "계정 생성 이메일 주소 인증",
@@ -342,18 +342,18 @@
   },
   "errors": {
     "read_only": "Wiki is read only mode.",
-    "disabled_feature": "비활성화된 기능입니다.",
+    "disabled_feature": "This feature is disabled.",
     "server_error": "Server error",
     "request_id": "Request ID",
     "missing_permission": "권한이 부족합니다.",
-    "invalid_request": "잘못된 요청입니다.",
-    "missing_document_name": "문서 이름이 없습니다.",
-    "invalid_document_name": "문서 이름이 올바르지 않습니다.",
-    "required_field": "{{key}}의 값은 필수입니다.",
-    "invalid_field": "{{key}}의 값이 올바르지 않습니다.",
-    "account_not_found": "계정을 찾을 수 없습니다.",
-    "same_document_content": "문서 내용이 같습니다.",
-    "document_not_found": "문서를 찾을 수 없습니다.",
+    "invalid_request": "Invalid request.",
+    "missing_document_name": "Document name is missing.",
+    "invalid_document_name": "Document name is invalid.",
+    "required_field": "A value for {{key}} is required.",
+    "invalid_field": "{{key}}'s value is invalid.",
+    "account_not_found": "Account not found.",
+    "same_document_content": "Document content is the same.",
+    "document_not_found": "Document not found.",
     "api_request_failed": "Failed API request"
   },
   "default_aclgroups": {
@@ -362,7 +362,7 @@
     "login_allowed_block": "Allow login block",
     "isp_keyword": "ISP",
     "warn_keyword": "Warning",
-    "warn_message": "경고를 받았습니다.",
+    "warn_message": "You have received a strike.",
     "checked_message": "Checked."
   },
   "permissions": {
@@ -492,7 +492,7 @@
       "result": "All {{count}} count(s) / processing time {{sec}}s"
     },
     "notfound": {
-      "text": "해당 문서를 찾을 수 없습니다.",
+      "text": "Such document was not found.",
       "new_document": "Create new document",
       "history": "이 문서의 역사",
       "history_more": "More"
@@ -614,7 +614,7 @@
       "external_login": "External login"
     },
     "mypage": {
-      "gravatar": "사용자 아바타는 {gravatar}에서 제공됩니다.",
+      "gravatar": "User avatar is provided by {gravatar}.",
       "username": "Username",
       "change": "Change",
       "email": "Email",
@@ -1251,7 +1251,7 @@
     "nuxt": {
       "unchecked_notification": "확인하지 않은 알림이 {{count}}개 있습니다. {link} 확인하세요.",
       "unchecked_notification_many": "확인하지 않은 알림이 {{count}}개 이상 있습니다. {link} 확인하세요.",
-      "unchecked_notification_link_text": "여기를 눌러",
+      "unchecked_notification_link_text": "Click here to",
       "go_back_to_document": "Back to Document"
     },
     "form_error_alert": {
