@@ -1219,7 +1219,7 @@ app.use(async (req, res, next) => {
 
                         if(item.method && item.method !== req.method) continue;
                         if(item.url) {
-                            if(!url.startsWith(item.url)) continue;
+                            if(!url.toLowerCase().startsWith(item.url.toLowerCase())) continue;
                         }
                         else if(item.condition) {
                             try {
@@ -1306,7 +1306,7 @@ app.use(async (req, res, next) => {
             for(let item of global.plugins.preHook) {
                 if(item.method && item.method !== req.method) continue;
                 if(item.url) {
-                    if(!url.startsWith(item.url)) continue;
+                    if(!url.toLowerCase().startsWith(item.url.toLowerCase())) continue;
                 }
                 else if(item.condition) {
                     try {
