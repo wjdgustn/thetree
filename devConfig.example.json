@@ -27,6 +27,7 @@
   "auto_update": false,
   "disable_dev_support": false,
 
+  "private_mode": false,
   "disable_internal_login": false,
   "oauth2_providers": {
 //    "example": {

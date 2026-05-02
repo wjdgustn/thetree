@@ -36,6 +36,7 @@ global.__THETREE__ = {};
 const utils = require('./utils');
 const globalUtils = require('./utils/global');
 const namumarkUtils = require('./utils/namumark/utils');
+const middleware = require('./utils/middleware');
 const migrateCodes = require('./utils/migrate');
 const types = require('./utils/types');
 const {
@@ -1264,6 +1265,13 @@ app.use(async (req, res, next) => {
                 res.originalStatus(400).end();
                 return;
             }
+        }
+
+        const lowerPath = req.path.toLowerCase();
+        if(config.private_mode && !lowerPath.startsWith('/member/') && !['/license', '/opensearch.xml'].includes(lowerPath)) {
+            let passed = false;
+            middleware.isLogin(req, res, () => passed = true);
+            if(!passed) return;
         }
 
         if(!['/admin/config', '/admin/developer'].some(a => url.startsWith(a))) {
