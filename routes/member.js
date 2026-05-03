@@ -823,6 +823,10 @@ app.get('/member/login/oauth2/:provider/callback',
             token: tokenData.access_token,
             token_type_hint: 'access_token'
         }), {
+            auth: {
+                username: provider.client_id,
+                password: provider.client_secret
+            },
             headers: {
                 Accept: 'application/json'
             }
