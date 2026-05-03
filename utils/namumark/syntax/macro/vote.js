@@ -48,7 +48,7 @@ module.exports = {
 <div>
 <label>
 <input type="radio" name="vote-${options.Store.voteIndex}" value="${i}"${prevVote?.value === parseInt(i) ? ' checked' : ''}>
-${option} (${voteCount}${await options.parentAction('t', { key: 'namumark.vote.votes' })})
+${option} (${voteCount}${await options.parentAction('t', { key: 'namumark.vote.votes', options: { count: voteCount } })})
 </label>
 </div>
             `;

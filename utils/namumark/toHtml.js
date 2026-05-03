@@ -58,7 +58,7 @@ module.exports = async (...params) => {
             }
             case 't': {
                 return reply(i18next.t(msg.key, {
-                    defaultValue: msg.defaultValue,
+                    ...(msg.options || {}),
                     lng: config.lang
                 }));
             }
