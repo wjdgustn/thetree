@@ -814,7 +814,7 @@ app.get('/member/login/oauth2/:provider/callback',
         return res.error('invalid_code');
     }
 
-    if(!tokenData.scope || !tokenData.access_token)
+    if(!tokenData.access_token)
         return res.error(req.t('routes.member.errors.invalid_oauth2_token_data'));
 
     let introspectData;
@@ -833,7 +833,7 @@ app.get('/member/login/oauth2/:provider/callback',
         return res.error('invalid_introspect_response');
     }
 
-    const scopes = (introspectData?.scope || tokenData.scope).split(' ');
+    const scopes = (introspectData?.scope || tokenData.scope || []).split(' ');
     const missingScope = provider.scopes.find(a => !scopes.includes(a));
     if(missingScope)
         return res.error(req.t('routes.member.errors.missing_oauth2_scope', { value: missingScope }));
