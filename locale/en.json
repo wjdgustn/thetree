@@ -15,7 +15,7 @@
   },
   "namumark": {
     "errors": {
-      "maximum_length_html": "The document is too long.",
+      "maximum_length_html": "Document too long.",
       "render_failed": "Document rendering failed.",
       "render_timeout": "Document rendering takes too long."
     },
@@ -46,41 +46,41 @@
     "orphaned_pages": "Orphaned documents",
     "orphaned_categories": "Orphaned categories",
     "signup": "Sign up",
-    "login": "Login",
+    "login": "Log in",
     "mypage": "My page",
     "change_password": "Change password",
-    "user_contribution": "{{-value}}'s contribution",
-    "withdraw": "Withdraw",
+    "user_contribution": "{{-value}}'s contributions",
+    "withdraw": "Delete account",
     "change_name": "Change name",
     "change_email": "Change email",
-    "email_verified": "Email verified",
+    "email_verified": "Verification complete",
     "activate_otp": "Activate OTP",
     "deactivate_otp": "Deactivate OTP",
     "recover_password": "Recover password",
     "starred_documents": "Starred documents",
     "notifications": "Notifications",
-    "signup_verify": "Mobile verify",
+    "signup_verify": "Mobile verification",
     "search": "Search",
     "recent_changes": "Recent changes",
-    "recent_discuss": "Recent discuss",
+    "recent_discuss": "Recent discussions",
     "random_page": "RandomPage",
     "license": "License",
-    "upload": "File upload",
+    "upload": "Upload file",
     "block_history": "Block history",
-    "terms": "Terms and Conditions"
+    "terms": "Terms"
   },
   "title_description": {
     "edit_request": "Edit request",
     "edit": "Edit",
     "history": "History",
-    "backlinks": "Backlink",
-    "move": "Move",
+    "backlinks": "Backlinks",
+    "move": "Rename",
     "delete": "Delete",
     "acl": "ACL",
-    "thread": "Discuss",
-    "thread_list": "Discuss list",
-    "thread_list_close": "Closed discuss list",
-    "edit_request_close": "Closed edit request list",
+    "thread": "Discussion",
+    "thread_list": "Discussion list",
+    "thread_list_close": "Closed discussions",
+    "edit_request_close": "Closed edit requests",
     "diff": "Compare",
     "revert": "Revert to r{{rev}}",
     "raw": "r{{rev}} RAW",
@@ -97,7 +97,7 @@
   "permission_menus": {
     "grant": "Permission",
     "manage_account": "Manage account",
-    "login_history": "View login history",
+    "login_history": "Lookup login history",
     "aclgroup": "ACL Group",
     "batch_revert": "Batch revert",
     "audit_log": "Audit log",
@@ -111,36 +111,36 @@
     "deleted_user_document": "Deleted user document",
     "previous_page": "Previous",
     "recent_changes": "Recent changes",
-    "recent_discuss": "Recent Discuss",
+    "recent_discuss": "Recent discussions",
     "special_tab": "Special",
     "my_user_doc": "My user document",
     "my_stars": "Starred documents",
     "my_contribution_document": "My document contributions",
-    "my_contribution_discuss": "My discuss contributions",
+    "my_contribution_discuss": "My discussion contributions",
     "my_contribution_edit_request": "My edit request contributions",
-    "logout": "Logout",
-    "login": "Login",
+    "logout": "Log out",
+    "login": "Log in",
     "edit_request_instead": "You can make an {editRequest} instead.",
-    "edit_request_instead_link": "Edit request",
+    "edit_request_instead_link": "edit request",
     "user_discuss_alert": "There is a currently ongoing {userDiscuss}.",
-    "user_discuss_alert_link": "User discuss",
-    "not_found_search": "Would you like to search for '{{title}}'?",
+    "user_discuss_alert_link": "user discussion",
+    "not_found_search": "Would you like to search for \"{{title}}\"?",
     "edit_revision": "Edit r{{rev}}",
-    "edit_section_revision": "Edit r{{rev}}",
+    "edit_section_revision": "Edit section of r{{rev}}",
     "edit_new_document": "Create new document"
   },
   "routes": {
     "aclgroup": {
       "errors": {
         "missing_group_name": "Please enter the group name.",
-        "long_group_name": "The value of name must be 64 characters or less.",
-        "dup_group_name": "This is a group name that already exists.",
-        "group_not_found": "It is a non-existent group.",
+        "long_group_name": "A name cannot be longer than 64 characters.",
+        "dup_group_name": "That group name is already being used.",
+        "group_not_found": "That group does not exist.",
         "aclgroup_config": "{{key}} is {{value}}.",
         "invalid_username": "Incorrect username.",
         "min_duration": "Duration must be 0 or greater.",
         "dup_aclgroup_item": "Such element already exists.",
-        "aclgroup_item_not_found": "The ACL element does not exist.",
+        "aclgroup_item_not_found": "Such ACL element does not exist.",
         "invalid_permission": "Invalid permission: {{value}}.",
         "missing_self_permission": "This configuration does not include your own permission.",
         "modify_value_missing_permission": "{{value}} permission is required to edit this value.",
@@ -151,28 +151,28 @@
     },
     "admin": {
       "errors": {
-        "missing_opennamu_data_dir": "Try again after creating an 'opennamu_data' folder in the server folder and adding the 'data' folder files of 'opennamu'.",
-        "missing_sqlite3": "An error occurred during sqlite import. Try again after installing the sqlite3 library.",
+        "missing_opennamu_data_dir": "Try again after creating an \"opennamu_data\" folder inside the server folder, and adding the \"data\" folder files from opennamu.",
+        "missing_sqlite3": "An error occurred during sqlite3 import. Try again after installing the sqlite3 library.",
         "update_in_progress": "An update is already in progress.",
-        "dup_email_user": "There already exists an account with thie email address.",
+        "dup_email_user": "An account already exists with this email address.",
         "least_one_developer_permission": "At least one person must have developer permissions.",
-        "revision_not_found": "The revision could not be found.",
+        "revision_not_found": "Revision not found.",
         "file_delete_error": "An error occurred while deleting the file.",
-        "migrate_old_user_not_found": "The previous user account could not be found.",
-        "migrate_old_user_type_mismatch": "The previous user account is not an openNAMU account.",
-        "migrate_new_user_not_found": "The target account could not be found.",
-        "migrate_new_user_type_mismatch": "The target account is not a registered account.",
+        "migrate_old_user_not_found": "Previous contributor account could not be found.",
+        "migrate_old_user_type_mismatch": "Previous contributor account is not an openNAMU account.",
+        "migrate_new_user_not_found": "Target account could not be found.",
+        "migrate_new_user_type_mismatch": "Target account is not a registered account.",
         "method_type_condition_required": "'method', 'type' and 'condition' are required.",
-        "whitelisted_js_only": "Only JS code in the template is available.",
+        "whitelisted_js_only": "Only js code in the template is available.",
         "invalid_uuid": "Please enter a valid UUID.",
         "required_duration": "Duration is required.",
-        "invalid_duration": "The duration format is invalid.",
-        "maximum_duration": "The maximum duration is 24 hours.",
+        "invalid_duration": "Invalid duration format.",
+        "maximum_duration": "Maximum duration is 24 hours.",
         "no_action_selected": "No action was selected.",
-        "log_not_found": "No Logs found.",
+        "log_not_found": "No logs found.",
         "missing_diff_content": "There is no content to compare.",
         "email_used_by_another_user": "This email is already in use by user {{value}}.",
-        "invalid_email": "The email format is invalid."
+        "invalid_email": "Email format is invalid."
       },
       "batch_revert": {
         "closed_edit_request_count": "Closed edit request count",
@@ -205,7 +205,7 @@
         "email_not_whitelisted": "This email address is not whitelisted.",
         "invalid_email_token": "Expired or invalid verification request.",
         "username_required": "Username is required.",
-        "username_length_range": "Username must be between 3 and 32 characters.",
+        "username_length_range": "A username must be between 3 and 32 characters.",
         "username_valid_chars": "Username can only consist of alphanumericals and underscores(_).",
         "username_startswith_en": "Username must start with a letter.",
         "username_invalid_keyword": "Username contains a banned word.",
@@ -234,7 +234,7 @@
         "recent_change_name": "You recently created your account or have already changed your name.",
         "doing_change_email": "Email verification is already in progress.",
         "passkey_name_required": "Name is required.",
-        "passkey_name_max_length": "The name must be 80 characters or less.",
+        "passkey_name_max_length": "A name must not be longer than 80 characters.",
         "passkey_name_dup": "This name already exists.",
         "mobile_verify_disabled": "This feature is disabled.",
         "phone_number_and_ip_country_mismatch": "The nation of the phone number and that of the current IP must match.",
@@ -279,7 +279,7 @@
         "missing_acl_username": "Cannot find user with that name!",
         "invalid_ip": "Invalid IP",
         "invalid_geoip": "Invalid GeoIP",
-        "invalid_aclgroup_name": "Cannot find ACL group with that name!",
+        "invalid_aclgroup_name": "Could not find ACL Group with that name!",
         "missing_other_ns": "Enter a namespace to move!",
         "invalid_namespace": "Namespace {{value}} does not exist!",
         "same_gotons_target": "Cannot move to the same namespace.",
@@ -290,7 +290,7 @@
         "invalid_edit_request_status": "The status of the edit request is invalid.",
         "cant_reopen_locked_edit_request": "This edit request is locked and cannot be reopened.",
         "missing_edit_agree": "수정하기 전에 먼저 문서 배포 규정에 동의해 주세요.",
-        "max_log_length": "요약의 값은 {{value}}글자 이하여야 합니다.",
+        "max_log_length": "A summary cannot be longer than {{value}} characters.",
         "edit_request_same_document": "An edit request already exists in this document. Please update the existing request.",
         "edit_conflict": "Another user made changes while you were editing.",
         "cant_create_user_document": "User documents cannot be created.",
@@ -299,7 +299,7 @@
         "invalid_revert_rev_type": "Cannot revert to this revision.",
         "troll_revert_rev": "Cannot revert to divisions marked as vandalism.",
         "missing_delete_agree": "Please check the deletion acknowledgment before proceeding.",
-        "min_log_length": "Summary should be at least {{value}} characters long.",
+        "min_log_length": "A summary should be at least {{value}} characters long.",
         "file_ext_mismatch": "Document name and file extension does not match. (File extension: {{value}})",
         "cant_move_document_to_target_namespace": "Cannot move document to target namespace.",
         "dup_document": "This page already exists."
@@ -309,8 +309,8 @@
     "discuss": {
       "errors": {
         "text_required": "The body text is required.",
-        "max_topic_length": "The topic must contain 255 or fewer characters.",
-        "max_text_length": "The body must contain 65536 or fewer characters.",
+        "max_topic_length": "A topic must not be longer than 255 characters.",
+        "max_text_length": "A body cannot be longer than 65536 characters.",
         "missing_thread": "토론이 존재하지 않습니다.",
         "same_topic": "현재 주제와 동일합니다.",
         "same_document": "현재 문서와 동일합니다."
@@ -326,18 +326,18 @@
       "errors": {
         "document_required": "문서 제목을 입력해주세요.",
         "document_max_length": "document의 값은 200글자 이하여야 합니다.",
-        "document_file_namespace_only": "업로드는 파일 이름공간에서만 가능합니다.",
-        "license_required": "라이선스를 선택해주세요.",
-        "category_required": "카테고리를 선택해주세요.",
-        "log_max_length": "요약의 값은 255글자 이하여야 합니다.",
-        "file_required": "파일이 업로드되지 않았습니다.",
-        "invalid_file_type": "올바르지 않은 파일입니다.",
-        "dup_file": "이미 업로드된 파일입니다.\n중복 파일: {{-link}}",
-        "file_upload_error": "파일 업로드 중 오류가 발생했습니다.",
-        "no_document": "문서가 없습니다."
+        "document_file_namespace_only": "Uploads are only allowed in the file namespace.",
+        "license_required": "Choose a license.",
+        "category_required": "Choose a category.",
+        "log_max_length": "A summary must not be longer than 255 characters.",
+        "file_required": "This file was not uploaded.",
+        "invalid_file_type": "Invalid file.",
+        "dup_file": "This file already exists.\nDuplicate file: {{-link}}",
+        "file_upload_error": "An error occurred while uploading.",
+        "no_document": "There are no documents."
       },
-      "file_upload_log": "파일 {{-value}}을 올림",
-      "multiple_file_uploaded": "{{count}}개의 파일을 업로드했습니다."
+      "file_upload_log": "Uploaded file {{-value}}",
+      "multiple_file_uploaded": "Uploaded {{count}} files."
     }
   },
   "errors": {
@@ -378,7 +378,7 @@
     "auto_verified_member": "Auto verified user"
   },
   "acl": {
-    "acl_tab_message": "해당 {{target}}의 {{-linkOpen}}ACL 탭{{-linkClose}}을 확인하시기 바랍니다.",
+    "acl_tab_message": "Please check the {{-linkOpen}}ACL Tab{{-linkClose}} of such {{target}}.",
     "acl_target_document": "Document",
     "acl_target_thread": "Discuss",
     "types": {
@@ -443,7 +443,7 @@
     "raw": "RAW",
     "blame": "Blame",
     "revert": "Revert to this revision",
-    "diff": "Diff",
+    "diff": "Compare",
     "transfer_contribution": "Transfer this contribution to the logged-in user",
     "unmark_troll": "[A] Unmark vandalism",
     "mark_troll": "[A] Mark as vandalism",
@@ -559,8 +559,8 @@
         "login_history": "{createdUser} 사용자가 {targetUser} 사용자의 로그인 기록 조회"
       },
       "types": {
-        "acl_group_add": "Add ACLGroup",
-        "acl_group_remove": "Remove ACLGroup",
+        "acl_group_add": "Add ACL Group",
+        "acl_group_remove": "Remove ACL Group",
         "grant": "permission settings",
         "batch_revert": "batch revert",
         "login_history": "view login history"
@@ -668,7 +668,7 @@
       "permission_denied": "Browser notification permission was denied. Please allow this permission in the browser settings."
     },
     "pin_verification": {
-      "new_device": "You signed in with unrecognized device.",
+      "new_device": "You signed in from an unrecognized device.",
       "passkey_verify": "Two-factor authentication will proceed using a passkey.",
       "otp_verify": "Please enter your code from Google Authenticator.",
       "email_verify": "Please enter the PIN we sent via email({email}).",
@@ -749,10 +749,10 @@
         "user": "User",
         "ip": "IP",
         "geoip": "GeoIP",
-        "aclgroup": "ACLGroup"
+        "aclgroup": "ACL Group"
       },
       "custom": "Custom",
-      "aclgroup_name": "ACLGroup name",
+      "aclgroup_name": "ACL Group Name",
       "actions": {
         "allow": "allow",
         "deny": "deny",
@@ -844,7 +844,7 @@
     },
     "content_length": {
       "document_without_redirect": "문서 이름공간, 리다이렉트 제외",
-      "char_count": "{{count}} word(s)"
+      "char_count": "{{count}} characters"
     },
     "needed_pages": {
       "backlink_but_no_document": "역 링크는 존재하나 아직 작성이 되지 않은 문서 목록입니다.",
@@ -882,8 +882,8 @@
       "forever": "Forever",
       "delete": "Delete",
       "group_add_modal": {
-        "title": "Create ACLGroup",
-        "group_name": "Group name :",
+        "title": "Create ACL Group",
+        "group_name": "ACL Group Name:",
         "submit": "Create",
         "cancel": "Cancel"
       },
@@ -897,7 +897,7 @@
     "aclgroup_manage": {
       "delete": "Delete",
       "submit": "Edit",
-      "delete_confirm": "{{name}} 그룹을 삭제하시겠습니까?"
+      "delete_confirm": "Delete {{name}} Group?"
     },
     "audit_log": {
       "messages": {
@@ -915,8 +915,8 @@
         "0": "Edit namespace ACL",
         "1": "Delete thread",
         "2": "Support developer",
-        "3": "Create ACLGroup",
-        "4": "Remove ACLGroup",
+        "3": "Create ACL Group",
+        "4": "Delete ACL Group",
         "5": "Manage account",
         "6": "Edit config",
         "7": "Edit discuss ACL"
@@ -998,7 +998,7 @@
       "change": "Change",
       "set_base_url_to_origin": "현재 접속 URL 입력",
       "generate_default_aclgroup": "Generate default ACLGroup",
-      "generate_group_list": "Generate group list",
+      "generate_group_list": "Groups to be generated",
       "setup_nsacl": "Set namespace ACL",
       "add_namespace_before_nsacl": "추가할 이름공간이 있다면 nsacl 설정 전 {link}의 serverConfig.json에서 namespaces에 이름공간을 추가해주세요.",
       "config_link_text": "Config page",
@@ -1072,7 +1072,7 @@
     },
     "quick_acl_group_modal": {
       "title": "Fast ACLGroup",
-      "group": "Group:",
+      "group": "ACL Group:",
       "mode": "Target:",
       "note": "Note:",
       "duration": "Duration:",
@@ -1193,7 +1193,7 @@
     },
     "wiki_content": {
       "admin": "This user has special permission.",
-      "blocked": "This user has {{group}} group. (#{{id}})",
+      "blocked": "This user is in {{group}} ACL Group. (#{{id}})",
       "blocked_duration": "이 사용자는 {createdAt}에 {expiresAt} 까지 {{group}} 그룹에 추가되었습니다.",
       "blocked_forever": "이 사용자는 {createdAt}에 영구적으로 {{group}} 그룹에 추가되었습니다.",
       "reason": "Reason:",
@@ -1205,7 +1205,7 @@
       "language": "Language",
       "theme": {
         "name": "Theme",
-        "auto": "Auto (System setting)",
+        "auto": "Automatic (Based on System)",
         "light": "Light",
         "dark": "Dark"
       },
