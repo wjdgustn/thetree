@@ -10,20 +10,20 @@
     "아이피사용자": "IPUser"
   },
   "special_document_name": {
-    "file_license": "File license",
+    "file_license": "Image license",
     "file_category": "File"
   },
   "namumark": {
     "errors": {
-      "maximum_length_html": "The document length is too long.",
+      "maximum_length_html": "The document is too long.",
       "render_failed": "Document rendering failed.",
       "render_timeout": "Document rendering takes too long."
     },
-    "toc_title": "Index",
+    "toc_title": "Table of Contents",
     "heading_edit": "Edit",
     "vote": {
       "votes": "table",
-      "vote": "vote"
+      "vote": "Vote"
     }
   },
   "titles": {
@@ -31,7 +31,7 @@
     "aclgroup": "ACLGroup",
     "aclgroup_manage": "ACLGroup settings",
     "developer": "Developer settings",
-    "grant": "Granting Permission",
+    "grant": "Grant permission",
     "batch_revert": "Batch revert",
     "login_history": "Login history",
     "login_history_result": "{{value}}'s login history",
@@ -95,7 +95,7 @@
     "seconds": "second(s)"
   },
   "permission_menus": {
-    "grant": "Grant",
+    "grant": "Permission",
     "manage_account": "Manage account",
     "login_history": "View login history",
     "aclgroup": "ACL Group",
@@ -406,19 +406,19 @@
       "aclgroup": "ACL그룹 {{group}}에 속해 있는 사용자"
     },
     "deny_string": {
-      "using_ip": "현재 사용중인 아이피가 ",
-      "in_group": "{{usingIpStr}}ACL그룹 {{group}} #{{groupId}}에 있기",
-      "not_in_group": "{{usingIpStr}}ACL그룹 {{group}}에 없기",
-      "condition": "{{condition}}이기",
-      "message": "{{rule}} 때문에 {{type}} 권한이 부족합니다.",
+      "using_ip": "Your IP address is ",
+      "in_group": "{{usingIpStr}}in {{group}} ACL Group #{{groupId}}",
+      "not_in_group": "{{usingIpStr}}not in {{group}} ACL Group",
+      "condition": "{{condition}}",
+      "message": "Insufficient {{type}} permission. The following condition is satisfied: {{rule}}",
       "expiry": "Expiry",
       "reason": "Reason",
       "forever": "Forever"
     },
-    "allowed_listing_deny": "{{type}} 권한이 부족합니다. {{rules}}(이)여야 합니다.",
-    "allowed_listing_deny_many": "{{type}} 권한이 부족합니다. {{rules}} 그 외 {{count}}개의 규칙(이)여야 합니다.",
-    "deep_other_ns": "다른 이름공간 ACL 실행이 이중으로 사용되었습니다.",
-    "no_rules_deny": "ACL에 허용 규칙이 없기 때문에 {{type}} 권한이 부족합니다."
+    "allowed_listing_deny": "Insufficient {{type}} permission. The following condition needs to be satisfied: {{rules}}",
+    "allowed_listing_deny_many": "Insufficient {{type}} permission. The following condition needs to be satisfied: {{rules}} (and {{count}} more)",
+    "deep_other_ns": "Another namespace ACL was invoked more than once.",
+    "no_rules_deny": "You do not have {{type}} permission because no allow rules are defined in the ACL."
   },
   "notification": {
     "site_name_placeholder": "wiki",
