@@ -248,19 +248,19 @@
         "titles": {
           "signup": "Verify your email to sign up",
           "pin": "New sign-in from an unrecognized device",
-          "change_email": "{{value}}님의 이메일 변경 인증 메일 입니다.",
-          "recover_password": "{{value}}님의 비밀번호 찾기 메일 입니다."
+          "change_email": "Email Change Verification for {{value}}.",
+          "recover_password": "Password Recovery for {{value}}."
         },
         "contents": {
-          "hello": "Hello. I'm {{siteName}}",
-          "signup_content": "{{siteName}} 계정 생성 이메일 인증 메일입니다.",
+          "hello": "Hello. This is {{siteName}}.",
+          "signup_content": "Account Verification for {{siteName}}.",
           "signup_email_dup": "Someone attempted to create an account using this email address, but could not be created because an account has already been made using it.",
-          "signup_email_link": "직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.\n{{-linkOpen}}[인증]]{{-linkClose}}\n이 메일은 24시간동안 유효합니다.",
-          "pin_content": "확인되지 않은 기기에서 로그인을 시도하셨습니다.\n본인이 맞다면 아래 PIN 번호를 입력해주세요.\nPIN: {{-pin}}\n\n이 메일은 10분동안 유효합니다.",
-          "change_email_content": "{{value}}님의 이메일 변경 인증 메일입니다.",
+          "signup_email_link": "If this is really you creating an account, click the link below and proceed your account creation.\n{{-linkOpen}}[Create Account]{{-linkClose}}\nThis link is only valid for 24 hours.",
+          "pin_content": "You attempted to sign in with unrecognized device.\nIf this is really you, please enter the PIN below.\nPIN: {{-pin}}\n\nThis PIN is only valid for 10 minutes.",
+          "change_email_content": "This is an email verification for changing the email address of {{value}}.",
           "change_email_dup": "이 이메일로 이메일 변경을 시도했지만 이미 이 이메일로 계정 생성이 되어있어서 더 이상 계정을 생성할 수 없습니다.",
           "change_email_link": "해당 아이디로 변경한게 맞으시면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
-          "recover_password_content": "{{user}}님의 비밀번호 찾기 메일입니다.\n해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n\n이 메일은 24시간동안 유효합니다.",
+          "recover_password_content": "Password recovery mail for {{user}}.\nIf you'd like to recover your account's password, please click the link below.\n{{-linkOpen}}[Recover Password]{{-linkClose}}\n\nThis link is only valid for 24 hours.",
           "request_ip": "Request IP"
         }
       },
@@ -656,7 +656,7 @@
         "read": "Read",
         "all": "All"
       },
-      "turn_on_push": "Turn on push",
+      "turn_on_push": "Enable push notifications",
       "read_all": "Read all",
       "messages": {
         "user_discuss": "{user} 사용자가 {link} 사용자 토론 댓글 작성",
@@ -664,7 +664,7 @@
       },
       "mark_unread": "Unread",
       "mark_read": "Read",
-      "checked_all": "Checked all notifications.",
+      "checked_all": "Marked all notifications as read.",
       "permission_denied": "Browser notification permission was denied. Please allow this permission in the browser settings."
     },
     "pin_verification": {
@@ -1249,8 +1249,8 @@
       "bold": "Bold"
     },
     "nuxt": {
-      "unchecked_notification": "확인하지 않은 알림이 {{count}}개 있습니다. {link} 확인하세요.",
-      "unchecked_notification_many": "확인하지 않은 알림이 {{count}}개 이상 있습니다. {link} 확인하세요.",
+      "unchecked_notification": "There are {{count}} unread notifications. Check: {link}",
+      "unchecked_notification_many": "There are {{count}}+ unread notifications. Check: {link}",
       "unchecked_notification_link_text": "Click here to",
       "go_back_to_document": "Back to Document"
     },
