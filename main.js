@@ -1019,6 +1019,7 @@ app.use(async (req, res, next) => {
                 logo_url: 'wiki.logo_url',
                 front_page: 'wiki.front_page',
                 editagree_text: 'wiki.editagree_text',
+                delete_document_text: 'wiki.delete_document_text',
                 copyright_text: 'wiki.copyright_text',
                 base_url: 'wiki.canonical_url',
                 sitenotice: 'wiki.sitenotice'
