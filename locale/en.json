@@ -265,7 +265,7 @@
         }
       },
       "signup_welcome": "Welcome, {{-value}}! Your account was successfully created.",
-      "deleted_user": "Deleted account",
+      "deleted_user": "Deleted User",
       "email_verified": "{{-name}}, your email address was verified.\nPlease {{-linkOpen}}[sign in]{{-linkClose}}."
     },
     "document": {
@@ -1158,7 +1158,7 @@
       "copy_uuid": "Copy UUID",
       "block_history": "View block history",
       "block": "Block",
-      "deleted_user": "Deleted user",
+      "deleted_user": "Deleted User",
       "ip": "IP",
       "user": "User",
       "migrated": "Migrated {{type}}",
