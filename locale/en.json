@@ -345,7 +345,7 @@
     "disabled_feature": "This feature is disabled.",
     "server_error": "Server error",
     "request_id": "Request ID",
-    "missing_permission": "권한이 부족합니다.",
+    "missing_permission": "Insufficient permission.",
     "invalid_request": "Invalid request.",
     "missing_document_name": "Document name is missing.",
     "invalid_document_name": "Document name is invalid.",
@@ -664,7 +664,7 @@
       },
       "mark_unread": "Unread",
       "mark_read": "Read",
-      "checked_all": "모든 알림을 확인했습니다.",
+      "checked_all": "Checked all notifications.",
       "permission_denied": "알림 권한이 거부되었습니다. 브라우저 설정에서 알림 권한을 허용해 주세요."
     },
     "pin_verification": {
