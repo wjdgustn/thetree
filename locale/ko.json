@@ -782,7 +782,7 @@
     },
     "delete": {
       "agree": "문서 이동 및 일부 내용 제거가 아닌 문서 전체를 삭제하기 위한 기능임을 확인합니다.",
-      "notify": "알림!{nbsp}:",
+      "notify": "알림!",
       "notify_content": "문서의 제목을 변경하려는 경우 {moveLink}기능을 사용 해주세요.",
       "move_link_text": "문서 이동",
       "submit": "삭제",
