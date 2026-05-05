@@ -1014,7 +1014,8 @@ app.get('/edit_request/:url/edit', async (req, res, next) => {
 
 app.post('/edit_request/:url/close', async (req, res) => {
     const lock = req.body.lock === 'Y';
-    if(lock && !req.permissions.includes('manage_thread'))
+    const manageThreadPerm = req.permissions.includes('manage_thread');
+    if(lock && !manageThreadPerm)
         return res.status(403).send(req.t('errors.missing_permission'));
 
     const editRequest = await EditRequest.findOne({
@@ -1026,7 +1027,7 @@ app.post('/edit_request/:url/close', async (req, res) => {
         EditRequestStatusTypes.Locked
     ].includes(editRequest.status)) return res.error(req.t('routes.document.errors.invalid_edit_request_status'));
 
-    if(editRequest.createdUser !== req.user.uuid) {
+    if(editRequest.createdUser !== req.user.uuid && !manageThreadPerm) {
         const dbDocument = await Document.findOne({
             uuid: editRequest.document
         }).lean();
