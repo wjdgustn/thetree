@@ -990,7 +990,7 @@
     },
     "initial_setup": {
       "install_skin": "Install skin",
-      "skin_git_repo_url": "설치할 스킨의 Git 레포지토리 URL을 입력하세요.",
+      "skin_git_repo_url": "Please enter the Git repository URL of the skin to install.",
       "skin_name": "설치할 스킨의 이름을 입력하세요.",
       "install": "Install",
       "set_base_url": "Set base_url",
