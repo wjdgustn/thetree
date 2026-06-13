@@ -1623,7 +1623,7 @@ app.post('/member/change_email',
                 to: email,
                 subject: `[${config.site_name}] ${req.t('routes.member.email.titles.change_email', { value: req.user.name })}`,
                 html: `
-${req.t('routes.member.email.contents.hello', { value: config.site_name })}
+${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 
 ${req.t('routes.member.email.contents.change_email_content', { value: req.user.name })}
 ${req.t('routes.member.email.contents.change_email_dup')}
@@ -1646,7 +1646,7 @@ ${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
             to: email,
             subject: `[${config.site_name}] ${req.t('routes.member.email.titles.change_email', { value: req.user.name })}`,
             html: `
-${req.t('routes.member.email.contents.hello', { value: config.site_name })}
+${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 
 ${req.t('routes.member.email.contents.change_email_content', { value: req.user.name })}
 ${req.t('routes.member.email.contents.change_email_link', {
@@ -1825,7 +1825,7 @@ app.post('/member/recover_password', middleware.isLogout, middleware.captcha(tru
         to: email,
         subject: `[${config.site_name}] ${req.t('routes.member.email.titles.recover_password', { value: newUser.name })}`,
         html: `
-${req.t('routes.member.email.contents.hello', { value: config.site_name })}
+${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 
 ${newUser.name}님의 비밀번호 찾기 메일입니다.
 해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.
