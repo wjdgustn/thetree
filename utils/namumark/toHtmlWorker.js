@@ -122,8 +122,10 @@ const topToHtml = module.exports = async parameter => {
 
     if(isTop) {
         await Store.isolateContext.eval(jsGlobalRemover);
-        if(includeData)
+        if(includeData) {
             await Promise.all(Object.entries(includeData).map(([key, value]) => Store.isolateContext.global.set(key, value)));
+            Store.isolateContext.global.set('calleeTitle', globalUtils.doc_fulltitle(originalDocument));
+        }
     }
 
     const commentPrefix = commentId ? `tc${commentId}-` : '';
