@@ -1,5 +1,8 @@
 const utils = require('../../utils');
 
-module.exports = params => {
-    return utils.katex(params);
+module.exports = {
+    allowThread: true,
+    format(params) {
+        return utils.katex(params);
+    }
 }
