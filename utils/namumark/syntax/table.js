@@ -267,8 +267,7 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
                     hasRowClass = true;
                 }
                 else if(name === 'thead') {
-                    // caption 사용 시 th를 사용할 수 없는 건 변경될수도
-                    if(obj.caption || isTableHead || bodyRows.length)
+                    if(isTableHead || bodyRows.length)
                         break;
                     isTableHead = true;
                 }
