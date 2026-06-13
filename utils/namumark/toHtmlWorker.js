@@ -436,7 +436,7 @@ const topToHtml = module.exports = async parameter => {
                 style = utils.cssFilter(style);
                 darkStyle = utils.cssFilter(darkStyle);
 
-                if(!['div', 'a'].includes(tag)) tag = 'div';
+                if(!['div', 'a', 'span'].includes(tag)) tag = 'div';
 
                 if(onclick) {
                     const onclickParams = onclick.split(',').filter(a => a);
