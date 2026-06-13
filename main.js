@@ -1269,7 +1269,7 @@ app.use(async (req, res, next) => {
         }
 
         const lowerPath = req.path.toLowerCase();
-        if(config.private_mode && !lowerPath.startsWith('/member/') && !['/license', '/opensearch.xml'].includes(lowerPath)) {
+        if(config.private_mode && !lowerPath.startsWith('/member/') && !['/license', '/opensearch.xml', '/terms'].includes(lowerPath)) {
             let passed = false;
             middleware.isLogin(req, res, () => passed = true);
             if(!passed) return;
