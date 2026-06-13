@@ -893,8 +893,7 @@
         "note": "메모",
         "date": "생성일",
         "expiry": "만료일",
-        "action": "작업",
-        "empty": "ACL 그룹이 비어있습니다."
+        "action": "작업"
       },
       "forever": "영구",
       "delete": "삭제",
