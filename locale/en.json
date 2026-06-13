@@ -878,7 +878,7 @@
         "date": "Create date",
         "expiry": "Expiry date",
         "action": "Action",
-        "empty": "ACL 그룹이 비어있습니다."
+        "empty": "The ACL Group is empty."
       },
       "forever": "Forever",
       "delete": "Delete",
