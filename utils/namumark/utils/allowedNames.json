@@ -51,6 +51,7 @@
   "break-inside",
   "clear",
   "color",
+  "cursor",
   "display",
   "flex-grow",
   "flex-shrink",
