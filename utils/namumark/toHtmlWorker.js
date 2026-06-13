@@ -421,12 +421,13 @@ const topToHtml = module.exports = async parameter => {
             case 'wikiSyntax':
                 let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.isolateContext);
 
-                const wikiParamsMatch = name => wikiParamsStr.match(new RegExp(`/(?<=(^| )${name}=")(.*?)(?=")/`))?.[0] || '';
+                const wikiParamsMatch = name => wikiParamsStr.match(new RegExp(`(?<=(^| )${name}=")(.*?)(?=")`))?.[0] || '';
                 let style = wikiParamsMatch('style');
                 let darkStyle = wikiParamsMatch('dark-style');
                 let className = wikiParamsMatch('class');
                 const lang = wikiParamsMatch('lang');
                 let tag = wikiParamsMatch('tag');
+                let onclick = wikiParamsMatch('onclick');
 
                 className = classGenerator(className);
 
@@ -435,7 +436,27 @@ const topToHtml = module.exports = async parameter => {
 
                 if(!['div', 'a'].includes(tag)) tag = 'div';
 
-                result += `<${tag}${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}>${await toHtml(obj.content)}</${tag}>`;
+                if(onclick) {
+                    const onclickParams = onclick.split(',').filter(a => a);
+                    switch(onclickParams[0]) {
+                        case 'add-class':
+                        case 'remove-class':
+                        case 'toggle-class': {
+                            if(onclickParams.length !== 3) {
+                                onclick = '';
+                                break;
+                            }
+                            onclickParams[1] = classGenerator(onclickParams[1]);
+                            onclickParams[2] = classGenerator(onclickParams[2]);
+                            onclick = onclickParams.join(',');
+                            break;
+                        }
+                        default:
+                            onclick = '';
+                    }
+                }
+
+                result += `<${tag}${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${onclick ? ` data-onclick="${utils.escapeHtml(onclick)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}>${await toHtml(obj.content)}</${tag}>`;
                 break;
             case 'syntaxSyntax':
                 result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
