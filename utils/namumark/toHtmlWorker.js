@@ -421,17 +421,21 @@ const topToHtml = module.exports = async parameter => {
             case 'wikiSyntax':
                 let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.isolateContext);
 
-                let style = wikiParamsStr.match(/(?<=(^| )style=")(.*?)(?=")/)?.[0] || '';
-                let darkStyle = wikiParamsStr.match(/(?<=(^| )dark-style=")(.*?)(?=")/)?.[0] || '';
-                let className = wikiParamsStr.match(/(?<=(^| )class=")(.*?)(?=")/)?.[0] || '';
-                const lang = wikiParamsStr.match(/(?<=(^| )lang=")(.*?)(?=")/)?.[0] || '';
+                const wikiParamsMatch = name => wikiParamsStr.match(new RegExp(`/(?<=(^| )${name}=")(.*?)(?=")/`))?.[0] || '';
+                let style = wikiParamsMatch('style');
+                let darkStyle = wikiParamsMatch('dark-style');
+                let className = wikiParamsMatch('class');
+                const lang = wikiParamsMatch('lang');
+                let tag = wikiParamsMatch('tag');
 
                 className = classGenerator(className);
 
                 style = utils.cssFilter(style);
                 darkStyle = utils.cssFilter(darkStyle);
 
-                result += `<div${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}>${await toHtml(obj.content)}</div>`;
+                if(!['div', 'a'].includes(tag)) tag = 'div';
+
+                result += `<${tag}${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}>${await toHtml(obj.content)}</${tag}>`;
                 break;
             case 'syntaxSyntax':
                 result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
