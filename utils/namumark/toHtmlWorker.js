@@ -456,7 +456,7 @@ const topToHtml = module.exports = async parameter => {
                     }
                 }
 
-                result += `<${tag}${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${onclick ? ` data-onclick="${utils.escapeHtml(onclick)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}>${await toHtml(obj.content)}</${tag}>`;
+                result += `<${tag}${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${onclick ? ` data-onclick="${utils.escapeHtml(onclick)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}${(tag === 'a' && onclick) ? ' href="#"' : ''}>${await toHtml(obj.content)}</${tag}>`;
                 break;
             case 'syntaxSyntax':
                 result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
