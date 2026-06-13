@@ -439,23 +439,29 @@ const topToHtml = module.exports = async parameter => {
                 if(!['div', 'a', 'span'].includes(tag)) tag = 'div';
 
                 if(onclick) {
-                    const onclickParams = onclick.split(',').filter(a => a);
-                    switch(onclickParams[0]) {
-                        case 'add-class':
-                        case 'remove-class':
-                        case 'toggle-class': {
-                            if(onclickParams.length !== 3) {
-                                onclick = '';
+                    const onClickList = onclick.split(';');
+                    const validOnclickList = [];
+                    for(let onclickStr of onClickList) {
+                        const onclickParams = onclickStr.split(',').filter(a => a);
+                        switch(onclickParams[0]) {
+                            case 'add-class':
+                            case 'remove-class':
+                            case 'toggle-class': {
+                                if(onclickParams.length !== 3) {
+                                    onclickStr = '';
+                                    break;
+                                }
+                                onclickParams[1] = classGenerator(onclickParams[1]);
+                                onclickParams[2] = classGenerator(onclickParams[2]);
+                                onclickStr = onclickParams.join(',');
                                 break;
                             }
-                            onclickParams[1] = classGenerator(onclickParams[1]);
-                            onclickParams[2] = classGenerator(onclickParams[2]);
-                            onclick = onclickParams.join(',');
-                            break;
+                            default:
+                                onclickStr = '';
                         }
-                        default:
-                            onclick = '';
+                        if(onclickStr) validOnclickList.push(onclickStr);
                     }
+                    onclick = validOnclickList.join(';');
                 }
 
                 result += `<${tag}${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${onclick ? ` data-onclick="${utils.escapeHtml(onclick)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}${(tag === 'a' && onclick) ? ' href="#"' : ''}>${await toHtml(obj.content)}</${tag}>`;
