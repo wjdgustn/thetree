@@ -478,6 +478,9 @@ const topToHtml = module.exports = async parameter => {
                     )
                 }</style>`;
                 break;
+            case 'latex':
+                result += utils.katex(obj.content, true);
+                break;
 
             case 'text':
                 result += utils.escapeHtml(await utils.parseIncludeParams(obj.text, Store.isolateContext)).replaceAll('\n', '<br>');

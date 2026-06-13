@@ -542,6 +542,10 @@ const LegacyMath = createToken({
     name: 'LegacyMath',
     pattern: /<math>(.*?)<\/math>/
 });
+const Latex = createToken({
+    name: 'Latex',
+    pattern: /{{{#!latex\n(?:(?!{{{#!latex)[\s\S])*?}}}/
+});
 const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
@@ -661,6 +665,7 @@ const inlineTokens = [
     Folding,
     IfSyntax,
     StyleSyntax,
+    Latex,
     ColorText,
     Literal,
     // Comment,
@@ -1146,6 +1151,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
                         { ALT: () => $.SUBRULE($.styleSyntax) },
+                        { ALT: () => $.SUBRULE($.latex) },
                         { ALT: () => $.SUBRULE($.colorText) },
                         { ALT: () => $.SUBRULE($.literal) },
                         { ALT: () => $.SUBRULE($.categoryWithNewline) },
@@ -1321,6 +1327,16 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             return {
                 type: 'styleSyntax',
+                content
+            }
+        });
+
+        $.RULE('latex', () => {
+            const tok = $.CONSUME(Latex);
+            const content = tok.image.slice(11, -3).trim();
+
+            return {
+                type: 'latex',
                 content
             }
         });

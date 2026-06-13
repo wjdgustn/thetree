@@ -205,8 +205,9 @@ module.exports = {
 
         return newText;
     },
-    katex: text => katex.renderToString(text, {
-        throwOnError: false
+    katex: (text, displayMode = false) => katex.renderToString(text, {
+        throwOnError: false,
+        displayMode
     }),
     cssFilter(css) {
         if(!css) return css;
