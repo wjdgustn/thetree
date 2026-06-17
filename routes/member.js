@@ -1857,7 +1857,6 @@ app.post('/member/recover_password', middleware.isLogout, middleware.captcha(tru
             || `
 ${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 
-
 ${req.t('routes.member.email.contents.recover_password_content', {
     user: newUser.name, 
     linkOpen: `<a href="${new URL(authUrl, config.base_url)}">`,
