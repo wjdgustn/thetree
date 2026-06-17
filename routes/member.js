@@ -92,7 +92,10 @@ const signupAction = async (email, req, res, phoneNumber) => {
                 from: config.smtp_sender,
                 to: email,
                 subject: `[${config.site_name}] ${req.t('routes.member.email.titles.signup')}`,
-                html: `
+                html: (config.email_signup_dup_text || '')
+                        .replaceAll('{{siteName}}', config.site_name)
+                        .replaceAll('{{ip}}', req.ip)
+                    || `
 ${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 ${req.t('routes.member.email.contents.signup_content', { siteName: config.site_name })}
 ${req.t('routes.member.email.contents.signup_email_dup')}
@@ -151,15 +154,21 @@ ${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
             serverData: { email }
         });
 
+        const signupLink = new URL(signupUrl, config.base_url);
+
         await mailTransporter.sendMail({
             from: config.smtp_sender,
             to: email,
             subject: `[${config.site_name}] ${req.t('routes.member.email.titles.signup')}`,
-            html: `
+            html: (config.email_signup_text || '')
+                    .replaceAll('{{siteName}}', config.site_name)
+                    .replaceAll('{{link}}', `${signupLink}`)
+                    .replaceAll('{{ip}}', req.ip)
+                || `
 ${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 ${req.t('routes.member.email.contents.signup_content', { siteName: config.site_name })}
 ${req.t('routes.member.email.contents.signup_email_link', {
-    linkOpen: `<a href="${new URL(signupUrl, config.base_url)}">`,
+    linkOpen: `<a href="${signupLink}">`,
     linkClose: '</a>'
 })}
 ${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
@@ -624,7 +633,11 @@ app.post('/member/login',
         from: config.smtp_sender,
         to: user.email,
         subject: `[${config.site_name}] ${req.t('routes.member.email.titles.pin')}`,
-        html: `
+        html: (config.email_pin_text || '')
+                .replaceAll('{{siteName}}', config.site_name)
+                .replaceAll('{{pin}}', user.emailPin)
+                .replaceAll('{{ip}}', req.ip)
+            || `
 ${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 ${req.t('routes.member.email.contents.pin_content', { pin: `<b>${user.emailPin}</b>` })}
 ${req.t('routes.member.email.contents.request_ip')}: ${req.ip}
@@ -1622,7 +1635,11 @@ app.post('/member/change_email',
                 from: config.smtp_sender,
                 to: email,
                 subject: `[${config.site_name}] ${req.t('routes.member.email.titles.change_email', { value: req.user.name })}`,
-                html: `
+                html: (config.email_change_email_dup_text || '')
+                        .replaceAll('{{siteName}}', config.site_name)
+                        .replaceAll('{{username}}', req.user.name)
+                        .replaceAll('{{ip}}', req.ip)
+                    || `
 ${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 
 ${req.t('routes.member.email.contents.change_email_content', { value: req.user.name })}
@@ -1641,16 +1658,23 @@ ${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
     if(config.use_email_verification) {
         res.redirect('/member/mypage');
 
+        const changeLink = new URL(authUrl, config.base_url);
+
         await mailTransporter.sendMail({
             from: config.smtp_sender,
             to: email,
             subject: `[${config.site_name}] ${req.t('routes.member.email.titles.change_email', { value: req.user.name })}`,
-            html: `
+            html: (config.email_change_email_text || '')
+                    .replaceAll('{{siteName}}', config.site_name)
+                    .replaceAll('{{username}}', req.user.name)
+                    .replaceAll('{{link}}', changeLink)
+                    .replaceAll('{{ip}}', req.ip)
+                || `
 ${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 
 ${req.t('routes.member.email.contents.change_email_content', { value: req.user.name })}
 ${req.t('routes.member.email.contents.change_email_link', {
-    linkOpen: `<a href="${new URL(authUrl, config.base_url)}">`,
+    linkOpen: `<a href="${changeLink}">`,
     linkClose: '</a>'
 })}
 ${req.t('routes.member.email.contents.request_ip')} : ${req.ip}
@@ -1820,20 +1844,22 @@ app.post('/member/recover_password', middleware.isLogout, middleware.captcha(tru
     if(!newUser) return;
 
     const authUrl = `/member/recover_password/auth/${newUser.name}/${newUser.changePasswordToken}`;
+    const changeLink = new URL(authUrl, config.base_url);
     await mailTransporter.sendMail({
         from: config.smtp_sender,
         to: email,
         subject: `[${config.site_name}] ${req.t('routes.member.email.titles.recover_password', { value: newUser.name })}`,
-        html: `
+        html: (config.email_recover_password_text || '')
+                .replaceAll('{{siteName}}', config.site_name)
+                .replaceAll('{{username}}', newUser.name)
+                .replaceAll('{{link}}', changeLink)
+                .replaceAll('{{ip}}', req.ip)
+            || `
 ${req.t('routes.member.email.contents.hello', { siteName: config.site_name })}
 
-${newUser.name}님의 비밀번호 찾기 메일입니다.
-해당 계정의 비밀번호를 찾으시려면 아래 링크를 클릭해주세요.
-<a href="${new URL(authUrl, config.base_url)}">[인증]</a>
 
-이 메일은 24시간동안 유효합니다.
 ${req.t('routes.member.email.contents.recover_password_content', {
-    user: namumarkUtils.escapeHtml(newUser.name), 
+    user: newUser.name, 
     linkOpen: `<a href="${new URL(authUrl, config.base_url)}">`,
     linkClose: '</a>'
 })}
