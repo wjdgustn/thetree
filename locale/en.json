@@ -255,7 +255,7 @@
           "hello": "Hello. This is {{siteName}}.",
           "signup_content": "Account Verification for {{siteName}}.",
           "signup_email_dup": "Someone attempted to create an account using this email address, but could not be created because an account has already been made using it.",
-          "signup_email_link": "If this is really you creating an account, click the link below and proceed your account creation.\n{{-linkOpen}}[Create Account]{{-linkClose}}\nThis link is only valid for 24 hours.",
+          "signup_email_link": "직접 계정 생성을 진행하신 것이 맞다면 아래 링크를 클릭해서 계정 생성을 계속 진행해주세요.\n{{-linkOpen}}[인증]{{-linkClose}}\n이 메일은 24시간동안 유효합니다.",
           "pin_content": "You attempted to sign in with unrecognized device.\nIf this is really you, please enter the PIN below.\nPIN: {{-pin}}\n\nThis PIN is only valid for 10 minutes.",
           "change_email_content": "This is an email verification for changing the email address of {{value}}.",
           "change_email_dup": "An email change was attempted with this email, but an account has already been created with this email, so no further accounts can be created.",
