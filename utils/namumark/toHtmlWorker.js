@@ -126,6 +126,11 @@ const topToHtml = module.exports = async parameter => {
             await Promise.all(Object.entries(includeData).map(([key, value]) => Store.isolateContext.global.set(key, value)));
             Store.isolateContext.global.set('calleeTitle', globalUtils.doc_fulltitle(originalDocument));
         }
+        await Store.isolateContext.eval(`
+function time() {
+  return ${Math.floor(Date.now() / 1000)};
+}
+        `.trim());
     }
 
     const commentPrefix = commentId ? `tc${commentId}-` : '';
