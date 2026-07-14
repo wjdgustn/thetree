@@ -823,7 +823,7 @@ app.get('/member/login/oauth2/:provider/callback',
         });
         tokenData = data;
     } catch(e) {
-        if(debug) console.error(e);
+        console.error(e);
         return res.error('invalid_code');
     }
 
