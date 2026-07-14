@@ -123,5 +123,6 @@
   "width",
   "word-break",
   "word-spacing",
-  "word-wrap"
+  "word-wrap",
+  "writing-mode"
 ]
