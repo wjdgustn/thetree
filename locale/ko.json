@@ -869,7 +869,7 @@
       "backlink": "역링크"
     },
     "old_pages": {
-      "description": "편집된 지 오래된 문서의 목록입니다. (리다이렉트 젲외)",
+      "description": "편집된 지 오래된 문서의 목록입니다. (리다이렉트 제외)",
       "edit_date": "수정 시각: {date}"
     },
     "orphaned_categories": {
