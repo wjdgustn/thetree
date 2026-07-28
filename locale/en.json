@@ -853,7 +853,7 @@
       "backlink": "Backlink"
     },
     "old_pages": {
-      "description": "편집된 지 오래된 문서의 목록입니다. (리다이렉트 제외)",
+      "description": "A list of documents that haven't been edited in a long time. (Excluding redirects)",
       "edit_date": "Edit date : {date}"
     },
     "orphaned_categories": {
