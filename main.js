@@ -975,7 +975,7 @@ app.use(async (req, res, next) => {
             });
             if(!lastThread) return;
 
-            return lastThread.lastUpdatedAt;
+            return Math.round(lastThread.lastUpdatedAt.getTime() / 1000);
         })()) || null;
 
         const makeConfigAndSession = () => {
