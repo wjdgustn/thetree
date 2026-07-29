@@ -969,7 +969,8 @@ app.use(async (req, res, next) => {
 
             const lastThread = await Thread.findOne({
                 document: userDoc.uuid,
-                status: ThreadStatusTypes.Normal
+                status: ThreadStatusTypes.Normal,
+                deleted: false
             }).sort({
                 lastUpdatedAt: -1
             });
