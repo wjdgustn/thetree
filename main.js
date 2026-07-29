@@ -958,7 +958,10 @@ app.use(async (req, res, next) => {
         }
 
         const user_document_discuss = (await (async () => {
-            const userDoc = await Document.findOne({
+            const userDoc = await Document.findOne(req.user?.type === UserTypes.Account ? {
+                namespace: '사용자',
+                title: req.user.name
+            } : {
                 namespace: '아이피사용자',
                 title: req.ip
             });
