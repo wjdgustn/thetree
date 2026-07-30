@@ -1112,6 +1112,7 @@ const batchRevert = async (
 
     const resultText = [];
     const failResultText = [];
+    let revertedSomething = false;
 
     if(closeEditRequests) {
         const result = await EditRequest.updateMany({
@@ -1129,6 +1130,7 @@ const batchRevert = async (
             lastUpdatedAt: date
         });
         resultText.push(`${$t('routes.admin.batch_revert.closed_edit_request_count')} : ${result.modifiedCount}`);
+        revertedSomething ||= !!result.modifiedCount;
     }
 
     if(hideThreadComments) {
@@ -1154,6 +1156,7 @@ const batchRevert = async (
             hidden: true
         });
         resultText.push(`${$t('routes.admin.batch_revert.hidden_comment_count')} : ${result.modifiedCount}`);
+        revertedSomething ||= !!result.modifiedCount;
 
         let targetThreads = await Thread.find({
             status: {
@@ -1182,6 +1185,7 @@ const batchRevert = async (
             })));
 
             resultText.push(`${$t('routes.admin.batch_revert.closed_thread_count')} : ${closeResult.modifiedCount}`);
+            revertedSomething ||= !!closeResult.modifiedCount;
         }
     }
 
@@ -1207,6 +1211,7 @@ const batchRevert = async (
             trollBy: createdUser.uuid
         });
         resultText.push(`${$t('routes.admin.batch_revert.marked_troll_revision_count')} : ${trollResult.modifiedCount}`);
+        revertedSomething ||= !!trollResult.modifiedCount;
 
         let revertedCount = 0;
         const documents = [...new Set(revs.map(rev => rev.document))];
@@ -1300,6 +1305,7 @@ const batchRevert = async (
             resolve();
         })));
         resultText.push(`${$t('routes.admin.batch_revert.reverted_document_count')} : ${revertedCount}`);
+        revertedSomething ||= !!revertedCount;
     }
 
     if(revertEditRequests) {
@@ -1313,9 +1319,10 @@ const batchRevert = async (
             status: EditRequestStatusTypes.Open
         });
         resultText.push(`${$t('routes.admin.batch_revert.reopen_edit_request_count')} : ${result.modifiedCount}`);
+        revertedSomething ||= !!result.modifiedCount;
     }
 
-    await BlockHistory.create({
+    if(revertedSomething) await BlockHistory.create({
         type: BlockHistoryTypes.BatchRevert,
         createdUser: createdUser.uuid,
         targetUser: user.uuid,
