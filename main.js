@@ -605,6 +605,43 @@ SocketIO.on('new_namespace', namespace => {
 
 // app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
+if(!debug) {
+    app.use(compression());
+}
+
+app.use('/locale/:namespace/:lang', (req, res, next) => {
+    const lang = req.params.lang.toString();
+    const namespace = req.params.namespace.toString();
+    if(!supportedLocales.includes(lang)) return next();
+
+    const resource = i18next.getResource(lang, namespace);
+    return res.json(resource ?? {});
+});
+app.use(express.static(`./customStatic`));
+app.use(express.static(`./public`));
+
+app.use('/skins', (req, res, next) => {
+    const splittedPath = req.path.split('/');
+    const skinName = splittedPath[1];
+    const filename = splittedPath.pop();
+
+    const skinInfo = global.skinInfos[skinName];
+    if(skinInfo) {
+        if(filename.endsWith('.html')) return next();
+
+        req.url = req.url.slice(skinName.length + 2);
+        express.static(`./skins/${skinName}/client`)(req, res, next);
+    }
+    else next();
+});
+
+app.use('/plugins/:pluginName', (req, res, next) => {
+    const plugin = pluginStaticPaths.find(a => a.pluginName === req.params.pluginName);
+    if(!plugin) return next();
+
+    plugin.middleware(req, res, next);
+});
+
 app.use(cookieParser());
 
 app.use(i18nMiddleware.handle(i18next));
@@ -655,43 +692,6 @@ app.use((req, res, next) => {
         referrerPolicy: false,
         strictTransportSecurity: !debug
     })(req, res, next);
-});
-
-if(!debug) {
-    app.use(compression());
-}
-
-app.use('/locale/:namespace/:lang', (req, res, next) => {
-    const lang = req.params.lang.toString();
-    const namespace = req.params.namespace.toString();
-    if(!supportedLocales.includes(lang)) return next();
-
-    const resource = i18next.getResource(lang, namespace);
-    return res.json(resource ?? {});
-});
-app.use(express.static(`./customStatic`));
-app.use(express.static(`./public`));
-
-app.use('/skins', (req, res, next) => {
-    const splittedPath = req.path.split('/');
-    const skinName = splittedPath[1];
-    const filename = splittedPath.pop();
-
-    const skinInfo = global.skinInfos[skinName];
-    if(skinInfo) {
-        if(filename.endsWith('.html')) return next();
-
-        req.url = req.url.slice(skinName.length + 2);
-        express.static(`./skins/${skinName}/client`)(req, res, next);
-    }
-    else next();
-});
-
-app.use('/plugins/:pluginName', (req, res, next) => {
-    const plugin = pluginStaticPaths.find(a => a.pluginName === req.params.pluginName);
-    if(!plugin) return next();
-
-    plugin.middleware(req, res, next);
 });
 
 app.use(express.urlencoded({
