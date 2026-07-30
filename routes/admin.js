@@ -832,6 +832,9 @@ app.get('/admin/grant', middleware.permission('grant'), async (req, res) => {
     res.renderSkin('grant', {
         contentName: 'admin/grant',
         serverData: {
+            ...(req.query.username && !targetUser ? {
+                alert: req.t('routes.aclgroup.errors.invalid_username')
+            } : {}),
             targetUser: targetUser ? {
                 ...await utils.getPublicUser(targetUser),
                 permissions: targetUser.permissions
