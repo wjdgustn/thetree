@@ -569,7 +569,7 @@
         "user": "사용자",
         "ip": "IP",
         "block_name_text": "(차단 당시 이름: {{targetUsername}})",
-        "acl_group_remove": "{createdUser} 사용자가 {targetUser} {{userOrIp}}를 {{blockNameText}} ACL 그룹에서 제거함",
+        "acl_group_remove": "{createdUser} 사용자가 {targetUser} {{userOrIp}}를 {{blockNameText}} {aclGroup} ACL 그룹에서 제거함",
         "grant": "{createdUser} 사용자가 {targetUser} 사용자의 권한 설정",
         "batch_revert": "{createdUser} 사용자가 {targetUser} {{userOrIp}}의 기여를 일괄 되돌림",
         "login_history": "{createdUser} 사용자가 {targetUser} 사용자의 로그인 기록 조회"
