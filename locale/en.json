@@ -553,7 +553,7 @@
         "user": "User",
         "ip": "IP",
         "block_name_text": "(Name at block time: {{targetUsername}})",
-        "acl_group_remove": "{createdUser} removed {targetUser} {{userOrIp}} from the {{blockNameText}} ACL Group",
+        "acl_group_remove": "{createdUser} 사용자가 {targetUser} {{userOrIp}}를 {{blockNameText}} {aclGroup} ACL 그룹에서 제거함",
         "grant": "{createdUser} set permissions for {targetUser}",
         "batch_revert": "{createdUser} batch reverted contributions of {targetUser} {{userOrIp}}",
         "login_history": "{createdUser} viewed login history of {targetUser}"
