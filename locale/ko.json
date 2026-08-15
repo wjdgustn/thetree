@@ -1038,7 +1038,7 @@
       "change_frontpage": "대문 변경",
       "guide": "권장사항",
       "guide_description": "원활한 위키 운영을 위한 설정 권장사항입니다.",
-      "use_email_verification": "이메일 인증 활성화(devConfig.json)",
+      "use_email_verification": "이메일 인증 활성화(serverConfig.json)",
       "use_captcha": "캡챠 활성화(devConfig.json)",
       "use_search_engine": "검색 엔진 설정(.env)",
       "use_redis": "Redis 설정(.env)",
