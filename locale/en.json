@@ -1022,7 +1022,7 @@
       "change_frontpage": "Change frontpage",
       "guide": "Guide",
       "guide_description": "These are recommended settings for smooth wiki operation.",
-      "use_email_verification": "이메일 인증 활성화(serverConfig.json)",
+      "use_email_verification": "Use email verification (serverConfig.json)",
       "use_captcha": "Use captcha (devConfig.json)",
       "use_search_engine": "Set search engine (.env)",
       "use_redis": "Set Redis (.env)",
