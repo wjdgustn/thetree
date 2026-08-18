@@ -250,7 +250,8 @@
         "invalid_phone_number": "번호가 올바르지 않습니다.",
         "phone_number_verify_in_progress": "이미 해당 번호로 인증이 진행중입니다.",
         "mobile_verify_internal_error": "내부 오류가 발생했습니다.",
-        "phone_number_already_used": "이 번호로는 더 이상 인증할 수 없습니다."
+        "phone_number_already_used": "이 번호로는 더 이상 인증할 수 없습니다.",
+        "invalid_switch_account": "계정을 찾을 수 없습니다."
       },
       "default_agree_text": "동의합니다.",
       "email": {
