@@ -241,7 +241,8 @@
         "invalid_phone_number": "Invalid phone number.",
         "phone_number_verify_in_progress": "Verification for this phone number is already in progress.",
         "mobile_verify_internal_error": "An internal error has occurred.",
-        "phone_number_already_used": "This phone number can no longer be used for verification."
+        "phone_number_already_used": "This phone number can no longer be used for verification.",
+        "invalid_switch_account": "계정을 찾을 수 없습니다."
       },
       "default_agree_text": "I agree.",
       "email": {
