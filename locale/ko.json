@@ -1172,6 +1172,7 @@
     "author_span": {
       "deleted": "없음",
       "user_doc": "사용자 문서",
+      "user_discuss": "사용자 토론",
       "document_contribution": "문서 기여 내역",
       "discuss_contribution": "토론 기여 내역",
       "copy_uuid": "UUID 복사",
