@@ -1155,6 +1155,7 @@
     "author_span": {
       "deleted": "None",
       "user_doc": "User document",
+      "user_discuss": "사용자 토론",
       "document_contribution": "Document contribution",
       "discuss_contribution": "Discuss contribution",
       "copy_uuid": "Copy UUID",
