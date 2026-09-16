@@ -167,7 +167,7 @@ module.exports = async (obj, options = {}) => {
     //     text = text.slice(0, aPos) + text.slice(aClosePosEnd);
     // }
 
-    const safeLink = utils.escapeHtml(globalUtils.removeHtmlTags(link));
+    const safeLink = utils.escapeHtml(link);
     const parsedTitle = obj.textExists ? await toHtml(obj.parsedText) : utils.escapeHtml(text);
 
     const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
