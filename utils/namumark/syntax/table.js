@@ -107,8 +107,10 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
 
                     if(name.includes('color')) {
                         if(splittedValue.length > 2) break;
-                        if(splittedValue
-                            .some(v => !utils.validateColor(v))) break;
+
+                        if(!utils.validateColor(splittedValue[0])) break;
+                        if(splittedValue.length > 1 && !utils.validateColor(splittedValue[1]))
+                            splittedValue.length = 1;
                     }
 
                     if(name === 'align') {
