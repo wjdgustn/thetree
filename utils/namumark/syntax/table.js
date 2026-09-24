@@ -86,8 +86,10 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
                 if(!tagStr.startsWith('table')
                     && name.includes('color')) {
                     if(splittedValue.length > 2) break;
-                    if(splittedValue
-                        .some(v => !utils.validateColor(v))) break;
+
+                    if(!utils.validateColor(splittedValue[0])) break;
+                    if(splittedValue.length > 1 && !utils.validateColor(splittedValue[1]))
+                        splittedValue.length = 1;
                 }
 
                 if(tagStr.startsWith('table')) {
@@ -283,12 +285,13 @@ module.exports = async (obj, { toHtml, classGenerator, Store }) => {
                     const evalResult = await utils.runJavascript(Store.isolateContext, value);
                     if(!evalResult) continue colLoop;
                 }
-                else if([1, 2].includes(splittedValue.length)
-                    && splittedValue.every(a => utils.validateColor(a))) {
+                else if([1, 2].includes(splittedValue.length)) {
                     if(tdStyle.includes(';background-color:')) break;
 
+                    if(!utils.validateColor(light)) break;
+
                     tdStyle += `background-color:${light};`;
-                    if(dark) tdDarkStyle += `background-color:${dark};`;
+                    if(dark && utils.validateColor(dark)) tdDarkStyle += `background-color:${dark};`;
                 }
                 else break;
 
