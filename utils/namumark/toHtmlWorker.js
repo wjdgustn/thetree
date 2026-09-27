@@ -587,13 +587,16 @@ function time() {
                 // const value = await toHtml(obj.value);
 
                 const prevFootnote = Store.footnote.values.find(a => a.name === name);
-                let value = prevFootnote?.content;
+                let html = prevFootnote?.html;
                 if(prevFootnote == null) {
-                    value = obj.value;
-                    Store.footnote.values.push({
+                    const valueObj = {
                         name,
-                        content: value
-                    });
+                        content: obj.value
+                    }
+                    Store.footnote.values.push(valueObj);
+
+                    html = await toHtml(obj.value);
+                    valueObj.html = html;
                 }
 
                 Store.footnote.list.push({
@@ -601,9 +604,7 @@ function time() {
                     index
                 });
 
-                value = await toHtml(value);
-
-                result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(value)}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
+                result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(html)}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
                 break;
             }
 
