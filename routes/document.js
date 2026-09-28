@@ -516,10 +516,9 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
             namespace,
             title
         });
-        if(!dbDocument) return res.status(404).send(req.t('errors.document_not_found'));
 
         if(target === 'thread') {
-            dbThread = await Thread.findOne({
+            if(dbDocument) dbThread = await Thread.findOne({
                 document: dbDocument.uuid,
                 url: req.body.thread,
                 deleted: false
