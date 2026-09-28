@@ -1129,7 +1129,7 @@ app.post('/member/change_password',
         password: hash
     });
     await AutoLoginToken.deleteMany({
-        uuid: user.uuid,
+        uuid: req.user.uuid,
         ...(req.cookies.honoka ? {
             token: { $ne: req.cookies.honoka }
         } : {})
