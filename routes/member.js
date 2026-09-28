@@ -1127,6 +1127,12 @@ app.post('/member/change_password',
     }, {
         password: hash
     });
+    await AutoLoginToken.deleteMany({
+        uuid: user.uuid,
+        ...(req.cookies.honoka ? {
+            token: { $ne: req.cookies.honoka }
+        } : {})
+    });
 
     return res.redirect('/member/mypage');
 });
@@ -1931,6 +1937,9 @@ app.post('/member/recover_password/auth/:name/:token',
         lastChangePassword: null
     });
     if(!user) return res.status(400).send(req.t('routes.member.errors.invalid_email_token'));
+    await AutoLoginToken.deleteMany({
+        uuid: user.uuid
+    });
 
     res.redirect('/member/login');
 });
