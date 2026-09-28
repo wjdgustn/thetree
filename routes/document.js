@@ -511,18 +511,20 @@ app.post('/acl{/*document}', middleware.parseDocumentName, async (req, res) => {
 
     let dbDocument;
     let dbThread;
-    if(target === 'thread') {
-        dbThread = await Thread.findOne({
-            url: req.body.thread,
-            deleted: false
-        });
-        if(!dbThread) return res.status(404).send('thread_not_found');
-    }
     if(target === 'document' || target === 'thread') {
         dbDocument = await Document.findOne({
             namespace,
             title
         });
+
+        if(target === 'thread') {
+            dbThread = await Thread.findOne({
+                document: dbDocument.uuid,
+                url: req.body.thread,
+                deleted: false
+            });
+            if(!dbThread) return res.status(404).send('thread_not_found');
+        }
 
         const acl = await ACL.get({ document: dbDocument }, document);
         const { result: editable, aclMessage } = await acl.check(ACLTypes.ACL, req.aclData);
