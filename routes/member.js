@@ -676,7 +676,8 @@ app.post('/member/login/pin',
             const options = req.session.passkeyAuthOptions;
             const response = req.body.challenge;
             const passkey = await Passkey.findOne({
-                id: response.id
+                id: response.id,
+                user: user.uuid
             });
             if(!passkey) return res.status(400).send(req.t('routes.member.errors.passkey_not_found'));
 
@@ -694,6 +695,7 @@ app.post('/member/login/pin',
                         transports: passkey.transports
                     }
                 });
+                if(!verification.verified) throw new Error('invalid_passkey');
             } catch(e) {
                 if(debug) console.error(e);
                 return res.status(400).send(req.t('routes.member.errors.passkey_auth_failed'));
