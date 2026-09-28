@@ -540,6 +540,7 @@ app.post('/member/login',
                     transports: passkey.transports
                 }
             });
+            if(!verification.verified) throw new Error('invalid_passkey');
         } catch(e) {
             if(debug) console.error(e);
             return res.status(400).send(req.t('routes.member.errors.passkey_auth_failed'));
