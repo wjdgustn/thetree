@@ -469,12 +469,11 @@ module.exports.removeACLGroupValidate = removeACLGroupValidate;
 const removeACLGroupItem = async ({ createdUser, createdUserUuid, group, id, uuid, note, hideLog = false }) => {
     if(createdUserUuid) createdUser ??= await User.findOne({ uuid: createdUserUuid });
 
-    if(!createdUser || (!id && !uuid) || !note) throw new Error('Invalid parameters');
+    if(!createdUser || (!id && !uuid) || !note || !group) throw new Error('Invalid parameters');
 
-    const deleted = await ACLGroupItem.findOneAndDelete(id ? {
-        id
-    } : {
-        uuid
+    const deleted = await ACLGroupItem.findOneAndDelete({
+        aclGroup: group.uuid,
+        ...(id ? { id } : { uuid })
     });
     if(!deleted) return null;
 
