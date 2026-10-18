@@ -1369,7 +1369,8 @@ app.post('/admin/batch_revert',
         .custom(async (value, { req }) => {
             req.modifiedBody.duration = ms(value);
             if(!req.modifiedBody.duration) throw new Error(req.t('routes.admin.errors.invalid_duration'));
-            if(req.modifiedBody.duration > 1000 * 60 * 60 * 24) throw new Error(req.t('routes.admin.errors.maximum_duration'));
+            if(!req.permissions.includes('developer') && req.modifiedBody.duration > 1000 * 60 * 60 * 24)
+                throw new Error(req.t('routes.admin.errors.maximum_duration'));
         }),
     body('reason')
         .notEmpty().withMessage('errors.required_field'),
