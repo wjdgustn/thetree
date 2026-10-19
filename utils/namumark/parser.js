@@ -325,6 +325,21 @@ const TableRow = createToken({
     start_chars_hint: ['|']
 });
 
+const SkipToken = createToken({
+    name: 'SkipToken',
+    pattern: (text, startOffset) => startOffset < text.length ? [text.slice(startOffset)] : null,
+    group: Lexer.SKIPPED,
+    line_breaks: true
+});
+
+const NewlineSkip = createToken({
+    name: 'NewlineSkip',
+    pattern: /\r?\n/,
+    group: Lexer.SKIPPED,
+    line_breaks: true,
+    push_mode: 'skip'
+})
+
 const LiteralRegex = /(?<!\\)(?:\\\\)*{{{[\s\S]*}}}/g;
 const inlineRegex = (openRegex, closeRegex = null, keepOriginal = false) => {
     let openCloseSame = false;
@@ -332,24 +347,59 @@ const inlineRegex = (openRegex, closeRegex = null, keepOriginal = false) => {
         openCloseSame = true;
         closeRegex = openRegex;
     }
+    const closeFirstChar = closeRegex.source[0];
     openRegex = new RegExp((keepOriginal || (openRegex.source.startsWith('^')) ? '' : '^') + openRegex.source, 'i');
     closeRegex = new RegExp((keepOriginal ? '' : '(?<!\\\\)(?:\\\\\\\\)*') + closeRegex.source, 'i');
 
+    const InlineClose = createToken({
+        name: 'InlineClose',
+        pattern: closeRegex,
+        line_breaks: false,
+        start_chars_hint: [closeFirstChar],
+        push_mode: 'skip'
+    });
+    let closeLexer;
+
     return ({
         pattern: (text, startOffset) => {
+            closeLexer ??= new Lexer({
+                defaultMode: 'default',
+                modes: {
+                    default: [
+                        ...importantTokens,
+                        NewlineSkip,
+                        InlineClose,
+                        ...syntaxTokens.filter(a => !inlineTokens.includes(a))
+                    ],
+                    skip: [SkipToken]
+                }
+            }, {
+                positionTracking: 'onlyOffset'
+            });
+
             const str = text.slice(startOffset);
             const openMatch = str.match(openRegex);
             if(!openMatch) return null;
 
-            const closeMatch = str.slice(openMatch[0].length).match(closeRegex);
-            if(!closeMatch || (openCloseSame && openMatch[0] !== closeMatch[0]))
-                return null;
+            let closeIndex;
+            let closeStr;
 
-            const content = str.slice(openMatch[0].length, closeMatch.index + openMatch[0].length);
+            const { tokens } = closeLexer.tokenize(str.slice(openMatch[0].length));
+            for(let t of tokens) {
+                if(t.tokenType !== InlineClose) continue;
+
+                closeIndex = t.startOffset;
+                closeStr = t.image;
+                break;
+            }
+
+            if(closeIndex == null || (openCloseSame && openMatch[0] !== closeStr)) return null;
+
+            const content = str.slice(openMatch[0].length, closeIndex + openMatch[0].length);
             if(!content || content.replace(LiteralRegex, '').includes('\n'))
                 return null;
 
-            const fullMatch = openMatch[0] + content + closeMatch[0];
+            const fullMatch = openMatch[0] + content + closeStr;
             return [fullMatch];
         },
         line_breaks: true
@@ -656,6 +706,16 @@ const importantTokens = [
 ];
 
 const inlineTokens = [
+    Bold,
+    Italic,
+    Strike1,
+    Strike2,
+    Underline,
+    Sup,
+    Sub
+];
+
+const syntaxTokens = [
     ScaleText,
     WikiSyntax,
     SyntaxSyntax,
@@ -669,13 +729,9 @@ const inlineTokens = [
     ColorText,
     Literal,
     // Comment,
-    Bold,
-    Italic,
-    Strike1,
-    Strike2,
-    Underline,
-    Sup,
-    Sub,
+
+    ...inlineTokens,
+
     CategoryWithNewline,
     Link,
     Footnote,
@@ -684,7 +740,7 @@ const inlineTokens = [
 
     Text
 ];
-const inlineLexer = new Lexer([...importantTokens, ...inlineTokens]);
+const inlineLexer = new Lexer([...importantTokens, ...syntaxTokens]);
 
 const allTokens = [
     ...importantTokens,
@@ -701,7 +757,7 @@ const allTokens = [
     Hr,
     BlockQuote,
 
-    ...inlineTokens
+    ...syntaxTokens
 ];
 
 const modeGenerator = tokens => ({
@@ -730,7 +786,7 @@ const tableRowLexer = new Lexer([
     Newline,
     TableSplit,
     RowIf,
-    ...inlineTokens
+    ...syntaxTokens
 ]);
 
 const instances = [];
