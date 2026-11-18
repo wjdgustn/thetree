@@ -93,10 +93,10 @@ const nestedRegex = (openRegex, closeRegex, {
                     if(postCheck && !postCheck(content, { payload, startOffset }))
                         return null;
 
-                    if(breakByHeading && HeadingRegex.test(content)) {
-                        Store.noLiteralPos.push(startOffset);
-                        return null;
-                    }
+                    // if(breakByHeading && HeadingRegex.test(content)) {
+                    //     Store.noLiteralPos.push(startOffset);
+                    //     return null;
+                    // }
 
                     return result;
                 }
@@ -284,8 +284,8 @@ const TableRow = createToken({
             if(result.endsWith('\n')) result = result.slice(0, -1);
             else if(!result) result = null;
 
-            if(result != null && HeadingRegex.test(result))
-                result = null;
+            // if(result != null && HeadingRegex.test(result))
+            //     result = null;
 
             if(result != null) {
                 const openOrCloses = (result.match(OpenOrClosesRegex) || []);
