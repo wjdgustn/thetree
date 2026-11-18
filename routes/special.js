@@ -173,7 +173,12 @@ let lastSidebarUpdate = 0;
 const updateSidebar = async () => {
     if(Date.now() - lastSidebarUpdate > 1000 * 5) {
         const documents = await Document.find({
-            namespace: '문서'
+            namespace: {
+                $in: Array.isArray(config.sidebar_namespaces)
+                && config.sidebar_namespaces.every(a => typeof a === 'string')
+                    ? config.sidebar_namespaces
+                    : ['문서']
+            }
         })
             .sort({ updatedAt: -1 })
             .limit(15);

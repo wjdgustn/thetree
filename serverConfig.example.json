@@ -6,6 +6,7 @@
   "namespaces": [],
   "hidden_namespaces": [],
   "protected_namespaces": [],
+  "sidebar_namespaces": ["문서"],
 
   "max_file_size": 10,
   "document_maximum_length": 1000000,
