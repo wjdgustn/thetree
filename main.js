@@ -467,13 +467,13 @@ global.updateEngine = (exit = true) => {
                 }
                 if(packageUpdated) {
                     console.log('package.json updated, updating packages...');
-                    exec('npm i', onFinish);
+                    await execPromise('npm i');
                 }
-                else if(fePackageUpdated) {
+                if(fePackageUpdated) {
                     console.log('Frontend package.json updated, updating packages...');
-                    exec('npm i --production=false', { cwd: './frontend' }, onFinish);
+                    await execPromise('npm i --production=false', { cwd: './frontend' });
                 }
-                else await onFinish();
+                await onFinish();
             }
             else global.skinCommitId = {};
         } catch(e) {}
