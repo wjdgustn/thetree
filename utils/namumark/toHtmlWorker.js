@@ -610,7 +610,7 @@ function time() {
                     index
                 });
 
-                result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(html)}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
+                result += `<a class="wiki-fn-content" title="${utils.escapeHtml(utils.parsedToText(obj.value))}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
                 break;
             }
 
