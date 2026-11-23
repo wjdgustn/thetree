@@ -1153,9 +1153,9 @@ app.use(async (req, res, next) => {
                 }
                 const html = skinInfo.template
                     .replaceAll('{cspNonce}', res.locals.cspNonce)
-                    .replace('<html>', `<html${rendered.head.htmlAttrs}>`)
-                    .replace('<!--app-head-->', rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
-                    .replace('<!--app-body-->', body);
+                    .replace('<html>', () => `<html${rendered.head.htmlAttrs}>`)
+                    .replace('<!--app-head-->', () => rendered.head.headTags + '\n' + (config.head_html?.replaceAll('{cspNonce}', res.locals.cspNonce) || '') + rendered.links)
+                    .replace('<!--app-body-->', () => body);
 
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
                 res.status(status).send(html);
