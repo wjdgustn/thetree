@@ -603,6 +603,7 @@ function time() {
 
                     html = await toHtml(obj.value);
                     valueObj.html = html;
+                    valueObj.text = utils.parsedToText(obj.value);
                 }
 
                 Store.footnote.list.push({
@@ -610,7 +611,7 @@ function time() {
                     index
                 });
 
-                result += `<a class="wiki-fn-content" title="${utils.escapeHtml(utils.parsedToText(obj.value))}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
+                result += `<a class="wiki-fn-content" title="${utils.escapeHtml(obj.text)}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
                 break;
             }
 
