@@ -15,7 +15,7 @@ module.exports = {
 
         let result = `<div class="wiki-macro-footnote">`;
         for(let { name, html } of footnoteValues) {
-            result += `<span class="footnote-list"><span id="${commentPrefix}fn-${name}"></span>`;
+            result += `<span class="footnote-list"><span id="${commentPrefix}fn-${utils.escapeHtml(name)}"></span>`;
 
             const sameFootnotes = footnoteList.filter(a => a.name === name);
             const footnote = sameFootnotes[0];
