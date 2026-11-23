@@ -10,7 +10,7 @@ module.exports = async (obj, options) => {
     const name = obj.name;
     const params = obj.params;
 
-    if(!macros[name]) return obj.image;
+    if(!macros[name]) return utils.escapeHtml(obj.image);
 
     if(options.thread && !threadMacros.includes(name)) return '';
 
