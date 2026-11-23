@@ -378,7 +378,7 @@ function time() {
                 const text = await toHtml(obj.text);
 
                 let headingSpanId = utils.escapeHtml(utils.parsedToText(obj.text));
-                const spanIdCounts = Store.heading.headingSpanIdCount;
+                const spanIdCounts = Store.headingSpanIdCount;
                 const spanIdCount = spanIdCounts[headingSpanId] = (spanIdCounts[headingSpanId] ?? 0) + 1;
                 if(spanIdCount > 1) headingSpanId += `_${spanIdCount}`;
 
