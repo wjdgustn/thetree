@@ -60,7 +60,8 @@ const topToHtml = module.exports = async parameter => {
         categories: [],
         heading: {
             list: [],
-            html: ''
+            html: '',
+            spanIdCount: {}
         },
         footnote: {
             index: 0,
@@ -376,9 +377,14 @@ function time() {
             case 'heading': {
                 const text = await toHtml(obj.text);
 
+                let headingSpanId = utils.escapeHtml(utils.parsedToText(obj.text));
+                const spanIdCounts = Store.heading.spanIdCount;
+                const spanIdCount = spanIdCounts[headingSpanId] = (spanIdCounts[headingSpanId] ?? 0) + 1;
+                if(spanIdCount > 1) headingSpanId += `_${spanIdCount}`;
+
                 result += `<h${obj.level} class="wiki-heading${obj.closed ? ' wiki-heading-folded' : ''}">`;
                 result += `<a id="s-${obj.numText}" href="#${commentPrefix}toc">${obj.numText}.</a>`;
-                result += ` <span id="${globalUtils.removeHtmlTags(text)}">${text}`;
+                result += ` <span id="${headingSpanId}">${text}`;
                 if(!thread) result += `
 <span class="wiki-edit-section">
 <a href="${utils.escapeHtml(globalUtils.doc_action_link(document, 'edit', {
