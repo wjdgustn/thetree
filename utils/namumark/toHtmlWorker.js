@@ -594,6 +594,7 @@ function time() {
 
                 const prevFootnote = Store.footnote.values.find(a => a.name === name);
                 let html = prevFootnote?.html;
+                let text = prevFootnote?.text;
                 if(prevFootnote == null) {
                     const valueObj = {
                         name,
@@ -601,9 +602,8 @@ function time() {
                     }
                     Store.footnote.values.push(valueObj);
 
-                    html = await toHtml(obj.value);
-                    valueObj.html = html;
-                    valueObj.text = utils.parsedToText(obj.value);
+                    html = valueObj.html = await toHtml(obj.value);
+                    text = valueObj.text = utils.parsedToText(obj.value);
                 }
 
                 Store.footnote.list.push({
@@ -611,7 +611,7 @@ function time() {
                     index
                 });
 
-                result += `<a class="wiki-fn-content" title="${utils.escapeHtml(obj.text)}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
+                result += `<a class="wiki-fn-content" title="${utils.escapeHtml(text)}" href="#${commentPrefix}fn-${utils.escapeHtml(name)}"><span id="${commentPrefix}rfn-${index}"></span>[${utils.escapeHtml(name)}]</a>`;
                 break;
             }
 
